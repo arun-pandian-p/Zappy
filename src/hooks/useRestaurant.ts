@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
+import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Restaurant = Tables<"restaurants">;
+export type RestaurantInsert = TablesInsert<"restaurants">;
+export type RestaurantUpdate = TablesUpdate<"restaurants">;
 
 export function useRestaurant(restaurantId?: string) {
   return useQuery({
@@ -64,10 +66,10 @@ export function useUpdateRestaurant() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: TablesUpdate<"restaurants"> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: RestaurantUpdate }) => {
       const { data: result, error } = await supabase
         .from("restaurants")
-        .update(data)
+        .update(updates)
         .eq("id", id)
         .select()
         .single();
@@ -77,6 +79,45 @@ export function useUpdateRestaurant() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["restaurant", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["restaurants"] });
+    },
+  });
+}
+
+export function useCreateRestaurant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (restaurant: RestaurantInsert) => {
+      const { data, error } = await supabase
+        .from("restaurants")
+        .insert(restaurant)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["restaurants"] });
+    },
+  });
+}
+
+export function useDeleteRestaurant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("restaurants")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["restaurants"] });
     },
   });
