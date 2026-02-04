@@ -7,6 +7,30 @@ export type Table = Tables<"tables">;
 export type TableInsert = TablesInsert<"tables">;
 export type TableUpdate = TablesUpdate<"tables">;
 
+// Hook to resolve table number (e.g. "T1") to table UUID
+export function useTableByNumber(restaurantId?: string, tableNumber?: string) {
+  return useQuery({
+    queryKey: ["table-by-number", restaurantId, tableNumber],
+    queryFn: async () => {
+      if (!restaurantId || !tableNumber) return null;
+      
+      const { data, error } = await supabase
+        .from("tables")
+        .select("*")
+        .eq("restaurant_id", restaurantId)
+        .eq("table_number", tableNumber)
+        .single();
+
+      if (error) {
+        console.error("Error fetching table by number:", error);
+        return null;
+      }
+      return data as Table;
+    },
+    enabled: !!restaurantId && !!tableNumber,
+  });
+}
+
 export function useTables(restaurantId?: string) {
   const queryClient = useQueryClient();
 
