@@ -16,12 +16,11 @@ import {
   Megaphone,
   Star,
   Loader2,
+  Download,
+  Edit2,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {
-  categories as mockCategories,
-  MenuItem,
-} from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,11 +49,19 @@ import { OrderHistory } from "@/components/admin/OrderHistory";
 import { AdsManager } from "@/components/admin/AdsManager";
 import { FeedbackManager } from "@/components/admin/FeedbackManager";
 import { SettingsPanel } from "@/components/admin/SettingsPanel";
+import { CategoryManager } from "@/components/admin/CategoryManager";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import KitchenDashboard from "@/pages/KitchenDashboard";
 import BillingCounter from "@/pages/BillingCounter";
 import { useRestaurants, useRestaurant } from "@/hooks/useRestaurant";
-import { useMenuItems, useCategories } from "@/hooks/useMenuItems";
-import { useTables } from "@/hooks/useTables";
+import { 
+  useMenuItems, 
+  useCategories, 
+  useCreateMenuItem, 
+  useDeleteMenuItem, 
+  useToggleMenuItemAvailability 
+} from "@/hooks/useMenuItems";
+import { useTables, useCreateTable, useDeleteTable } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
 import { useInvoiceStats } from "@/hooks/useInvoices";
 
@@ -102,7 +109,18 @@ const AdminDashboard = () => {
   const currencySymbol = restaurant?.currency || "₹";
   const restaurantName = restaurant?.name || "QR Dine Pro";
 
-  const handleAddItem = () => {
+  // Mutations
+  const createMenuItem = useCreateMenuItem();
+  const deleteMenuItem = useDeleteMenuItem();
+  const toggleAvailability = useToggleMenuItemAvailability();
+  const createTable = useCreateTable();
+  const deleteTable = useDeleteTable();
+
+  // New table form state
+  const [newTableNumber, setNewTableNumber] = useState('');
+  const [newTableCapacity, setNewTableCapacity] = useState('4');
+
+  const handleAddItem = async () => {
     if (!newItem.name || !newItem.price) {
       toast({
         title: "Missing Fields",
@@ -112,36 +130,152 @@ const AdminDashboard = () => {
       return;
     }
 
-    // TODO: Integrate with useCreateMenuItem hook
-    toast({
-      title: "Item Added",
-      description: `${newItem.name} has been added to the menu.`,
-    });
-    setNewItem({
-      name: "",
-      description: "",
-      price: "",
-      category: categories[0]?.name || "Starters",
-      image_url: "",
-      is_vegetarian: false,
-      prep_time_minutes: "15",
-    });
+    // Find category ID
+    const category = categories.find(c => c.name === newItem.category);
+
+    try {
+      await createMenuItem.mutateAsync({
+        restaurant_id: restaurantId,
+        name: newItem.name,
+        description: newItem.description || undefined,
+        price: parseFloat(newItem.price),
+        category_id: category?.id,
+        image_url: newItem.image_url || undefined,
+        is_vegetarian: newItem.is_vegetarian,
+        prep_time_minutes: parseInt(newItem.prep_time_minutes) || 15,
+        is_available: true,
+      });
+      
+      toast({
+        title: "Item Added",
+        description: `${newItem.name} has been added to the menu.`,
+      });
+      
+      setNewItem({
+        name: "",
+        description: "",
+        price: "",
+        category: categories[0]?.name || "Starters",
+        image_url: "",
+        is_vegetarian: false,
+        prep_time_minutes: "15",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add menu item.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteItem = (id: string) => {
-    // TODO: Integrate with useDeleteMenuItem hook
-    toast({
-      title: "Item Deleted",
-      description: "Menu item has been removed.",
-    });
+  const handleDeleteItem = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+    
+    try {
+      await deleteMenuItem.mutateAsync({ id, restaurantId });
+      toast({
+        title: "Item Deleted",
+        description: "Menu item has been removed.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete item.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleToggleAvailability = (id: string) => {
-    // TODO: Integrate with useToggleMenuItemAvailability hook
-    toast({
-      title: "Availability Updated",
-      description: "Item availability has been toggled.",
-    });
+  const handleToggleAvailability = async (id: string, currentValue: boolean) => {
+    try {
+      await toggleAvailability.mutateAsync({ id, isAvailable: !currentValue });
+      toast({
+        title: "Availability Updated",
+        description: `Item is now ${!currentValue ? 'available' : 'unavailable'}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update availability.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddTable = async () => {
+    if (!newTableNumber.trim()) {
+      toast({
+        title: "Enter table number",
+        description: "Table number is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await createTable.mutateAsync({
+        restaurant_id: restaurantId,
+        table_number: newTableNumber.trim(),
+        capacity: parseInt(newTableCapacity) || 4,
+        status: 'available',
+      });
+      
+      toast({
+        title: "Table Added",
+        description: `Table ${newTableNumber} has been created.`,
+      });
+      
+      setNewTableNumber('');
+      setNewTableCapacity('4');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create table.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteTable = async (id: string, tableNumber: string) => {
+    if (!confirm(`Delete table ${tableNumber}?`)) return;
+    
+    try {
+      await deleteTable.mutateAsync({ id, restaurantId });
+      toast({
+        title: "Table Deleted",
+        description: `Table ${tableNumber} has been removed.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete table.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const downloadQRCode = (tableNumber: string) => {
+    const svg = document.getElementById(`qr-${tableNumber}`);
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `QR-Table-${tableNumber}.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+    
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   };
 
   // Computed stats from live data
@@ -392,13 +526,12 @@ const AdminDashboard = () => {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>Image URL</Label>
-                          <Input
-                            value={newItem.image_url}
-                            onChange={(e) =>
-                              setNewItem({ ...newItem, image_url: e.target.value })
-                            }
-                            placeholder="https://..."
+                          <Label>Image</Label>
+                          <ImageUpload
+                            currentImageUrl={newItem.image_url}
+                            onImageUploaded={(url) => setNewItem({ ...newItem, image_url: url })}
+                            restaurantId={restaurantId}
+                            folder="menu"
                           />
                         </div>
                         <div className="flex items-center gap-2">
@@ -410,13 +543,23 @@ const AdminDashboard = () => {
                           />
                           <Label>Vegetarian</Label>
                         </div>
-                        <Button className="w-full" onClick={handleAddItem}>
-                          <Plus className="w-4 h-4 mr-2" />
+                        <Button 
+                          className="w-full" 
+                          onClick={handleAddItem}
+                          disabled={createMenuItem.isPending}
+                        >
+                          {createMenuItem.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Plus className="w-4 h-4 mr-2" />
+                          )}
                           Add Item
                         </Button>
                       </CardContent>
                     </Card>
 
+                    {/* Category Manager */}
+                    <CategoryManager restaurantId={restaurantId} />
                     {/* Menu Items Grid */}
                     <div className="lg:col-span-2">
                       <Card className="border-0 shadow-md">
@@ -442,10 +585,10 @@ const AdminDashboard = () => {
                                   index={index}
                                 />
                                 <div className="absolute top-2 right-2 flex gap-1">
-                                  <Switch
+                                <Switch
                                     checked={item.is_available}
                                     onCheckedChange={() =>
-                                      handleToggleAvailability(item.id)
+                                      handleToggleAvailability(item.id, item.is_available ?? true)
                                     }
                                     className="scale-75"
                                   />
@@ -482,32 +625,94 @@ const AdminDashboard = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Add Table */}
+                    <Card className="border-0 shadow-md">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Plus className="w-5 h-5" />
+                          Add Table
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Table Number *</Label>
+                          <Input
+                            value={newTableNumber}
+                            onChange={(e) => setNewTableNumber(e.target.value)}
+                            placeholder="e.g. T1, Table 1, A1"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Capacity</Label>
+                          <Input
+                            type="number"
+                            value={newTableCapacity}
+                            onChange={(e) => setNewTableCapacity(e.target.value)}
+                            placeholder="4"
+                            min="1"
+                            max="20"
+                          />
+                        </div>
+                        <Button 
+                          className="w-full" 
+                          onClick={handleAddTable}
+                          disabled={createTable.isPending}
+                        >
+                          {createTable.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Plus className="w-4 h-4 mr-2" />
+                          )}
+                          Add Table
+                        </Button>
+                      </CardContent>
+                    </Card>
+
                     {/* Tables List */}
                     <Card className="border-0 shadow-md">
                       <CardHeader>
-                        <CardTitle>Restaurant Tables</CardTitle>
+                        <CardTitle>Restaurant Tables ({tables.length})</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto">
                           {tables.map((table) => (
-                            <Button
+                            <div
                               key={table.id}
-                              variant={
-                                selectedTableId === table.id ? "default" : "outline"
-                              }
-                              className="h-auto py-4 flex-col"
+                              className={`relative group p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                selectedTableId === table.id 
+                                  ? "border-primary bg-primary/5" 
+                                  : "border-border hover:border-primary/50"
+                              }`}
                               onClick={() => setSelectedTableId(table.id)}
                             >
-                              <span className="font-bold text-lg">
-                                {table.table_number}
-                              </span>
-                              <span className="text-xs opacity-70">
-                                {table.capacity} seats
-                              </span>
-                            </Button>
+                              <div className="text-center">
+                                <span className="font-bold text-lg block">
+                                  {table.table_number}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {table.capacity} seats
+                                </span>
+                              </div>
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                className="absolute -top-2 -right-2 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteTable(table.id, table.table_number);
+                                }}
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
                           ))}
                         </div>
+                        {tables.length === 0 && (
+                          <p className="text-center text-muted-foreground py-8">
+                            No tables yet. Add one to generate QR codes.
+                          </p>
+                        )}
                       </CardContent>
                     </Card>
 
@@ -516,15 +721,16 @@ const AdminDashboard = () => {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <Grid3X3 className="w-5 h-5" />
-                          QR Code - {selectedTable?.table_number}
+                          QR Code {selectedTable ? `- ${selectedTable.table_number}` : ''}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="flex flex-col items-center">
-                        {selectedTable && (
+                        {selectedTable ? (
                           <>
                             <div className="bg-white p-4 rounded-xl shadow-sm mb-4">
                               <QRCodeSVG
-                                value={`${window.location.origin}/order?r=${DEMO_RESTAURANT_ID}&table=${selectedTable.table_number}`}
+                                id={`qr-${selectedTable.table_number}`}
+                                value={`${window.location.origin}/order?r=${restaurantId}&table=${selectedTable.table_number}`}
                                 size={200}
                                 level="H"
                               />
@@ -532,8 +738,18 @@ const AdminDashboard = () => {
                             <p className="text-sm text-muted-foreground text-center mb-4">
                               Scan to order from {selectedTable.table_number}
                             </p>
-                            <Button variant="outline">Download QR Code</Button>
+                            <Button 
+                              variant="outline"
+                              onClick={() => downloadQRCode(selectedTable.table_number)}
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download QR Code
+                            </Button>
                           </>
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            Select a table to view its QR code
+                          </div>
                         )}
                       </CardContent>
                     </Card>
@@ -598,7 +814,7 @@ const AdminDashboard = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <AdsManager restaurantId={DEMO_RESTAURANT_ID} />
+                  <AdsManager restaurantId={restaurantId} />
                 </motion.div>
               )}
 
@@ -611,7 +827,7 @@ const AdminDashboard = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FeedbackManager restaurantId={DEMO_RESTAURANT_ID} />
+                  <FeedbackManager restaurantId={restaurantId} />
                 </motion.div>
               )}
 
@@ -624,7 +840,7 @@ const AdminDashboard = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <SettingsPanel restaurantId={DEMO_RESTAURANT_ID} />
+                  <SettingsPanel restaurantId={restaurantId} />
                 </motion.div>
               )}
             </AnimatePresence>

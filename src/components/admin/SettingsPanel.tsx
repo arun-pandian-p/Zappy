@@ -105,7 +105,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
     try {
       await updateRestaurant.mutateAsync({
         id: restaurantId,
-        data: {
+        updates: {
           name: settings.name,
           address: settings.address,
           phone: settings.phone,
