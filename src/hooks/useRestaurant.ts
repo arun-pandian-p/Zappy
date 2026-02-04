@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Restaurant = Tables<"restaurants">;
 
@@ -57,5 +57,27 @@ export function useRestaurants() {
       return data as Restaurant[];
     },
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpdateRestaurant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: TablesUpdate<"restaurants"> }) => {
+      const { data: result, error } = await supabase
+        .from("restaurants")
+        .update(data)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["restaurant", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["restaurants"] });
+    },
   });
 }

@@ -22,10 +22,15 @@ import { useCreateInvoice, useTodayInvoices, useInvoiceStats, generateInvoiceNum
 // Demo restaurant ID - in production, this would come from auth context
 const DEMO_RESTAURANT_ID = import.meta.env.VITE_DEMO_RESTAURANT_ID || '';
 
-const BillingCounter = () => {
+interface BillingCounterProps {
+  embedded?: boolean;
+  restaurantId?: string;
+}
+
+const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: BillingCounterProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const restaurantId = searchParams.get('r') || DEMO_RESTAURANT_ID;
+  const restaurantId = propRestaurantId || searchParams.get('r') || DEMO_RESTAURANT_ID;
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
 
