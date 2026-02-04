@@ -202,6 +202,81 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          created_at: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          discount_amount: number | null
+          id: string
+          invoice_number: string
+          items: Json
+          notes: string | null
+          order_id: string
+          payment_method: string
+          payment_status: string
+          printed: boolean | null
+          restaurant_id: string
+          service_charge: number
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount_amount?: number | null
+          id?: string
+          invoice_number: string
+          items: Json
+          notes?: string | null
+          order_id: string
+          payment_method: string
+          payment_status?: string
+          printed?: boolean | null
+          restaurant_id: string
+          service_charge?: number
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+        }
+        Update: {
+          created_at?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount_amount?: number | null
+          id?: string
+          invoice_number?: string
+          items?: Json
+          notes?: string | null
+          order_id?: string
+          payment_method?: string
+          payment_status?: string
+          printed?: boolean | null
+          restaurant_id?: string
+          service_charge?: number
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           category_id: string | null
@@ -403,9 +478,64 @@ export type Database = {
           },
         ]
       }
+      printer_queue: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          order_id: string | null
+          receipt_data: Json
+          receipt_type: string
+          restaurant_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          order_id?: string | null
+          receipt_data: Json
+          receipt_type?: string
+          restaurant_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          order_id?: string | null
+          receipt_data?: Json
+          receipt_type?: string
+          restaurant_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_queue_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printer_queue_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           address: string | null
+          ads_enabled: boolean | null
           cover_image_url: string | null
           created_at: string | null
           currency: string | null
@@ -418,6 +548,8 @@ export type Database = {
           name: string
           phone: string | null
           primary_color: string | null
+          printer_settings: Json | null
+          review_settings: Json | null
           secondary_color: string | null
           service_charge_rate: number | null
           settings: Json | null
@@ -431,6 +563,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          ads_enabled?: boolean | null
           cover_image_url?: string | null
           created_at?: string | null
           currency?: string | null
@@ -443,6 +576,8 @@ export type Database = {
           name: string
           phone?: string | null
           primary_color?: string | null
+          printer_settings?: Json | null
+          review_settings?: Json | null
           secondary_color?: string | null
           service_charge_rate?: number | null
           settings?: Json | null
@@ -456,6 +591,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          ads_enabled?: boolean | null
           cover_image_url?: string | null
           created_at?: string | null
           currency?: string | null
@@ -468,6 +604,8 @@ export type Database = {
           name?: string
           phone?: string | null
           primary_color?: string | null
+          printer_settings?: Json | null
+          review_settings?: Json | null
           secondary_color?: string | null
           service_charge_rate?: number | null
           settings?: Json | null
