@@ -42,9 +42,12 @@ const Login = () => {
       } else if (email.includes('billing')) {
         toast({ title: 'Welcome Billing Staff!', description: 'Logged in successfully' });
         navigate('/billing');
+      } else if (email.includes('waiter')) {
+        toast({ title: 'Welcome Waiter!', description: 'Logged in successfully' });
+        navigate('/waiter');
       } else {
         toast({ title: 'Welcome!', description: 'Logged in successfully' });
-        navigate('/');
+        navigate('/roles');
       }
       setLoading(false);
     }, 1000);

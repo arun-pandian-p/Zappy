@@ -259,6 +259,21 @@
     animation: fade-in 0.2s ease-out;
   }
 
+  /* Gradient shift animation for hero sections */
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .animate-gradient-shift {
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+  }
+
   /* Mobile bottom nav safe area */
   .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
