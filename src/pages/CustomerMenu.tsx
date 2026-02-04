@@ -15,6 +15,7 @@ import { useRestaurant } from '@/hooks/useRestaurant';
 import { useOrders, useCreateOrder, type OrderWithItems } from '@/hooks/useOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
 import { useRandomActiveAd, useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
+import { useTableByNumber } from '@/hooks/useTables';
 
 type ViewType = 'menu' | 'cart' | 'orders';
 
@@ -40,7 +41,11 @@ const CustomerMenu = () => {
   // Fetch categories
   const { data: categories = [] } = useCategories(restaurantId);
 
-  // Fetch customer orders for this table
+  // Resolve table number (e.g. "T1") to actual table UUID
+  const { data: tableData, isLoading: tableLoading } = useTableByNumber(restaurantId, tableId);
+  const resolvedTableId = tableData?.id;
+
+  // Fetch customer orders for this table (filter by resolved UUID)
   const { data: allOrders = [] } = useOrders(restaurantId);
 
   // Fetch active ad
@@ -87,10 +92,10 @@ const CustomerMenu = () => {
     }
   }, [activeAd, adShown, restaurant, trackImpression]);
 
-  // Filter orders for this table
+  // Filter orders for this table (use resolved UUID)
   const customerOrders = useMemo(() => 
-    allOrders.filter(o => o.table_id === tableId).slice(0, 10),
-    [allOrders, tableId]
+    allOrders.filter(o => o.table_id === resolvedTableId).slice(0, 10),
+    [allOrders, resolvedTableId]
   );
 
   // Get available menu items only
@@ -152,6 +157,15 @@ const CustomerMenu = () => {
       return;
     }
 
+    if (!resolvedTableId) {
+      toast({
+        title: 'Invalid table',
+        description: 'Could not find this table. Please scan a valid QR code.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const subtotal = getTotalPrice();
     const taxAmount = subtotal * (taxRate / 100);
     const serviceCharge = subtotal * (serviceChargeRate / 100);
@@ -161,7 +175,7 @@ const CustomerMenu = () => {
       await createOrder.mutateAsync({
         order: {
           restaurant_id: restaurantId,
-          table_id: tableId,
+          table_id: resolvedTableId, // Use resolved UUID instead of table number string
           subtotal,
           tax_amount: taxAmount,
           service_charge: serviceCharge,
@@ -193,7 +207,7 @@ const CustomerMenu = () => {
   };
 
   const handleCallWaiter = async () => {
-    if (!tableId || !restaurantId) {
+    if (!resolvedTableId || !restaurantId) {
       toast({
         title: 'Missing information',
         description: 'Please scan the QR code at your table.',
@@ -205,7 +219,7 @@ const CustomerMenu = () => {
     try {
       await createWaiterCall.mutateAsync({
         restaurant_id: restaurantId,
-        table_id: tableId,
+        table_id: resolvedTableId, // Use resolved UUID instead of table number string
         reason: 'Customer assistance requested',
       });
 
@@ -252,7 +266,7 @@ const CustomerMenu = () => {
   };
 
   // Loading state
-  if (restaurantLoading || menuLoading) {
+  if (restaurantLoading || menuLoading || tableLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -260,7 +274,7 @@ const CustomerMenu = () => {
     );
   }
 
-  // Error state
+  // Error state - no restaurant
   if (!restaurantId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">

@@ -1,37 +1,44 @@
-# ✅ COMPLETED: Fix Admin Dashboard and Create Seed Data
+# ✅ COMPLETED: Fix Database Issues & Enable Full Application Flow
 
 ## Implementation Summary
 
-All phases completed successfully:
+All critical database issues have been resolved:
 
-### Phase 1: Demo Restaurant Seed Data ✅
-- Created demo restaurant: `QR Dine Pro Demo` (ID: `00000000-0000-0000-0000-000000000001`)
-- Added 7 categories (Starters, Burgers, Pizza, Main Course, Sides, Desserts, Beverages)
-- Added 12 menu items with real Unsplash images
-- Added 8 tables (T1-T8)
-- Added 3 sample orders in different statuses
-- Added 1 active promotional ad
+### Phase 1: Fixed RLS Policies ✅
+Updated Row-Level Security to allow demo restaurant operations:
+- `orders` - Staff can update with demo fallback
+- `order_items` - Staff can update with demo fallback  
+- `invoices` - Full CRUD with demo fallback
+- `waiter_calls` - Staff can update with demo fallback
 
-### Phase 2: AdminDashboard Updated ✅
-- Now uses `useRestaurants()` hook to auto-detect first restaurant
-- Uses live data from `useMenuItems`, `useCategories`, `useTables`, `useOrders`
-- All child components receive the real `restaurantId`
-- Added loading state while fetching restaurant
+### Phase 2: Added Table Resolution Hook ✅
+- Added `useTableByNumber(restaurantId, tableNumber)` to `src/hooks/useTables.ts`
+- Resolves table number ("T1") to UUID for database operations
 
-### Phase 3: Kitchen & Billing Dashboards Updated ✅
-- Both dashboards now auto-detect restaurant using `useRestaurants()` hook
-- Removed dependency on environment variable
-- Show live data immediately when restaurant is detected
+### Phase 3: Fixed CustomerMenu ✅
+- Now imports `useTableByNumber` hook
+- Resolves table number to UUID before order creation
+- Uses resolved UUID for waiter calls
+- Filters customer orders by resolved UUID
 
-## Testing
+## Testing Flow
 
-Visit `/admin` to see the populated dashboard with:
-- Live stats (revenue, orders, active tables)
-- Menu items from database
-- Tables list for QR code generation
-- Kitchen and Billing tabs with live data
+```
+1. Visit /order?r=00000000-0000-0000-0000-000000000001&table=T1
+2. Add items to cart → Place Order ✓
+3. Visit /kitchen → See pending order → Start Preparation ✓
+4. Mark Ready → Order moves to Ready column ✓
+5. Visit /billing → Select order → Complete Payment ✓
+```
+
+## Security Notes
+
+The demo restaurant fallback (`00000000-0000-0000-0000-000000000001`) is for testing. In production:
+1. Remove demo fallback from RLS policies
+2. Enforce staff login for Kitchen/Billing dashboards
+3. Add route guards to redirect unauthenticated users
 
 ## Files Modified
-- `src/pages/AdminDashboard.tsx` - Uses live restaurant data
-- `src/pages/KitchenDashboard.tsx` - Auto-detects restaurant
-- `src/pages/BillingCounter.tsx` - Auto-detects restaurant
+- `src/hooks/useTables.ts` - Added `useTableByNumber` hook
+- `src/pages/CustomerMenu.tsx` - Uses resolved table UUID
+- Database migrations - Updated RLS policies
