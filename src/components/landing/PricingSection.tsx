@@ -1,0 +1,154 @@
+import { motion } from 'framer-motion';
+import { Check, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
+const plans = [
+  {
+    name: 'Free',
+    price: 0,
+    description: 'Perfect for trying out QR Dine Pro',
+    features: [
+      '1 Table',
+      'Basic menu management',
+      'QR code generation',
+      '50 orders/month',
+      'Email support',
+    ],
+    cta: 'Start Free',
+    popular: false,
+  },
+  {
+    name: 'Pro',
+    price: 999,
+    description: 'Best for growing restaurants',
+    features: [
+      'Up to 20 Tables',
+      'Advanced menu with images',
+      'Kitchen & Waiter dashboards',
+      'Analytics & Reports',
+      '1,000 orders/month',
+      'Priority support',
+      'Receipt printing',
+    ],
+    cta: 'Get Pro',
+    popular: true,
+  },
+  {
+    name: 'Enterprise',
+    price: 2999,
+    description: 'For restaurant chains & franchises',
+    features: [
+      'Unlimited Tables',
+      'Multi-location support',
+      'White-label branding',
+      'API access',
+      'Unlimited orders',
+      'Dedicated support',
+      'Custom integrations',
+      'Advanced analytics',
+    ],
+    cta: 'Contact Sales',
+    popular: false,
+  },
+];
+
+interface PricingSectionProps {
+  onSelectPlan: (plan: string) => void;
+}
+
+const PricingSection = ({ onSelectPlan }: PricingSectionProps) => {
+  return (
+    <section className="py-24 bg-muted/30">
+      <div className="container mx-auto px-4">
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Simple,{' '}
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Transparent
+            </span>{' '}
+            Pricing
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Choose the plan that fits your restaurant. No hidden fees, cancel anytime.
+          </p>
+        </motion.div>
+
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {plans.map((plan, index) => (
+            <motion.div
+              key={plan.name}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className={plan.popular ? 'relative' : ''}
+            >
+              {plan.popular && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                  <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground px-4 py-1">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Most Popular
+                  </Badge>
+                </div>
+              )}
+              <Card
+                className={`h-full ${
+                  plan.popular
+                    ? 'border-primary shadow-lg shadow-primary/20 scale-105'
+                    : 'border-border'
+                }`}
+              >
+                <CardHeader className="text-center pb-2">
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <CardDescription>{plan.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {/* Price */}
+                  <div className="text-center py-6 border-b mb-6">
+                    <span className="text-4xl font-bold">₹{plan.price}</span>
+                    <span className="text-muted-foreground">/month</span>
+                  </div>
+
+                  {/* Features */}
+                  <ul className="space-y-3 mb-8">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2">
+                        <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA */}
+                  <Button
+                    className={`w-full ${
+                      plan.popular
+                        ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90'
+                        : ''
+                    }`}
+                    variant={plan.popular ? 'default' : 'outline'}
+                    onClick={() => onSelectPlan(plan.name)}
+                  >
+                    {plan.cta}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default PricingSection;

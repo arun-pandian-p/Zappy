@@ -1,23 +1,80 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell } from 'lucide-react';
+import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { mockOrders, mockWaiterCalls, Order } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useSound, SOUNDS } from '@/hooks/useSound';
 
 const KitchenDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [waiterCallsCount] = useState(mockWaiterCalls.filter(c => c.status === 'pending').length);
-  const [isMuted, setIsMuted] = useState(false);
+  const [lastOrderCount, setLastOrderCount] = useState(mockOrders.filter(o => o.status === 'pending').length);
+
+  const { play: playNewOrderSound, isMuted, toggleMute } = useSound(SOUNDS.NEW_ORDER);
+  const { play: playWaiterCallSound } = useSound(SOUNDS.WAITER_CALL);
 
   const pendingOrders = orders.filter((o) => o.status === 'pending');
   const preparingOrders = orders.filter((o) => o.status === 'preparing');
   const readyOrders = orders.filter((o) => o.status === 'ready');
+
+  // Simulate new order arriving (for demo purposes)
+  const simulateNewOrder = useCallback(() => {
+    const orderNum = `ORD${String(orders.length + 100).padStart(3, '0')}`;
+    const newOrder: Order = {
+      id: `order-${Date.now()}`,
+      order_number: orderNum,
+      table_number: `T${Math.floor(Math.random() * 10) + 1}`,
+      status: 'pending',
+      items: [
+        {
+          id: `item-${Date.now()}`,
+          order_id: `order-${Date.now()}`,
+          menu_item_id: '1',
+          name: 'New Demo Item',
+          quantity: Math.floor(Math.random() * 3) + 1,
+          price: Math.floor(Math.random() * 200) + 100,
+        },
+      ],
+      subtotal: 299,
+      tax_amount: 14.95,
+      service_charge: 29.90,
+      total_amount: 343.85,
+      created_at: new Date().toISOString(),
+    };
+
+    setOrders(prev => [newOrder, ...prev]);
+    
+    if (!isMuted) {
+      playNewOrderSound();
+    }
+
+    toast({
+      title: '🔔 New Order!',
+      description: `Order #${newOrder.order_number} from ${newOrder.table_number}`,
+    });
+  }, [orders.length, isMuted, playNewOrderSound, toast]);
+
+  // Check for new orders (simulated real-time)
+  useEffect(() => {
+    const currentPendingCount = pendingOrders.length;
+    if (currentPendingCount > lastOrderCount && !isMuted) {
+      playNewOrderSound();
+    }
+    setLastOrderCount(currentPendingCount);
+  }, [pendingOrders.length, lastOrderCount, isMuted, playNewOrderSound]);
+
+  // Play waiter call sound if there are pending calls
+  useEffect(() => {
+    if (waiterCallsCount > 0 && !isMuted) {
+      playWaiterCallSound();
+    }
+  }, [waiterCallsCount, isMuted, playWaiterCallSound]);
 
   const handleStartPrep = (orderId: string) => {
     setOrders(prev => prev.map(order =>
@@ -61,11 +118,20 @@ const KitchenDashboard = () => {
   const OrderCard = ({ order, showActions }: { order: Order; showActions?: 'start' | 'ready' }) => (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
     >
-      <Card className={`border-2 ${getStatusColor(order.status)}`}>
+      <Card className={`border-2 ${getStatusColor(order.status)} overflow-hidden`}>
+        {order.status === 'pending' && (
+          <motion.div
+            className="h-1 bg-warning"
+            initial={{ width: '100%' }}
+            animate={{ width: '0%' }}
+            transition={{ duration: 600, ease: 'linear' }}
+          />
+        )}
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -147,8 +213,18 @@ const KitchenDashboard = () => {
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
+                size="sm"
+                onClick={simulateNewOrder}
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span className="hidden sm:inline">Simulate Order</span>
+              </Button>
+              <Button
+                variant={isMuted ? 'outline' : 'default'}
                 size="icon"
-                onClick={() => setIsMuted(!isMuted)}
+                onClick={toggleMute}
+                className={isMuted ? '' : 'bg-primary'}
               >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
@@ -158,16 +234,28 @@ const KitchenDashboard = () => {
       </header>
 
       {/* Waiter Calls Alert */}
-      {waiterCallsCount > 0 && (
-        <div className="bg-warning/10 border-b border-warning/20 px-4 py-2">
-          <div className="container mx-auto flex items-center gap-2 text-warning">
-            <Bell className="w-4 h-4" />
-            <span className="text-sm font-medium">
-              {waiterCallsCount} waiter call{waiterCallsCount > 1 ? 's' : ''} pending
-            </span>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {waiterCallsCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-warning/10 border-b border-warning/20 px-4 py-2"
+          >
+            <div className="container mx-auto flex items-center gap-2 text-warning">
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                <Bell className="w-4 h-4" />
+              </motion.div>
+              <span className="text-sm font-medium">
+                {waiterCallsCount} waiter call{waiterCallsCount > 1 ? 's' : ''} pending
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
@@ -175,11 +263,15 @@ const KitchenDashboard = () => {
           {/* Pending Orders */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-3 h-3 rounded-full bg-warning animate-pulse" />
+              <motion.div
+                className="w-3 h-3 rounded-full bg-warning"
+                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
               <h2 className="font-semibold">Pending ({pendingOrders.length})</h2>
             </div>
             <div className="space-y-4">
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {pendingOrders.map((order) => (
                   <OrderCard key={order.id} order={order} showActions="start" />
                 ))}
@@ -197,11 +289,15 @@ const KitchenDashboard = () => {
           {/* Preparing Orders */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-3 h-3 rounded-full bg-info animate-pulse" />
+              <motion.div
+                className="w-3 h-3 rounded-full bg-info"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              />
               <h2 className="font-semibold">Preparing ({preparingOrders.length})</h2>
             </div>
             <div className="space-y-4">
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {preparingOrders.map((order) => (
                   <OrderCard key={order.id} order={order} showActions="ready" />
                 ))}
@@ -223,7 +319,7 @@ const KitchenDashboard = () => {
               <h2 className="font-semibold">Ready ({readyOrders.length})</h2>
             </div>
             <div className="space-y-4">
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {readyOrders.map((order) => (
                   <OrderCard key={order.id} order={order} />
                 ))}
