@@ -1,104 +1,112 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell, RefreshCw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { mockOrders, mockWaiterCalls, Order } from '@/data/mockData';
+import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell, RefreshCw, AlertCircle } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useSound, SOUNDS } from '@/hooks/useSound';
+import { useOrders, useKitchenOrderActions, type OrderWithItems } from '@/hooks/useOrders';
+import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
+
+// Demo restaurant ID - in production, this would come from auth context
+const DEMO_RESTAURANT_ID = import.meta.env.VITE_DEMO_RESTAURANT_ID || '';
 
 const KitchenDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const restaurantId = searchParams.get('r') || DEMO_RESTAURANT_ID;
   const { toast } = useToast();
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
-  const [waiterCallsCount] = useState(mockWaiterCalls.filter(c => c.status === 'pending').length);
-  const [lastOrderCount, setLastOrderCount] = useState(mockOrders.filter(o => o.status === 'pending').length);
 
+  // Fetch orders with real-time subscription
+  const { data: orders = [], isLoading, error, refetch } = useOrders(
+    restaurantId,
+    ['pending', 'confirmed', 'preparing', 'ready']
+  );
+
+  // Fetch pending waiter calls
+  const { data: waiterCalls = [] } = usePendingWaiterCalls(restaurantId);
+
+  // Kitchen actions
+  const { startPreparing, markReady, isLoading: isUpdating } = useKitchenOrderActions(restaurantId);
+
+  const [lastOrderCount, setLastOrderCount] = useState(0);
   const { play: playNewOrderSound, isMuted, toggleMute } = useSound(SOUNDS.NEW_ORDER);
   const { play: playWaiterCallSound } = useSound(SOUNDS.WAITER_CALL);
 
-  const pendingOrders = orders.filter((o) => o.status === 'pending');
-  const preparingOrders = orders.filter((o) => o.status === 'preparing');
-  const readyOrders = orders.filter((o) => o.status === 'ready');
+  // Filter orders by status
+  const pendingOrders = useMemo(() => 
+    orders.filter((o) => o.status === 'pending' || o.status === 'confirmed'), 
+    [orders]
+  );
+  const preparingOrders = useMemo(() => 
+    orders.filter((o) => o.status === 'preparing'), 
+    [orders]
+  );
+  const readyOrders = useMemo(() => 
+    orders.filter((o) => o.status === 'ready'), 
+    [orders]
+  );
 
-  // Simulate new order arriving (for demo purposes)
-  const simulateNewOrder = useCallback(() => {
-    const orderNum = `ORD${String(orders.length + 100).padStart(3, '0')}`;
-    const newOrder: Order = {
-      id: `order-${Date.now()}`,
-      order_number: orderNum,
-      table_number: `T${Math.floor(Math.random() * 10) + 1}`,
-      status: 'pending',
-      items: [
-        {
-          id: `item-${Date.now()}`,
-          order_id: `order-${Date.now()}`,
-          menu_item_id: '1',
-          name: 'New Demo Item',
-          quantity: Math.floor(Math.random() * 3) + 1,
-          price: Math.floor(Math.random() * 200) + 100,
-        },
-      ],
-      subtotal: 299,
-      tax_amount: 14.95,
-      service_charge: 29.90,
-      total_amount: 343.85,
-      created_at: new Date().toISOString(),
-    };
+  const waiterCallsCount = waiterCalls.length;
 
-    setOrders(prev => [newOrder, ...prev]);
-    
-    if (!isMuted) {
-      playNewOrderSound();
-    }
-
-    toast({
-      title: '🔔 New Order!',
-      description: `Order #${newOrder.order_number} from ${newOrder.table_number}`,
-    });
-  }, [orders.length, isMuted, playNewOrderSound, toast]);
-
-  // Check for new orders (simulated real-time)
+  // Play sound on new orders
   useEffect(() => {
     const currentPendingCount = pendingOrders.length;
-    if (currentPendingCount > lastOrderCount && !isMuted) {
+    if (currentPendingCount > lastOrderCount && !isMuted && lastOrderCount > 0) {
       playNewOrderSound();
+      toast({
+        title: '🔔 New Order!',
+        description: `${currentPendingCount - lastOrderCount} new order(s) received`,
+      });
     }
     setLastOrderCount(currentPendingCount);
-  }, [pendingOrders.length, lastOrderCount, isMuted, playNewOrderSound]);
+  }, [pendingOrders.length, lastOrderCount, isMuted, playNewOrderSound, toast]);
 
-  // Play waiter call sound if there are pending calls
+  // Play waiter call sound
   useEffect(() => {
     if (waiterCallsCount > 0 && !isMuted) {
       playWaiterCallSound();
     }
   }, [waiterCallsCount, isMuted, playWaiterCallSound]);
 
-  const handleStartPrep = (orderId: string) => {
-    setOrders(prev => prev.map(order =>
-      order.id === orderId ? { ...order, status: 'preparing' as const } : order
-    ));
-    toast({
-      title: 'Order Started',
-      description: 'Order is now being prepared.',
-    });
-  };
+  const handleStartPrep = useCallback(async (orderId: string) => {
+    try {
+      await startPreparing(orderId);
+      toast({
+        title: 'Order Started',
+        description: 'Order is now being prepared.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update order status.',
+        variant: 'destructive',
+      });
+    }
+  }, [startPreparing, toast]);
 
-  const handleMarkReady = (orderId: string) => {
-    setOrders(prev => prev.map(order =>
-      order.id === orderId ? { ...order, status: 'ready' as const } : order
-    ));
-    toast({
-      title: 'Order Ready',
-      description: 'Order is ready for serving.',
-    });
-  };
+  const handleMarkReady = useCallback(async (orderId: string) => {
+    try {
+      await markReady(orderId);
+      toast({
+        title: 'Order Ready',
+        description: 'Order is ready for serving.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update order status.',
+        variant: 'destructive',
+      });
+    }
+  }, [markReady, toast]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
+      case 'confirmed':
         return 'bg-warning/10 text-warning border-warning/20';
       case 'preparing':
         return 'bg-info/10 text-info border-info/20';
@@ -115,7 +123,7 @@ const KitchenDashboard = () => {
     return mins < 1 ? 'Just now' : `${mins}m ago`;
   };
 
-  const OrderCard = ({ order, showActions }: { order: Order; showActions?: 'start' | 'ready' }) => (
+  const OrderCard = ({ order, showActions }: { order: OrderWithItems; showActions?: 'start' | 'ready' }) => (
     <motion.div
       layout
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -123,8 +131,8 @@ const KitchenDashboard = () => {
       exit={{ opacity: 0, y: -20, scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
     >
-      <Card className={`border-2 ${getStatusColor(order.status)} overflow-hidden`}>
-        {order.status === 'pending' && (
+      <Card className={`border-2 ${getStatusColor(order.status || 'pending')} overflow-hidden`}>
+        {(order.status === 'pending' || order.status === 'confirmed') && (
           <motion.div
             className="h-1 bg-warning"
             initial={{ width: '100%' }}
@@ -136,7 +144,7 @@ const KitchenDashboard = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-base font-bold">
-                {order.table_number}
+                {order.table?.table_number || 'N/A'}
               </Badge>
               <span className="text-xs text-muted-foreground">
                 #{order.order_number}
@@ -144,19 +152,19 @@ const KitchenDashboard = () => {
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="w-3 h-3" />
-              {getTimeAgo(order.created_at)}
+              {getTimeAgo(order.created_at || new Date().toISOString())}
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-2">
-            {order.items?.map((item) => (
+            {order.order_items?.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <span>
                   <span className="font-medium">{item.quantity}x</span> {item.name}
-                  {item.special_notes && (
+                  {item.special_instructions && (
                     <span className="block text-xs text-muted-foreground">
-                      Note: {item.special_notes}
+                      Note: {item.special_instructions}
                     </span>
                   )}
                 </span>
@@ -168,6 +176,7 @@ const KitchenDashboard = () => {
             <Button
               className="w-full"
               onClick={() => handleStartPrep(order.id)}
+              disabled={isUpdating}
             >
               <Play className="w-4 h-4 mr-2" />
               Start Preparation
@@ -178,6 +187,7 @@ const KitchenDashboard = () => {
             <Button
               className="w-full bg-success hover:bg-success/90"
               onClick={() => handleMarkReady(order.id)}
+              disabled={isUpdating}
             >
               <Check className="w-4 h-4 mr-2" />
               Mark Ready
@@ -188,6 +198,29 @@ const KitchenDashboard = () => {
     </motion.div>
   );
 
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
+            <h2 className="text-lg font-semibold mb-2">Failed to load orders</h2>
+            <p className="text-muted-foreground mb-4">
+              {!restaurantId 
+                ? 'No restaurant ID provided. Please access this page with ?r=your-restaurant-id'
+                : 'Unable to connect to the database. Please try again.'}
+            </p>
+            <Button onClick={() => refetch()}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -195,7 +228,7 @@ const KitchenDashboard = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+              <Button variant="ghost" size="icon" onClick={() => navigate('/roles')}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex items-center gap-2">
@@ -205,7 +238,7 @@ const KitchenDashboard = () => {
                 <div>
                   <h1 className="font-bold">Kitchen Display</h1>
                   <p className="text-xs text-muted-foreground">
-                    {pendingOrders.length} pending • {preparingOrders.length} preparing
+                    {isLoading ? 'Loading...' : `${pendingOrders.length} pending • ${preparingOrders.length} preparing`}
                   </p>
                 </div>
               </div>
@@ -214,17 +247,17 @@ const KitchenDashboard = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={simulateNewOrder}
+                onClick={() => refetch()}
                 className="gap-2"
+                disabled={isLoading}
               >
-                <RefreshCw className="w-4 h-4" />
-                <span className="hidden sm:inline">Simulate Order</span>
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
               </Button>
               <Button
                 variant={isMuted ? 'outline' : 'default'}
                 size="icon"
                 onClick={toggleMute}
-                className={isMuted ? '' : 'bg-primary'}
               >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
@@ -259,81 +292,96 @@ const KitchenDashboard = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Pending Orders */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <motion.div
-                className="w-3 h-3 rounded-full bg-warning"
-                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
-              <h2 className="font-semibold">Pending ({pendingOrders.length})</h2>
-            </div>
-            <div className="space-y-4">
-              <AnimatePresence mode="popLayout">
-                {pendingOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} showActions="start" />
-                ))}
-              </AnimatePresence>
-              {pendingOrders.length === 0 && (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-4">
+                <div className="h-6 bg-muted rounded animate-pulse w-32" />
                 <Card className="border-dashed">
-                  <CardContent className="py-8 text-center text-muted-foreground">
-                    No pending orders
+                  <CardContent className="py-8">
+                    <div className="h-20 bg-muted rounded animate-pulse" />
                   </CardContent>
                 </Card>
-              )}
-            </div>
+              </div>
+            ))}
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Pending Orders */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <motion.div
+                  className="w-3 h-3 rounded-full bg-warning"
+                  animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+                <h2 className="font-semibold">Pending ({pendingOrders.length})</h2>
+              </div>
+              <div className="space-y-4">
+                <AnimatePresence mode="popLayout">
+                  {pendingOrders.map((order) => (
+                    <OrderCard key={order.id} order={order} showActions="start" />
+                  ))}
+                </AnimatePresence>
+                {pendingOrders.length === 0 && (
+                  <Card className="border-dashed">
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      No pending orders
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
 
-          {/* Preparing Orders */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <motion.div
-                className="w-3 h-3 rounded-full bg-info"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              />
-              <h2 className="font-semibold">Preparing ({preparingOrders.length})</h2>
+            {/* Preparing Orders */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <motion.div
+                  className="w-3 h-3 rounded-full bg-info"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                />
+                <h2 className="font-semibold">Preparing ({preparingOrders.length})</h2>
+              </div>
+              <div className="space-y-4">
+                <AnimatePresence mode="popLayout">
+                  {preparingOrders.map((order) => (
+                    <OrderCard key={order.id} order={order} showActions="ready" />
+                  ))}
+                </AnimatePresence>
+                {preparingOrders.length === 0 && (
+                  <Card className="border-dashed">
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      No orders in preparation
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
-            <div className="space-y-4">
-              <AnimatePresence mode="popLayout">
-                {preparingOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} showActions="ready" />
-                ))}
-              </AnimatePresence>
-              {preparingOrders.length === 0 && (
-                <Card className="border-dashed">
-                  <CardContent className="py-8 text-center text-muted-foreground">
-                    No orders in preparation
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
 
-          {/* Ready Orders */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-3 h-3 rounded-full bg-success" />
-              <h2 className="font-semibold">Ready ({readyOrders.length})</h2>
-            </div>
-            <div className="space-y-4">
-              <AnimatePresence mode="popLayout">
-                {readyOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} />
-                ))}
-              </AnimatePresence>
-              {readyOrders.length === 0 && (
-                <Card className="border-dashed">
-                  <CardContent className="py-8 text-center text-muted-foreground">
-                    No orders ready
-                  </CardContent>
-                </Card>
-              )}
+            {/* Ready Orders */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-3 h-3 rounded-full bg-success" />
+                <h2 className="font-semibold">Ready ({readyOrders.length})</h2>
+              </div>
+              <div className="space-y-4">
+                <AnimatePresence mode="popLayout">
+                  {readyOrders.map((order) => (
+                    <OrderCard key={order.id} order={order} />
+                  ))}
+                </AnimatePresence>
+                {readyOrders.length === 0 && (
+                  <Card className="border-dashed">
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      No orders ready
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
