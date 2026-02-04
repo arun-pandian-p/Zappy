@@ -16,11 +16,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useOrders, useUpdateOrderPayment, type OrderWithItems } from '@/hooks/useOrders';
-import { useRestaurant } from '@/hooks/useRestaurant';
+import { useRestaurant, useRestaurants } from '@/hooks/useRestaurant';
 import { useCreateInvoice, useTodayInvoices, useInvoiceStats, generateInvoiceNumber, type Invoice } from '@/hooks/useInvoices';
 
-// Demo restaurant ID - in production, this would come from auth context
-const DEMO_RESTAURANT_ID = import.meta.env.VITE_DEMO_RESTAURANT_ID || '';
+// Demo restaurant ID - fallback if no restaurant in DB
+const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
 
 interface BillingCounterProps {
   embedded?: boolean;
@@ -30,7 +30,12 @@ interface BillingCounterProps {
 const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: BillingCounterProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const restaurantId = propRestaurantId || searchParams.get('r') || DEMO_RESTAURANT_ID;
+  
+  // Auto-detect restaurant if none provided
+  const { data: restaurants = [] } = useRestaurants();
+  const urlRestaurantId = searchParams.get('r');
+  const autoRestaurantId = restaurants[0]?.id;
+  const restaurantId = propRestaurantId || urlRestaurantId || autoRestaurantId || DEMO_RESTAURANT_ID;
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
 

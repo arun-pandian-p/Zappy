@@ -9,9 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useSound, SOUNDS } from '@/hooks/useSound';
 import { useOrders, useKitchenOrderActions, type OrderWithItems } from '@/hooks/useOrders';
 import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
+import { useRestaurants } from '@/hooks/useRestaurant';
 
-// Demo restaurant ID - in production, this would come from auth context
-const DEMO_RESTAURANT_ID = import.meta.env.VITE_DEMO_RESTAURANT_ID || '';
+// Demo restaurant ID - fallback if no restaurant in DB
+const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
 
 interface KitchenDashboardProps {
   embedded?: boolean;
@@ -21,7 +22,12 @@ interface KitchenDashboardProps {
 const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: KitchenDashboardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const restaurantId = propRestaurantId || searchParams.get('r') || DEMO_RESTAURANT_ID;
+  
+  // Auto-detect restaurant if none provided
+  const { data: restaurants = [], isLoading: restaurantsLoading } = useRestaurants();
+  const urlRestaurantId = searchParams.get('r');
+  const autoRestaurantId = restaurants[0]?.id;
+  const restaurantId = propRestaurantId || urlRestaurantId || autoRestaurantId || DEMO_RESTAURANT_ID;
   const { toast } = useToast();
 
   // Fetch orders with real-time subscription

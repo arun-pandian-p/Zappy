@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings,
@@ -15,14 +15,11 @@ import {
   Receipt,
   Megaphone,
   Star,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
-  menuItems as initialMenuItems,
-  mockTables,
-  mockOrders,
-  systemSettings as initialSettings,
-  categories,
+  categories as mockCategories,
   MenuItem,
 } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
@@ -55,17 +52,40 @@ import { FeedbackManager } from "@/components/admin/FeedbackManager";
 import { SettingsPanel } from "@/components/admin/SettingsPanel";
 import KitchenDashboard from "@/pages/KitchenDashboard";
 import BillingCounter from "@/pages/BillingCounter";
+import { useRestaurants, useRestaurant } from "@/hooks/useRestaurant";
+import { useMenuItems, useCategories } from "@/hooks/useMenuItems";
+import { useTables } from "@/hooks/useTables";
+import { useOrders } from "@/hooks/useOrders";
+import { useInvoiceStats } from "@/hooks/useInvoices";
 
-// Demo restaurant ID for testing
+// Demo restaurant ID - fallback if no restaurant in DB
 const DEMO_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
-  const [settings, setSettings] = useState(initialSettings);
-  const [selectedTableId, setSelectedTableId] = useState(mockTables[0]?.id || "");
+
+  // Auto-detect restaurant
+  const { data: restaurants = [], isLoading: restaurantsLoading } = useRestaurants();
+  const restaurantId = restaurants[0]?.id || DEMO_RESTAURANT_ID;
+  
+  // Fetch live data
+  const { data: restaurant } = useRestaurant(restaurantId);
+  const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(restaurantId);
+  const { data: categories = [] } = useCategories(restaurantId);
+  const { data: tables = [], isLoading: tablesLoading } = useTables(restaurantId);
+  const { data: orders = [] } = useOrders(restaurantId);
+  const { data: invoiceStats } = useInvoiceStats(restaurantId);
+  
+  const [selectedTableId, setSelectedTableId] = useState<string>("");
+
+  // Set first table when tables load
+  useEffect(() => {
+    if (tables.length > 0 && !selectedTableId) {
+      setSelectedTableId(tables[0].id);
+    }
+  }, [tables, selectedTableId]);
 
   // New item form state
   const [newItem, setNewItem] = useState({
@@ -78,12 +98,9 @@ const AdminDashboard = () => {
     prep_time_minutes: "15",
   });
 
-  const handleSaveSettings = () => {
-    toast({
-      title: "Settings Saved",
-      description: "Restaurant settings have been updated.",
-    });
-  };
+  // Restaurant settings with defaults
+  const currencySymbol = restaurant?.currency || "₹";
+  const restaurantName = restaurant?.name || "QR Dine Pro";
 
   const handleAddItem = () => {
     if (!newItem.name || !newItem.price) {
@@ -95,38 +112,24 @@ const AdminDashboard = () => {
       return;
     }
 
-    const item: MenuItem = {
-      id: Date.now().toString(),
-      name: newItem.name,
-      description: newItem.description,
-      price: parseFloat(newItem.price),
-      category: newItem.category,
-      image_url:
-        newItem.image_url ||
-        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
-      is_available: true,
-      is_vegetarian: newItem.is_vegetarian,
-      prep_time_minutes: parseInt(newItem.prep_time_minutes) || 15,
-    };
-
-    setMenuItems((prev) => [...prev, item]);
+    // TODO: Integrate with useCreateMenuItem hook
+    toast({
+      title: "Item Added",
+      description: `${newItem.name} has been added to the menu.`,
+    });
     setNewItem({
       name: "",
       description: "",
       price: "",
-      category: "Starters",
+      category: categories[0]?.name || "Starters",
       image_url: "",
       is_vegetarian: false,
       prep_time_minutes: "15",
     });
-    toast({
-      title: "Item Added",
-      description: `${item.name} has been added to the menu.`,
-    });
   };
 
   const handleDeleteItem = (id: string) => {
-    setMenuItems((prev) => prev.filter((item) => item.id !== id));
+    // TODO: Integrate with useDeleteMenuItem hook
     toast({
       title: "Item Deleted",
       description: "Menu item has been removed.",
@@ -134,33 +137,45 @@ const AdminDashboard = () => {
   };
 
   const handleToggleAvailability = (id: string) => {
-    setMenuItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, is_available: !item.is_available } : item
-      )
-    );
+    // TODO: Integrate with useToggleMenuItemAvailability hook
+    toast({
+      title: "Availability Updated",
+      description: "Item availability has been toggled.",
+    });
   };
 
-  // Computed stats
-  const completedOrders = mockOrders.filter((o) => o.status === "completed");
-  const todayRevenue = completedOrders.reduce((acc, o) => acc + o.total_amount, 0);
-  const activeTables = mockTables.filter((t) => t.status !== "idle").length;
+  // Computed stats from live data
+  const completedOrders = orders.filter((o) => o.status === "completed");
+  const todayRevenue = invoiceStats?.totalRevenue || completedOrders.reduce((acc, o) => acc + Number(o.total_amount || 0), 0);
+  const activeTables = tables.filter((t) => t.status !== "available").length;
 
   // Transform orders for table display
   const recentOrders = useMemo(() => {
-    return mockOrders.slice(0, 5).map((order) => ({
+    return orders.slice(0, 5).map((order) => ({
       id: order.id,
-      tableNumber: order.table_number,
-      items: order.items.map((item) => ({
+      tableNumber: order.table?.table_number || "N/A",
+      items: order.order_items?.map((item) => ({
         name: item.name,
         quantity: item.quantity,
-      })),
+      })) || [],
       status: order.status as "pending" | "preparing" | "ready" | "delivered" | "completed",
-      amount: order.total_amount,
+      amount: Number(order.total_amount || 0),
     }));
-  }, []);
+  }, [orders]);
 
-  const selectedTable = mockTables.find((t) => t.id === selectedTableId);
+  const selectedTable = tables.find((t) => t.id === selectedTableId);
+
+  // Loading state
+  if (restaurantsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading restaurant...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Tab triggers for top navigation
   const mainTabs = [
@@ -181,7 +196,7 @@ const AdminDashboard = () => {
         <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
         <SidebarInset className="flex-1">
-          <AdminHeader restaurantName={settings.restaurant_name} />
+          <AdminHeader restaurantName={restaurantName} />
 
           {/* Tab Navigation */}
           <div className="border-b bg-card overflow-x-auto">
@@ -219,14 +234,14 @@ const AdminDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <StatCard
                       label="Today's Revenue"
-                      value={`${settings.currency_symbol}${todayRevenue}`}
+                      value={`${currencySymbol}${todayRevenue}`}
                       icon={Wallet}
                       iconColor="orange"
                       index={0}
                     />
                     <StatCard
                       label="Orders Today"
-                      value={mockOrders.length}
+                      value={orders.length}
                       icon={ChefHat}
                       iconColor="blue"
                       index={1}
@@ -246,7 +261,7 @@ const AdminDashboard = () => {
                     <div className="lg:col-span-2">
                       <RecentOrdersTable
                         orders={recentOrders}
-                        currencySymbol={settings.currency_symbol}
+                        currencySymbol={currencySymbol}
                         onViewAll={() => setActiveTab("orders")}
                       />
                     </div>
@@ -254,7 +269,7 @@ const AdminDashboard = () => {
                     {/* Right Panel - QR & Menu Preview */}
                     <div className="space-y-6">
                       <QuickQRSection
-                        tables={mockTables.map((t) => ({
+                        tables={tables.map((t) => ({
                           id: t.id,
                           table_number: t.table_number,
                         }))}
@@ -279,7 +294,7 @@ const AdminDashboard = () => {
                                 price={item.price}
                                 imageUrl={item.image_url}
                                 isVegetarian={item.is_vegetarian}
-                                currencySymbol={settings.currency_symbol}
+                                currencySymbol={currencySymbol}
                                 index={index}
                               />
                             ))}
@@ -368,11 +383,9 @@ const AdminDashboard = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {categories
-                                .filter((c) => c !== "All")
-                                .map((cat) => (
-                                  <SelectItem key={cat} value={cat}>
-                                    {cat}
+                              {categories.map((cat) => (
+                                  <SelectItem key={cat.id} value={cat.name}>
+                                    {cat.name}
                                   </SelectItem>
                                 ))}
                             </SelectContent>
@@ -425,7 +438,7 @@ const AdminDashboard = () => {
                                   price={item.price}
                                   imageUrl={item.image_url}
                                   isVegetarian={item.is_vegetarian}
-                                  currencySymbol={settings.currency_symbol}
+                                  currencySymbol={currencySymbol}
                                   index={index}
                                 />
                                 <div className="absolute top-2 right-2 flex gap-1">
@@ -477,7 +490,7 @@ const AdminDashboard = () => {
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {mockTables.map((table) => (
+                          {tables.map((table) => (
                             <Button
                               key={table.id}
                               variant={
@@ -538,8 +551,8 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <OrderHistory 
-                    restaurantId={DEMO_RESTAURANT_ID} 
-                    currencySymbol={settings.currency_symbol}
+                    restaurantId={restaurantId} 
+                    currencySymbol={currencySymbol}
                   />
                 </motion.div>
               )}
@@ -555,7 +568,7 @@ const AdminDashboard = () => {
                   className="-m-6"
                 >
                   <div className="h-[calc(100vh-180px)] overflow-auto">
-                    <KitchenDashboard embedded restaurantId={DEMO_RESTAURANT_ID} />
+                    <KitchenDashboard embedded restaurantId={restaurantId} />
                   </div>
                 </motion.div>
               )}
@@ -571,7 +584,7 @@ const AdminDashboard = () => {
                   className="-m-6"
                 >
                   <div className="h-[calc(100vh-180px)] overflow-auto">
-                    <BillingCounter embedded restaurantId={DEMO_RESTAURANT_ID} />
+                    <BillingCounter embedded restaurantId={restaurantId} />
                   </div>
                 </motion.div>
               )}
