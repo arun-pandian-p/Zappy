@@ -8,6 +8,11 @@ import {
   Settings,
   LogOut,
   QrCode,
+  ClipboardList,
+  ChefHat,
+  Receipt,
+  Megaphone,
+  Star,
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,6 +38,11 @@ const navItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
   { title: "Menu", icon: UtensilsCrossed, value: "menu" },
   { title: "Tables & QR", icon: Grid3X3, value: "tables" },
+  { title: "Orders", icon: ClipboardList, value: "orders" },
+  { title: "Kitchen", icon: ChefHat, value: "kitchen" },
+  { title: "Billing", icon: Receipt, value: "billing" },
+  { title: "Ads", icon: Megaphone, value: "ads" },
+  { title: "Reviews", icon: Star, value: "reviews" },
   { title: "Settings", icon: Settings, value: "settings" },
 ];
 

@@ -13,10 +13,15 @@ import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
 // Demo restaurant ID - in production, this would come from auth context
 const DEMO_RESTAURANT_ID = import.meta.env.VITE_DEMO_RESTAURANT_ID || '';
 
-const KitchenDashboard = () => {
+interface KitchenDashboardProps {
+  embedded?: boolean;
+  restaurantId?: string;
+}
+
+const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: KitchenDashboardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const restaurantId = searchParams.get('r') || DEMO_RESTAURANT_ID;
+  const restaurantId = propRestaurantId || searchParams.get('r') || DEMO_RESTAURANT_ID;
   const { toast } = useToast();
 
   // Fetch orders with real-time subscription
