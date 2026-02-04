@@ -11,6 +11,7 @@ import KitchenDashboard from "./pages/KitchenDashboard";
 import WaiterDashboard from "./pages/WaiterDashboard";
 import BillingCounter from "./pages/BillingCounter";
 import AdminDashboard from "./pages/AdminDashboard";
+import FeedbackPage from "./pages/FeedbackPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/roles" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/order" element={<CustomerMenu />} />
+          <Route path="/feedback" element={<FeedbackPage />} />
 
           {/* Staff routes */}
           <Route path="/kitchen" element={<KitchenDashboard />} />
