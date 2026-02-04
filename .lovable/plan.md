@@ -1,414 +1,163 @@
 
-# QR Dine Pro - Multi-Tenant SaaS Platform
+# Admin Dashboard UI Redesign
 
 ## Overview
 
-Transform the existing restaurant ordering system into a comprehensive multi-tenant SaaS platform called "QR Dine Pro" where multiple restaurants can create QR-based digital menus with subscription access, real-time sync, modern animations, and no customer login required.
+Recreate the Admin Dashboard with a modern, Pinterest-inspired design matching the reference image. The new design features a persistent sidebar navigation, glassmorphism cards with icons, a refined stat display with colored icons, a recent orders table, a menu items preview section with images, and an integrated QR code generator.
 
-## Architecture Overview
+## Design Analysis from Reference Image
+
+**Key Visual Elements:**
+- Left sidebar with logo, navigation items (Dashboard, Menu, Tables & QR, Settings), user profile at bottom, and logout button
+- Header with restaurant name, subtitle, search icon, settings icon, and user icon
+- Horizontal tab navigation below header (Dashboard, Menu, Tables & QR, Settings)
+- 3 stat cards in a row with icons (Today's Revenue, Orders Today, Active Tables)
+- Recent Orders table with Table No, Items, Status badges, and Amount
+- Right panel showing menu items with images, descriptions, prices, and Add buttons
+- QR Code section with download button
+- Color scheme: Deep blue sidebar, white cards, orange/yellow icons for stats
+
+## Implementation Approach
+
+### Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/components/admin/AdminSidebar.tsx` | Persistent sidebar with navigation, user profile, logout |
+| `src/components/admin/AdminHeader.tsx` | Top header with search, settings icons |
+| `src/components/admin/StatCard.tsx` | Reusable stat card with icon, value, label |
+| `src/components/admin/RecentOrdersTable.tsx` | Recent orders table component |
+| `src/components/admin/MenuPreviewCard.tsx` | Menu item card with image and add button |
+| `src/components/admin/QuickQRSection.tsx` | Quick access QR code generator |
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/AdminDashboard.tsx` | Complete rewrite with new layout using SidebarProvider |
+| `src/index.css` | Add new utility classes and color variables |
+
+## Detailed Component Structure
+
+### 1. AdminSidebar Component
+- **Logo section**: QR Dine Pro with gear icon, "Admin Dashboard" subtitle
+- **Navigation items**: 
+  - Dashboard (with home/dashboard icon) - highlighted when active
+  - Menu (with bell/food icon)
+  - Tables & QR (with grid icon)
+  - Settings (with gear icon)
+- **Bottom section**: User avatar, name, email, Logout button
+- **Styling**: Dark blue/slate background, rounded active states, hover effects
+
+### 2. AdminHeader Component  
+- Restaurant name with subtitle "Manage your restaurant"
+- Right side icons: Search, Settings, User profile
+- Clean white background with subtle shadow
+
+### 3. Stat Cards (3 cards in row)
+- **Today's Revenue**: Yellow/orange wallet icon, ₹0 value
+- **Orders Today**: Blue restaurant/chef icon, number value
+- **Active Tables**: Yellow/orange utensils icon, number value
+- Each card: White background, rounded corners, icon on right side
+
+### 4. Recent Orders Table
+- Table header: Table No., Items, Status, Amount
+- Rows with:
+  - Table icon + table number (e.g., T1)
+  - Arrow + item count/names (e.g., 1x Classic Burger)
+  - Status badge (Preparing = blue, Delivered = green, Pending = yellow)
+  - Amount in currency
+- "View All Orders" link at bottom
+
+### 5. Menu Preview Section
+- Grid of menu item cards
+- Each card: Image, Veg badge (if applicable), Name, Description, Price, "+Add" button
+- Green accent for vegetarian items
+
+### 6. QR Code Section
+- Shows QR code for selected table
+- "Today's Revenue" and "Orders Today" quick stats below
+- "Download QR Code" button
+
+## Layout Structure
 
 ```text
-+------------------------------------------------------------------+
-|                        QR DINE PRO SAAS                          |
-+------------------------------------------------------------------+
-|  PUBLIC LAYER (No Auth Required)                                 |
-|  +------------------+  +------------------+  +------------------+ |
-|  | Landing Page     |  | Customer Menu    |  | Feedback Page    | |
-|  | (Animated Hero)  |  | (Per Restaurant) |  | (Star Rating)    | |
-|  +------------------+  +------------------+  +------------------+ |
-+------------------------------------------------------------------+
-|  RESTAURANT LAYER (Staff Auth)                                   |
-|  +------------------+  +------------------+  +------------------+ |
-|  | Kitchen Display  |  | Waiter Dashboard |  | Billing Counter  | |
-|  | (Sound Alerts)   |  | (Real-time)      |  | (Receipt Print)  | |
-|  +------------------+  +------------------+  +------------------+ |
-|  +------------------------------------------------------------+  |
-|  | Restaurant Admin Dashboard                                  |  |
-|  | - Menu CRUD  - Tables/QR  - Orders  - Analytics  - Settings |  |
-|  +------------------------------------------------------------+  |
-+------------------------------------------------------------------+
-|  SUPER ADMIN LAYER                                               |
-|  +------------------------------------------------------------+  |
-|  | Super Admin Panel                                           |  |
-|  | - Manage Restaurants - Subscription Plans - Ads - Revenue   |  |
-|  +------------------------------------------------------------+  |
-+------------------------------------------------------------------+
-|  DATA LAYER (Supabase)                                           |
-|  +------------------+  +------------------+  +------------------+ |
-|  | Multi-tenant DB  |  | Real-time Sync   |  | Edge Functions   | |
-|  | (RLS Policies)   |  | (Subscriptions)  |  | (Billing/Stripe) | |
-|  +------------------+  +------------------+  +------------------+ |
-+------------------------------------------------------------------+
++------------------+----------------------------------------+
+|                  |  [Header with icons]                   |
+|    SIDEBAR       +----------------------------------------+
+|                  |  [Tab Navigation]                      |
+|  - Dashboard     +----------------------------------------+
+|  - Menu          |                                        |
+|  - Tables & QR   |  [3 Stat Cards in Row]                 |
+|  - Settings      |                                        |
+|                  +--------------------+-------------------+
+|                  |                    |                   |
+|  [User Profile]  | Recent Orders      | Menu Items        |
+|  [Logout]        | Table              | with Images       |
+|                  |                    |                   |
++------------------+--------------------+-------------------+
 ```
 
----
-
-## Phase 1: Foundation & Multi-Tenancy
-
-### 1.1 Database Schema (Supabase)
-
-**Core Tables:**
-
-| Table | Purpose |
-|-------|---------|
-| `restaurants` | Restaurant profiles with branding, settings, subscription |
-| `user_roles` | Role-based access (admin, staff, super_admin) |
-| `subscription_plans` | Plan tiers (Free, Pro, Enterprise) |
-| `menu_items` | Per-restaurant menu with images, pricing |
-| `categories` | Menu categories per restaurant |
-| `tables` | Table management with QR codes |
-| `orders` | Orders with real-time status |
-| `order_items` | Line items with customizations |
-| `feedback` | Customer ratings and comments |
-| `waiter_calls` | Service request queue |
-| `ads` | Partner promotions and ads |
-| `analytics_events` | Tracking for dashboards |
-
-**Multi-tenancy:** All tables include `restaurant_id` with RLS policies ensuring data isolation.
-
-### 1.2 Authentication & Roles
-
-- **Customers**: No login required - identified by table QR code session
-- **Restaurant Staff**: Email/password auth with role assignment
-- **Super Admin**: Special role for platform management
-
-Role hierarchy using `user_roles` table with enum:
-```text
-super_admin > restaurant_admin > staff (kitchen/waiter/billing)
-```
-
----
-
-## Phase 2: Public Customer Experience
-
-### 2.1 Landing Page (Modern & Animated)
-
-Inspired by Pinterest/yummy-dispatch design:
-- Hero section with animated gradient background
-- Floating food images with parallax
-- "Scan to Dine" animated QR code demo
-- Restaurant showcase carousel
-- Feature highlights with scroll animations
-- Testimonials section
-- Footer with links
-
-**Animations (Framer Motion):**
-- Staggered fade-in on scroll
-- Smooth page transitions
-- Micro-interactions on hover
-- Parallax scrolling effects
-
-### 2.2 Customer Menu (Mobile-First)
-
-**Route**: `/r/{restaurant_slug}/table/{table_id}` or `/order?r={id}&table={num}`
-
-Features:
-- Restaurant branding (logo, colors, theme)
-- Category tabs with smooth scroll
-- Menu cards with images and badges (veg/non-veg, spicy level, popular)
-- Add to cart with quantity animations
-- Special instructions per item
-- Cart drawer with swipe gestures
-- Order placement (no login)
-- Real-time order tracking
-- Estimated prep time display
-
-### 2.3 Feedback & Google Review Redirection
-
-**Flow:**
-1. Post-meal feedback prompt appears
-2. Customer rates 1-5 stars
-3. If rating >= 4: Redirect to Google Review page
-4. If rating < 4: Show internal feedback form for improvement
-
-Components:
-- Star rating animation
-- Feedback textarea
-- Smart redirect logic
-- Thank you confirmation
-
----
-
-## Phase 3: Kitchen & Staff Dashboards
-
-### 3.1 Kitchen Display System (KDS)
-
-**Enhancements:**
-- **Sound Alerts**: Audio notification for new orders
-  - Uses Web Audio API
-  - Mute/unmute toggle (persisted)
-  - Different sounds for priority orders
-- **Real-time Updates**: Supabase real-time subscriptions
-- **Order Cards**: Kanban-style columns (Pending > Preparing > Ready)
-- **Timer Display**: Countdown for each order
-- **Voice Announcement**: Optional TTS for order numbers
-
-### 3.2 Waiter Dashboard
-
-- Real-time table status grid
-- Waiter call notifications with sound
-- Quick order status updates
-- Table assignment management
-
-### 3.3 Billing Counter with Receipt Printing
-
-**Thermal Receipt Format (80mm):**
-```text
-================================
-      [RESTAURANT NAME]
-      [Address Line 1]
-      [Phone Number]
-================================
-Date: DD/MM/YYYY    Time: HH:MM
-Table: T5           Order: #1234
-================================
-Qty  Item                 Amount
---------------------------------
-2x   Classic Burger      ₹498.00
-1x   Mango Lassi          ₹99.00
---------------------------------
-Subtotal:               ₹597.00
-Tax (5%):                ₹29.85
-Service Charge:          ₹59.70
-================================
-TOTAL:                  ₹686.55
-================================
-Payment: CASH
-================================
-   Thank you for dining!
-   Please visit again.
-================================
-```
-
-**Print Implementation:**
-- CSS print media queries for thermal format
-- `window.print()` trigger
-- Optional: Direct ESC/POS commands via browser extension
-
----
-
-## Phase 4: Restaurant Admin Dashboard
-
-### 4.1 Dashboard Tabs
-
-| Tab | Features |
-|-----|----------|
-| Overview | Today's stats, revenue chart, popular items |
-| Menu | CRUD items, categories, availability toggle, image upload |
-| Tables | Add/edit tables, generate QR codes, download as PDF |
-| Orders | Order history, filters, export to CSV |
-| Feedback | View ratings, respond to feedback |
-| Analytics | Charts for revenue, orders, peak hours, item performance |
-| Settings | Restaurant profile, branding, tax rates, working hours |
-| Subscription | Current plan, upgrade options, billing history |
-
-### 4.2 QR Code Generation
-
-- Per-table unique QR codes
-- Include restaurant branding
-- Download as PNG/PDF
-- Print-ready templates (tent cards)
-
----
-
-## Phase 5: Super Admin Panel
-
-### 5.1 Dashboard
-
-- Total restaurants count
-- Active subscriptions breakdown
-- Monthly revenue (from subscriptions)
-- New registrations chart
-
-### 5.2 Restaurant Management
-
-- List all restaurants with search/filter
-- View/edit restaurant details
-- Suspend/activate accounts
-- View restaurant analytics
-
-### 5.3 Subscription Plans Management
-
-- Create/edit plans (Free, Pro, Enterprise)
-- Feature toggles per plan
-- Trial period settings
-- Pricing management
-
-### 5.4 Ads & Promotions Module
-
-- Create ad campaigns
-- Target by location/category
-- Set display rules (rotation, frequency)
-- Track impressions and clicks
-
-### 5.5 Revenue Analytics
-
-- Subscription revenue by plan
-- Churn rate tracking
-- Restaurant growth metrics
-- Export financial reports
-
----
-
-## Phase 6: Real-Time & Notifications
-
-### 6.1 Supabase Real-Time Subscriptions
-
-Tables with real-time sync:
-- `orders` - For kitchen, waiter, customer order tracking
-- `waiter_calls` - For waiter notifications
-- `order_items` - For status updates
-
-### 6.2 Sound Notifications
-
-```typescript
-// Sound alert system
-const playOrderSound = () => {
-  const audio = new Audio('/sounds/new-order.mp3');
-  audio.play();
-};
-
-// Subscribe to new orders
-supabase
-  .channel('kitchen-orders')
-  .on('postgres_changes', 
-    { event: 'INSERT', schema: 'public', table: 'orders' },
-    (payload) => {
-      if (!isMuted) playOrderSound();
-      // Update UI
-    }
-  )
-  .subscribe();
-```
-
----
-
-## Phase 7: Subscription Billing (Stripe Integration)
-
-### 7.1 Plans
-
-| Plan | Price/Month | Features |
-|------|-------------|----------|
-| Free | ₹0 | 1 table, basic menu, 50 orders/month |
-| Pro | ₹999 | 20 tables, analytics, priority support |
-| Enterprise | ₹2999 | Unlimited, API access, white-label |
-
-### 7.2 Integration
-
-- Stripe Checkout for subscriptions
-- Webhook handling for events
-- Invoice generation
-- Usage tracking
-
----
-
-## New Files to Create
-
-```text
-src/
-├── components/
-│   ├── landing/
-│   │   ├── HeroSection.tsx
-│   │   ├── FeaturesSection.tsx
-│   │   ├── RestaurantShowcase.tsx
-│   │   └── TestimonialsSection.tsx
-│   ├── feedback/
-│   │   ├── StarRating.tsx
-│   │   └── FeedbackForm.tsx
-│   ├── receipt/
-│   │   └── ThermalReceipt.tsx
-│   ├── sounds/
-│   │   └── SoundPlayer.tsx
-│   └── animations/
-│       └── PageTransition.tsx
-├── pages/
-│   ├── LandingPage.tsx          (Public landing)
-│   ├── RestaurantMenu.tsx       (Per-restaurant menu)
-│   ├── FeedbackPage.tsx         (Post-order feedback)
-│   ├── RestaurantSignup.tsx     (Restaurant registration)
-│   ├── RestaurantDashboard.tsx  (Restaurant admin)
-│   └── SuperAdminPanel.tsx      (Platform super admin)
-├── stores/
-│   ├── authStore.ts             (Auth state)
-│   ├── restaurantStore.ts       (Restaurant context)
-│   └── realtimeStore.ts         (Real-time subscriptions)
-├── hooks/
-│   ├── useSound.ts              (Sound notification hook)
-│   ├── useRealtime.ts           (Supabase real-time hook)
-│   └── useRestaurant.ts         (Restaurant context hook)
-├── lib/
-│   ├── supabase.ts              (Supabase client)
-│   └── stripe.ts                (Stripe utilities)
-└── types/
-    └── database.types.ts        (Supabase generated types)
-```
-
----
-
-## UI/UX Design Principles
-
-1. **Modern & Attractive**
-   - Glassmorphism cards
-   - Gradient accents
-   - Smooth shadows
-   - Inter/Poppins fonts
-
-2. **Animations**
-   - Page transitions with Framer Motion
-   - Staggered list animations
-   - Micro-interactions on buttons/cards
-   - Loading skeletons
-
-3. **Mobile-First**
-   - Touch-optimized interfaces
-   - Swipe gestures for cart
-   - Bottom navigation for customers
-   - Responsive grid layouts
-
-4. **Accessibility**
-   - Proper contrast ratios
-   - Focus indicators
-   - Screen reader support
-   - Keyboard navigation
-
----
-
-## Technical Details
-
-### Database: Requires Lovable Cloud
-
-The multi-tenant architecture requires Supabase/Lovable Cloud for:
-- PostgreSQL database with RLS
-- Real-time subscriptions
-- Authentication
-- Storage for images
-- Edge functions for billing
-
-### Dependencies to Add
-
-- `@supabase/supabase-js` - Database client
-- Sound files for notifications (public/sounds/)
-
-### Key Patterns
-
-1. **Multi-tenancy**: All queries filtered by `restaurant_id`
-2. **Real-time**: Supabase channels for live updates
-3. **Optimistic UI**: Immediate feedback, sync in background
-4. **Error boundaries**: Graceful error handling
-
----
-
-## Implementation Order
-
-1. **Phase 1**: Enable Lovable Cloud, create database schema
-2. **Phase 2**: Landing page with animations
-3. **Phase 3**: Customer menu with cart and ordering
-4. **Phase 4**: Kitchen dashboard with sound alerts
-5. **Phase 5**: Billing counter with receipt printing
-6. **Phase 6**: Restaurant admin dashboard
-7. **Phase 7**: Feedback system with Google redirect
-8. **Phase 8**: Super admin panel
-9. **Phase 9**: Stripe subscription integration
-10. **Phase 10**: Ads module and final polish
-
-This is a comprehensive build. Shall I start with Phase 1 (database setup) or Phase 2 (landing page with animations) first?
+## Color Scheme (from reference)
+
+- **Sidebar background**: `hsl(222, 47%, 11%)` - Deep slate blue
+- **Active nav item**: `hsl(217, 91%, 60%)` - Primary blue with rounded pill shape
+- **Stat card icons**: 
+  - Revenue: Orange/yellow `#F59E0B`
+  - Orders: Blue `#3B82F6`
+  - Tables: Orange/yellow `#F59E0B`
+- **Status badges**:
+  - Preparing: Blue background
+  - Delivered: Green background
+  - Pending: Yellow/amber background
+
+## Animation & Interactions
+
+- Framer Motion for:
+  - Page transitions
+  - Card hover effects (subtle scale)
+  - Tab switching animations
+  - Sidebar item hover states
+- Smooth transitions on stat card hover
+- Staggered animation for menu items loading
+
+## Technical Implementation
+
+### Phase 1: Create Base Components
+1. Create `AdminSidebar.tsx` with SidebarProvider integration
+2. Create `AdminHeader.tsx` with search and icon buttons
+3. Create `StatCard.tsx` with icon, value, and label props
+
+### Phase 2: Create Content Components
+4. Create `RecentOrdersTable.tsx` with status badges
+5. Create `MenuPreviewCard.tsx` with image and action button
+6. Create `QuickQRSection.tsx` with QR generation
+
+### Phase 3: Rebuild AdminDashboard
+7. Rewrite `AdminDashboard.tsx` with:
+   - SidebarProvider wrapper
+   - New layout grid system
+   - Integration of all new components
+   - Framer Motion animations
+
+### Phase 4: Styling Updates
+8. Update `index.css` with new utility classes
+9. Add icon color utilities
+10. Add status badge variants
+
+## Dependencies
+
+- Existing: `framer-motion`, `lucide-react`, `qrcode.react`
+- Using: Shadcn Sidebar, Card, Badge, Button, Tabs, Avatar components
+- No new packages required
+
+## Expected Outcome
+
+A polished admin dashboard matching the reference image with:
+- Professional sidebar navigation
+- Clean stat cards with colorful icons
+- Recent orders table with status badges
+- Menu item preview cards
+- Integrated QR code generator
+- Smooth Framer Motion animations
+- Responsive design for tablet and desktop
