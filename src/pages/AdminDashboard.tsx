@@ -19,6 +19,7 @@ import {
   Download,
   Edit2,
   X,
+  Ticket,
   FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -53,6 +54,7 @@ import { SettingsPanel } from "@/components/admin/SettingsPanel";
 import { CategoryManager } from "@/components/admin/CategoryManager";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { ExportPanel } from "@/components/admin/ExportPanel";
+import { CouponManager } from "@/components/admin/CouponManager";
 import { RevenueChart } from "@/components/analytics/RevenueChart";
 import { DashboardStats } from "@/components/analytics/DashboardStats";
 import { OrdersTable } from "@/components/analytics/OrdersTable";
@@ -325,6 +327,7 @@ const AdminDashboard = () => {
     { value: "orders", label: "Orders", icon: ClipboardList },
     { value: "kitchen", label: "Kitchen", icon: ChefHat },
     { value: "billing", label: "Billing", icon: Receipt },
+    { value: "coupons", label: "Coupons", icon: Ticket },
     { value: "ads", label: "Ads", icon: Megaphone },
     { value: "reviews", label: "Reviews", icon: Star },
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
@@ -796,6 +799,19 @@ const AdminDashboard = () => {
                   <div className="h-[calc(100vh-180px)] overflow-auto">
                     <BillingCounter embedded restaurantId={restaurantId} />
                   </div>
+                </motion.div>
+              )}
+
+              {/* Coupons Tab */}
+              {activeTab === "coupons" && (
+                <motion.div
+                  key="coupons"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <CouponManager restaurantId={restaurantId} />
                 </motion.div>
               )}
 

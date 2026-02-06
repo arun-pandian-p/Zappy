@@ -27,9 +27,9 @@ This plan transforms "QR Dine Pro" into a fully production-ready "QR Companion" 
 | Super Admin Analytics | ✅ Complete | High |
 | Revenue/Order Charts | ✅ Complete | High |
 | CSV Export Engine | ✅ Complete | Medium |
-| Coupons & Offers System | Missing | Medium |
-| Customer Behavior Tracking | Missing | Medium |
-| Table Session Timers | Missing | Medium |
+| Coupons & Offers System | ✅ Complete | Medium |
+| Customer Behavior Tracking | ✅ Complete | Medium |
+| Table Session Timers | ✅ Complete | Medium |
 | Branding Customization (logo/colors) | Partial | Medium |
 | Operating Hours | Missing | Low |
 | Multi-branch Support | Missing | Low |
