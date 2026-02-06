@@ -19,6 +19,7 @@ import {
   Download,
   Edit2,
   X,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,11 @@ import { FeedbackManager } from "@/components/admin/FeedbackManager";
 import { SettingsPanel } from "@/components/admin/SettingsPanel";
 import { CategoryManager } from "@/components/admin/CategoryManager";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { ExportPanel } from "@/components/admin/ExportPanel";
+import { RevenueChart } from "@/components/analytics/RevenueChart";
+import { DashboardStats } from "@/components/analytics/DashboardStats";
+import { OrdersTable } from "@/components/analytics/OrdersTable";
+import { RevenueTrends } from "@/components/analytics/RevenueTrends";
 import KitchenDashboard from "@/pages/KitchenDashboard";
 import BillingCounter from "@/pages/BillingCounter";
 import { useRestaurants, useRestaurant } from "@/hooks/useRestaurant";
@@ -321,6 +327,7 @@ const AdminDashboard = () => {
     { value: "billing", label: "Billing", icon: Receipt },
     { value: "ads", label: "Ads", icon: Megaphone },
     { value: "reviews", label: "Reviews", icon: Star },
+    { value: "exports", label: "Exports", icon: FileSpreadsheet },
     { value: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -363,40 +370,27 @@ const AdminDashboard = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="space-y-6"
                 >
-                  {/* Stats Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <StatCard
-                      label="Today's Revenue"
-                      value={`${currencySymbol}${todayRevenue}`}
-                      icon={Wallet}
-                      iconColor="orange"
-                      index={0}
-                    />
-                    <StatCard
-                      label="Orders Today"
-                      value={orders.length}
-                      icon={ChefHat}
-                      iconColor="blue"
-                      index={1}
-                    />
-                    <StatCard
-                      label="Active Tables"
-                      value={activeTables}
-                      icon={Utensils}
-                      iconColor="orange"
-                      index={2}
-                    />
+                  {/* Enhanced Stats Row */}
+                  <DashboardStats orders={orders} currencySymbol={currencySymbol} />
+
+                  {/* Charts Row */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <RevenueChart orders={orders} currencySymbol={currencySymbol} days={7} />
+                    <RevenueTrends orders={orders} currencySymbol={currencySymbol} days={7} />
                   </div>
 
                   {/* Content Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Recent Orders - 2 columns */}
                     <div className="lg:col-span-2">
-                      <RecentOrdersTable
-                        orders={recentOrders}
+                      <OrdersTable
+                        orders={orders}
                         currencySymbol={currencySymbol}
                         onViewAll={() => setActiveTab("orders")}
+                        limit={5}
+                        showFilters={false}
                       />
                     </div>
 
@@ -828,6 +822,19 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <FeedbackManager restaurantId={restaurantId} />
+                </motion.div>
+              )}
+
+              {/* Exports Tab */}
+              {activeTab === "exports" && (
+                <motion.div
+                  key="exports"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ExportPanel restaurantId={restaurantId} />
                 </motion.div>
               )}
 
