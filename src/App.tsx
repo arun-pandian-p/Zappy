@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import SuperAdminLogin from "./pages/SuperAdminLogin";
+import TenantAdminLogin from "./pages/TenantAdminLogin";
 import CustomerMenu from "./pages/CustomerMenu";
 import KitchenDashboard from "./pages/KitchenDashboard";
 import WaiterDashboard from "./pages/WaiterDashboard";
@@ -28,6 +30,8 @@ const App = () => (
           <Route path="/" element={<LandingPage />} />
           <Route path="/roles" element={<Index />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+          <Route path="/admin/login" element={<TenantAdminLogin />} />
           <Route path="/order" element={<CustomerMenu />} />
           <Route path="/feedback" element={<FeedbackPage />} />
 

@@ -15,6 +15,7 @@ import {
   Receipt,
   Megaphone,
   Star,
+  Users,
   Loader2,
   Download,
   Edit2,
@@ -56,6 +57,7 @@ import { ImageUpload } from "@/components/admin/ImageUpload";
 import { ExportPanel } from "@/components/admin/ExportPanel";
 import { CouponManager } from "@/components/admin/CouponManager";
 import { TableSessionTimers } from "@/components/admin/TableSessionTimers";
+import UserManagement from "@/components/admin/UserManagement";
 import { RevenueChart } from "@/components/analytics/RevenueChart";
 import { DashboardStats } from "@/components/analytics/DashboardStats";
 import { OrdersTable } from "@/components/analytics/OrdersTable";
@@ -331,6 +333,7 @@ const AdminDashboard = () => {
     { value: "coupons", label: "Coupons", icon: Ticket },
     { value: "ads", label: "Ads", icon: Megaphone },
     { value: "reviews", label: "Reviews", icon: Star },
+    { value: "users", label: "Users", icon: Users },
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
     { value: "settings", label: "Settings", icon: Settings },
   ];
@@ -855,6 +858,19 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <ExportPanel restaurantId={restaurantId} />
+                </motion.div>
+              )}
+
+              {/* Users Tab */}
+              {activeTab === "users" && (
+                <motion.div
+                  key="users"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <UserManagement />
                 </motion.div>
               )}
 

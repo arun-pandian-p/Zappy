@@ -1,18 +1,18 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard,
   UtensilsCrossed,
   Grid3X3,
   Settings,
   LogOut,
-  QrCode,
   ClipboardList,
   ChefHat,
   Receipt,
   Megaphone,
   Star,
+  Users,
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +43,7 @@ const navItems: NavItem[] = [
   { title: "Billing", icon: Receipt, value: "billing" },
   { title: "Ads", icon: Megaphone, value: "ads" },
   { title: "Reviews", icon: Star, value: "reviews" },
+  { title: "Users", icon: Users, value: "users" },
   { title: "Settings", icon: Settings, value: "settings" },
 ];
 
@@ -55,8 +56,10 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const navigate = useNavigate();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { signOut } = useAuth();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
 
