@@ -55,6 +55,7 @@ import { CategoryManager } from "@/components/admin/CategoryManager";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { ExportPanel } from "@/components/admin/ExportPanel";
 import { CouponManager } from "@/components/admin/CouponManager";
+import { TableSessionTimers } from "@/components/admin/TableSessionTimers";
 import { RevenueChart } from "@/components/analytics/RevenueChart";
 import { DashboardStats } from "@/components/analytics/DashboardStats";
 import { OrdersTable } from "@/components/analytics/OrdersTable";
@@ -399,6 +400,9 @@ const AdminDashboard = () => {
 
                     {/* Right Panel - QR & Menu Preview */}
                     <div className="space-y-6">
+                      {/* Table Session Timers */}
+                      <TableSessionTimers restaurantId={restaurantId} />
+
                       <QuickQRSection
                         tables={tables.map((t) => ({
                           id: t.id,

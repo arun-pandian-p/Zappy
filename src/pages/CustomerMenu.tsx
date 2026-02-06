@@ -16,6 +16,7 @@ import { useOrders, useCreateOrder, type OrderWithItems } from '@/hooks/useOrder
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
 import { useRandomActiveAd, useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
 import { useTableByNumber } from '@/hooks/useTables';
+import { WaitingTimer } from '@/components/order/WaitingTimer';
 
 type ViewType = 'menu' | 'cart' | 'orders';
 
@@ -115,9 +116,24 @@ const CustomerMenu = () => {
     return availableMenuItems.filter((item) => {
       const matchesCategory = selectedCategory === 'All' || item.category?.name === selectedCategory;
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [availableMenuItems, selectedCategory, searchQuery]);
+    return matchesCategory && matchesSearch;
+  });
+}, [availableMenuItems, selectedCategory, searchQuery]);
+
+// Find active order (pending/preparing/ready - not completed)
+const activeOrder = useMemo(() => {
+  return customerOrders.find(
+    (o) => o.status !== "completed" && o.status !== "cancelled" && o.status !== "served"
+  );
+}, [customerOrders]);
+
+// Calculate estimated prep time based on order items
+const estimatedPrepTime = useMemo(() => {
+  if (!activeOrder) return 15;
+  // Sum up prep times of all items, then take max (parallel cooking)
+  const prepTimes = activeOrder.order_items?.map(() => 15) || [15]; // Default 15 min per item
+  return Math.max(...prepTimes, 10);
+}, [activeOrder]);
 
   // Restaurant settings
   const currencySymbol = restaurant?.currency || '₹';
@@ -491,6 +507,18 @@ const CustomerMenu = () => {
 
   const renderOrders = () => (
     <div className="space-y-4">
+      {/* Active Order Timer */}
+      {activeOrder && (
+        <WaitingTimer
+          order={activeOrder}
+          estimatedMinutes={estimatedPrepTime}
+          currencySymbol={currencySymbol}
+          onViewDetails={() => {
+            // Scroll to order details or expand
+          }}
+        />
+      )}
+
       {customerOrders.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">

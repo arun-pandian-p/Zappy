@@ -209,11 +209,16 @@ const SuperAdminDashboard = () => {
       <header className="sticky top-0 z-50 bg-card border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Super Admin</h1>
-              <p className="text-sm text-muted-foreground">
-                Platform Management Console
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                <img src="/qr-logo.svg" alt="QR Dine Pro" className="w-6 h-6" style={{ filter: 'brightness(0) invert(1)' }} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Super Admin</h1>
+                <p className="text-sm text-muted-foreground">
+                  Platform Management Console
+                </p>
+              </div>
             </div>
             <Button variant="outline" onClick={() => navigate('/admin')}>
               Back to Admin

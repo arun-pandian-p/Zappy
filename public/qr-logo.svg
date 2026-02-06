@@ -1,0 +1,42 @@
+<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- QR Code themed logo -->
+  <!-- Top-left QR finder pattern -->
+  <rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor" class="text-primary"/>
+  <rect x="4" y="4" width="8" height="8" rx="1" fill="white"/>
+  <rect x="6" y="6" width="4" height="4" rx="0.5" fill="currentColor" class="text-primary"/>
+  
+  <!-- Top-right QR finder pattern -->
+  <rect x="26" y="2" width="12" height="12" rx="2" fill="currentColor" class="text-primary"/>
+  <rect x="28" y="4" width="8" height="8" rx="1" fill="white"/>
+  <rect x="30" y="6" width="4" height="4" rx="0.5" fill="currentColor" class="text-primary"/>
+  
+  <!-- Bottom-left QR finder pattern -->
+  <rect x="2" y="26" width="12" height="12" rx="2" fill="currentColor" class="text-primary"/>
+  <rect x="4" y="28" width="8" height="8" rx="1" fill="white"/>
+  <rect x="6" y="30" width="4" height="4" rx="0.5" fill="currentColor" class="text-primary"/>
+  
+  <!-- Center data modules -->
+  <rect x="16" y="4" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+  <rect x="21" y="4" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+  
+  <rect x="16" y="9" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+  
+  <rect x="4" y="16" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+  <rect x="9" y="16" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+  
+  <!-- Central "QR" symbol area -->
+  <rect x="16" y="16" width="8" height="8" rx="1.5" fill="currentColor" class="text-primary"/>
+  <text x="20" y="22" text-anchor="middle" font-size="5" font-weight="bold" fill="white" font-family="system-ui, sans-serif">QR</text>
+  
+  <rect x="26" y="16" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+  <rect x="31" y="16" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+  
+  <rect x="16" y="26" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+  <rect x="21" y="26" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+  
+  <rect x="26" y="26" width="8" height="8" rx="1.5" fill="currentColor" class="text-primary" opacity="0.6"/>
+  <rect x="28" y="28" width="4" height="4" rx="0.5" fill="currentColor" class="text-primary"/>
+  
+  <rect x="16" y="33" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+  <rect x="21" y="33" width="3" height="3" rx="0.5" fill="currentColor" class="text-primary"/>
+</svg>

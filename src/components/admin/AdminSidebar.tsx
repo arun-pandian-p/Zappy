@@ -67,8 +67,8 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
     >
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
-            <QrCode className="w-5 h-5 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
+            <img src="/qr-logo.svg" alt="QR Dine Pro" className="w-6 h-6 text-primary-foreground" style={{ filter: 'brightness(0) invert(1)' }} />
           </div>
           {!collapsed && (
             <motion.div
