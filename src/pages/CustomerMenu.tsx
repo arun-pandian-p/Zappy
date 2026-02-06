@@ -1,24 +1,27 @@
-import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ClipboardList, ArrowLeft, Star, HandHelping, Search, Plus, Minus, Trash2, Loader2, AlertCircle, X } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCartStore } from '@/stores/cartStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useMenuItems, useCategories, type MenuItem } from '@/hooks/useMenuItems';
 import { useRestaurant } from '@/hooks/useRestaurant';
-import { useOrders, useCreateOrder, type OrderWithItems } from '@/hooks/useOrders';
+import { useOrders, useCreateOrder } from '@/hooks/useOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
 import { useRandomActiveAd, useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
 import { useTableByNumber } from '@/hooks/useTables';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
+import { FoodCard } from '@/components/menu/FoodCard';
+import { AdsPopup } from '@/components/menu/AdsPopup';
+import { BottomNav } from '@/components/menu/BottomNav';
+import { AddedToCartToast } from '@/components/menu/AddedToCartToast';
+import { CategorySlider } from '@/components/menu/CategorySlider';
 
-type ViewType = 'menu' | 'cart' | 'orders';
+type ViewType = 'home' | 'menu' | 'cart' | 'orders';
 
 const CustomerMenu = () => {
   const navigate = useNavigate();
@@ -32,6 +35,8 @@ const CustomerMenu = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAdPopup, setShowAdPopup] = useState(false);
   const [adShown, setAdShown] = useState(false);
+  const [showAddedToast, setShowAddedToast] = useState(false);
+  const [lastAddedItem, setLastAddedItem] = useState('');
 
   // Fetch restaurant data
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId);
@@ -42,11 +47,11 @@ const CustomerMenu = () => {
   // Fetch categories
   const { data: categories = [] } = useCategories(restaurantId);
 
-  // Resolve table number (e.g. "T1") to actual table UUID
+  // Resolve table number to table UUID
   const { data: tableData, isLoading: tableLoading } = useTableByNumber(restaurantId, tableId);
   const resolvedTableId = tableData?.id;
 
-  // Fetch customer orders for this table (filter by resolved UUID)
+  // Fetch customer orders
   const { data: allOrders = [] } = useOrders(restaurantId);
 
   // Fetch active ad
@@ -85,7 +90,7 @@ const CustomerMenu = () => {
       const lastSeen = sessionStorage.getItem(adSeenKey);
       
       if (!lastSeen) {
-        setShowAdPopup(true);
+        setTimeout(() => setShowAdPopup(true), 500);
         setAdShown(true);
         trackImpression.mutate(activeAd.id);
         sessionStorage.setItem(adSeenKey, Date.now().toString());
@@ -93,7 +98,7 @@ const CustomerMenu = () => {
     }
   }, [activeAd, adShown, restaurant, trackImpression]);
 
-  // Filter orders for this table (use resolved UUID)
+  // Filter orders for this table
   const customerOrders = useMemo(() => 
     allOrders.filter(o => o.table_id === resolvedTableId).slice(0, 10),
     [allOrders, resolvedTableId]
@@ -116,31 +121,36 @@ const CustomerMenu = () => {
     return availableMenuItems.filter((item) => {
       const matchesCategory = selectedCategory === 'All' || item.category?.name === selectedCategory;
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-}, [availableMenuItems, selectedCategory, searchQuery]);
+      return matchesCategory && matchesSearch;
+    });
+  }, [availableMenuItems, selectedCategory, searchQuery]);
 
-// Find active order (pending/preparing/ready - not completed)
-const activeOrder = useMemo(() => {
-  return customerOrders.find(
-    (o) => o.status !== "completed" && o.status !== "cancelled" && o.status !== "served"
-  );
-}, [customerOrders]);
+  // Find active order
+  const activeOrder = useMemo(() => {
+    return customerOrders.find(
+      (o) => o.status !== "completed" && o.status !== "cancelled" && o.status !== "served"
+    );
+  }, [customerOrders]);
 
-// Calculate estimated prep time based on order items
-const estimatedPrepTime = useMemo(() => {
-  if (!activeOrder) return 15;
-  // Sum up prep times of all items, then take max (parallel cooking)
-  const prepTimes = activeOrder.order_items?.map(() => 15) || [15]; // Default 15 min per item
-  return Math.max(...prepTimes, 10);
-}, [activeOrder]);
+  // Calculate estimated prep time
+  const estimatedPrepTime = useMemo(() => {
+    if (!activeOrder) return 15;
+    const prepTimes = activeOrder.order_items?.map(() => 15) || [15];
+    return Math.max(...prepTimes, 10);
+  }, [activeOrder]);
 
   // Restaurant settings
   const currencySymbol = restaurant?.currency || '₹';
   const taxRate = Number(restaurant?.tax_rate) || 5;
   const serviceChargeRate = Number(restaurant?.service_charge_rate) || 0;
 
-  const handleAddToCart = (item: MenuItem & { category?: { name: string } | null }) => {
+  // Get item quantity in cart
+  const getItemQuantity = useCallback((itemId: string) => {
+    const cartItem = cartItems.find(i => i.id === itemId);
+    return cartItem?.quantity || 0;
+  }, [cartItems]);
+
+  const handleAddToCart = useCallback((item: MenuItem & { category?: { name: string } | null }) => {
     addItem({
       id: item.id,
       name: item.name,
@@ -148,11 +158,10 @@ const estimatedPrepTime = useMemo(() => {
       category: item.category?.name || 'Uncategorized',
       image_url: item.image_url || undefined,
     });
-    toast({
-      title: 'Added to cart',
-      description: `${item.name} has been added to your cart.`,
-    });
-  };
+    setLastAddedItem(item.name);
+    setShowAddedToast(true);
+    setTimeout(() => setShowAddedToast(false), 2000);
+  }, [addItem]);
 
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) {
@@ -164,19 +173,10 @@ const estimatedPrepTime = useMemo(() => {
       return;
     }
 
-    if (!tableId || !restaurantId) {
-      toast({
-        title: 'Missing information',
-        description: 'Please scan the QR code at your table.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!resolvedTableId) {
+    if (!tableId || !restaurantId || !resolvedTableId) {
       toast({
         title: 'Invalid table',
-        description: 'Could not find this table. Please scan a valid QR code.',
+        description: 'Please scan a valid QR code at your table.',
         variant: 'destructive',
       });
       return;
@@ -191,7 +191,7 @@ const estimatedPrepTime = useMemo(() => {
       await createOrder.mutateAsync({
         order: {
           restaurant_id: restaurantId,
-          table_id: resolvedTableId, // Use resolved UUID instead of table number string
+          table_id: resolvedTableId,
           subtotal,
           tax_amount: taxAmount,
           service_charge: serviceCharge,
@@ -235,7 +235,7 @@ const estimatedPrepTime = useMemo(() => {
     try {
       await createWaiterCall.mutateAsync({
         restaurant_id: restaurantId,
-        table_id: resolvedTableId, // Use resolved UUID instead of table number string
+        table_id: resolvedTableId,
         reason: 'Customer assistance requested',
       });
 
@@ -260,6 +260,13 @@ const estimatedPrepTime = useMemo(() => {
       }
     }
     setShowAdPopup(false);
+  };
+
+  const handleApplyCoupon = (code: string) => {
+    toast({
+      title: 'Coupon Applied!',
+      description: `Code "${code}" has been applied to your cart.`,
+    });
   };
 
   const getStatusBadge = (status: string | null) => {
@@ -290,7 +297,7 @@ const estimatedPrepTime = useMemo(() => {
     );
   }
 
-  // Error state - no restaurant
+  // Error state
   if (!restaurantId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -307,6 +314,52 @@ const estimatedPrepTime = useMemo(() => {
     );
   }
 
+  const renderHome = () => (
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="text-center py-8">
+        {restaurant?.logo_url && (
+          <img 
+            src={restaurant.logo_url} 
+            alt={restaurant.name}
+            className="w-24 h-24 mx-auto mb-4 rounded-xl object-cover"
+          />
+        )}
+        <h2 className="text-2xl font-bold">{restaurant?.name}</h2>
+        <p className="text-muted-foreground mt-1">{restaurant?.description || 'Welcome!'}</p>
+        {tableNumber && (
+          <Badge variant="outline" className="mt-3">Table {tableNumber}</Badge>
+        )}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="card-hover cursor-pointer" onClick={() => setCurrentView('menu')}>
+          <CardContent className="p-6 text-center">
+            <Menu className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <p className="font-semibold">View Menu</p>
+          </CardContent>
+        </Card>
+        <Card className="card-hover cursor-pointer" onClick={handleCallWaiter}>
+          <CardContent className="p-6 text-center">
+            <HandHelping className="w-8 h-8 mx-auto mb-2 text-warning" />
+            <p className="font-semibold">Call Waiter</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Active Order */}
+      {activeOrder && (
+        <WaitingTimer
+          order={activeOrder}
+          estimatedMinutes={estimatedPrepTime}
+          currencySymbol={currencySymbol}
+          onViewDetails={() => setCurrentView('orders')}
+        />
+      )}
+    </div>
+  );
+
   const renderMenu = () => (
     <div className="space-y-4">
       {/* Search */}
@@ -316,79 +369,36 @@ const estimatedPrepTime = useMemo(() => {
           placeholder="Search menu..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
+          className="pl-10 rounded-full bg-muted/50 border-0"
         />
       </div>
 
       {/* Categories */}
-      <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-        <TabsList className="w-full flex overflow-x-auto gap-1 h-auto p-1">
-          {categoryNames.map((category) => (
-            <TabsTrigger
-              key={category}
-              value={category}
-              className="flex-shrink-0 text-xs px-3 py-1.5"
-            >
-              {category}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <CategorySlider
+        categories={categoryNames}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
-      {/* Menu Items */}
+      {/* Menu Items Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <AnimatePresence mode="popLayout">
           {filteredItems.map((item) => (
-            <motion.div
+            <FoodCard
               key={item.id}
-              layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-            >
-              <Card className="overflow-hidden card-hover">
-                <div className="relative h-32">
-                  <img
-                    src={item.image_url || '/placeholder.svg'}
-                    alt={item.name}
-                    className="w-full h-full object-cover"
-                  />
-                  {item.is_vegetarian && (
-                    <Badge className="absolute top-2 left-2 bg-success text-success-foreground text-xs">
-                      Veg
-                    </Badge>
-                  )}
-                  {item.is_popular && (
-                    <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs">
-                      Popular
-                    </Badge>
-                  )}
-                </div>
-                <CardContent className="p-3">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-semibold text-sm">{item.name}</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-primary">
-                      {currencySymbol}{Number(item.price).toFixed(0)}
-                    </span>
-                    <Button
-                      size="sm"
-                      onClick={() => handleAddToCart(item)}
-                      className="h-8"
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+              id={item.id}
+              name={item.name}
+              description={item.description}
+              price={Number(item.price)}
+              imageUrl={item.image_url}
+              isVegetarian={item.is_vegetarian || false}
+              isPopular={item.is_popular || false}
+              currencySymbol={currencySymbol}
+              quantity={getItemQuantity(item.id)}
+              onAdd={() => handleAddToCart(item)}
+              onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
+              onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
+            />
           ))}
         </AnimatePresence>
       </div>
@@ -486,7 +496,7 @@ const estimatedPrepTime = useMemo(() => {
           </Card>
 
           <Button
-            className="w-full"
+            className="w-full bg-success hover:bg-success/90"
             size="lg"
             onClick={handlePlaceOrder}
             disabled={createOrder.isPending}
@@ -513,9 +523,6 @@ const estimatedPrepTime = useMemo(() => {
           order={activeOrder}
           estimatedMinutes={estimatedPrepTime}
           currencySymbol={currencySymbol}
-          onViewDetails={() => {
-            // Scroll to order details or expand
-          }}
         />
       )}
 
@@ -565,65 +572,45 @@ const estimatedPrepTime = useMemo(() => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Ad Popup */}
-      <Dialog open={showAdPopup} onOpenChange={setShowAdPopup}>
-        <DialogContent className="max-w-sm p-0 overflow-hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 z-10 bg-background/80 hover:bg-background"
-            onClick={() => setShowAdPopup(false)}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-          {activeAd && (
-            <div className="cursor-pointer" onClick={handleAdClick}>
-              {activeAd.image_url && (
-                <img
-                  src={activeAd.image_url}
-                  alt={activeAd.title}
-                  className="w-full aspect-video object-cover"
-                />
-              )}
-              <div className="p-4">
-                <h3 className="font-bold text-lg">{activeAd.title}</h3>
-                {activeAd.description && (
-                  <p className="text-sm text-muted-foreground mt-1">{activeAd.description}</p>
-                )}
-                {activeAd.link_url && (
-                  <Button className="w-full mt-3">Learn More</Button>
-                )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+    <div className="min-h-screen bg-background pb-24">
+      {/* Ads Popup */}
+      <AdsPopup
+        ad={activeAd || null}
+        open={showAdPopup}
+        onOpenChange={setShowAdPopup}
+        onApplyCoupon={handleApplyCoupon}
+        onSkip={() => setShowAdPopup(false)}
+        onClickThrough={handleAdClick}
+      />
+
+      {/* Added to Cart Toast */}
+      <AddedToCartToast show={showAddedToast} itemName={lastAddedItem} />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b">
+      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
+              <div className="w-8 h-8">
+                <Menu className="w-5 h-5 text-muted-foreground" />
+              </div>
               <div>
-                <h1 className="font-bold">{restaurant?.name || 'Restaurant'}</h1>
-                {tableNumber && (
-                  <p className="text-xs text-muted-foreground">Table {tableNumber}</p>
-                )}
+                <h1 className="font-bold text-lg">{restaurant?.name || 'Restaurant'}</h1>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="icon" 
                 onClick={handleCallWaiter}
                 disabled={createWaiterCall.isPending}
+                className="rounded-full"
               >
                 <HandHelping className="w-5 h-5" />
               </Button>
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                <span className="text-sm">👤</span>
+              </div>
             </div>
           </div>
         </div>
@@ -631,43 +618,19 @@ const estimatedPrepTime = useMemo(() => {
 
       {/* Content */}
       <main className="container mx-auto px-4 py-4">
+        {currentView === 'home' && renderHome()}
         {currentView === 'menu' && renderMenu()}
         {currentView === 'cart' && renderCart()}
         {currentView === 'orders' && renderOrders()}
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t pb-safe">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-around py-2">
-            {[
-              { view: 'menu' as ViewType, icon: Star, label: 'Menu' },
-              { view: 'cart' as ViewType, icon: ShoppingCart, label: 'Cart', badge: getTotalItems() },
-              { view: 'orders' as ViewType, icon: ClipboardList, label: 'Orders', badge: customerOrders.filter(o => o.status !== 'completed').length },
-            ].map(({ view, icon: Icon, label, badge }) => (
-              <button
-                key={view}
-                onClick={() => setCurrentView(view)}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
-                  currentView === view
-                    ? 'text-primary bg-primary/10'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <div className="relative">
-                  <Icon className="w-5 h-5" />
-                  {badge !== undefined && badge > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                      {badge}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs">{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
+      <BottomNav
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        cartCount={getTotalItems()}
+        orderCount={customerOrders.filter(o => o.status !== 'completed').length}
+      />
     </div>
   );
 };
