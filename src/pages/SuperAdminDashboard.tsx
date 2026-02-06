@@ -41,6 +41,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRestaurants, useCreateRestaurant, useUpdateRestaurant } from '@/hooks/useRestaurant';
 import { useAuth } from '@/hooks/useAuth';
+import { TenantStats } from '@/components/superadmin/TenantStats';
+import { MonthlyTrendChart } from '@/components/superadmin/MonthlyTrendChart';
+import { TenantTable } from '@/components/superadmin/TenantTable';
 
 const SuperAdminDashboard = () => {
   const navigate = useNavigate();
@@ -220,65 +223,9 @@ const SuperAdminDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-xs text-muted-foreground">Total Restaurants</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-                  <Check className="w-5 h-5 text-success" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.active}</p>
-                  <p className="text-xs text-muted-foreground">Active</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.tiers.pro}</p>
-                  <p className="text-xs text-muted-foreground">Pro Plans</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-purple-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.tiers.enterprise}</p>
-                  <p className="text-xs text-muted-foreground">Enterprise</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Enhanced Stats Row */}
+        <TenantStats restaurants={restaurants} totalRevenue={0} currencySymbol="₹" />
 
         {/* Restaurants Tab */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -508,24 +455,17 @@ const SuperAdminDashboard = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="analytics" className="mt-6">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle>Platform Analytics</CardTitle>
-                <CardDescription>
-                  Overview of platform-wide metrics
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-muted-foreground">
-                  <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Analytics dashboard coming soon</p>
-                  <p className="text-sm">
-                    Track orders, revenue, and growth across all restaurants
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="analytics" className="mt-6 space-y-6">
+            {/* Monthly Trends Chart */}
+            <MonthlyTrendChart restaurants={restaurants} currencySymbol="₹" months={6} />
+
+            {/* Tenant Performance Table */}
+            <TenantTable
+              restaurants={restaurants}
+              onToggleActive={handleToggleActive}
+              onChangeTier={handleChangeTier}
+              onViewDetails={(id) => window.open(`/admin?restaurant=${id}`, '_blank')}
+            />
           </TabsContent>
         </Tabs>
       </main>
