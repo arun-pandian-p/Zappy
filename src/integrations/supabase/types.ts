@@ -788,6 +788,47 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          name: string | null
+          restaurant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          name?: string | null
+          restaurant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          name?: string | null
+          restaurant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_profiles_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string | null
@@ -1042,6 +1083,7 @@ export type Database = {
         | "kitchen_staff"
         | "waiter_staff"
         | "billing_staff"
+        | "manager"
       order_status:
         | "pending"
         | "confirmed"
@@ -1185,6 +1227,7 @@ export const Constants = {
         "kitchen_staff",
         "waiter_staff",
         "billing_staff",
+        "manager",
       ],
       order_status: [
         "pending",
