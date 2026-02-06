@@ -2,27 +2,19 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
-  Users,
-  CreditCard,
   BarChart3,
   Plus,
   Search,
-  Edit2,
-  Trash2,
   Check,
   X,
   Loader2,
   Power,
-  Eye,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -30,20 +22,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { useRestaurants, useCreateRestaurant, useUpdateRestaurant } from '@/hooks/useRestaurant';
+import { useRestaurants, useCreateRestaurant, useUpdateRestaurant, useDeleteRestaurant } from '@/hooks/useRestaurant';
 import { useAuth } from '@/hooks/useAuth';
 import { TenantStats } from '@/components/superadmin/TenantStats';
 import { MonthlyTrendChart } from '@/components/superadmin/MonthlyTrendChart';
 import { TenantTable } from '@/components/superadmin/TenantTable';
+import { EditHotelProfile } from '@/components/superadmin/EditHotelProfile';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Tables } from '@/integrations/supabase/types';
+
+type Restaurant = Tables<"restaurants">;
 
 const SuperAdminDashboard = () => {
   const navigate = useNavigate();
@@ -53,6 +42,7 @@ const SuperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('restaurants');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   
   // Restaurant form state
   const [newRestaurant, setNewRestaurant] = useState({
@@ -68,6 +58,7 @@ const SuperAdminDashboard = () => {
   const { data: restaurants = [], isLoading } = useRestaurants();
   const createRestaurant = useCreateRestaurant();
   const updateRestaurant = useUpdateRestaurant();
+  const deleteRestaurant = useDeleteRestaurant();
 
   // Filter restaurants
   const filteredRestaurants = useMemo(() => {
@@ -80,17 +71,6 @@ const SuperAdminDashboard = () => {
         r.email?.toLowerCase().includes(query)
     );
   }, [restaurants, searchQuery]);
-
-  // Stats
-  const stats = useMemo(() => {
-    const active = restaurants.filter((r) => r.is_active).length;
-    const tiers = {
-      free: restaurants.filter((r) => r.subscription_tier === 'free').length,
-      pro: restaurants.filter((r) => r.subscription_tier === 'pro').length,
-      enterprise: restaurants.filter((r) => r.subscription_tier === 'enterprise').length,
-    };
-    return { total: restaurants.length, active, tiers };
-  }, [restaurants]);
 
   const handleAddRestaurant = async () => {
     if (!newRestaurant.name || !newRestaurant.slug) {
@@ -174,15 +154,25 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  const getTierBadge = (tier: string | null) => {
-    switch (tier) {
-      case 'pro':
-        return <Badge className="bg-blue-500">Pro</Badge>;
-      case 'enterprise':
-        return <Badge className="bg-purple-500">Enterprise</Badge>;
-      default:
-        return <Badge variant="secondary">Free</Badge>;
+  const handleViewDetails = (id: string) => {
+    const restaurant = restaurants.find(r => r.id === id);
+    if (restaurant) {
+      setEditingRestaurant(restaurant);
     }
+  };
+
+  const handleSaveRestaurant = async (updates: Partial<Restaurant>) => {
+    if (!editingRestaurant) return;
+    await updateRestaurant.mutateAsync({
+      id: editingRestaurant.id,
+      updates,
+    });
+    setEditingRestaurant(null);
+  };
+
+  const handleDeleteRestaurant = async (id: string) => {
+    await deleteRestaurant.mutateAsync(id);
+    setEditingRestaurant(null);
   };
 
   // Check if user is super admin
@@ -199,6 +189,58 @@ const SuperAdminDashboard = () => {
             <Button onClick={() => navigate('/admin')}>Go to Admin Dashboard</Button>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  // Show Edit Profile view
+  if (editingRestaurant) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-sidebar text-sidebar-foreground">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                <img src="/qr-logo.svg" alt="QR Dine Pro" className="w-6 h-6" style={{ filter: 'brightness(0) invert(1)' }} />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold">Super Admin</h1>
+                <p className="text-xs text-sidebar-foreground/70">Admin Dashboard</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex">
+          {/* Sidebar */}
+          <aside className="w-64 min-h-screen bg-sidebar text-sidebar-foreground p-4 hidden lg:block">
+            <nav className="space-y-1 mt-4">
+              <button
+                onClick={() => setEditingRestaurant(null)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent"
+              >
+                <Building2 className="w-5 h-5" />
+                Dashboard
+              </button>
+              <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
+                <Building2 className="w-5 h-5" />
+                Tenants
+              </div>
+            </nav>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 p-6">
+            <EditHotelProfile
+              restaurant={editingRestaurant}
+              onSave={handleSaveRestaurant}
+              onDelete={handleDeleteRestaurant}
+              onBack={() => setEditingRestaurant(null)}
+              isSaving={updateRestaurant.isPending}
+            />
+          </main>
+        </div>
       </div>
     );
   }
@@ -380,81 +422,13 @@ const SuperAdminDashboard = () => {
                     <Loader2 className="w-8 h-8 animate-spin" />
                   </div>
                 ) : (
-                  <div className="rounded-lg border overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Restaurant</TableHead>
-                          <TableHead>Slug</TableHead>
-                          <TableHead>Plan</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredRestaurants.map((restaurant) => (
-                          <TableRow key={restaurant.id}>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">{restaurant.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {restaurant.email || 'No email'}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <code className="text-xs bg-muted px-2 py-1 rounded">
-                                {restaurant.slug}
-                              </code>
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                value={restaurant.subscription_tier || 'free'}
-                                onValueChange={(v: 'free' | 'pro' | 'enterprise') =>
-                                  handleChangeTier(restaurant.id, v)
-                                }
-                              >
-                                <SelectTrigger className="w-[120px]">
-                                  {getTierBadge(restaurant.subscription_tier)}
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="free">Free</SelectItem>
-                                  <SelectItem value="pro">Pro</SelectItem>
-                                  <SelectItem value="enterprise">Enterprise</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Switch
-                                checked={restaurant.is_active || false}
-                                onCheckedChange={() =>
-                                  handleToggleActive(restaurant.id, restaurant.is_active || false)
-                                }
-                              />
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  window.open(`/admin?restaurant=${restaurant.id}`, '_blank')
-                                }
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        {filteredRestaurants.length === 0 && (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                              No restaurants found
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <TenantTable
+                    restaurants={filteredRestaurants}
+                    onToggleActive={handleToggleActive}
+                    onChangeTier={handleChangeTier}
+                    onViewDetails={handleViewDetails}
+                    onDelete={handleDeleteRestaurant}
+                  />
                 )}
               </CardContent>
             </Card>
@@ -469,7 +443,7 @@ const SuperAdminDashboard = () => {
               restaurants={restaurants}
               onToggleActive={handleToggleActive}
               onChangeTier={handleChangeTier}
-              onViewDetails={(id) => window.open(`/admin?restaurant=${id}`, '_blank')}
+              onViewDetails={handleViewDetails}
             />
           </TabsContent>
         </Tabs>

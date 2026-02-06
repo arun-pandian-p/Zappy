@@ -1,56 +1,90 @@
-# Implementation Plan - COMPLETED
+# Implementation Plan - Phase 2 Complete
 
 ## Summary
 
-All phases from the original plan have been implemented:
+All major modules from the PRD have now been implemented:
 
-### ✅ Completed Features
+### ✅ Phase 1 - Completed
+1. QR Logo & Favicon
+2. Ads System Fix
+3. Timer Components (WaitingTimer, TableSessionTimers)
 
-1. **QR Logo & Favicon**
-   - Created `public/qr-logo.svg` with custom QR-themed design
-   - Updated `index.html` with favicon and proper meta tags
-   - Updated AdminSidebar to use new logo
-   - Updated SuperAdminDashboard header with new logo
+### ✅ Phase 2 - Completed (Current)
 
-2. **Ads System Fix**
-   - Fixed "Cannot coerce JSON" error in `useAds.ts`
-   - Removed `.single()` from create/update mutations
-   - Now returns `data?.[0] || null` to handle edge cases
+#### Customer QR Menu Redesign
+- **FoodCard Component** (`src/components/menu/FoodCard.tsx`)
+  - Image with aspect ratio
+  - Veg badge (top-left, green)
+  - Popular badge (top-right, green)
+  - Qty stepper when item in cart
+  - Add to Cart button (green)
 
-3. **Timer Components**
-   - Created `WaitingTimer.tsx` for customer order tracking
-   - Created `TableSessionTimers.tsx` for admin session monitoring
-   - Real-time countdown with color-coded duration alerts
+- **CategorySlider** (`src/components/menu/CategorySlider.tsx`)
+  - Horizontal scroll with auto-scroll to active
+  - Pill-style buttons
+  - Green active state
 
-4. **Dashboard Integration**
-   - Admin Dashboard now shows table session timers
-   - Customer Menu shows animated waiting timer after order
-   - Super Admin header updated with QR branding
+- **BottomNav** (`src/components/menu/BottomNav.tsx`)
+  - 4 tabs: Home, Menu, Cart, Orders
+  - Badge counts for cart/orders
+  - Green active indicator
+
+- **AdsPopup** (`src/components/menu/AdsPopup.tsx`)
+  - Full image with gradient overlay
+  - Coupon code extraction from description
+  - Apply Coupon / Skip buttons
+
+- **AddedToCartToast** (`src/components/menu/AddedToCartToast.tsx`)
+  - Green checkmark banner
+  - Auto-dismiss after 2 seconds
+
+#### Super Admin Edit Hotel Profile
+- **EditHotelProfile** (`src/components/superadmin/EditHotelProfile.tsx`)
+  - Logo upload section
+  - Subdomain, Name, Owner, Plan fields
+  - Email, Phone inputs
+  - Plan Start/End dates
+  - Description textarea
+  - Settings tabs: Business, Billing, Ads
+  - Active/Trial toggles
+  - Currency, Tax Rate, Service Charge
+  - Address with map placeholder
+  - Cancel/Save buttons
+  - Delete Hotel with confirmation
+
+---
 
 ## Files Changed
 
-### New Files
-- `public/qr-logo.svg` - QR-themed logo
-- `src/components/order/WaitingTimer.tsx` - Customer timer
-- `src/components/admin/TableSessionTimers.tsx` - Admin timer grid
+### New Components (Phase 2)
+| File | Purpose |
+|------|---------|
+| `src/components/menu/FoodCard.tsx` | Redesigned menu item card |
+| `src/components/menu/AdsPopup.tsx` | Ad modal with coupon support |
+| `src/components/menu/BottomNav.tsx` | 4-tab navigation |
+| `src/components/menu/CategorySlider.tsx` | Horizontal category pills |
+| `src/components/menu/AddedToCartToast.tsx` | Cart confirmation toast |
+| `src/components/superadmin/EditHotelProfile.tsx` | Full tenant edit form |
 
-### Updated Files
-- `index.html` - Favicon + meta tags
-- `src/hooks/useAds.ts` - Error handling fix
-- `src/components/admin/AdminSidebar.tsx` - New logo
-- `src/pages/AdminDashboard.tsx` - Timer integration
-- `src/pages/SuperAdminDashboard.tsx` - Logo + header
-- `src/pages/CustomerMenu.tsx` - WaitingTimer integration
+### Updated Pages
+| File | Changes |
+|------|---------|
+| `src/pages/CustomerMenu.tsx` | Integrated all new menu components |
+| `src/pages/SuperAdminDashboard.tsx` | Added Edit Profile view with sidebar |
 
-## Technical Notes
+---
 
-### Timer Thresholds
-- **Wait Time**: Warning at 5min, Alert at 10min
-- **Prep Time**: Warning at 15min, Alert at 25min
-- **Service Time**: Warning at 3min, Alert at 5min
+## Design Tokens Used
+- `--success`: Green for Veg badges, Popular badges, Add buttons
+- `--warning`: Orange for coupon badges
+- `--muted`: Gray backgrounds
+- `--primary`: Blue for active states
+- `--destructive`: Red for delete actions
 
-### WaitingTimer Features
-- Circular progress indicator
-- Real-time elapsed time counter
-- Status-based styling (pending/preparing/ready)
-- Estimated wait time display
+---
+
+## Next Steps
+1. Kitchen Display System (KDS) improvements
+2. Billing POS interface
+3. Hotel Admin Menu CRUD
+4. Reviews/Feedback module
