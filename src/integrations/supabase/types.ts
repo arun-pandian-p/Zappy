@@ -292,6 +292,66 @@ export type Database = {
           },
         ]
       }
+      default_tax_settings: {
+        Row: {
+          currency: string
+          gst_percent: number
+          id: string
+          service_charge_percent: number
+          tax_mode: string
+          updated_at: string
+          vat_percent: number
+        }
+        Insert: {
+          currency?: string
+          gst_percent?: number
+          id?: string
+          service_charge_percent?: number
+          tax_mode?: string
+          updated_at?: string
+          vat_percent?: number
+        }
+        Update: {
+          currency?: string
+          gst_percent?: number
+          id?: string
+          service_charge_percent?: number
+          tax_mode?: string
+          updated_at?: string
+          vat_percent?: number
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          body_html: string
+          created_at: string
+          id: string
+          subject: string
+          template_name: string
+          updated_at: string
+          variables_json: Json | null
+        }
+        Insert: {
+          body_html?: string
+          created_at?: string
+          id?: string
+          subject?: string
+          template_name: string
+          updated_at?: string
+          variables_json?: Json | null
+        }
+        Update: {
+          body_html?: string
+          created_at?: string
+          id?: string
+          subject?: string
+          template_name?: string
+          updated_at?: string
+          variables_json?: Json | null
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           comment: string | null
@@ -635,6 +695,42 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          email_logo_url: string | null
+          favicon_url: string | null
+          id: string
+          login_bg_url: string | null
+          logo_url: string | null
+          platform_name: string
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          email_logo_url?: string | null
+          favicon_url?: string | null
+          id?: string
+          login_bg_url?: string | null
+          logo_url?: string | null
+          platform_name?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          email_logo_url?: string | null
+          favicon_url?: string | null
+          id?: string
+          login_bg_url?: string | null
+          logo_url?: string | null
+          platform_name?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       printer_queue: {
         Row: {
           attempts: number | null
@@ -868,6 +964,39 @@ export type Database = {
           price_yearly?: number | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_logs: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
         }
         Relationships: []
       }

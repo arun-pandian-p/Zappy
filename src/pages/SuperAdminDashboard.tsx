@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useRestaurants, useCreateRestaurant, useUpdateRestaurant, useDeleteRestaurant } from '@/hooks/useRestaurant';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,8 +30,17 @@ import { MonthlyTrendChart } from '@/components/superadmin/MonthlyTrendChart';
 import { TenantTable } from '@/components/superadmin/TenantTable';
 import { EditHotelProfile } from '@/components/superadmin/EditHotelProfile';
 import { SuperAdminSidebar } from '@/components/superadmin/SuperAdminSidebar';
+import { CreateHotelForm } from '@/components/superadmin/CreateHotelForm';
+import { SubscriptionPlansManager } from '@/components/superadmin/SubscriptionPlansManager';
+import { PlatformAdsManager } from '@/components/superadmin/PlatformAdsManager';
+import { PlatformSettings } from '@/components/superadmin/PlatformSettings';
+import { DefaultTaxSettings } from '@/components/superadmin/DefaultTaxSettings';
+import { EmailTemplateManager } from '@/components/superadmin/EmailTemplateManager';
+import { SystemLogs } from '@/components/superadmin/SystemLogs';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import UserManagement from '@/components/admin/UserManagement';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Restaurant = Tables<"restaurants">;
@@ -39,25 +49,39 @@ const SuperAdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { role } = useAuth();
+  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showCreateHotel, setShowCreateHotel] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
-
-  const [newRestaurant, setNewRestaurant] = useState({
-    name: '',
-    slug: '',
-    email: '',
-    phone: '',
-    address: '',
-    subscription_tier: 'free' as 'free' | 'pro' | 'enterprise',
-  });
 
   const { data: restaurants = [], isLoading } = useRestaurants();
   const createRestaurant = useCreateRestaurant();
   const updateRestaurant = useUpdateRestaurant();
   const deleteRestaurant = useDeleteRestaurant();
+
+  // Real-time subscriptions
+  useEffect(() => {
+    const channel = supabase
+      .channel('super-admin-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'restaurants' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['restaurants'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_profiles' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['staff-members'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['staff-members'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_logs' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['system-logs'] });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
 
   const filteredRestaurants = useMemo(() => {
     if (!searchQuery) return restaurants;
@@ -69,29 +93,6 @@ const SuperAdminDashboard = () => {
         r.email?.toLowerCase().includes(query)
     );
   }, [restaurants, searchQuery]);
-
-  const handleAddRestaurant = async () => {
-    if (!newRestaurant.name || !newRestaurant.slug) {
-      toast({ title: 'Missing Fields', description: 'Name and slug are required.', variant: 'destructive' });
-      return;
-    }
-    try {
-      await createRestaurant.mutateAsync({
-        name: newRestaurant.name,
-        slug: newRestaurant.slug.toLowerCase().replace(/\s+/g, '-'),
-        email: newRestaurant.email || undefined,
-        phone: newRestaurant.phone || undefined,
-        address: newRestaurant.address || undefined,
-        subscription_tier: newRestaurant.subscription_tier,
-        is_active: true,
-      });
-      toast({ title: 'Restaurant Created', description: `${newRestaurant.name} has been added.` });
-      setNewRestaurant({ name: '', slug: '', email: '', phone: '', address: '', subscription_tier: 'free' });
-      setShowAddForm(false);
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message || 'Failed to create restaurant.', variant: 'destructive' });
-    }
-  };
 
   const handleToggleActive = async (id: string, currentValue: boolean) => {
     try {
@@ -165,12 +166,22 @@ const SuperAdminDashboard = () => {
         );
 
       case 'restaurants':
+        if (showCreateHotel) {
+          return (
+            <CreateHotelForm
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ['restaurants'] });
+              }}
+              onCancel={() => setShowCreateHotel(false)}
+            />
+          );
+        }
         return (
           <Card className="border-0 shadow-md">
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <CardTitle>Restaurants</CardTitle>
+                  <CardTitle>Tenants / Hotels</CardTitle>
                   <CardDescription>Manage all restaurants on the platform</CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -183,68 +194,14 @@ const SuperAdminDashboard = () => {
                       className="pl-9 w-[200px]"
                     />
                   </div>
-                  <Button onClick={() => setShowAddForm(true)}>
+                  <Button onClick={() => setShowCreateHotel(true)}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Restaurant
+                    Create Hotel
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <AnimatePresence>
-                {showAddForm && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mb-6 p-4 border rounded-lg bg-muted/50"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label>Name *</Label>
-                        <Input value={newRestaurant.name} onChange={(e) => setNewRestaurant({ ...newRestaurant, name: e.target.value })} placeholder="Restaurant Name" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Slug *</Label>
-                        <Input value={newRestaurant.slug} onChange={(e) => setNewRestaurant({ ...newRestaurant, slug: e.target.value })} placeholder="restaurant-name" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Subscription</Label>
-                        <Select value={newRestaurant.subscription_tier} onValueChange={(v: 'free' | 'pro' | 'enterprise') => setNewRestaurant({ ...newRestaurant, subscription_tier: v })}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="free">Free</SelectItem>
-                            <SelectItem value="pro">Pro</SelectItem>
-                            <SelectItem value="enterprise">Enterprise</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Email</Label>
-                        <Input type="email" value={newRestaurant.email} onChange={(e) => setNewRestaurant({ ...newRestaurant, email: e.target.value })} placeholder="contact@restaurant.com" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Phone</Label>
-                        <Input value={newRestaurant.phone} onChange={(e) => setNewRestaurant({ ...newRestaurant, phone: e.target.value })} placeholder="+91 9876543210" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Address</Label>
-                        <Input value={newRestaurant.address} onChange={(e) => setNewRestaurant({ ...newRestaurant, address: e.target.value })} placeholder="123 Main Street" />
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mt-4">
-                      <Button onClick={handleAddRestaurant} disabled={createRestaurant.isPending}>
-                        {createRestaurant.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
-                        Create Restaurant
-                      </Button>
-                      <Button variant="outline" onClick={() => setShowAddForm(false)}>
-                        <X className="w-4 h-4 mr-2" />
-                        Cancel
-                      </Button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin" />
@@ -278,18 +235,28 @@ const SuperAdminDashboard = () => {
       case 'users':
         return <UserManagement />;
 
+      case 'plans':
+        return <SubscriptionPlansManager />;
+
+      case 'ads':
+        return <PlatformAdsManager />;
+
       case 'settings':
         return (
-          <Card className="border-0 shadow-md">
-            <CardHeader>
-              <CardTitle>Platform Settings</CardTitle>
-              <CardDescription>Configure global platform settings</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Platform settings coming soon.</p>
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="branding" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="branding">Platform Branding</TabsTrigger>
+              <TabsTrigger value="tax">Default Tax Config</TabsTrigger>
+              <TabsTrigger value="emails">Email Templates</TabsTrigger>
+            </TabsList>
+            <TabsContent value="branding"><PlatformSettings /></TabsContent>
+            <TabsContent value="tax"><DefaultTaxSettings /></TabsContent>
+            <TabsContent value="emails"><EmailTemplateManager /></TabsContent>
+          </Tabs>
         );
+
+      case 'logs':
+        return <SystemLogs />;
 
       default:
         return null;
@@ -298,10 +265,13 @@ const SuperAdminDashboard = () => {
 
   const pageTitles: Record<string, { title: string; description: string }> = {
     dashboard: { title: 'Dashboard', description: 'Platform overview and metrics' },
-    restaurants: { title: 'Restaurants', description: 'Manage all tenants' },
+    restaurants: { title: 'Tenants / Hotels', description: 'Manage all tenants' },
     analytics: { title: 'Analytics', description: 'Revenue and performance trends' },
     users: { title: 'User Management', description: 'Manage all staff across restaurants' },
+    plans: { title: 'Subscription Plans', description: 'Manage platform subscription tiers' },
+    ads: { title: 'Platform Ads', description: 'Manage promotional advertisements' },
     settings: { title: 'Settings', description: 'Platform configuration' },
+    logs: { title: 'System Logs', description: 'Audit trail of platform actions' },
   };
 
   const currentPage = editingRestaurant
@@ -311,7 +281,7 @@ const SuperAdminDashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-muted/30">
-        <SuperAdminSidebar activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setEditingRestaurant(null); }} />
+        <SuperAdminSidebar activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setEditingRestaurant(null); setShowCreateHotel(false); }} />
         <SidebarInset className="flex-1">
           <header className="sticky top-0 z-40 bg-card border-b">
             <div className="flex items-center justify-between px-6 py-4">
