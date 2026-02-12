@@ -13,6 +13,7 @@ import {
   Usb,
   QrCode,
 } from "lucide-react";
+import { BrandingAnimationSettings, type BrandingConfig, defaultBrandingConfig } from "@/components/branding/BrandingAnimationSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ interface RestaurantSettings {
   review_enabled: boolean;
   google_redirect_threshold: number;
   qr_base_url: string;
+  branding: BrandingConfig;
 }
 
 const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
@@ -70,6 +72,7 @@ const defaultSettings: RestaurantSettings = {
   review_enabled: true,
   google_redirect_threshold: 4,
   qr_base_url: PUBLISHED_URL,
+  branding: defaultBrandingConfig,
 };
 
 export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
@@ -86,6 +89,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
       const reviewSettings = restaurant.review_settings as Record<string, unknown> || {};
       const extraSettings = restaurant.settings as Record<string, unknown> || {};
 
+      const brandingRaw = (extraSettings.branding as Record<string, unknown>) || {};
       setSettings({
         name: restaurant.name || "",
         address: restaurant.address || "",
@@ -102,6 +106,13 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         review_enabled: (reviewSettings.enabled as boolean) ?? true,
         google_redirect_threshold: (reviewSettings.google_redirect_threshold as number) || 4,
         qr_base_url: (extraSettings.qr_base_url as string) || PUBLISHED_URL,
+        branding: {
+          animation_enabled: (brandingRaw.animation_enabled as boolean) ?? false,
+          letter_animation: (brandingRaw.letter_animation as BrandingConfig["letter_animation"]) || "bounce",
+          mascot: (brandingRaw.mascot as BrandingConfig["mascot"]) || "none",
+          animation_speed: (brandingRaw.animation_speed as BrandingConfig["animation_speed"]) || "normal",
+          glow_color_sync: (brandingRaw.glow_color_sync as boolean) ?? true,
+        },
       });
     }
   }, [restaurant]);
@@ -134,7 +145,8 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           },
           settings: {
             qr_base_url: settings.qr_base_url,
-          },
+            branding: { ...settings.branding },
+          } as any,
         },
       });
 
@@ -443,10 +455,24 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         </Card>
       </motion.div>
 
+      {/* Branding Animations */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
+      >
+        <BrandingAnimationSettings
+          config={settings.branding}
+          onChange={(branding) => setSettings({ ...settings, branding })}
+          restaurantName={settings.name || "Hotel Name"}
+          primaryColor={restaurant?.primary_color || undefined}
+        />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
       >
         <Card className="border-0 shadow-md">
           <CardHeader>

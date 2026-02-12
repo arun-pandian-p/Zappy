@@ -23,6 +23,7 @@ import { CustomerTopBar } from '@/components/menu/CustomerTopBar';
 import { FloatingCartBar } from '@/components/menu/FloatingCartBar';
 import { MenuItemRow } from '@/components/menu/MenuItemRow';
 import { OrderStatusPipeline } from '@/components/menu/OrderStatusPipeline';
+import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
@@ -146,6 +147,8 @@ const CustomerMenu = () => {
   const currencySymbol = restaurant?.currency || '₹';
   const taxRate = Number(restaurant?.tax_rate) || 5;
   const serviceChargeRate = Number(restaurant?.service_charge_rate) || 0;
+  const brandingConfig = ((restaurant?.settings as any)?.branding) || {};
+  const primaryColor = restaurant?.primary_color || undefined;
 
   // Get item quantity in cart
   const getItemQuantity = useCallback((itemId: string) => {
@@ -272,12 +275,18 @@ const CustomerMenu = () => {
     });
   };
 
-  // Loading state
+  // Loading state — show splash
   if (restaurantLoading || menuLoading || tableLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
+      <QRSplashScreen
+        restaurantName={restaurant?.name || 'Restaurant'}
+        logoUrl={restaurant?.logo_url}
+        animation={brandingConfig.letter_animation}
+        speed={brandingConfig.animation_speed}
+        mascot={brandingConfig.mascot}
+        primaryColor={primaryColor}
+        isLoading={true}
+      />
     );
   }
 
@@ -626,6 +635,8 @@ const CustomerMenu = () => {
         onCallWaiter={handleCallWaiter}
         onCartClick={() => setCurrentView('cart')}
         isCallingWaiter={createWaiterCall.isPending}
+        primaryColor={primaryColor}
+        branding={brandingConfig}
       />
 
       {/* Content */}

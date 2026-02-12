@@ -349,7 +349,11 @@ const AdminDashboard = () => {
         <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} />
 
         <SidebarInset className="flex-1">
-          <AdminHeader restaurantName={restaurantName} />
+          <AdminHeader
+            restaurantName={restaurantName}
+            primaryColor={restaurant?.primary_color || undefined}
+            branding={(restaurant?.settings as any)?.branding}
+          />
 
           {/* Tab Navigation */}
           <div className="border-b bg-card overflow-x-auto">
