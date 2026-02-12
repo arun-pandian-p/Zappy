@@ -9,6 +9,7 @@ import {
   X,
   Loader2,
   Power,
+  Users,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ import { MonthlyTrendChart } from '@/components/superadmin/MonthlyTrendChart';
 import { TenantTable } from '@/components/superadmin/TenantTable';
 import { EditHotelProfile } from '@/components/superadmin/EditHotelProfile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import UserManagement from '@/components/admin/UserManagement';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Restaurant = Tables<"restaurants">;
@@ -285,6 +287,10 @@ const SuperAdminDashboard = () => {
               <BarChart3 className="w-4 h-4 mr-2" />
               Analytics
             </TabsTrigger>
+            <TabsTrigger value="users">
+              <Users className="w-4 h-4 mr-2" />
+              Staff
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="restaurants" className="mt-6">
@@ -445,6 +451,10 @@ const SuperAdminDashboard = () => {
               onChangeTier={handleChangeTier}
               onViewDetails={handleViewDetails}
             />
+          </TabsContent>
+
+          <TabsContent value="users" className="mt-6">
+            <UserManagement />
           </TabsContent>
         </Tabs>
       </main>

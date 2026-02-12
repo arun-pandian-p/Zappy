@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
@@ -76,10 +76,15 @@ const roleConfig: Record<AppRole, { label: string; icon: React.ComponentType<{ c
 
 const staffRoles: AppRole[] = ['manager', 'kitchen_staff', 'waiter_staff', 'billing_staff'];
 
-const UserManagement = () => {
+interface UserManagementProps {
+  restaurantIdOverride?: string | null;
+}
+
+const UserManagement = ({ restaurantIdOverride }: UserManagementProps = {}) => {
   const { toast } = useToast();
-  const { restaurantId } = useAuth();
+  const { restaurantId: authRestaurantId, role } = useAuth();
   const queryClient = useQueryClient();
+  const effectiveRestaurantId = restaurantIdOverride !== undefined ? restaurantIdOverride : authRestaurantId;
   
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -93,21 +98,26 @@ const UserManagement = () => {
   });
 
   // Fetch staff profiles with their roles
+  const isSuperAdmin = role === 'super_admin';
+
   const { data: staffMembers = [], isLoading } = useQuery({
-    queryKey: ['staff-members', restaurantId],
+    queryKey: ['staff-members', effectiveRestaurantId, isSuperAdmin],
     queryFn: async () => {
-      if (!restaurantId) return [];
-      
-      const { data: profiles, error: profilesError } = await supabase
+      let profilesQuery = supabase
         .from('staff_profiles')
         .select('*')
-        .eq('restaurant_id', restaurantId)
         .order('created_at', { ascending: false });
+
+      if (effectiveRestaurantId) {
+        profilesQuery = profilesQuery.eq('restaurant_id', effectiveRestaurantId);
+      }
+      // super_admin with no specific restaurant sees all staff
+
+      const { data: profiles, error: profilesError } = await profilesQuery;
 
       if (profilesError) throw profilesError;
       if (!profiles?.length) return [];
 
-      // Fetch roles for these users
       const userIds = profiles.map(p => p.user_id);
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
@@ -128,13 +138,38 @@ const UserManagement = () => {
         created_at: p.created_at,
       }));
     },
-    enabled: !!restaurantId,
+    enabled: isSuperAdmin || !!effectiveRestaurantId,
   });
+
+  // Realtime subscription for live updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('staff-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'staff_profiles' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['staff-members'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_roles' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['staff-members'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Create new staff user via secure edge function
   const createStaffMutation = useMutation({
     mutationFn: async (data: typeof newUser) => {
-      if (!restaurantId) throw new Error('No restaurant context');
+      if (!effectiveRestaurantId && !isSuperAdmin) throw new Error('No restaurant context');
       
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
@@ -255,7 +290,7 @@ const UserManagement = () => {
     createStaffMutation.mutate(newUser);
   };
 
-  if (!restaurantId) {
+  if (!effectiveRestaurantId && !isSuperAdmin) {
     return (
       <Card>
         <CardContent className="p-6 text-center text-muted-foreground">
