@@ -16,6 +16,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import FeedbackPage from "./pages/FeedbackPage";
 import NotFound from "./pages/NotFound";
+import ArchitectureDiagram from "./pages/ArchitectureDiagram";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
           {/* Admin routes */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/super-admin" element={<SuperAdminDashboard />} />
+          <Route path="/architecture" element={<ArchitectureDiagram />} />
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
