@@ -2,14 +2,12 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
-  BarChart3,
   Plus,
   Search,
   Check,
   X,
   Loader2,
   Power,
-  Users,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -30,7 +28,8 @@ import { TenantStats } from '@/components/superadmin/TenantStats';
 import { MonthlyTrendChart } from '@/components/superadmin/MonthlyTrendChart';
 import { TenantTable } from '@/components/superadmin/TenantTable';
 import { EditHotelProfile } from '@/components/superadmin/EditHotelProfile';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SuperAdminSidebar } from '@/components/superadmin/SuperAdminSidebar';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import UserManagement from '@/components/admin/UserManagement';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -40,13 +39,12 @@ const SuperAdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { role } = useAuth();
-  
-  const [activeTab, setActiveTab] = useState('restaurants');
+
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
-  
-  // Restaurant form state
+
   const [newRestaurant, setNewRestaurant] = useState({
     name: '',
     slug: '',
@@ -56,13 +54,11 @@ const SuperAdminDashboard = () => {
     subscription_tier: 'free' as 'free' | 'pro' | 'enterprise',
   });
 
-  // Fetch restaurants
   const { data: restaurants = [], isLoading } = useRestaurants();
   const createRestaurant = useCreateRestaurant();
   const updateRestaurant = useUpdateRestaurant();
   const deleteRestaurant = useDeleteRestaurant();
 
-  // Filter restaurants
   const filteredRestaurants = useMemo(() => {
     if (!searchQuery) return restaurants;
     const query = searchQuery.toLowerCase();
@@ -76,14 +72,9 @@ const SuperAdminDashboard = () => {
 
   const handleAddRestaurant = async () => {
     if (!newRestaurant.name || !newRestaurant.slug) {
-      toast({
-        title: 'Missing Fields',
-        description: 'Name and slug are required.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Missing Fields', description: 'Name and slug are required.', variant: 'destructive' });
       return;
     }
-
     try {
       await createRestaurant.mutateAsync({
         name: newRestaurant.name,
@@ -94,81 +85,40 @@ const SuperAdminDashboard = () => {
         subscription_tier: newRestaurant.subscription_tier,
         is_active: true,
       });
-
-      toast({
-        title: 'Restaurant Created',
-        description: `${newRestaurant.name} has been added.`,
-      });
-
-      setNewRestaurant({
-        name: '',
-        slug: '',
-        email: '',
-        phone: '',
-        address: '',
-        subscription_tier: 'free',
-      });
+      toast({ title: 'Restaurant Created', description: `${newRestaurant.name} has been added.` });
+      setNewRestaurant({ name: '', slug: '', email: '', phone: '', address: '', subscription_tier: 'free' });
       setShowAddForm(false);
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create restaurant.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message || 'Failed to create restaurant.', variant: 'destructive' });
     }
   };
 
   const handleToggleActive = async (id: string, currentValue: boolean) => {
     try {
-      await updateRestaurant.mutateAsync({
-        id,
-        updates: { is_active: !currentValue },
-      });
-      toast({
-        title: 'Status Updated',
-        description: `Restaurant is now ${!currentValue ? 'active' : 'inactive'}.`,
-      });
+      await updateRestaurant.mutateAsync({ id, updates: { is_active: !currentValue } });
+      toast({ title: 'Status Updated', description: `Restaurant is now ${!currentValue ? 'active' : 'inactive'}.` });
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update status.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message || 'Failed to update status.', variant: 'destructive' });
     }
   };
 
   const handleChangeTier = async (id: string, tier: 'free' | 'pro' | 'enterprise') => {
     try {
-      await updateRestaurant.mutateAsync({
-        id,
-        updates: { subscription_tier: tier },
-      });
-      toast({
-        title: 'Plan Updated',
-        description: `Subscription changed to ${tier}.`,
-      });
+      await updateRestaurant.mutateAsync({ id, updates: { subscription_tier: tier } });
+      toast({ title: 'Plan Updated', description: `Subscription changed to ${tier}.` });
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update plan.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message || 'Failed to update plan.', variant: 'destructive' });
     }
   };
 
   const handleViewDetails = (id: string) => {
     const restaurant = restaurants.find(r => r.id === id);
-    if (restaurant) {
-      setEditingRestaurant(restaurant);
-    }
+    if (restaurant) setEditingRestaurant(restaurant);
   };
 
   const handleSaveRestaurant = async (updates: Partial<Restaurant>) => {
     if (!editingRestaurant) return;
-    await updateRestaurant.mutateAsync({
-      id: editingRestaurant.id,
-      updates,
-    });
+    await updateRestaurant.mutateAsync({ id: editingRestaurant.id, updates });
     setEditingRestaurant(null);
   };
 
@@ -177,7 +127,6 @@ const SuperAdminDashboard = () => {
     setEditingRestaurant(null);
   };
 
-  // Check if user is super admin
   if (role !== 'super_admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
@@ -185,9 +134,7 @@ const SuperAdminDashboard = () => {
           <CardContent className="p-6 text-center">
             <Power className="w-12 h-12 mx-auto mb-4 text-destructive" />
             <h2 className="text-lg font-semibold mb-2">Access Denied</h2>
-            <p className="text-muted-foreground mb-4">
-              You need Super Admin privileges to access this page.
-            </p>
+            <p className="text-muted-foreground mb-4">You need Super Admin privileges.</p>
             <Button onClick={() => navigate('/admin')}>Go to Admin Dashboard</Button>
           </CardContent>
         </Card>
@@ -195,270 +142,197 @@ const SuperAdminDashboard = () => {
     );
   }
 
-  // Show Edit Profile view
-  if (editingRestaurant) {
-    return (
-      <div className="min-h-screen bg-muted/30">
-        {/* Header */}
-        <header className="sticky top-0 z-50 bg-sidebar text-sidebar-foreground">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <img src="/qr-logo.svg" alt="QR Dine Pro" className="w-6 h-6" style={{ filter: 'brightness(0) invert(1)' }} />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold">Super Admin</h1>
-                <p className="text-xs text-sidebar-foreground/70">Admin Dashboard</p>
-              </div>
-            </div>
-          </div>
-        </header>
+  const renderContent = () => {
+    if (editingRestaurant) {
+      return (
+        <EditHotelProfile
+          restaurant={editingRestaurant}
+          onSave={handleSaveRestaurant}
+          onDelete={handleDeleteRestaurant}
+          onBack={() => setEditingRestaurant(null)}
+          isSaving={updateRestaurant.isPending}
+        />
+      );
+    }
 
-        <div className="flex">
-          {/* Sidebar */}
-          <aside className="w-64 min-h-screen bg-sidebar text-sidebar-foreground p-4 hidden lg:block">
-            <nav className="space-y-1 mt-4">
-              <button
-                onClick={() => setEditingRestaurant(null)}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent"
-              >
-                <Building2 className="w-5 h-5" />
-                Dashboard
-              </button>
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
-                <Building2 className="w-5 h-5" />
-                Tenants
-              </div>
-            </nav>
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1 p-6">
-            <EditHotelProfile
-              restaurant={editingRestaurant}
-              onSave={handleSaveRestaurant}
-              onDelete={handleDeleteRestaurant}
-              onBack={() => setEditingRestaurant(null)}
-              isSaving={updateRestaurant.isPending}
-            />
-          </main>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <img src="/qr-logo.svg" alt="QR Dine Pro" className="w-6 h-6" style={{ filter: 'brightness(0) invert(1)' }} />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">Super Admin</h1>
-                <p className="text-sm text-muted-foreground">
-                  Platform Management Console
-                </p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={() => navigate('/admin')}>
-              Back to Admin
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Enhanced Stats Row */}
-        <TenantStats restaurants={restaurants} totalRevenue={0} currencySymbol="₹" />
-
-        {/* Restaurants Tab */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="restaurants">
-              <Building2 className="w-4 h-4 mr-2" />
-              Restaurants
-            </TabsTrigger>
-            <TabsTrigger value="analytics">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Analytics
-            </TabsTrigger>
-            <TabsTrigger value="users">
-              <Users className="w-4 h-4 mr-2" />
-              Staff
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="restaurants" className="mt-6">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <CardTitle>Restaurants</CardTitle>
-                    <CardDescription>
-                      Manage all restaurants on the platform
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9 w-[200px]"
-                      />
-                    </div>
-                    <Button onClick={() => setShowAddForm(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Restaurant
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Add Form */}
-                <AnimatePresence>
-                  {showAddForm && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mb-6 p-4 border rounded-lg bg-muted/50"
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label>Name *</Label>
-                          <Input
-                            value={newRestaurant.name}
-                            onChange={(e) =>
-                              setNewRestaurant({ ...newRestaurant, name: e.target.value })
-                            }
-                            placeholder="Restaurant Name"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Slug * (URL identifier)</Label>
-                          <Input
-                            value={newRestaurant.slug}
-                            onChange={(e) =>
-                              setNewRestaurant({ ...newRestaurant, slug: e.target.value })
-                            }
-                            placeholder="restaurant-name"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Subscription</Label>
-                          <Select
-                            value={newRestaurant.subscription_tier}
-                            onValueChange={(v: 'free' | 'pro' | 'enterprise') =>
-                              setNewRestaurant({ ...newRestaurant, subscription_tier: v })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="free">Free</SelectItem>
-                              <SelectItem value="pro">Pro</SelectItem>
-                              <SelectItem value="enterprise">Enterprise</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Email</Label>
-                          <Input
-                            type="email"
-                            value={newRestaurant.email}
-                            onChange={(e) =>
-                              setNewRestaurant({ ...newRestaurant, email: e.target.value })
-                            }
-                            placeholder="contact@restaurant.com"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Phone</Label>
-                          <Input
-                            value={newRestaurant.phone}
-                            onChange={(e) =>
-                              setNewRestaurant({ ...newRestaurant, phone: e.target.value })
-                            }
-                            placeholder="+91 9876543210"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Address</Label>
-                          <Input
-                            value={newRestaurant.address}
-                            onChange={(e) =>
-                              setNewRestaurant({ ...newRestaurant, address: e.target.value })
-                            }
-                            placeholder="123 Main Street"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-2 mt-4">
-                        <Button
-                          onClick={handleAddRestaurant}
-                          disabled={createRestaurant.isPending}
-                        >
-                          {createRestaurant.isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : (
-                            <Check className="w-4 h-4 mr-2" />
-                          )}
-                          Create Restaurant
-                        </Button>
-                        <Button variant="outline" onClick={() => setShowAddForm(false)}>
-                          <X className="w-4 h-4 mr-2" />
-                          Cancel
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Table */}
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                  </div>
-                ) : (
-                  <TenantTable
-                    restaurants={filteredRestaurants}
-                    onToggleActive={handleToggleActive}
-                    onChangeTier={handleChangeTier}
-                    onViewDetails={handleViewDetails}
-                    onDelete={handleDeleteRestaurant}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="mt-6 space-y-6">
-            {/* Monthly Trends Chart */}
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <div className="space-y-6">
+            <TenantStats restaurants={restaurants} totalRevenue={0} currencySymbol="₹" />
             <MonthlyTrendChart restaurants={restaurants} currencySymbol="₹" months={6} />
+          </div>
+        );
 
-            {/* Tenant Performance Table */}
+      case 'restaurants':
+        return (
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle>Restaurants</CardTitle>
+                  <CardDescription>Manage all restaurants on the platform</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 w-[200px]"
+                    />
+                  </div>
+                  <Button onClick={() => setShowAddForm(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Restaurant
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <AnimatePresence>
+                {showAddForm && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mb-6 p-4 border rounded-lg bg-muted/50"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Name *</Label>
+                        <Input value={newRestaurant.name} onChange={(e) => setNewRestaurant({ ...newRestaurant, name: e.target.value })} placeholder="Restaurant Name" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Slug *</Label>
+                        <Input value={newRestaurant.slug} onChange={(e) => setNewRestaurant({ ...newRestaurant, slug: e.target.value })} placeholder="restaurant-name" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Subscription</Label>
+                        <Select value={newRestaurant.subscription_tier} onValueChange={(v: 'free' | 'pro' | 'enterprise') => setNewRestaurant({ ...newRestaurant, subscription_tier: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="free">Free</SelectItem>
+                            <SelectItem value="pro">Pro</SelectItem>
+                            <SelectItem value="enterprise">Enterprise</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input type="email" value={newRestaurant.email} onChange={(e) => setNewRestaurant({ ...newRestaurant, email: e.target.value })} placeholder="contact@restaurant.com" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Phone</Label>
+                        <Input value={newRestaurant.phone} onChange={(e) => setNewRestaurant({ ...newRestaurant, phone: e.target.value })} placeholder="+91 9876543210" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Address</Label>
+                        <Input value={newRestaurant.address} onChange={(e) => setNewRestaurant({ ...newRestaurant, address: e.target.value })} placeholder="123 Main Street" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <Button onClick={handleAddRestaurant} disabled={createRestaurant.isPending}>
+                        {createRestaurant.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+                        Create Restaurant
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                </div>
+              ) : (
+                <TenantTable
+                  restaurants={filteredRestaurants}
+                  onToggleActive={handleToggleActive}
+                  onChangeTier={handleChangeTier}
+                  onViewDetails={handleViewDetails}
+                  onDelete={handleDeleteRestaurant}
+                />
+              )}
+            </CardContent>
+          </Card>
+        );
+
+      case 'analytics':
+        return (
+          <div className="space-y-6">
+            <MonthlyTrendChart restaurants={restaurants} currencySymbol="₹" months={6} />
             <TenantTable
               restaurants={restaurants}
               onToggleActive={handleToggleActive}
               onChangeTier={handleChangeTier}
               onViewDetails={handleViewDetails}
             />
-          </TabsContent>
+          </div>
+        );
 
-          <TabsContent value="users" className="mt-6">
-            <UserManagement />
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+      case 'users':
+        return <UserManagement />;
+
+      case 'settings':
+        return (
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle>Platform Settings</CardTitle>
+              <CardDescription>Configure global platform settings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Platform settings coming soon.</p>
+            </CardContent>
+          </Card>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const pageTitles: Record<string, { title: string; description: string }> = {
+    dashboard: { title: 'Dashboard', description: 'Platform overview and metrics' },
+    restaurants: { title: 'Restaurants', description: 'Manage all tenants' },
+    analytics: { title: 'Analytics', description: 'Revenue and performance trends' },
+    users: { title: 'User Management', description: 'Manage all staff across restaurants' },
+    settings: { title: 'Settings', description: 'Platform configuration' },
+  };
+
+  const currentPage = editingRestaurant
+    ? { title: editingRestaurant.name, description: 'Edit restaurant profile' }
+    : pageTitles[activeTab] || pageTitles.dashboard;
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-muted/30">
+        <SuperAdminSidebar activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setEditingRestaurant(null); }} />
+        <SidebarInset className="flex-1">
+          <header className="sticky top-0 z-40 bg-card border-b">
+            <div className="flex items-center justify-between px-6 py-4">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger />
+                <div>
+                  <h1 className="text-xl font-bold">{currentPage.title}</h1>
+                  <p className="text-sm text-muted-foreground">{currentPage.description}</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
+                Back to Admin
+              </Button>
+            </div>
+          </header>
+          <main className="p-6">
+            {renderContent()}
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 
