@@ -131,51 +131,28 @@ const UserManagement = () => {
     enabled: !!restaurantId,
   });
 
-  // Create new staff user
+  // Create new staff user via secure edge function
   const createStaffMutation = useMutation({
     mutationFn: async (data: typeof newUser) => {
       if (!restaurantId) throw new Error('No restaurant context');
       
-      // Create the user in auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            name: data.name,
-          }
-        }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await supabase.functions.invoke('manage-staff', {
+        body: {
+          action: 'create',
+          email: data.email,
+          password: data.password,
+          name: data.name,
+          role: data.role,
+        },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Failed to create user');
+      if (response.error) throw new Error(response.error.message);
+      if (response.data?.error) throw new Error(response.data.error);
 
-      // Add role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: authData.user.id,
-          role: data.role,
-          restaurant_id: restaurantId,
-        });
-
-      if (roleError) throw roleError;
-
-      // Add staff profile
-      const { error: profileError } = await supabase
-        .from('staff_profiles')
-        .insert({
-          user_id: authData.user.id,
-          email: data.email,
-          name: data.name || null,
-          restaurant_id: restaurantId,
-          is_active: true,
-        });
-
-      if (profileError) throw profileError;
-
-      return authData.user;
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-members'] });
@@ -232,13 +209,15 @@ const UserManagement = () => {
     },
   });
 
-  // Delete staff
+  // Delete staff via secure edge function
   const deleteStaffMutation = useMutation({
     mutationFn: async (userId: string) => {
-      // Delete from user_roles first
-      await supabase.from('user_roles').delete().eq('user_id', userId);
-      // Then delete staff profile
-      await supabase.from('staff_profiles').delete().eq('user_id', userId);
+      const response = await supabase.functions.invoke('manage-staff', {
+        body: { action: 'delete', user_id: userId },
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      if (response.data?.error) throw new Error(response.data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-members'] });
