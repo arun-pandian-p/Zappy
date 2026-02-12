@@ -75,6 +75,7 @@ import {
 import { useTables, useCreateTable, useDeleteTable } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
 import { useInvoiceStats } from "@/hooks/useInvoices";
+import { useAuth } from "@/hooks/useAuth";
 
 // Demo restaurant ID - fallback if no restaurant in DB
 const DEMO_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
@@ -83,10 +84,18 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const { user, role, restaurantId: authRestaurantId, loading: authLoading } = useAuth();
 
-  // Auto-detect restaurant
+  // Use auth restaurant context first, then fallback to DB query
   const { data: restaurants = [], isLoading: restaurantsLoading } = useRestaurants();
-  const restaurantId = restaurants[0]?.id || DEMO_RESTAURANT_ID;
+  const restaurantId = authRestaurantId || restaurants[0]?.id || DEMO_RESTAURANT_ID;
+  
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/login');
+    }
+  }, [authLoading, user, navigate]);
   
   // Fetch live data
   const { data: restaurant } = useRestaurant(restaurantId);
