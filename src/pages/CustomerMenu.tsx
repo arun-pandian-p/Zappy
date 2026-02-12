@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { AnimatePresence } from 'framer-motion';
 import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -45,7 +47,7 @@ const CustomerMenu = () => {
   const [adShown, setAdShown] = useState(false);
   const [showAddedToast, setShowAddedToast] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState('');
-  const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('list');
+  const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('grid');
 
   // Fetch restaurant data
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId);
@@ -88,12 +90,41 @@ const CustomerMenu = () => {
     tableNumber 
   } = useCartStore();
 
+  // Query client for realtime invalidation
+  const queryClient = useQueryClient();
+
   // Set table from URL
   useEffect(() => {
     if (tableId) {
       setTableNumber(tableId);
     }
   }, [tableId, setTableNumber]);
+
+  // Realtime subscriptions for live sync
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    const channel = supabase
+      .channel(`menu-realtime-${restaurantId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'restaurants', filter: `id=eq.${restaurantId}` },
+        () => { queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] }); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'offers', filter: `restaurant_id=eq.${restaurantId}` },
+        () => { queryClient.invalidateQueries({ queryKey: ['offers', restaurantId] }); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'menu_items', filter: `restaurant_id=eq.${restaurantId}` },
+        () => { queryClient.invalidateQueries({ queryKey: ['menuItems', restaurantId] }); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [restaurantId, queryClient]);
 
   // Show ad popup on first load
   useEffect(() => {
@@ -447,7 +478,7 @@ const CustomerMenu = () => {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           <AnimatePresence mode="popLayout">
             {filteredItems.map((item) => (
               <FoodCard
