@@ -90,9 +90,10 @@ const DEMO_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
 
 type DeviceType = "mobile" | "tablet" | "desktop";
 
-function PreviewTabContent({ customerPreviewUrl }: { customerPreviewUrl: string }) {
+function PreviewTabContent({ customerPreviewUrl, externalRefreshKey }: { customerPreviewUrl: string; externalRefreshKey: number }) {
   const [device, setDevice] = useState<DeviceType>("mobile");
   const [refreshKey, setRefreshKey] = useState(0);
+  const combinedKey = `${refreshKey}-${externalRefreshKey}`;
 
   const deviceConfig = {
     mobile: { width: 375, height: 812, label: "Mobile" },
@@ -143,7 +144,7 @@ function PreviewTabContent({ customerPreviewUrl }: { customerPreviewUrl: string 
           style={device !== "desktop" ? { width: deviceConfig[device].width, height: deviceConfig[device].height, maxHeight: '70vh' } : { height: '70vh' }}
         >
           <iframe
-            key={refreshKey}
+            key={combinedKey}
             src={customerPreviewUrl}
             className="w-full h-full border-0"
             title="Customer Menu Preview"
@@ -158,7 +159,15 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [previewRefreshKey, setPreviewRefreshKey] = useState(0);
   const { user, role, restaurantId: authRestaurantId, loading: authLoading } = useAuth();
+
+  // Auto-refresh preview when switching to preview tab
+  useEffect(() => {
+    if (activeTab === "preview") {
+      setPreviewRefreshKey(k => k + 1);
+    }
+  }, [activeTab]);
 
   // Use auth restaurant context first, then fallback to DB query
   const { data: restaurants = [], isLoading: restaurantsLoading } = useRestaurants();
@@ -990,7 +999,7 @@ const AdminDashboard = () => {
 
               {/* Preview Tab */}
               {activeTab === "preview" && (
-                <PreviewTabContent customerPreviewUrl={customerPreviewUrl} />
+                <PreviewTabContent customerPreviewUrl={customerPreviewUrl} externalRefreshKey={previewRefreshKey} />
               )}
 
               {/* Settings Tab */}
