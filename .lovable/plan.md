@@ -1,48 +1,93 @@
 
 
-# Fix: QR Code Not Scannable
+# Fix: QR Code Not Redirecting to Order Page
 
-## Root Causes
+## Root Cause
 
-1. **Small render size (160px)**: The QR is generated at 160px which is too small for reliable scanning, especially when downloaded and printed.
-2. **Broken SVG-to-PNG conversion**: The `btoa()` function used in the download fails on SVGs with non-ASCII/special characters, producing corrupted PNGs.
-3. **Low-resolution download**: The canvas renders at 300x300 but upscales from 160px SVG, introducing blur that degrades scannability.
-4. **Wrong base URL**: The QR encodes `window.location.origin` which is the Lovable preview URL, not the published app URL. Scanned QR codes point to a broken URL.
+The QR codes encode the wrong URL. Two bugs:
 
-## Fixes
+1. **Wrong route path**: QR generates `/menu?table=T1` but the actual React Router route is `/order` (there is no `/menu` route)
+2. **Missing restaurant ID**: `CustomerMenu.tsx` reads `searchParams.get('r')` for the restaurant ID, but the QR URL never includes the `r` parameter. Without it, the page shows "Invalid QR Code"
 
-### 1. Use published URL as base
-- Use the published URL (`https://qr-pal-maker.lovable.app`) as the default QR base URL instead of `window.location.origin`
-- Store it in a constant or allow the admin to configure it in settings
+Current QR URL format:
+```text
+https://qr-pal-maker.lovable.app/menu?table=T1
+```
 
-### 2. Increase QR render size
-- Change `QRCodeSVG` size from 160 to 256 for better visual clarity
-- Add `includeMargin={true}` for the required quiet zone around QR codes (essential for scanners)
+Required QR URL format:
+```text
+https://qr-pal-maker.lovable.app/order?r={restaurant_uuid}&table=T1
+```
 
-### 3. Fix download to use Canvas-based QR
-- Switch from `QRCodeSVG` to `QRCodeCanvas` for the downloadable version (hidden)
-- Use `canvas.toDataURL()` directly from the canvas element -- no SVG-to-PNG conversion needed
-- Set download canvas size to 512x512 for print-quality output
+---
 
-### 4. Alternative: Fix the SVG download path
-- Replace `btoa(svgData)` with `btoa(unescape(encodeURIComponent(svgData)))` to handle non-ASCII characters
-- Increase canvas resolution to 512x512
+## Fix Locations
+
+### 1. `src/components/admin/QuickQRSection.tsx` (Dashboard sidebar QR)
+
+Line building the QR value currently:
+```text
+`${baseUrl}/menu?table=${selectedTable.table_number}`
+```
+
+Change to include `/order` route and `r` param:
+```text
+`${baseUrl}/order?r=${restaurantId}&table=${selectedTable.table_number}`
+```
+
+This requires adding a `restaurantId` prop to the component.
+
+### 2. `src/pages/AdminDashboard.tsx` (Tables tab QR generator)
+
+Two places generate QR values (lines 742 and 752), both using:
+```text
+`${qrBaseUrl}/menu?table=${selectedTable.table_number}`
+```
+
+Change both to:
+```text
+`${qrBaseUrl}/order?r=${restaurantId}&table=${selectedTable.table_number}`
+```
+
+Also pass `restaurantId` to the `QuickQRSection` component.
+
+---
+
+## Files to Modify
+
+1. **`src/components/admin/QuickQRSection.tsx`**
+   - Add `restaurantId` prop to the interface
+   - Update QR value from `/menu?table=` to `/order?r={restaurantId}&table=`
+
+2. **`src/pages/AdminDashboard.tsx`**
+   - Pass `restaurantId` prop to `QuickQRSection`
+   - Fix QR value in the Tables tab (2 occurrences) from `/menu` to `/order?r={restaurantId}`
+
+---
 
 ## Technical Details
 
-### File: `src/components/admin/QuickQRSection.tsx`
+### QuickQRSection changes
 
-Changes:
-- Import `QRCodeCanvas` alongside `QRCodeSVG` from `qrcode.react`
-- Render a hidden `QRCodeCanvas` at 512px for downloads
-- Update visible `QRCodeSVG` to size 256 with `includeMargin={true}`
-- Fix `handleDownload` to grab the hidden canvas directly via `ref` and call `toDataURL()`
-- Change default `baseUrl` to the published URL
+Add `restaurantId: string` to the props interface. Update the `qrValue` computation:
 
-### File: `src/pages/AdminDashboard.tsx`
-- Pass the published URL as `baseUrl` prop to `QuickQRSection` (if the QR section is used there too)
+```text
+Before: `${baseUrl}/menu?table=${selectedTable.table_number}`
+After:  `${baseUrl}/order?r=${restaurantId}&table=${selectedTable.table_number}`
+```
 
-## Implementation Order
-1. Update `QuickQRSection.tsx` with all fixes
-2. Verify QR renders at proper size with quiet zone margin
-3. Test download produces a clean, scannable PNG
+### AdminDashboard changes
+
+Pass restaurantId to QuickQRSection:
+```text
+<QuickQRSection ... restaurantId={restaurantId} />
+```
+
+Fix two QR value strings in the Tables tab (QRCodeSVG and QRCodeCanvas):
+```text
+Before: `${qrBaseUrl}/menu?table=${selectedTable.table_number}`
+After:  `${qrBaseUrl}/order?r=${restaurantId}&table=${selectedTable.table_number}`
+```
+
+After these changes, scanning the QR will correctly open `/order?r=<uuid>&table=T1`, which matches the React Router route and provides both required query parameters for the CustomerMenu page to load the restaurant's menu.
+
