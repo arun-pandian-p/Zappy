@@ -1,147 +1,224 @@
 
-
-# Animated Hotel Branding + Mascot System
+# Visual Preview + Menu UX Upgrade
 
 ## Overview
 
-Add animated hotel name typography with animal mascot themes to the customer menu header, admin dashboard header, and a QR splash/loading screen. Admins configure animation style and mascot from the Settings panel. All animation config is stored in the existing `restaurants.settings` JSONB column (no migration needed).
+This upgrade adds a branded live website preview to the Admin and Super Admin dashboards, introduces a sliding food offers system, compacts the dashboard KPI cards, adds admin avatar customization, and improves the customer menu with a compact grid card option. All changes sync in real-time via the existing realtime infrastructure.
 
-## Architecture
+---
 
-### Data Model (no migration)
+## Phase 1: Database Migration -- Offers Table
 
-Store animation config in the existing `restaurants.settings` JSONB field alongside `qr_base_url`:
+Create a new `offers` table for the sliding offers system:
 
 ```text
-settings: {
-  qr_base_url: "...",
-  branding: {
-    animation_enabled: true,
-    letter_animation: "bounce" | "wave" | "glow" | "slide" | "typing",
-    mascot: "lion" | "tiger" | "elephant" | "peacock" | "fish" | "owl" | "panda" | "horse" | "none",
-    animation_speed: "slow" | "normal" | "fast",
-    glow_color_sync: true
-  }
-}
+offers
+- id (uuid, PK)
+- restaurant_id (uuid, FK -> restaurants)
+- title (text)
+- description (text, nullable)
+- image_url (text, nullable)
+- discount_text (text, nullable) -- e.g. "20% OFF", "Buy 1 Get 1"
+- linked_menu_item_id (uuid, FK -> menu_items, nullable)
+- start_date (timestamptz)
+- end_date (timestamptz)
+- is_active (boolean, default true)
+- sort_order (int, default 0)
+- created_at / updated_at
 ```
 
-### Mascot Implementation
+RLS: restaurant staff can CRUD their own offers; anonymous users can SELECT active offers for a given restaurant.
 
-Instead of external SVG assets or Lottie files (which would need hosting), mascots are rendered as inline SVG emoji-style illustrations using simple animated SVG paths, or as styled emoji characters with Framer Motion animations. This keeps the bundle small and avoids asset management.
-
-Each mascot has a unique Framer Motion animation pattern:
-- Lion: gold glow pulse
-- Tiger: horizontal stripe swipe
-- Elephant: slow vertical bounce
-- Peacock: scale fan-out reveal
-- Fish: wave/swim motion
-- Owl: blink (opacity flicker)
-- Panda: soft bounce
-- Horse: speed trail (translateX with blur)
+Enable realtime on the offers table.
 
 ---
 
-## Files to Create
+## Phase 2: Admin Dashboard -- Enhanced Website Preview
 
-### 1. `src/components/branding/AnimatedHotelName.tsx`
-Core reusable component. Renders the hotel name with per-letter Framer Motion animations.
+### Redesigned Preview Tab
 
-Props:
-- `name: string`
-- `animation: "bounce" | "wave" | "glow" | "slide" | "typing"`
-- `speed: "slow" | "normal" | "fast"`
-- `primaryColor?: string`
-- `className?: string`
+Replace the current simple iframe preview with a device-frame preview panel:
 
-Implementation:
-- Splits name into individual `motion.span` elements
-- Each animation type applies different Framer Motion variants (e.g., bounce uses `y` keyframes, wave uses sine-wave delays, glow uses `textShadow` animation, slide uses `x` from alternating directions, typing uses sequential opacity)
-- Respects `prefers-reduced-motion` media query -- falls back to static text
-- Speed maps to transition duration multiplier
+- **Device selector buttons**: Mobile (375x812 phone frame), Tablet (768x1024), Desktop (full width)
+- **Refresh button**: Reloads the iframe by toggling a key
+- **Open in New Tab link**: Existing functionality preserved
+- The iframe is wrapped in a centered device frame container that visually represents the selected device
 
-### 2. `src/components/branding/MascotIcon.tsx`
-Renders the selected mascot as an animated inline element.
+File: **`src/pages/AdminDashboard.tsx`** -- update the `preview` tab rendering (lines 903-933)
 
-Props:
-- `mascot: string`
-- `size?: number`
-- `primaryColor?: string`
+### Compact KPI Cards (Dashboard Stats)
 
-Implementation:
-- Maps mascot name to an emoji character (e.g., lion="lion-face", tiger="tiger-face", etc.) rendered inside a `motion.div`
-- Each mascot has a unique Framer Motion animation loop (bounce, pulse, swim, blink, etc.)
-- Sized to match the header context (default 40px)
+Reduce the stat card height by ~30% and make them denser:
 
-### 3. `src/components/branding/BrandingAnimationSettings.tsx`
-Admin settings card for the branding animation configuration.
-
-UI:
-- "Enable Animations" toggle
-- "Mascot Theme" dropdown (Lion, Tiger, Elephant, Peacock, Fish, Owl, Panda, Horse, None)
-- "Letter Animation" dropdown (Bounce, Wave, Glow Pulse, Slide Reveal, Typing)
-- "Animation Speed" dropdown (Slow, Normal, Fast)
-- "Sync Glow to Theme Color" toggle
-- **Live Preview** section showing the animated hotel name + mascot in real time
-
-### 4. `src/components/branding/QRSplashScreen.tsx`
-Shown briefly when customer scans QR and the menu is loading.
-
-UI:
-- Centered animated hotel name (large)
-- Mascot animation below
-- Loading progress bar
-- Fades out when menu data is ready
+File: **`src/components/analytics/DashboardStats.tsx`**
+- Reduce padding from `p-6` to `p-4`
+- Reduce value font from `text-3xl` to `text-2xl`
+- Reduce icon container from `w-12 h-12` to `w-10 h-10`
+- Add a subtle inline micro sparkline (tiny inline SVG/CSS bar) under the value
 
 ---
 
-## Files to Modify
+## Phase 3: Super Admin -- Tenant Preview Grid
 
-### 1. `src/components/menu/CustomerTopBar.tsx`
-- Import `AnimatedHotelName` and `MascotIcon`
-- Replace the static `<h1>{restaurantName}</h1>` with `<AnimatedHotelName>` when animation is enabled
-- Add `MascotIcon` next to the logo
-- Accept new props: `animationConfig` object (or read from restaurant data)
+### New Component: `TenantPreviewCard`
 
-### 2. `src/components/admin/AdminHeader.tsx`
-- Import `AnimatedHotelName` and `MascotIcon`
-- Replace static restaurant name with animated version
-- Add mascot beside the admin avatar area
-- Accept branding config props
+File: **`src/components/superadmin/TenantPreviewCard.tsx`** (new)
 
-### 3. `src/components/admin/SettingsPanel.tsx`
-- Import and render `BrandingAnimationSettings` as a new card section
-- Read/write branding config from/to the `settings.branding` JSONB path
-- Include it in the `handleSave` function alongside existing settings
+A visual card for each tenant showing:
+- Restaurant logo (from `logo_url`) or fallback initial
+- Restaurant name with theme color accent border
+- Primary color swatch dot
+- Active orders count badge
+- Subscription tier badge
+- Action buttons: "Open Admin", "View QR", "Suspend", "Edit"
 
-### 4. `src/pages/CustomerMenu.tsx`
-- Import `QRSplashScreen`
-- Show splash screen during initial data loading (restaurant + menu fetch)
-- Pass animation config to `CustomerTopBar`
-- Extract branding settings from restaurant data
+### Update Super Admin Dashboard
 
-### 5. `src/components/menu/OrderStatusPipeline.tsx`
-- Add celebration animation when order status changes to "ready" or "served"
-- Use mascot + letter bounce on the "Order Placed" success state
+File: **`src/pages/SuperAdminDashboard.tsx`**
+- Add a new "preview" sub-view option in the restaurants tab
+- Toggle between current table view and new grid card view
+- Grid: 2 cols on tablet, 3 cols on desktop
+
+---
+
+## Phase 4: Sliding Food Offers System
+
+### New Hook: `useOffers`
+
+File: **`src/hooks/useOffers.ts`** (new)
+
+CRUD operations for the `offers` table:
+- `useOffers(restaurantId)` -- fetch active offers
+- `useCreateOffer()` / `useUpdateOffer()` / `useDeleteOffer()`
+
+### New Component: Offers Slider (Customer)
+
+File: **`src/components/menu/OffersSlider.tsx`** (new)
+
+- Horizontal auto-scrolling carousel using `embla-carousel-react` (already installed)
+- Shows offer cards with image, title, discount badge
+- Click navigates to linked menu item (scrolls to it)
+- Auto-play with 4s interval, pausable on touch
+- Swipe-enabled, infinite loop
+
+### New Component: Offers Manager (Admin)
+
+File: **`src/components/admin/OffersManager.tsx`** (new)
+
+Admin CRUD for offers:
+- List of current offers with toggle active/inactive
+- Add offer form: title, description, image upload, discount text, link to menu item, date range
+- Delete offer
+
+### Integration Points
+
+- **`src/pages/CustomerMenu.tsx`**: Add `OffersSlider` below the `CustomerTopBar` in both Home and Menu views (only when offers exist)
+- **`src/pages/AdminDashboard.tsx`**: Add "Offers" tab to the sidebar and tab navigation, rendering `OffersManager`
+
+---
+
+## Phase 5: Admin Avatar Customization
+
+### Update Admin Sidebar
+
+File: **`src/components/admin/AdminSidebar.tsx`**
+- Replace hardcoded DiceBear URL with dynamic avatar from user profile or restaurant settings
+- Read avatar config from `restaurants.settings.admin_avatar` (JSONB): `{ type: "upload" | "emoji" | "mascot", value: string }`
+- Fallback to current DiceBear default
+
+### Update Settings Panel
+
+File: **`src/components/admin/SettingsPanel.tsx`**
+- Add a new "Profile" card section with:
+  - Avatar preview (current avatar displayed)
+  - Upload image button (uses existing `menu-images` storage bucket)
+  - Emoji picker (preset grid of 12 emojis)
+  - Display name input
+  - Save updates to `restaurants.settings.admin_avatar`
+
+### Update Admin Header
+
+File: **`src/components/admin/AdminHeader.tsx`**
+- Read the same avatar config and display it in the header avatar
+
+---
+
+## Phase 6: Customer Menu -- Compact Grid Cards
+
+### Update FoodCard Component
+
+File: **`src/components/menu/FoodCard.tsx`**
+- Reduce the aspect ratio from `4/3` to `1/1` (square, smaller)
+- Reduce padding from `p-4` to `p-3`
+- Truncate description to 1 line
+- Smaller font sizes throughout
+- This makes cards compact enough for a 2-col mobile / 3-col tablet / 4-col desktop grid
+
+### Add Grid View Toggle to Customer Menu
+
+File: **`src/pages/CustomerMenu.tsx`** (in `renderMenu`)
+- Add a view toggle (list vs grid) above the menu items
+- List view: current `MenuItemRow` components
+- Grid view: `FoodCard` in a responsive grid (`grid-cols-2 md:grid-cols-3 lg:grid-cols-4`)
+- Default to list view on mobile, grid on tablet+
+
+---
+
+## Phase 7: Real-time Sync
+
+### Enable Realtime on Offers Table
+
+Migration SQL will include:
+```text
+ALTER PUBLICATION supabase_realtime ADD TABLE public.offers;
+```
+
+### Preview Sync
+
+The admin preview iframe already loads the live customer menu page. When admin changes logo/theme/menu/offers:
+1. Mutation updates DB
+2. Realtime event fires
+3. Customer menu hooks (`useMenuItems`, `useRestaurant`, `useOffers`) auto-invalidate via `react-query`
+4. Preview iframe reflects changes (natural page re-render)
+
+No additional sync engine needed -- the existing architecture handles this.
+
+---
+
+## Files Summary
+
+### New Files
+1. `src/hooks/useOffers.ts` -- CRUD hook for offers table
+2. `src/components/menu/OffersSlider.tsx` -- Customer-facing offer carousel
+3. `src/components/admin/OffersManager.tsx` -- Admin offer management UI
+4. `src/components/superadmin/TenantPreviewCard.tsx` -- Visual tenant card for Super Admin
+
+### Modified Files
+1. `src/pages/AdminDashboard.tsx` -- Enhanced preview tab with device frames, add Offers tab
+2. `src/components/analytics/DashboardStats.tsx` -- Compact KPI cards (reduced padding/sizes)
+3. `src/pages/SuperAdminDashboard.tsx` -- Add grid view toggle for tenant cards
+4. `src/components/superadmin/TenantTable.tsx` -- Minor: expose grid/table toggle
+5. `src/components/menu/FoodCard.tsx` -- Compact card sizing
+6. `src/pages/CustomerMenu.tsx` -- Add offers slider, grid/list toggle
+7. `src/components/admin/AdminSidebar.tsx` -- Dynamic avatar, add Offers nav item
+8. `src/components/admin/AdminHeader.tsx` -- Dynamic avatar from settings
+9. `src/components/admin/SettingsPanel.tsx` -- Avatar customization section
+
+### Database Migration
+1. Create `offers` table with RLS policies
+2. Enable realtime on `offers`
 
 ---
 
 ## Implementation Order
 
-1. Create `AnimatedHotelName.tsx` -- core letter animation component with all 5 presets
-2. Create `MascotIcon.tsx` -- emoji-based animated mascot component
-3. Create `BrandingAnimationSettings.tsx` -- admin settings card with live preview
-4. Add branding settings card to `SettingsPanel.tsx` and wire up save/load
-5. Update `CustomerTopBar.tsx` to use animated name + mascot
-6. Update `AdminHeader.tsx` to use animated name + mascot
-7. Create `QRSplashScreen.tsx` for customer menu loading state
-8. Integrate splash screen into `CustomerMenu.tsx`
-9. Add celebration animation to `OrderStatusPipeline.tsx`
-
-## Performance and Accessibility
-
-- All animations use Framer Motion (already installed, no new dependencies)
-- `prefers-reduced-motion` check disables all animations automatically
-- Mascots use emoji characters (no external assets to load)
-- Animations are GPU-accelerated (transform/opacity only where possible)
-- Splash screen has a max timeout (3 seconds) to prevent infinite loading
-
+1. Database migration: create `offers` table + RLS + realtime
+2. Create `useOffers` hook
+3. Compact DashboardStats cards
+4. Enhanced admin preview tab with device frames
+5. Create OffersSlider component
+6. Create OffersManager component
+7. Integrate offers into AdminDashboard (new tab) and CustomerMenu
+8. Create TenantPreviewCard and update SuperAdminDashboard grid view
+9. Add avatar customization to SettingsPanel + AdminSidebar + AdminHeader
+10. Add grid/list toggle to CustomerMenu with compact FoodCard
