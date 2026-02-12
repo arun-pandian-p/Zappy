@@ -11,6 +11,7 @@ import {
   Loader2,
   Bluetooth,
   Usb,
+  QrCode,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,7 +49,10 @@ interface RestaurantSettings {
   auto_print_billing: boolean;
   review_enabled: boolean;
   google_redirect_threshold: number;
+  qr_base_url: string;
 }
+
+const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
 
 const defaultSettings: RestaurantSettings = {
   name: "",
@@ -65,6 +69,7 @@ const defaultSettings: RestaurantSettings = {
   auto_print_billing: true,
   review_enabled: true,
   google_redirect_threshold: 4,
+  qr_base_url: PUBLISHED_URL,
 };
 
 export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
@@ -79,6 +84,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
     if (restaurant) {
       const printerSettings = restaurant.printer_settings as Record<string, unknown> || {};
       const reviewSettings = restaurant.review_settings as Record<string, unknown> || {};
+      const extraSettings = restaurant.settings as Record<string, unknown> || {};
 
       setSettings({
         name: restaurant.name || "",
@@ -95,6 +101,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         auto_print_billing: (printerSettings.auto_print_billing as boolean) ?? true,
         review_enabled: (reviewSettings.enabled as boolean) ?? true,
         google_redirect_threshold: (reviewSettings.google_redirect_threshold as number) || 4,
+        qr_base_url: (extraSettings.qr_base_url as string) || PUBLISHED_URL,
       });
     }
   }, [restaurant]);
@@ -124,6 +131,9 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
             enabled: settings.review_enabled,
             google_redirect_threshold: settings.google_redirect_threshold,
             google_review_url: settings.google_review_url,
+          },
+          settings: {
+            qr_base_url: settings.qr_base_url,
           },
         },
       });
@@ -401,7 +411,38 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         </Card>
       </motion.div>
 
-      {/* Ads */}
+      {/* QR Code Settings */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+      >
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <QrCode className="w-5 h-5" />
+              QR Code Settings
+            </CardTitle>
+            <CardDescription>Configure the base URL your QR codes point to</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>QR Base URL</Label>
+              <Input
+                value={settings.qr_base_url}
+                onChange={(e) =>
+                  setSettings({ ...settings, qr_base_url: e.target.value })
+                }
+                placeholder="https://yourdomain.com"
+              />
+              <p className="text-xs text-muted-foreground">
+                The domain your QR codes will link to. Use your custom domain or the default published URL.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
