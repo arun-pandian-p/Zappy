@@ -84,6 +84,7 @@ import { useTables, useCreateTable, useDeleteTable } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
 import { useInvoiceStats } from "@/hooks/useInvoices";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 // Demo restaurant ID - fallback if no restaurant in DB
 const DEMO_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
@@ -169,6 +170,7 @@ const AdminDashboard = () => {
     }
   }, [activeTab]);
 
+
   // Use auth restaurant context first, then fallback to DB query
   const { data: restaurants = [], isLoading: restaurantsLoading } = useRestaurants();
   const restaurantId = authRestaurantId || restaurants[0]?.id || DEMO_RESTAURANT_ID;
@@ -182,6 +184,21 @@ const AdminDashboard = () => {
   
   // Fetch live data
   const { data: restaurant } = useRestaurant(restaurantId);
+
+  // Realtime: bump preview key when restaurant/offers/menu change
+  useEffect(() => {
+    if (!restaurantId) return;
+    const channel = supabase
+      .channel(`admin-preview-sync-${restaurantId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'restaurants', filter: `id=eq.${restaurantId}` },
+        () => { setPreviewRefreshKey(k => k + 1); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'offers', filter: `restaurant_id=eq.${restaurantId}` },
+        () => { setPreviewRefreshKey(k => k + 1); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items', filter: `restaurant_id=eq.${restaurantId}` },
+        () => { setPreviewRefreshKey(k => k + 1); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [restaurantId]);
 
   // Redirect if onboarding not completed
   useEffect(() => {
