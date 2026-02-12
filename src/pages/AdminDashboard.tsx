@@ -31,7 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import {
   Select,
   SelectContent,
@@ -135,6 +135,8 @@ const AdminDashboard = () => {
   // Restaurant settings with defaults
   const currencySymbol = restaurant?.currency || "₹";
   const restaurantName = restaurant?.name || "QR Dine Pro";
+  const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
+  const qrBaseUrl = ((restaurant?.settings as Record<string, unknown>)?.qr_base_url as string) || PUBLISHED_URL;
 
   // Mutations
   const createMenuItem = useCreateMenuItem();
@@ -283,26 +285,13 @@ const AdminDashboard = () => {
   };
 
   const downloadQRCode = (tableNumber: string) => {
-    const svg = document.getElementById(`qr-${tableNumber}`);
-    if (!svg) return;
-
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx?.drawImage(img, 0, 0);
-      const pngFile = canvas.toDataURL("image/png");
-      const downloadLink = document.createElement("a");
-      downloadLink.download = `QR-Table-${tableNumber}.png`;
-      downloadLink.href = pngFile;
-      downloadLink.click();
-    };
-    
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+    const canvas = document.getElementById(`qr-canvas-${tableNumber}`) as HTMLCanvasElement;
+    if (!canvas) return;
+    const pngUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.download = `QR-Table-${tableNumber}.png`;
+    link.href = pngUrl;
+    link.click();
   };
 
   // Computed stats from live data
@@ -429,6 +418,7 @@ const AdminDashboard = () => {
                         }))}
                         selectedTableId={selectedTableId}
                         onTableChange={setSelectedTableId}
+                        baseUrl={qrBaseUrl}
                       />
 
                       {/* Mini Menu Preview */}
@@ -749,10 +739,20 @@ const AdminDashboard = () => {
                           <>
                             <div className="bg-white p-4 rounded-xl shadow-sm mb-4">
                               <QRCodeSVG
-                                id={`qr-${selectedTable.table_number}`}
-                                value={`${window.location.origin}/order?r=${restaurantId}&table=${selectedTable.table_number}`}
-                                size={200}
+                                value={`${qrBaseUrl}/menu?table=${selectedTable.table_number}`}
+                                size={256}
                                 level="H"
+                                includeMargin
+                              />
+                            </div>
+                            {/* Hidden canvas for high-res download */}
+                            <div style={{ position: "absolute", left: "-9999px" }}>
+                              <QRCodeCanvas
+                                id={`qr-canvas-${selectedTable.table_number}`}
+                                value={`${qrBaseUrl}/menu?table=${selectedTable.table_number}`}
+                                size={512}
+                                level="H"
+                                includeMargin
                               />
                             </div>
                             <p className="text-sm text-muted-foreground text-center mb-4">
