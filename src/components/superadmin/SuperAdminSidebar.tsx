@@ -8,6 +8,9 @@ import {
   Users,
   LogOut,
   Settings,
+  CreditCard,
+  Megaphone,
+  ScrollText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,10 +34,13 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
-  { title: "Restaurants", icon: Building2, value: "restaurants" },
-  { title: "Analytics", icon: BarChart3, value: "analytics" },
+  { title: "Tenants / Hotels", icon: Building2, value: "restaurants" },
   { title: "User Management", icon: Users, value: "users" },
+  { title: "Subscription Plans", icon: CreditCard, value: "plans" },
+  { title: "Platform Ads", icon: Megaphone, value: "ads" },
+  { title: "Analytics", icon: BarChart3, value: "analytics" },
   { title: "Settings", icon: Settings, value: "settings" },
+  { title: "System Logs", icon: ScrollText, value: "logs" },
 ];
 
 interface SuperAdminSidebarProps {

@@ -56,13 +56,22 @@ serve(async (req) => {
       }
 
       // Prevent privilege escalation
-      if (["super_admin", "restaurant_admin"].includes(role)) {
-        return new Response(JSON.stringify({ error: "Cannot create admin roles via this endpoint" }), {
+      if (role === "super_admin") {
+        return new Response(JSON.stringify({ error: "Cannot create super_admin roles" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Only super_admin can create restaurant_admin roles
+      if (role === "restaurant_admin" && callerRole.role !== "super_admin") {
+        return new Response(JSON.stringify({ error: "Only platform admins can create admin roles" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const restaurantId = callerRole.restaurant_id;
+      // Allow super_admin to specify target restaurant_id
+      const restaurantId = (callerRole.role === "super_admin" && body.restaurant_id)
+        ? body.restaurant_id
+        : callerRole.restaurant_id;
       if (!restaurantId && callerRole.role !== "super_admin") {
         return new Response(JSON.stringify({ error: "No restaurant context" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
