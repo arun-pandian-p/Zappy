@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell, RefreshCw, AlertCircle } from 'lucide-react';
+import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell, RefreshCw, AlertCircle, UtensilsCrossed } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -33,14 +33,14 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   // Fetch orders with real-time subscription
   const { data: orders = [], isLoading, error, refetch } = useOrders(
     restaurantId,
-    ['pending', 'confirmed', 'preparing', 'ready']
+    ['pending', 'confirmed', 'preparing', 'ready', 'served']
   );
 
   // Fetch pending waiter calls
   const { data: waiterCalls = [] } = usePendingWaiterCalls(restaurantId);
 
   // Kitchen actions
-  const { startPreparing, markReady, isLoading: isUpdating } = useKitchenOrderActions(restaurantId);
+  const { startPreparing, markReady, markServed, isLoading: isUpdating } = useKitchenOrderActions(restaurantId);
 
   const [lastOrderCount, setLastOrderCount] = useState(0);
   const { play: playNewOrderSound, isMuted, toggleMute } = useSound(SOUNDS.NEW_ORDER);
@@ -57,6 +57,10 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   );
   const readyOrders = useMemo(() => 
     orders.filter((o) => o.status === 'ready'), 
+    [orders]
+  );
+  const servedOrders = useMemo(() => 
+    orders.filter((o) => o.status === 'served'), 
     [orders]
   );
 
@@ -85,46 +89,37 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   const handleStartPrep = useCallback(async (orderId: string) => {
     try {
       await startPreparing(orderId);
-      toast({
-        title: 'Order Started',
-        description: 'Order is now being prepared.',
-      });
+      toast({ title: 'Order Started', description: 'Order is now being prepared.' });
     } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update order status.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to update order status.', variant: 'destructive' });
     }
   }, [startPreparing, toast]);
 
   const handleMarkReady = useCallback(async (orderId: string) => {
     try {
       await markReady(orderId);
-      toast({
-        title: 'Order Ready',
-        description: 'Order is ready for serving.',
-      });
+      toast({ title: 'Order Ready', description: 'Order is ready for serving.' });
     } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update order status.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to update order status.', variant: 'destructive' });
     }
   }, [markReady, toast]);
 
+  const handleMarkServed = useCallback(async (orderId: string) => {
+    try {
+      await markServed(orderId);
+      toast({ title: 'Order Served', description: 'Order has been served.' });
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to update order status.', variant: 'destructive' });
+    }
+  }, [markServed, toast]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
-      case 'confirmed':
-        return 'bg-warning/10 text-warning border-warning/20';
-      case 'preparing':
-        return 'bg-info/10 text-info border-info/20';
-      case 'ready':
-        return 'bg-success/10 text-success border-success/20';
-      default:
-        return 'bg-muted text-muted-foreground';
+      case 'pending': case 'confirmed': return 'bg-warning/10 text-warning border-warning/20';
+      case 'preparing': return 'bg-info/10 text-info border-info/20';
+      case 'ready': return 'bg-success/10 text-success border-success/20';
+      case 'served': return 'bg-primary/10 text-primary border-primary/20';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -134,80 +129,103 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
     return mins < 1 ? 'Just now' : `${mins}m ago`;
   };
 
-  const OrderCard = ({ order, showActions }: { order: OrderWithItems; showActions?: 'start' | 'ready' }) => (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -20, scale: 0.95 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-    >
-      <Card className={`border-2 ${getStatusColor(order.status || 'pending')} overflow-hidden`}>
-        {(order.status === 'pending' || order.status === 'confirmed') && (
-          <motion.div
-            className="h-1 bg-warning"
-            initial={{ width: '100%' }}
-            animate={{ width: '0%' }}
-            transition={{ duration: 600, ease: 'linear' }}
-          />
-        )}
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-base font-bold">
-                {order.table?.table_number || 'N/A'}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                #{order.order_number}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock className="w-3 h-3" />
-              {getTimeAgo(order.created_at || new Date().toISOString())}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
-            {order.order_items?.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <span>
-                  <span className="font-medium">{item.quantity}x</span> {item.name}
-                  {item.special_instructions && (
-                    <span className="block text-xs text-muted-foreground">
-                      Note: {item.special_instructions}
-                    </span>
-                  )}
+  const getPrepTimer = (order: OrderWithItems) => {
+    if (order.status !== 'preparing' || !order.started_preparing_at) return null;
+    const diff = Date.now() - new Date(order.started_preparing_at).getTime();
+    const mins = Math.floor(diff / 60000);
+    return mins;
+  };
+
+  const isUrgent = (order: OrderWithItems) => {
+    if (order.status !== 'pending' && order.status !== 'confirmed') return false;
+    const diff = Date.now() - new Date(order.created_at || Date.now()).getTime();
+    return diff > 10 * 60 * 1000; // >10 min
+  };
+
+  const OrderCard = ({ order, showActions }: { order: OrderWithItems; showActions?: 'start' | 'ready' | 'served' }) => {
+    const prepMins = getPrepTimer(order);
+    const urgent = isUrgent(order);
+
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+      >
+        <Card className={`border-2 ${getStatusColor(order.status || 'pending')} overflow-hidden ${urgent ? 'ring-2 ring-destructive/50' : ''}`}>
+          {(order.status === 'pending' || order.status === 'confirmed') && (
+            <motion.div
+              className={`h-1 ${urgent ? 'bg-destructive' : 'bg-warning'}`}
+              initial={{ width: '100%' }}
+              animate={{ width: '0%' }}
+              transition={{ duration: 600, ease: 'linear' }}
+            />
+          )}
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-base font-bold">
+                  {order.table?.table_number || 'N/A'}
+                </Badge>
+                <span className="text-xs text-muted-foreground">#{order.order_number}</span>
+                {urgent && <Badge variant="destructive" className="text-[10px]">URGENT</Badge>}
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {prepMins !== null && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    <Clock className="w-3 h-3 mr-0.5" />{prepMins}m
+                  </Badge>
+                )}
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {getTimeAgo(order.created_at || new Date().toISOString())}
                 </span>
               </div>
-            ))}
-          </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              {order.order_items?.map((item) => (
+                <div key={item.id} className="flex items-center gap-2 text-sm">
+                  <span>
+                    <span className="font-medium">{item.quantity}x</span> {item.name}
+                    {item.special_instructions && (
+                      <span className="block text-xs text-muted-foreground">
+                        Note: {item.special_instructions}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
 
-          {showActions === 'start' && (
-            <Button
-              className="w-full"
-              onClick={() => handleStartPrep(order.id)}
-              disabled={isUpdating}
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Start Preparation
-            </Button>
-          )}
+            {showActions === 'start' && (
+              <Button className="w-full" onClick={() => handleStartPrep(order.id)} disabled={isUpdating}>
+                <Play className="w-4 h-4 mr-2" />
+                Start Preparation
+              </Button>
+            )}
 
-          {showActions === 'ready' && (
-            <Button
-              className="w-full bg-success hover:bg-success/90"
-              onClick={() => handleMarkReady(order.id)}
-              disabled={isUpdating}
-            >
-              <Check className="w-4 h-4 mr-2" />
-              Mark Ready
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
+            {showActions === 'ready' && (
+              <Button className="w-full bg-success hover:bg-success/90" onClick={() => handleMarkReady(order.id)} disabled={isUpdating}>
+                <Check className="w-4 h-4 mr-2" />
+                Mark Ready
+              </Button>
+            )}
+
+            {showActions === 'served' && (
+              <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => handleMarkServed(order.id)} disabled={isUpdating}>
+                <UtensilsCrossed className="w-4 h-4 mr-2" />
+                Mark Served
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
 
   // Show error state
   if (error) {
@@ -232,6 +250,13 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
     );
   }
 
+  const columns = [
+    { title: 'Pending', orders: pendingOrders, color: 'bg-warning', action: 'start' as const, animate: true },
+    { title: 'Preparing', orders: preparingOrders, color: 'bg-info', action: 'ready' as const, spin: true },
+    { title: 'Ready', orders: readyOrders, color: 'bg-success', action: 'served' as const },
+    { title: 'Served', orders: servedOrders, color: 'bg-primary', action: undefined },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -243,33 +268,23 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                  <ChefHat className="w-6 h-6 text-orange-500" />
+                <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                  <ChefHat className="w-6 h-6 text-warning" />
                 </div>
                 <div>
                   <h1 className="font-bold">Kitchen Display</h1>
                   <p className="text-xs text-muted-foreground">
-                    {isLoading ? 'Loading...' : `${pendingOrders.length} pending • ${preparingOrders.length} preparing`}
+                    {isLoading ? 'Loading...' : `${pendingOrders.length} pending • ${preparingOrders.length} preparing • ${readyOrders.length} ready`}
                   </p>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => refetch()}
-                className="gap-2"
-                disabled={isLoading}
-              >
+              <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2" disabled={isLoading}>
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
               </Button>
-              <Button
-                variant={isMuted ? 'outline' : 'default'}
-                size="icon"
-                onClick={toggleMute}
-              >
+              <Button variant={isMuted ? 'outline' : 'default'} size="icon" onClick={toggleMute}>
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
             </div>
@@ -287,10 +302,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
             className="bg-warning/10 border-b border-warning/20 px-4 py-2"
           >
             <div className="container mx-auto flex items-center gap-2 text-warning">
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
+              <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }}>
                 <Bell className="w-4 h-4" />
               </motion.div>
               <span className="text-sm font-medium">
@@ -301,11 +313,11 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
+      {/* Main Content - 4 columns */}
       <main className="container mx-auto px-4 py-6">
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="space-y-4">
                 <div className="h-6 bg-muted rounded animate-pulse w-32" />
                 <Card className="border-dashed">
@@ -317,80 +329,33 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Pending Orders */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <motion.div
-                  className="w-3 h-3 rounded-full bg-warning"
-                  animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
-                <h2 className="font-semibold">Pending ({pendingOrders.length})</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {columns.map((col) => (
+              <div key={col.title}>
+                <div className="flex items-center gap-2 mb-4">
+                  <motion.div
+                    className={`w-3 h-3 rounded-full ${col.color}`}
+                    animate={col.animate ? { scale: [1, 1.2, 1], opacity: [1, 0.7, 1] } : col.spin ? { rotate: 360 } : {}}
+                    transition={col.animate ? { duration: 1.5, repeat: Infinity } : col.spin ? { duration: 2, repeat: Infinity, ease: 'linear' } : {}}
+                  />
+                  <h2 className="font-semibold">{col.title} ({col.orders.length})</h2>
+                </div>
+                <div className="space-y-4">
+                  <AnimatePresence mode="popLayout">
+                    {col.orders.map((order) => (
+                      <OrderCard key={order.id} order={order} showActions={col.action} />
+                    ))}
+                  </AnimatePresence>
+                  {col.orders.length === 0 && (
+                    <Card className="border-dashed">
+                      <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                        No {col.title.toLowerCase()} orders
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </div>
-              <div className="space-y-4">
-                <AnimatePresence mode="popLayout">
-                  {pendingOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} showActions="start" />
-                  ))}
-                </AnimatePresence>
-                {pendingOrders.length === 0 && (
-                  <Card className="border-dashed">
-                    <CardContent className="py-8 text-center text-muted-foreground">
-                      No pending orders
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </div>
-
-            {/* Preparing Orders */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <motion.div
-                  className="w-3 h-3 rounded-full bg-info"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                />
-                <h2 className="font-semibold">Preparing ({preparingOrders.length})</h2>
-              </div>
-              <div className="space-y-4">
-                <AnimatePresence mode="popLayout">
-                  {preparingOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} showActions="ready" />
-                  ))}
-                </AnimatePresence>
-                {preparingOrders.length === 0 && (
-                  <Card className="border-dashed">
-                    <CardContent className="py-8 text-center text-muted-foreground">
-                      No orders in preparation
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </div>
-
-            {/* Ready Orders */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 rounded-full bg-success" />
-                <h2 className="font-semibold">Ready ({readyOrders.length})</h2>
-              </div>
-              <div className="space-y-4">
-                <AnimatePresence mode="popLayout">
-                  {readyOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} />
-                  ))}
-                </AnimatePresence>
-                {readyOrders.length === 0 && (
-                  <Card className="border-dashed">
-                    <CardContent className="py-8 text-center text-muted-foreground">
-                      No orders ready
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </div>
+            ))}
           </div>
         )}
       </main>

@@ -1,7 +1,7 @@
-import { Home, UtensilsCrossed, ShoppingCart, ClipboardList } from "lucide-react";
+import { Home, UtensilsCrossed, ShoppingCart, ClipboardList, User } from "lucide-react";
 import { motion } from "framer-motion";
 
-type ViewType = "home" | "menu" | "cart" | "orders";
+type ViewType = "home" | "menu" | "cart" | "orders" | "profile";
 
 interface BottomNavProps {
   currentView: ViewType;
@@ -15,6 +15,7 @@ const navItems: { view: ViewType; icon: typeof Home; label: string }[] = [
   { view: "menu", icon: UtensilsCrossed, label: "Menu" },
   { view: "cart", icon: ShoppingCart, label: "Cart" },
   { view: "orders", icon: ClipboardList, label: "Orders" },
+  { view: "profile", icon: User, label: "Profile" },
 ];
 
 export function BottomNav({
@@ -41,7 +42,7 @@ export function BottomNav({
               <button
                 key={view}
                 onClick={() => onViewChange(view)}
-                className={`relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 min-w-[60px] ${
+                className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[52px] ${
                   isActive
                     ? "text-success"
                     : "text-muted-foreground hover:text-foreground"
@@ -60,9 +61,14 @@ export function BottomNav({
                       {badgeCount > 9 ? "9+" : badgeCount}
                     </motion.span>
                   )}
+
+                  {/* Active order dot on Orders tab */}
+                  {view === "orders" && orderCount > 0 && !isActive && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-warning" />
+                  )}
                 </div>
 
-                <span className={`text-xs font-medium ${isActive ? "text-success" : ""}`}>
+                <span className={`text-[10px] font-medium ${isActive ? "text-success" : ""}`}>
                   {label}
                 </span>
 

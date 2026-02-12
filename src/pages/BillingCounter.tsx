@@ -18,6 +18,7 @@ import {
 import { useOrders, useUpdateOrderPayment, type OrderWithItems } from '@/hooks/useOrders';
 import { useRestaurant, useRestaurants } from '@/hooks/useRestaurant';
 import { useCreateInvoice, useTodayInvoices, useInvoiceStats, generateInvoiceNumber, type Invoice } from '@/hooks/useInvoices';
+import { useTables } from '@/hooks/useTables';
 
 // Demo restaurant ID - fallback if no restaurant in DB
 const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
@@ -42,6 +43,9 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   // Fetch restaurant settings
   const { data: restaurant } = useRestaurant(restaurantId);
 
+  // Fetch tables for table selector
+  const { data: tables = [] } = useTables(restaurantId);
+
   // Fetch orders - ready and completed
   const { data: allOrders = [], isLoading: ordersLoading, refetch: refetchOrders } = useOrders(
     restaurantId,
@@ -62,14 +66,16 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   const [showReceiptPreview, setShowReceiptPreview] = useState(false);
   const [orderToPrint, setOrderToPrint] = useState<OrderWithItems | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedTableFilter, setSelectedTableFilter] = useState<string | null>(null);
 
   const { isMuted, toggleMute, play: playSound } = useSound(SOUNDS.ORDER_READY);
 
   // Filter orders
-  const readyOrders = useMemo(() => 
-    allOrders.filter((o) => o.status === 'ready' || o.status === 'served'),
-    [allOrders]
-  );
+  const readyOrders = useMemo(() => {
+    const orders = allOrders.filter((o) => o.status === 'ready' || o.status === 'served');
+    if (selectedTableFilter) return orders.filter(o => o.table_id === selectedTableFilter);
+    return orders;
+  }, [allOrders, selectedTableFilter]);
   const completedOrders = useMemo(() => 
     allOrders.filter((o) => o.status === 'completed'),
     [allOrders]
@@ -230,6 +236,38 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
           </TabsList>
 
           <TabsContent value="billing">
+            {/* Table Selector Grid */}
+            {tables.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Select Table</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={selectedTableFilter === null ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedTableFilter(null)}
+                    className="rounded-lg"
+                  >
+                    All
+                  </Button>
+                  {tables.map((table) => {
+                    const hasOrder = readyOrders.some(o => o.table_id === table.id);
+                    return (
+                      <Button
+                        key={table.id}
+                        variant={selectedTableFilter === table.id ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedTableFilter(table.id)}
+                        className={`rounded-lg ${hasOrder ? 'border-success/50 text-success' : ''}`}
+                      >
+                        {table.table_number}
+                        {hasOrder && <span className="ml-1 w-2 h-2 rounded-full bg-success inline-block" />}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Ready Orders */}
               <Card>
