@@ -10,6 +10,7 @@ interface BrandingConfig {
   animation_enabled?: boolean;
   letter_animation?: LetterAnimation;
   mascot?: MascotType;
+  mascot_image_url?: string;
   animation_speed?: AnimationSpeed;
   glow_color_sync?: boolean;
 }
@@ -59,7 +60,7 @@ export function CustomerTopBar({
           {/* Left: Mascot + Logo + Name + Table */}
           <div className="flex items-center gap-3 min-w-0">
             {animEnabled && branding?.mascot && branding.mascot !== "none" && (
-              <MascotIcon mascot={branding.mascot} size={isScrolled ? 28 : 34} primaryColor={primaryColor} />
+              <MascotIcon mascot={branding.mascot} size={isScrolled ? 28 : 34} primaryColor={primaryColor} customImageUrl={branding?.mascot_image_url} />
             )}
             {logoUrl ? (
               <img

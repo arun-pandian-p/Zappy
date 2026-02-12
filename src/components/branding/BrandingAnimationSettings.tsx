@@ -11,11 +11,13 @@ import {
 import { Sparkles } from "lucide-react";
 import { AnimatedHotelName, type LetterAnimation, type AnimationSpeed } from "./AnimatedHotelName";
 import { MascotIcon, type MascotType } from "./MascotIcon";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export interface BrandingConfig {
   animation_enabled: boolean;
   letter_animation: LetterAnimation;
   mascot: MascotType;
+  mascot_image_url?: string;
   animation_speed: AnimationSpeed;
   glow_color_sync: boolean;
 }
@@ -24,6 +26,7 @@ export const defaultBrandingConfig: BrandingConfig = {
   animation_enabled: false,
   letter_animation: "bounce",
   mascot: "none",
+  mascot_image_url: "",
   animation_speed: "normal",
   glow_color_sync: true,
 };
@@ -33,6 +36,7 @@ interface BrandingAnimationSettingsProps {
   onChange: (config: BrandingConfig) => void;
   restaurantName?: string;
   primaryColor?: string;
+  restaurantId?: string;
 }
 
 export function BrandingAnimationSettings({
@@ -40,6 +44,7 @@ export function BrandingAnimationSettings({
   onChange,
   restaurantName = "Hotel Name",
   primaryColor,
+  restaurantId,
 }: BrandingAnimationSettingsProps) {
   const update = (partial: Partial<BrandingConfig>) =>
     onChange({ ...config, ...partial });
@@ -84,6 +89,7 @@ export function BrandingAnimationSettings({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="custom">📷 Custom Upload</SelectItem>
                   <SelectItem value="lion">🦁 Lion</SelectItem>
                   <SelectItem value="tiger">🐯 Tiger</SelectItem>
                   <SelectItem value="elephant">🐘 Elephant</SelectItem>
@@ -95,6 +101,25 @@ export function BrandingAnimationSettings({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Custom mascot upload */}
+            {config.mascot === "custom" && restaurantId && (
+              <div className="space-y-2">
+                <Label>Upload Logo / Mascot Image</Label>
+                <ImageUpload
+                  currentImageUrl={config.mascot_image_url || ""}
+                  onImageUploaded={(url) => update({ mascot_image_url: url })}
+                  restaurantId={restaurantId}
+                  folder="mascots"
+                />
+                {config.mascot_image_url && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <img src={config.mascot_image_url} alt="Custom mascot" className="w-10 h-10 rounded-full object-cover border" />
+                    <span className="text-sm text-muted-foreground">Current mascot</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Letter animation */}
             <div className="space-y-2">
@@ -154,11 +179,12 @@ export function BrandingAnimationSettings({
                 Live Preview
               </p>
               <div className="flex items-center justify-center gap-2">
-                <MascotIcon
-                  mascot={config.mascot}
-                  size={36}
-                  primaryColor={primaryColor}
-                />
+                 <MascotIcon
+                   mascot={config.mascot}
+                   size={36}
+                   primaryColor={primaryColor}
+                   customImageUrl={config.mascot_image_url}
+                 />
                 <AnimatedHotelName
                   name={restaurantName}
                   animation={config.letter_animation}
