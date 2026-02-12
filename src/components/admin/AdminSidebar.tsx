@@ -13,6 +13,7 @@ import {
   Megaphone,
   Star,
   Users,
+  Gift,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,7 @@ const allNavItems: NavItem[] = [
   { title: "Kitchen", icon: ChefHat, value: "kitchen" },
   { title: "Billing", icon: Receipt, value: "billing" },
   { title: "Ads", icon: Megaphone, value: "ads" },
+  { title: "Offers", icon: Gift, value: "offers" },
   { title: "Reviews", icon: Star, value: "reviews" },
   { title: "Users", icon: Users, value: "users" },
   { title: "Settings", icon: Settings, value: "settings" },

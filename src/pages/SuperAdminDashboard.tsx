@@ -8,6 +8,8 @@ import {
   X,
   Loader2,
   Power,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -28,6 +30,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { TenantStats } from '@/components/superadmin/TenantStats';
 import { MonthlyTrendChart } from '@/components/superadmin/MonthlyTrendChart';
 import { TenantTable } from '@/components/superadmin/TenantTable';
+import { TenantPreviewCard } from '@/components/superadmin/TenantPreviewCard';
 import { EditHotelProfile } from '@/components/superadmin/EditHotelProfile';
 import { SuperAdminSidebar } from '@/components/superadmin/SuperAdminSidebar';
 import { CreateHotelForm } from '@/components/superadmin/CreateHotelForm';
@@ -56,6 +59,7 @@ const SuperAdminDashboard = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showCreateHotel, setShowCreateHotel] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
+  const [tenantViewMode, setTenantViewMode] = useState<'table' | 'grid'>('table');
 
   const { data: restaurants = [], isLoading } = useRestaurants();
   const createRestaurant = useCreateRestaurant();
@@ -194,6 +198,14 @@ const SuperAdminDashboard = () => {
                       className="pl-9 w-[200px]"
                     />
                   </div>
+                  <div className="flex items-center bg-muted rounded-lg p-0.5">
+                    <Button variant={tenantViewMode === 'table' ? 'default' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setTenantViewMode('table')}>
+                      <List className="w-4 h-4" />
+                    </Button>
+                    <Button variant={tenantViewMode === 'grid' ? 'default' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setTenantViewMode('grid')}>
+                      <LayoutGrid className="w-4 h-4" />
+                    </Button>
+                  </div>
                   <Button onClick={() => setShowCreateHotel(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Create Hotel
@@ -206,7 +218,7 @@ const SuperAdminDashboard = () => {
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin" />
                 </div>
-              ) : (
+              ) : tenantViewMode === 'table' ? (
                 <TenantTable
                   restaurants={filteredRestaurants}
                   onToggleActive={handleToggleActive}
@@ -214,6 +226,22 @@ const SuperAdminDashboard = () => {
                   onViewDetails={handleViewDetails}
                   onDelete={handleDeleteRestaurant}
                 />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredRestaurants.map((restaurant) => (
+                    <TenantPreviewCard
+                      key={restaurant.id}
+                      restaurant={restaurant}
+                      onToggleActive={handleToggleActive}
+                      onViewDetails={handleViewDetails}
+                    />
+                  ))}
+                  {filteredRestaurants.length === 0 && (
+                    <div className="col-span-full text-center py-8 text-muted-foreground">
+                      No restaurants found
+                    </div>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>

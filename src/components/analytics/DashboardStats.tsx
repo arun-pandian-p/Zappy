@@ -29,11 +29,11 @@ function StatCard({ label, value, change, icon: Icon, iconColor, index }: StatCa
       transition={{ duration: 0.3, delay: index * 0.1 }}
     >
       <Card className="border-0 shadow-md overflow-hidden">
-        <CardContent className="p-6">
+        <CardContent className="p-4">
           <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">{label}</p>
-              <p className="text-3xl font-bold tracking-tight">{value}</p>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">{label}</p>
+              <p className="text-2xl font-bold tracking-tight">{value}</p>
               {change !== undefined && (
                 <div className={`flex items-center gap-1 text-xs ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
                   {isPositive ? (
@@ -44,12 +44,22 @@ function StatCard({ label, value, change, icon: Icon, iconColor, index }: StatCa
                   <span>{Math.abs(change).toFixed(1)}% vs yesterday</span>
                 </div>
               )}
+              {/* Micro sparkline */}
+              <div className="flex items-end gap-0.5 h-3 mt-1">
+                {[40, 65, 45, 80, 55, 70, 90].map((h, i) => (
+                  <div
+                    key={i}
+                    className="w-1 rounded-full"
+                    style={{ height: `${h}%`, backgroundColor: `${iconColor}40` }}
+                  />
+                ))}
+              </div>
             </div>
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: `${iconColor}15` }}
             >
-              <Icon className="w-6 h-6" style={{ color: iconColor }} />
+              <Icon className="w-5 h-5" style={{ color: iconColor }} />
             </div>
           </div>
         </CardContent>

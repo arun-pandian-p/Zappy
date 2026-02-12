@@ -12,6 +12,7 @@ import {
   Bluetooth,
   Usb,
   QrCode,
+  UserCircle,
 } from "lucide-react";
 import { BrandingAnimationSettings, type BrandingConfig, defaultBrandingConfig } from "@/components/branding/BrandingAnimationSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,6 +22,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import {
   Select,
   SelectContent,
@@ -52,6 +55,8 @@ interface RestaurantSettings {
   google_redirect_threshold: number;
   qr_base_url: string;
   branding: BrandingConfig;
+  admin_avatar: { type: "upload" | "emoji" | "mascot"; value: string };
+  admin_display_name: string;
 }
 
 const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
@@ -73,6 +78,8 @@ const defaultSettings: RestaurantSettings = {
   google_redirect_threshold: 4,
   qr_base_url: PUBLISHED_URL,
   branding: defaultBrandingConfig,
+  admin_avatar: { type: "upload" as const, value: "" },
+  admin_display_name: "",
 };
 
 export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
@@ -113,6 +120,8 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           animation_speed: (brandingRaw.animation_speed as BrandingConfig["animation_speed"]) || "normal",
           glow_color_sync: (brandingRaw.glow_color_sync as boolean) ?? true,
         },
+        admin_avatar: (extraSettings.admin_avatar as any) || { type: "upload", value: "" },
+        admin_display_name: (extraSettings.admin_display_name as string) || "",
       });
     }
   }, [restaurant]);
@@ -146,6 +155,8 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           settings: {
             qr_base_url: settings.qr_base_url,
             branding: { ...settings.branding },
+            admin_avatar: settings.admin_avatar,
+            admin_display_name: settings.admin_display_name,
           } as any,
         },
       });
@@ -499,7 +510,70 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         </Card>
       </motion.div>
 
-      {/* Save Button */}
+      {/* Profile & Avatar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.48 }}
+      >
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserCircle className="w-5 h-5" />
+              Admin Profile
+            </CardTitle>
+            <CardDescription>Customize your admin avatar and display name</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Avatar className="w-16 h-16">
+                {settings.admin_avatar.type === "emoji" && settings.admin_avatar.value ? (
+                  <AvatarFallback className="text-3xl bg-primary/10">{settings.admin_avatar.value}</AvatarFallback>
+                ) : settings.admin_avatar.type === "upload" && settings.admin_avatar.value ? (
+                  <AvatarImage src={settings.admin_avatar.value} />
+                ) : (
+                  <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" />
+                )}
+                <AvatarFallback className="bg-primary/20 text-primary">AD</AvatarFallback>
+              </Avatar>
+              <div className="space-y-2 flex-1">
+                <Label>Display Name</Label>
+                <Input
+                  value={settings.admin_display_name}
+                  onChange={(e) => setSettings({ ...settings, admin_display_name: e.target.value })}
+                  placeholder="Admin Name"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Avatar Image</Label>
+              <ImageUpload
+                currentImageUrl={settings.admin_avatar.type === "upload" ? settings.admin_avatar.value : ""}
+                onImageUploaded={(url) => setSettings({ ...settings, admin_avatar: { type: "upload", value: url } })}
+                restaurantId={restaurantId}
+                folder="avatars"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Or pick an emoji</Label>
+              <div className="flex gap-2 flex-wrap">
+                {["👨‍🍳", "👩‍🍳", "🧑‍💼", "👤", "🦁", "🐯", "🎩", "⭐", "🍽️", "🔥", "💎", "🌟"].map((emoji) => (
+                  <Button
+                    key={emoji}
+                    variant={settings.admin_avatar.type === "emoji" && settings.admin_avatar.value === emoji ? "default" : "outline"}
+                    size="icon"
+                    className="text-lg h-10 w-10"
+                    onClick={() => setSettings({ ...settings, admin_avatar: { type: "emoji", value: emoji } })}
+                  >
+                    {emoji}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

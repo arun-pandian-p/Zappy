@@ -563,6 +563,69 @@ export type Database = {
           },
         ]
       }
+      offers: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_text: string | null
+          end_date: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          linked_menu_item_id: string | null
+          restaurant_id: string
+          sort_order: number
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_text?: string | null
+          end_date?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          linked_menu_item_id?: string | null
+          restaurant_id: string
+          sort_order?: number
+          start_date?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_text?: string | null
+          end_date?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          linked_menu_item_id?: string | null
+          restaurant_id?: string
+          sort_order?: number
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_linked_menu_item_id_fkey"
+            columns: ["linked_menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string | null

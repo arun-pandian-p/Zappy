@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping } from 'lucide-react';
+import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCartStore } from '@/stores/cartStore';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { useOrders, useCreateOrder } from '@/hooks/useOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
 import { useRandomActiveAd, useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
 import { useTableByNumber } from '@/hooks/useTables';
+import { useActiveOffers } from '@/hooks/useOffers';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
 import { AdsPopup } from '@/components/menu/AdsPopup';
 import { BottomNav } from '@/components/menu/BottomNav';
@@ -22,7 +23,9 @@ import { CategorySlider } from '@/components/menu/CategorySlider';
 import { CustomerTopBar } from '@/components/menu/CustomerTopBar';
 import { FloatingCartBar } from '@/components/menu/FloatingCartBar';
 import { MenuItemRow } from '@/components/menu/MenuItemRow';
+import { FoodCard } from '@/components/menu/FoodCard';
 import { OrderStatusPipeline } from '@/components/menu/OrderStatusPipeline';
+import { OffersSlider } from '@/components/menu/OffersSlider';
 import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
@@ -42,9 +45,13 @@ const CustomerMenu = () => {
   const [adShown, setAdShown] = useState(false);
   const [showAddedToast, setShowAddedToast] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState('');
+  const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('list');
 
   // Fetch restaurant data
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId);
+
+  // Fetch offers
+  const { data: offers = [] } = useActiveOffers(restaurantId);
 
   // Fetch menu items
   const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(restaurantId);
@@ -310,6 +317,11 @@ const CustomerMenu = () => {
 
   const renderHome = () => (
     <div className="space-y-6">
+      {/* Offers Slider */}
+      {offers.length > 0 && (
+        <OffersSlider offers={offers} />
+      )}
+
       {/* Banner */}
       {restaurant?.banner_image_url && (
         <div className="rounded-2xl overflow-hidden -mx-4 -mt-4 mb-4">
@@ -367,15 +379,40 @@ const CustomerMenu = () => {
 
   const renderMenu = () => (
     <div className="space-y-4">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search menu..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 rounded-full bg-muted/50 border-0"
-        />
+      {/* Offers Slider */}
+      {offers.length > 0 && (
+        <OffersSlider offers={offers} />
+      )}
+
+      {/* Search + View Toggle */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search menu..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 rounded-full bg-muted/50 border-0"
+          />
+        </div>
+        <div className="flex items-center bg-muted rounded-lg p-0.5">
+          <Button
+            variant={menuViewMode === 'list' ? 'default' : 'ghost'}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setMenuViewMode('list')}
+          >
+            <List className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={menuViewMode === 'grid' ? 'default' : 'ghost'}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setMenuViewMode('grid')}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Categories */}
@@ -385,29 +422,53 @@ const CustomerMenu = () => {
         onSelectCategory={setSelectedCategory}
       />
 
-      {/* Menu Items - List Style */}
-      <div className="space-y-3">
-        <AnimatePresence mode="popLayout">
-          {filteredItems.map((item) => (
-            <MenuItemRow
-              key={item.id}
-              id={item.id}
-              name={item.name}
-              description={item.description}
-              price={Number(item.price)}
-              imageUrl={item.image_url}
-              isVegetarian={item.is_vegetarian || false}
-              isPopular={item.is_popular || false}
-              prepTime={item.prep_time_minutes}
-              currencySymbol={currencySymbol}
-              quantity={getItemQuantity(item.id)}
-              onAdd={() => handleAddToCart(item)}
-              onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
-              onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
-            />
-          ))}
-        </AnimatePresence>
-      </div>
+      {/* Menu Items */}
+      {menuViewMode === 'list' ? (
+        <div className="space-y-3">
+          <AnimatePresence mode="popLayout">
+            {filteredItems.map((item) => (
+              <MenuItemRow
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                description={item.description}
+                price={Number(item.price)}
+                imageUrl={item.image_url}
+                isVegetarian={item.is_vegetarian || false}
+                isPopular={item.is_popular || false}
+                prepTime={item.prep_time_minutes}
+                currencySymbol={currencySymbol}
+                quantity={getItemQuantity(item.id)}
+                onAdd={() => handleAddToCart(item)}
+                onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
+                onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <AnimatePresence mode="popLayout">
+            {filteredItems.map((item) => (
+              <FoodCard
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                description={item.description}
+                price={Number(item.price)}
+                imageUrl={item.image_url}
+                isVegetarian={item.is_vegetarian || false}
+                isPopular={item.is_popular || false}
+                currencySymbol={currencySymbol}
+                quantity={getItemQuantity(item.id)}
+                onAdd={() => handleAddToCart(item)}
+                onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
+                onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
 
       {filteredItems.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
