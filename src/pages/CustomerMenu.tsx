@@ -32,6 +32,7 @@ const CustomerMenu = () => {
   const [searchParams] = useSearchParams();
   const restaurantId = searchParams.get('r') || '';
   const tableId = searchParams.get('table') || '';
+  const isPreviewMode = !tableId;
   const { toast } = useToast();
 
   const [currentView, setCurrentView] = useState<ViewType>('menu');
@@ -51,7 +52,7 @@ const CustomerMenu = () => {
   // Fetch categories
   const { data: categories = [] } = useCategories(restaurantId);
 
-  // Resolve table number to table UUID
+  // Resolve table number to table UUID (skip in preview mode)
   const { data: tableData, isLoading: tableLoading } = useTableByNumber(restaurantId, tableId);
   const resolvedTableId = tableData?.id;
 
@@ -275,8 +276,8 @@ const CustomerMenu = () => {
     });
   };
 
-  // Loading state — show splash
-  if (restaurantLoading || menuLoading || tableLoading) {
+  // Loading state — show splash (skip table loading in preview mode)
+  if (restaurantLoading || menuLoading || (!isPreviewMode && tableLoading)) {
     return (
       <QRSplashScreen
         restaurantName={restaurant?.name || 'Restaurant'}
@@ -613,6 +614,13 @@ const CustomerMenu = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      {/* Preview Mode Banner */}
+      {isPreviewMode && (
+        <div className="bg-warning/20 text-warning-foreground text-center py-2 text-xs font-medium border-b border-warning/30">
+          👁️ Preview Mode — Ordering is disabled
+        </div>
+      )}
+
       {/* Ads Popup */}
       <AdsPopup
         ad={activeAd || null}
@@ -630,10 +638,10 @@ const CustomerMenu = () => {
       <CustomerTopBar
         restaurantName={restaurant?.name || 'Restaurant'}
         logoUrl={restaurant?.logo_url}
-        tableNumber={tableNumber}
-        cartCount={getTotalItems()}
+        tableNumber={isPreviewMode ? 'Preview' : tableNumber}
+        cartCount={isPreviewMode ? 0 : getTotalItems()}
         onCallWaiter={handleCallWaiter}
-        onCartClick={() => setCurrentView('cart')}
+        onCartClick={() => !isPreviewMode && setCurrentView('cart')}
         isCallingWaiter={createWaiterCall.isPending}
         primaryColor={primaryColor}
         branding={brandingConfig}
@@ -643,13 +651,19 @@ const CustomerMenu = () => {
       <main className="container mx-auto px-4 py-4">
         {currentView === 'home' && renderHome()}
         {currentView === 'menu' && renderMenu()}
-        {currentView === 'cart' && renderCart()}
-        {currentView === 'orders' && renderOrders()}
+        {!isPreviewMode && currentView === 'cart' && renderCart()}
+        {!isPreviewMode && currentView === 'orders' && renderOrders()}
         {currentView === 'profile' && renderProfile()}
+        {isPreviewMode && (currentView === 'cart' || currentView === 'orders') && (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-lg font-medium">Not available in preview mode</p>
+            <p className="text-sm mt-1">Scan a QR code at a table to place orders</p>
+          </div>
+        )}
       </main>
 
-      {/* Floating Cart Bar (menu view only) */}
-      {currentView === 'menu' && (
+      {/* Floating Cart Bar (menu view only, not in preview) */}
+      {!isPreviewMode && currentView === 'menu' && (
         <FloatingCartBar
           itemCount={getTotalItems()}
           totalPrice={getTotalPrice()}
@@ -662,8 +676,8 @@ const CustomerMenu = () => {
       <BottomNav
         currentView={currentView}
         onViewChange={setCurrentView}
-        cartCount={getTotalItems()}
-        orderCount={customerOrders.filter(o => o.status !== 'completed').length}
+        cartCount={isPreviewMode ? 0 : getTotalItems()}
+        orderCount={isPreviewMode ? 0 : customerOrders.filter(o => o.status !== 'completed').length}
       />
     </div>
   );
