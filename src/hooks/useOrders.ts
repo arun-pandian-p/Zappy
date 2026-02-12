@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
 
@@ -236,34 +236,64 @@ export function useUpdateOrderPayment() {
 
 // Hook for kitchen-specific order status updates
 export function useKitchenOrderActions(restaurantId?: string) {
-  const updateStatus = useUpdateOrderStatus();
   const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
   const startPreparing = useCallback(
-    (orderId: string) => {
-      return updateStatus.mutateAsync({ id: orderId, status: "preparing" });
+    async (orderId: string) => {
+      setIsPending(true);
+      try {
+        const { error } = await supabase
+          .from("orders")
+          .update({ status: "preparing" as const, started_preparing_at: new Date().toISOString() })
+          .eq("id", orderId);
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+      } finally {
+        setIsPending(false);
+      }
     },
-    [updateStatus]
+    [queryClient]
   );
 
   const markReady = useCallback(
-    (orderId: string) => {
-      return updateStatus.mutateAsync({ id: orderId, status: "ready" });
+    async (orderId: string) => {
+      setIsPending(true);
+      try {
+        const { error } = await supabase
+          .from("orders")
+          .update({ status: "ready" as const, ready_at: new Date().toISOString() })
+          .eq("id", orderId);
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+      } finally {
+        setIsPending(false);
+      }
     },
-    [updateStatus]
+    [queryClient]
   );
 
   const markServed = useCallback(
-    (orderId: string) => {
-      return updateStatus.mutateAsync({ id: orderId, status: "served" });
+    async (orderId: string) => {
+      setIsPending(true);
+      try {
+        const { error } = await supabase
+          .from("orders")
+          .update({ status: "served" as const })
+          .eq("id", orderId);
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+      } finally {
+        setIsPending(false);
+      }
     },
-    [updateStatus]
+    [queryClient]
   );
 
   return {
     startPreparing,
     markReady,
     markServed,
-    isLoading: updateStatus.isPending,
+    isLoading: isPending,
   };
 }

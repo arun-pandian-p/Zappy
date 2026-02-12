@@ -15,13 +15,16 @@ import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
 import { useRandomActiveAd, useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
 import { useTableByNumber } from '@/hooks/useTables';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
-import { FoodCard } from '@/components/menu/FoodCard';
 import { AdsPopup } from '@/components/menu/AdsPopup';
 import { BottomNav } from '@/components/menu/BottomNav';
 import { AddedToCartToast } from '@/components/menu/AddedToCartToast';
 import { CategorySlider } from '@/components/menu/CategorySlider';
+import { CustomerTopBar } from '@/components/menu/CustomerTopBar';
+import { FloatingCartBar } from '@/components/menu/FloatingCartBar';
+import { MenuItemRow } from '@/components/menu/MenuItemRow';
+import { OrderStatusPipeline } from '@/components/menu/OrderStatusPipeline';
 
-type ViewType = 'home' | 'menu' | 'cart' | 'orders';
+type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
 const CustomerMenu = () => {
   const navigate = useNavigate();
@@ -269,35 +272,6 @@ const CustomerMenu = () => {
     });
   };
 
-  const getStatusBadge = (status: string | null) => {
-    switch (status) {
-      case 'pending':
-        return <Badge className="bg-warning/20 text-warning border-0">Placed</Badge>;
-      case 'confirmed':
-        return <Badge className="bg-info/20 text-info border-0">Confirmed</Badge>;
-      case 'preparing':
-        return <Badge className="bg-info/20 text-info border-0">Preparing</Badge>;
-      case 'ready':
-        return <Badge className="bg-success/20 text-success border-0">Ready</Badge>;
-      case 'served':
-        return <Badge className="bg-success/20 text-success border-0">Served</Badge>;
-      case 'completed':
-        return <Badge className="bg-muted text-muted-foreground border-0">Completed</Badge>;
-      default:
-        return <Badge>{status || 'Unknown'}</Badge>;
-    }
-  };
-
-  // Apply tenant theme
-  const themeStyle = useMemo(() => {
-    if (!restaurant) return {};
-    return {
-      '--tenant-primary': restaurant.primary_color || '#F97316',
-      '--tenant-secondary': restaurant.secondary_color || '#FDE68A',
-      fontFamily: restaurant.font_family || 'Inter',
-    } as React.CSSProperties;
-  }, [restaurant]);
-
   // Loading state
   if (restaurantLoading || menuLoading || tableLoading) {
     return (
@@ -325,54 +299,58 @@ const CustomerMenu = () => {
   }
 
   const renderHome = () => (
-    <div className="space-y-6" style={themeStyle}>
+    <div className="space-y-6">
       {/* Banner */}
       {restaurant?.banner_image_url && (
-        <div className="rounded-xl overflow-hidden -mx-4 -mt-4 mb-4">
-          <img src={restaurant.banner_image_url} alt="Banner" className="w-full h-40 object-cover" />
+        <div className="rounded-2xl overflow-hidden -mx-4 -mt-4 mb-4">
+          <img src={restaurant.banner_image_url} alt="Banner" className="w-full h-44 object-cover" />
         </div>
       )}
 
       {/* Welcome Section */}
-      <div className="text-center py-8">
+      <div className="text-center py-6">
         {restaurant?.logo_url && (
           <img 
             src={restaurant.logo_url} 
             alt={restaurant.name}
-            className="w-24 h-24 mx-auto mb-4 rounded-xl object-cover"
+            className="w-20 h-20 mx-auto mb-3 rounded-2xl object-cover shadow-md"
           />
         )}
         <h2 className="text-2xl font-bold">{restaurant?.name}</h2>
-        <p className="text-muted-foreground mt-1">{restaurant?.description || 'Welcome!'}</p>
+        <p className="text-muted-foreground mt-1 text-sm">{restaurant?.description || 'Welcome!'}</p>
         {tableNumber && (
-          <Badge variant="outline" className="mt-3">Table {tableNumber}</Badge>
+          <Badge variant="secondary" className="mt-3">Table {tableNumber}</Badge>
         )}
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="card-hover cursor-pointer" onClick={() => setCurrentView('menu')}>
-          <CardContent className="p-6 text-center">
-            <Menu className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <p className="font-semibold">View Menu</p>
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="card-hover cursor-pointer border-primary/20" onClick={() => setCurrentView('menu')}>
+          <CardContent className="p-5 text-center">
+            <Menu className="w-7 h-7 mx-auto mb-2 text-primary" />
+            <p className="font-semibold text-sm">View Menu</p>
           </CardContent>
         </Card>
-        <Card className="card-hover cursor-pointer" onClick={handleCallWaiter}>
-          <CardContent className="p-6 text-center">
-            <HandHelping className="w-8 h-8 mx-auto mb-2 text-warning" />
-            <p className="font-semibold">Call Waiter</p>
+        <Card className="card-hover cursor-pointer border-warning/20" onClick={handleCallWaiter}>
+          <CardContent className="p-5 text-center">
+            <HandHelping className="w-7 h-7 mx-auto mb-2 text-warning" />
+            <p className="font-semibold text-sm">Call Waiter</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Active Order */}
       {activeOrder && (
-        <WaitingTimer
-          order={activeOrder}
-          estimatedMinutes={estimatedPrepTime}
-          currencySymbol={currencySymbol}
-          onViewDetails={() => setCurrentView('orders')}
-        />
+        <div>
+          <h3 className="font-semibold mb-2 text-sm text-muted-foreground uppercase tracking-wide">Active Order</h3>
+          <OrderStatusPipeline currentStatus={activeOrder.status} />
+          <WaitingTimer
+            order={activeOrder}
+            estimatedMinutes={estimatedPrepTime}
+            currencySymbol={currencySymbol}
+            onViewDetails={() => setCurrentView('orders')}
+          />
+        </div>
       )}
     </div>
   );
@@ -397,11 +375,11 @@ const CustomerMenu = () => {
         onSelectCategory={setSelectedCategory}
       />
 
-      {/* Menu Items Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Menu Items - List Style */}
+      <div className="space-y-3">
         <AnimatePresence mode="popLayout">
           {filteredItems.map((item) => (
-            <FoodCard
+            <MenuItemRow
               key={item.id}
               id={item.id}
               name={item.name}
@@ -410,6 +388,7 @@ const CustomerMenu = () => {
               imageUrl={item.image_url}
               isVegetarian={item.is_vegetarian || false}
               isPopular={item.is_popular || false}
+              prepTime={item.prep_time_minutes}
               currencySymbol={currencySymbol}
               quantity={getItemQuantity(item.id)}
               onAdd={() => handleAddToCart(item)}
@@ -447,10 +426,17 @@ const CustomerMenu = () => {
           {cartItems.map((item) => (
             <Card key={item.id}>
               <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <h4 className="font-semibold">{item.name}</h4>
-                    <p className="text-sm text-muted-foreground">
+                <div className="flex items-center gap-3">
+                  {item.image_url && (
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm">{item.name}</h4>
+                    <p className="text-xs text-muted-foreground">
                       {currencySymbol}{item.price} each
                     </p>
                   </div>
@@ -458,27 +444,27 @@ const CustomerMenu = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-7 w-7"
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     >
-                      <Minus className="w-4 h-4" />
+                      <Minus className="w-3.5 h-3.5" />
                     </Button>
-                    <span className="w-8 text-center font-medium">{item.quantity}</span>
+                    <span className="w-6 text-center font-medium text-sm">{item.quantity}</span>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-7 w-7"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive"
+                      className="h-7 w-7 text-destructive"
                       onClick={() => removeItem(item.id)}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -534,13 +520,16 @@ const CustomerMenu = () => {
 
   const renderOrders = () => (
     <div className="space-y-4">
-      {/* Active Order Timer */}
+      {/* Active Order with Pipeline */}
       {activeOrder && (
-        <WaitingTimer
-          order={activeOrder}
-          estimatedMinutes={estimatedPrepTime}
-          currencySymbol={currencySymbol}
-        />
+        <div>
+          <OrderStatusPipeline currentStatus={activeOrder.status} />
+          <WaitingTimer
+            order={activeOrder}
+            estimatedMinutes={estimatedPrepTime}
+            currencySymbol={currencySymbol}
+          />
+        </div>
       )}
 
       {customerOrders.length === 0 ? (
@@ -566,7 +555,19 @@ const CustomerMenu = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold">#{order.order_number}</span>
-                {getStatusBadge(order.status)}
+                <Badge
+                  className={
+                    order.status === 'pending' ? 'bg-warning/20 text-warning border-0' :
+                    order.status === 'preparing' ? 'bg-info/20 text-info border-0' :
+                    order.status === 'ready' ? 'bg-success/20 text-success border-0' :
+                    order.status === 'served' ? 'bg-success/20 text-success border-0' :
+                    order.status === 'completed' ? 'bg-muted text-muted-foreground border-0' :
+                    ''
+                  }
+                >
+                  {order.status === 'pending' ? 'Placed' : 
+                   order.status?.charAt(0).toUpperCase() + (order.status?.slice(1) || '')}
+                </Badge>
               </div>
               <div className="space-y-1 mb-2">
                 {order.order_items?.map((item) => (
@@ -588,6 +589,19 @@ const CustomerMenu = () => {
     </div>
   );
 
+  const renderProfile = () => (
+    <div className="space-y-4 text-center py-12">
+      <div className="w-20 h-20 mx-auto bg-muted rounded-full flex items-center justify-center">
+        <span className="text-3xl">👤</span>
+      </div>
+      <h3 className="font-semibold text-lg">Guest</h3>
+      <p className="text-sm text-muted-foreground">Table {tableNumber || 'N/A'}</p>
+      {restaurant && (
+        <p className="text-sm text-muted-foreground">{restaurant.name}</p>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Ads Popup */}
@@ -603,35 +617,16 @@ const CustomerMenu = () => {
       {/* Added to Cart Toast */}
       <AddedToCartToast show={showAddedToast} itemName={lastAddedItem} />
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur border-b">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8">
-                <Menu className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div>
-                <h1 className="font-bold text-lg">{restaurant?.name || 'Restaurant'}</h1>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleCallWaiter}
-                disabled={createWaiterCall.isPending}
-                className="rounded-full"
-              >
-                <HandHelping className="w-5 h-5" />
-              </Button>
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-sm">👤</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Branded Top Bar */}
+      <CustomerTopBar
+        restaurantName={restaurant?.name || 'Restaurant'}
+        logoUrl={restaurant?.logo_url}
+        tableNumber={tableNumber}
+        cartCount={getTotalItems()}
+        onCallWaiter={handleCallWaiter}
+        onCartClick={() => setCurrentView('cart')}
+        isCallingWaiter={createWaiterCall.isPending}
+      />
 
       {/* Content */}
       <main className="container mx-auto px-4 py-4">
@@ -639,7 +634,18 @@ const CustomerMenu = () => {
         {currentView === 'menu' && renderMenu()}
         {currentView === 'cart' && renderCart()}
         {currentView === 'orders' && renderOrders()}
+        {currentView === 'profile' && renderProfile()}
       </main>
+
+      {/* Floating Cart Bar (menu view only) */}
+      {currentView === 'menu' && (
+        <FloatingCartBar
+          itemCount={getTotalItems()}
+          totalPrice={getTotalPrice()}
+          currencySymbol={currencySymbol}
+          onViewCart={() => setCurrentView('cart')}
+        />
+      )}
 
       {/* Bottom Navigation */}
       <BottomNav
