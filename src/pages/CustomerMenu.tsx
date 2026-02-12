@@ -288,6 +288,16 @@ const CustomerMenu = () => {
     }
   };
 
+  // Apply tenant theme
+  const themeStyle = useMemo(() => {
+    if (!restaurant) return {};
+    return {
+      '--tenant-primary': restaurant.primary_color || '#F97316',
+      '--tenant-secondary': restaurant.secondary_color || '#FDE68A',
+      fontFamily: restaurant.font_family || 'Inter',
+    } as React.CSSProperties;
+  }, [restaurant]);
+
   // Loading state
   if (restaurantLoading || menuLoading || tableLoading) {
     return (
@@ -315,7 +325,14 @@ const CustomerMenu = () => {
   }
 
   const renderHome = () => (
-    <div className="space-y-6">
+    <div className="space-y-6" style={themeStyle}>
+      {/* Banner */}
+      {restaurant?.banner_image_url && (
+        <div className="rounded-xl overflow-hidden -mx-4 -mt-4 mb-4">
+          <img src={restaurant.banner_image_url} alt="Banner" className="w-full h-40 object-cover" />
+        </div>
+      )}
+
       {/* Welcome Section */}
       <div className="text-center py-8">
         {restaurant?.logo_url && (

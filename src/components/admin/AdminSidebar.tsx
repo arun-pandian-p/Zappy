@@ -34,7 +34,7 @@ interface NavItem {
   value: string;
 }
 
-const navItems: NavItem[] = [
+const allNavItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
   { title: "Menu", icon: UtensilsCrossed, value: "menu" },
   { title: "Tables & QR", icon: Grid3X3, value: "tables" },
@@ -47,16 +47,22 @@ const navItems: NavItem[] = [
   { title: "Settings", icon: Settings, value: "settings" },
 ];
 
+const onboardingNavItems: NavItem[] = [
+  { title: "Settings", icon: Settings, value: "settings" },
+];
+
 interface AdminSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onboardingCompleted?: boolean;
 }
 
-export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, onboardingCompleted = true }: AdminSidebarProps) {
   const navigate = useNavigate();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { signOut } = useAuth();
+  const navItems = onboardingCompleted ? allNavItems : onboardingNavItems;
 
   const handleLogout = async () => {
     await signOut();

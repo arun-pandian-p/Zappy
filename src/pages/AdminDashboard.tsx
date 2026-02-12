@@ -99,6 +99,13 @@ const AdminDashboard = () => {
   
   // Fetch live data
   const { data: restaurant } = useRestaurant(restaurantId);
+
+  // Redirect if onboarding not completed
+  useEffect(() => {
+    if (restaurant && !(restaurant as any).onboarding_completed && role === 'restaurant_admin') {
+      navigate('/admin/onboarding');
+    }
+  }, [restaurant, role, navigate]);
   const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(restaurantId);
   const { data: categories = [] } = useCategories(restaurantId);
   const { data: tables = [], isLoading: tablesLoading } = useTables(restaurantId);
@@ -350,7 +357,7 @@ const AdminDashboard = () => {
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full bg-muted/30">
-        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} />
 
         <SidebarInset className="flex-1">
           <AdminHeader restaurantName={restaurantName} />

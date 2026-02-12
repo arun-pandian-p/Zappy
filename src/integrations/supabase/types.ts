@@ -803,6 +803,7 @@ export type Database = {
           logo_url: string | null
           menu_title: string | null
           name: string
+          onboarding_completed: boolean | null
           phone: string | null
           primary_color: string | null
           printer_settings: Json | null
@@ -816,6 +817,7 @@ export type Database = {
             | Database["public"]["Enums"]["subscription_tier"]
             | null
           tax_rate: number | null
+          theme_config: Json | null
           updated_at: string | null
         }
         Insert: {
@@ -835,6 +837,7 @@ export type Database = {
           logo_url?: string | null
           menu_title?: string | null
           name: string
+          onboarding_completed?: boolean | null
           phone?: string | null
           primary_color?: string | null
           printer_settings?: Json | null
@@ -848,6 +851,7 @@ export type Database = {
             | Database["public"]["Enums"]["subscription_tier"]
             | null
           tax_rate?: number | null
+          theme_config?: Json | null
           updated_at?: string | null
         }
         Update: {
@@ -867,6 +871,7 @@ export type Database = {
           logo_url?: string | null
           menu_title?: string | null
           name?: string
+          onboarding_completed?: boolean | null
           phone?: string | null
           primary_color?: string | null
           printer_settings?: Json | null
@@ -880,6 +885,7 @@ export type Database = {
             | Database["public"]["Enums"]["subscription_tier"]
             | null
           tax_rate?: number | null
+          theme_config?: Json | null
           updated_at?: string | null
         }
         Relationships: []
