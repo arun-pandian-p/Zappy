@@ -1,120 +1,58 @@
 
 
-# Fix: Admin Preview Sync, Logo, Offers, and Compact Cards
+# Fix: Admin Preview UI and Published Site Sync
 
-## Issues Identified
+## Problems Identified
 
-1. **Admin preview iframe not syncing** -- The iframe loads once and doesn't refresh when admin makes changes (logo, theme, offers, menu edits)
-2. **Logo/animated name mismatch** -- The admin header and customer top bar may show different branding because they read settings independently with no realtime refresh trigger
-3. **Offers not appearing in customer menu** -- The `useActiveOffers` hook filters by date range but the offers slider only shows if data loads successfully; the admin preview iframe doesn't reload when new offers are added
-4. **Food cards too large on mobile** -- The grid cards still use `aspect-square` which is too tall; need much smaller compact cards for mobile
+**Image 1 (Admin Preview):** The customer menu preview in the iframe shows the offers slider and categories, but food cards are not visible below. The iframe content is scrollable but the cards appear to be rendering below the visible area. The preview itself is working with the correct compact UI.
 
----
+**Image 2 (Published Site):** The published site at `qr-pal-maker.lovable.app` shows a completely **outdated version** of the code -- large full-width cards, no offers slider, a different header layout. This is because the latest code changes have not been published yet. You need to click the **Publish** button to push the new compact grid cards, offers slider, and real-time sync features to the live site.
 
-## Fix 1: Auto-Refresh Admin Preview on Data Changes
+## Changes Required
+
+### 1. Fix Admin Preview Iframe Scrolling
+The iframe height is constrained to `maxHeight: 70vh` which cuts off content. The food cards render below the fold but the iframe container doesn't allow proper scrolling.
 
 **File: `src/pages/AdminDashboard.tsx`**
+- Remove `maxHeight: '70vh'` constraint from the iframe wrapper for mobile/tablet devices
+- Instead, set a fixed pixel height matching the device (e.g., 812px for mobile) and let the iframe scroll naturally within it
+- Increase the outer container `minHeight` so the preview device frame has room
 
-- Pass a `refreshKey` to `PreviewTabContent` that increments whenever the admin saves any change (menu item, offer, settings, logo)
-- Add a `useEffect` that listens to query invalidation events on key queries (`menuItems`, `offers`, `restaurant`) and bumps the refresh key
-- Simpler approach: add a `postMessage` listener or just auto-refresh the iframe every time the admin switches to the preview tab
-
-**Implementation:**
-- Track `activeTab` changes -- when switching to "preview", bump the refresh key
-- Also bump refresh key after any successful mutation (menu add/delete, offer create, settings save)
-
----
-
-## Fix 2: Consistent Logo and Branding in Customer TopBar
-
-**File: `src/components/menu/CustomerTopBar.tsx`**
-
-- The logo is already passed via `logoUrl={restaurant?.logo_url}` -- this should work
-- Ensure the `AnimatedHotelName` component receives the same branding config as the admin
-- The issue may be that the iframe preview loads without realtime subscription -- add `refetchInterval: 30000` to `useRestaurant` in customer menu to pick up changes faster
-
-**File: `src/pages/CustomerMenu.tsx`**
-
-- Add a Supabase realtime subscription on the `restaurants` table for the current restaurant ID
-- When a change event fires, invalidate the `restaurant` query to refresh branding/logo instantly
-
----
-
-## Fix 3: Offers Sync with Realtime
-
-**File: `src/pages/CustomerMenu.tsx`**
-
-- Add a Supabase realtime subscription on the `offers` table filtered by `restaurant_id`
-- On any INSERT/UPDATE/DELETE event, invalidate the `offers` query
-- This ensures the preview iframe and the live customer page both update when admin adds/edits offers
-
----
-
-## Fix 4: Smaller Compact Food Cards for Mobile
-
-**File: `src/components/menu/FoodCard.tsx`**
-
-Current card uses `aspect-square` for the image which makes it very tall on mobile. Changes:
-- Reduce image aspect ratio to `aspect-[4/3]` or even `aspect-[3/2]` 
-- Reduce overall card padding from `p-3` to `p-2`
-- Reduce font sizes: name to `text-xs`, price to `text-xs`
-- Make the Add button smaller: `h-6 text-[10px]`
-- Remove description entirely on compact cards to save space
-
-**File: `src/pages/CustomerMenu.tsx`**
-
-- Default `menuViewMode` to `'grid'` instead of `'list'` for a more modern look
-- Reduce grid gap from `gap-3` to `gap-2` on mobile
-
----
-
-## Fix 5: Realtime Subscriptions Setup
-
-**File: `src/pages/CustomerMenu.tsx`** -- add useEffect with realtime channels:
-
-```text
-Channel 1: restaurants table (filter: id = restaurantId)
-  -> invalidate ['restaurant', restaurantId]
-
-Channel 2: offers table (filter: restaurant_id = restaurantId)  
-  -> invalidate ['offers', restaurantId]
-
-Channel 3: menu_items table (filter: restaurant_id = restaurantId)
-  -> invalidate ['menuItems', restaurantId]
-```
-
-This ensures the customer menu (and the admin preview iframe showing it) auto-refreshes on any backend change.
-
----
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/pages/AdminDashboard.tsx` | Auto-refresh preview iframe on tab switch and after mutations |
-| `src/pages/CustomerMenu.tsx` | Add realtime subscriptions for restaurants, offers, menu_items; default to grid view |
-| `src/components/menu/FoodCard.tsx` | Reduce card size: smaller image ratio, tighter padding, smaller fonts |
-| `src/components/menu/OffersSlider.tsx` | Minor: ensure graceful empty state |
+### 2. Publish the App
+The published site is running old code. After these fixes are implemented, you must **click Publish** to deploy the latest version with:
+- Compact 3:2 grid food cards
+- Offers slider with auto-scroll
+- Real-time sync for logo/branding/menu changes
+- Branded customer top bar with animations
 
 ---
 
 ## Technical Details
 
-### Realtime subscription pattern (CustomerMenu.tsx):
-- Use `supabase.channel()` with `postgres_changes` event
-- Filter by `restaurant_id` using the Supabase filter syntax
-- On payload received, call `queryClient.invalidateQueries()` for the relevant query key
-- Clean up channel on component unmount
+### AdminDashboard.tsx iframe fix (line ~145):
 
-### FoodCard compact sizing:
-- Image: `aspect-[3/2]` (from `aspect-square`)
-- Card content padding: `p-2` (from `p-3`)
-- Name font: `text-xs font-semibold` (from `text-sm font-bold`)
-- Price: `text-xs` (from `text-sm`)
-- Add button: `h-6 px-2 text-[10px]` (from `h-7 px-3 text-xs`)
-- No description text on grid cards
+Current code:
+```text
+style={device !== "desktop" 
+  ? { width: deviceConfig[device].width, height: deviceConfig[device].height, maxHeight: '70vh' } 
+  : { height: '70vh' }}
+```
 
-### Preview auto-refresh:
-- Increment `refreshKey` state in AdminDashboard whenever `activeTab` changes to "preview"
-- Pass this key down to `PreviewTabContent` which uses it as the iframe `key`
+Change to:
+```text
+style={device !== "desktop" 
+  ? { width: deviceConfig[device].width, height: deviceConfig[device].height } 
+  : { height: '80vh' }}
+```
+
+Also update the outer container from `minHeight: '75vh'` to `minHeight: '85vh'` to give the device frame enough room to display at full height without clipping.
+
+### Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/pages/AdminDashboard.tsx` | Remove `maxHeight: '70vh'` on iframe wrapper, increase container height |
+
+### Post-Implementation
+After the fix, click **Publish** to deploy all changes to the live site.
 
