@@ -137,12 +137,12 @@ function PreviewTabContent({ customerPreviewUrl, externalRefreshKey }: { custome
           </Button>
         </div>
       </div>
-      <div className="flex justify-center bg-muted/30 rounded-xl border p-4" style={{ minHeight: '75vh' }}>
+      <div className="flex justify-center bg-muted/30 rounded-xl border p-4" style={{ minHeight: '85vh' }}>
         <div
           className={`bg-background rounded-2xl shadow-2xl border-4 border-foreground/10 overflow-hidden transition-all duration-300 ${
             device === "desktop" ? "w-full h-full" : ""
           }`}
-          style={device !== "desktop" ? { width: deviceConfig[device].width, height: deviceConfig[device].height, maxHeight: '70vh' } : { height: '70vh' }}
+          style={device !== "desktop" ? { width: deviceConfig[device].width, height: deviceConfig[device].height } : { height: '80vh' }}
         >
           <iframe
             key={combinedKey}
