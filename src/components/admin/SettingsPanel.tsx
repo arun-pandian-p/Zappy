@@ -117,6 +117,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           animation_enabled: (brandingRaw.animation_enabled as boolean) ?? false,
           letter_animation: (brandingRaw.letter_animation as BrandingConfig["letter_animation"]) || "bounce",
           mascot: (brandingRaw.mascot as BrandingConfig["mascot"]) || "none",
+          mascot_image_url: (brandingRaw.mascot_image_url as string) || "",
           animation_speed: (brandingRaw.animation_speed as BrandingConfig["animation_speed"]) || "normal",
           glow_color_sync: (brandingRaw.glow_color_sync as boolean) ?? true,
         },
@@ -477,6 +478,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           onChange={(branding) => setSettings({ ...settings, branding })}
           restaurantName={settings.name || "Hotel Name"}
           primaryColor={restaurant?.primary_color || undefined}
+          restaurantId={restaurantId}
         />
       </motion.div>
 

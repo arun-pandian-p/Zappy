@@ -9,9 +9,10 @@ export type MascotType =
   | "owl"
   | "panda"
   | "horse"
+  | "custom"
   | "none";
 
-const MASCOT_EMOJI: Record<Exclude<MascotType, "none">, string> = {
+const MASCOT_EMOJI: Record<Exclude<MascotType, "none" | "custom">, string> = {
   lion: "🦁",
   tiger: "🐯",
   elephant: "🐘",
@@ -22,7 +23,7 @@ const MASCOT_EMOJI: Record<Exclude<MascotType, "none">, string> = {
   horse: "🐴",
 };
 
-const MASCOT_ANIMATIONS: Record<Exclude<MascotType, "none">, any> = {
+const MASCOT_ANIMATIONS: Record<Exclude<MascotType, "none" | "custom">, any> = {
   lion: {
     scale: [1, 1.1, 1],
     filter: [
@@ -74,19 +75,33 @@ interface MascotIconProps {
   mascot: MascotType | string;
   size?: number;
   primaryColor?: string;
+  customImageUrl?: string;
 }
 
-export function MascotIcon({ mascot, size = 40, primaryColor }: MascotIconProps) {
+export function MascotIcon({ mascot, size = 40, primaryColor, customImageUrl }: MascotIconProps) {
   const prefersReducedMotion = useReducedMotion();
 
   if (!mascot || mascot === "none") return null;
 
-  const emoji = MASCOT_EMOJI[mascot as Exclude<MascotType, "none">];
+  // Custom uploaded logo
+  if (mascot === "custom" && customImageUrl) {
+    return (
+      <motion.img
+        src={customImageUrl}
+        alt="Custom mascot"
+        className="rounded-full object-cover"
+        style={{ width: size, height: size }}
+        animate={prefersReducedMotion ? {} : { scale: [1, 1.05, 1], transition: { duration: 2, repeat: Infinity, ease: "easeInOut" } }}
+      />
+    );
+  }
+
+  const emoji = MASCOT_EMOJI[mascot as Exclude<MascotType, "none" | "custom">];
   if (!emoji) return null;
 
   const animProps = prefersReducedMotion
     ? {}
-    : MASCOT_ANIMATIONS[mascot as Exclude<MascotType, "none">];
+    : MASCOT_ANIMATIONS[mascot as Exclude<MascotType, "none" | "custom">];
 
   return (
     <motion.span

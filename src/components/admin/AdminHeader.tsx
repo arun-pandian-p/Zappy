@@ -9,6 +9,7 @@ interface BrandingConfig {
   animation_enabled?: boolean;
   letter_animation?: LetterAnimation;
   mascot?: MascotType;
+  mascot_image_url?: string;
   animation_speed?: AnimationSpeed;
   glow_color_sync?: boolean;
 }
@@ -41,7 +42,7 @@ export function AdminHeader({
         <div className="flex items-center gap-4">
           <SidebarTrigger className="md:hidden" />
           {animEnabled && branding?.mascot && branding.mascot !== "none" && (
-            <MascotIcon mascot={branding.mascot} size={36} primaryColor={primaryColor} />
+            <MascotIcon mascot={branding.mascot} size={36} primaryColor={primaryColor} customImageUrl={branding?.mascot_image_url} />
           )}
           <div>
             {animEnabled ? (
