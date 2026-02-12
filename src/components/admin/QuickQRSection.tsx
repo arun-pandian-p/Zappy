@@ -24,6 +24,7 @@ interface QuickQRSectionProps {
   selectedTableId: string;
   onTableChange: (tableId: string) => void;
   baseUrl?: string;
+  restaurantId: string;
 }
 
 export function QuickQRSection({
@@ -31,11 +32,12 @@ export function QuickQRSection({
   selectedTableId,
   onTableChange,
   baseUrl = PUBLISHED_URL,
+  restaurantId,
 }: QuickQRSectionProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const selectedTable = tables.find((t) => t.id === selectedTableId);
   const qrValue = selectedTable
-    ? `${baseUrl}/menu?table=${selectedTable.table_number}`
+    ? `${baseUrl}/order?r=${restaurantId}&table=${selectedTable.table_number}`
     : "";
 
   const handleDownload = () => {

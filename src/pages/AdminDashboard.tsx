@@ -419,6 +419,7 @@ const AdminDashboard = () => {
                         selectedTableId={selectedTableId}
                         onTableChange={setSelectedTableId}
                         baseUrl={qrBaseUrl}
+                        restaurantId={restaurantId}
                       />
 
                       {/* Mini Menu Preview */}
@@ -739,7 +740,7 @@ const AdminDashboard = () => {
                           <>
                             <div className="bg-white p-4 rounded-xl shadow-sm mb-4">
                               <QRCodeSVG
-                                value={`${qrBaseUrl}/menu?table=${selectedTable.table_number}`}
+                                value={`${qrBaseUrl}/order?r=${restaurantId}&table=${selectedTable.table_number}`}
                                 size={256}
                                 level="H"
                                 includeMargin
@@ -749,7 +750,7 @@ const AdminDashboard = () => {
                             <div style={{ position: "absolute", left: "-9999px" }}>
                               <QRCodeCanvas
                                 id={`qr-canvas-${selectedTable.table_number}`}
-                                value={`${qrBaseUrl}/menu?table=${selectedTable.table_number}`}
+                                value={`${qrBaseUrl}/order?r=${restaurantId}&table=${selectedTable.table_number}`}
                                 size={512}
                                 level="H"
                                 includeMargin
