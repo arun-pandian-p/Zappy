@@ -1,8 +1,18 @@
 import { useState, useEffect } from "react";
 import { Bell, ShoppingCart } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AnimatedHotelName, type LetterAnimation, type AnimationSpeed } from "@/components/branding/AnimatedHotelName";
+import { MascotIcon, type MascotType } from "@/components/branding/MascotIcon";
+
+interface BrandingConfig {
+  animation_enabled?: boolean;
+  letter_animation?: LetterAnimation;
+  mascot?: MascotType;
+  animation_speed?: AnimationSpeed;
+  glow_color_sync?: boolean;
+}
 
 interface CustomerTopBarProps {
   restaurantName: string;
@@ -12,6 +22,8 @@ interface CustomerTopBarProps {
   onCallWaiter: () => void;
   onCartClick: () => void;
   isCallingWaiter?: boolean;
+  primaryColor?: string;
+  branding?: BrandingConfig;
 }
 
 export function CustomerTopBar({
@@ -22,7 +34,10 @@ export function CustomerTopBar({
   onCallWaiter,
   onCartClick,
   isCallingWaiter,
+  primaryColor,
+  branding,
 }: CustomerTopBarProps) {
+  const animEnabled = branding?.animation_enabled ?? false;
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -41,8 +56,11 @@ export function CustomerTopBar({
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
-          {/* Left: Logo + Name + Table */}
+          {/* Left: Mascot + Logo + Name + Table */}
           <div className="flex items-center gap-3 min-w-0">
+            {animEnabled && branding?.mascot && branding.mascot !== "none" && (
+              <MascotIcon mascot={branding.mascot} size={isScrolled ? 28 : 34} primaryColor={primaryColor} />
+            )}
             {logoUrl ? (
               <img
                 src={logoUrl}
@@ -61,6 +79,15 @@ export function CustomerTopBar({
               </div>
             )}
             <div className="min-w-0">
+              {animEnabled ? (
+                <AnimatedHotelName
+                  name={restaurantName}
+                  animation={branding?.letter_animation || "bounce"}
+                  speed={branding?.animation_speed || "normal"}
+                  primaryColor={branding?.glow_color_sync ? primaryColor : undefined}
+                  className={`font-bold transition-all ${isScrolled ? "text-sm" : "text-base"}`}
+                />
+              ) : (
               <h1
                 className={`font-bold truncate transition-all ${
                   isScrolled ? "text-sm" : "text-base"
@@ -68,6 +95,7 @@ export function CustomerTopBar({
               >
                 {restaurantName}
               </h1>
+              )}
               {tableNumber && (
                 <Badge
                   variant="secondary"
