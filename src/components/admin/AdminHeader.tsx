@@ -13,16 +13,25 @@ interface BrandingConfig {
   glow_color_sync?: boolean;
 }
 
+interface AdminAvatarConfig {
+  type?: "upload" | "emoji" | "mascot";
+  value?: string;
+}
+
 interface AdminHeaderProps {
   restaurantName?: string;
   primaryColor?: string;
   branding?: BrandingConfig;
+  adminAvatar?: AdminAvatarConfig;
+  adminDisplayName?: string;
 }
 
 export function AdminHeader({
   restaurantName = "Restaurant Name",
   primaryColor,
   branding,
+  adminAvatar,
+  adminDisplayName,
 }: AdminHeaderProps) {
   const animEnabled = branding?.animation_enabled ?? false;
 
@@ -61,8 +70,14 @@ export function AdminHeader({
             <Settings className="w-5 h-5" />
           </Button>
           <Avatar className="w-9 h-9 ml-2">
-            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" />
-            <AvatarFallback className="bg-primary/20 text-primary text-sm">AD</AvatarFallback>
+            {adminAvatar?.type === "emoji" && adminAvatar.value ? (
+              <AvatarFallback className="text-lg bg-primary/10">{adminAvatar.value}</AvatarFallback>
+            ) : (
+              <AvatarImage src={adminAvatar?.type === "upload" && adminAvatar.value ? adminAvatar.value : "https://api.dicebear.com/7.x/avataaars/svg?seed=admin"} />
+            )}
+            <AvatarFallback className="bg-primary/20 text-primary text-sm">
+              {adminDisplayName ? adminDisplayName.charAt(0).toUpperCase() : "AD"}
+            </AvatarFallback>
           </Avatar>
         </div>
       </div>

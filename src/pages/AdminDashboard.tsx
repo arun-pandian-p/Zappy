@@ -24,6 +24,11 @@ import {
   FileSpreadsheet,
   Eye,
   ExternalLink,
+  Gift,
+  RefreshCw,
+  Smartphone,
+  Tablet,
+  Monitor,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -66,6 +71,7 @@ import { OrdersTable } from "@/components/analytics/OrdersTable";
 import { RevenueTrends } from "@/components/analytics/RevenueTrends";
 import KitchenDashboard from "@/pages/KitchenDashboard";
 import BillingCounter from "@/pages/BillingCounter";
+import { OffersManager } from "@/components/admin/OffersManager";
 import { useRestaurants, useRestaurant } from "@/hooks/useRestaurant";
 import { 
   useMenuItems, 
@@ -81,6 +87,72 @@ import { useAuth } from "@/hooks/useAuth";
 
 // Demo restaurant ID - fallback if no restaurant in DB
 const DEMO_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
+
+type DeviceType = "mobile" | "tablet" | "desktop";
+
+function PreviewTabContent({ customerPreviewUrl }: { customerPreviewUrl: string }) {
+  const [device, setDevice] = useState<DeviceType>("mobile");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const deviceConfig = {
+    mobile: { width: 375, height: 812, label: "Mobile" },
+    tablet: { width: 768, height: 1024, label: "Tablet" },
+    desktop: { width: "100%", height: "100%", label: "Desktop" },
+  };
+
+  return (
+    <motion.div
+      key="preview"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="space-y-4"
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold">Customer Site Preview</h2>
+          <p className="text-sm text-muted-foreground">See how your menu looks to customers</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
+            <Button variant={device === "mobile" ? "default" : "ghost"} size="sm" onClick={() => setDevice("mobile")}>
+              <Smartphone className="w-4 h-4" />
+            </Button>
+            <Button variant={device === "tablet" ? "default" : "ghost"} size="sm" onClick={() => setDevice("tablet")}>
+              <Tablet className="w-4 h-4" />
+            </Button>
+            <Button variant={device === "desktop" ? "default" : "ghost"} size="sm" onClick={() => setDevice("desktop")}>
+              <Monitor className="w-4 h-4" />
+            </Button>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)}>
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => window.open(customerPreviewUrl, '_blank')}>
+            <ExternalLink className="w-4 h-4 mr-1" />
+            Open
+          </Button>
+        </div>
+      </div>
+      <div className="flex justify-center bg-muted/30 rounded-xl border p-4" style={{ minHeight: '75vh' }}>
+        <div
+          className={`bg-background rounded-2xl shadow-2xl border-4 border-foreground/10 overflow-hidden transition-all duration-300 ${
+            device === "desktop" ? "w-full h-full" : ""
+          }`}
+          style={device !== "desktop" ? { width: deviceConfig[device].width, height: deviceConfig[device].height, maxHeight: '70vh' } : { height: '70vh' }}
+        >
+          <iframe
+            key={refreshKey}
+            src={customerPreviewUrl}
+            className="w-full h-full border-0"
+            title="Customer Menu Preview"
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -342,6 +414,7 @@ const AdminDashboard = () => {
     { value: "reviews", label: "Reviews", icon: Star },
     { value: "users", label: "Users", icon: Users },
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
+    { value: "offers", label: "Offers", icon: Gift },
     { value: "preview", label: "Preview Site", icon: Eye },
     { value: "settings", label: "Settings", icon: Settings },
   ];
@@ -358,6 +431,8 @@ const AdminDashboard = () => {
             restaurantName={restaurantName}
             primaryColor={restaurant?.primary_color || undefined}
             branding={(restaurant?.settings as any)?.branding}
+            adminAvatar={(restaurant?.settings as any)?.admin_avatar}
+            adminDisplayName={(restaurant?.settings as any)?.admin_display_name}
           />
 
           {/* Tab Navigation */}
@@ -900,37 +975,22 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Preview Tab */}
-              {activeTab === "preview" && (
+              {/* Offers Tab */}
+              {activeTab === "offers" && (
                 <motion.div
-                  key="preview"
+                  key="offers"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="space-y-4"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold">Customer Site Preview</h2>
-                      <p className="text-sm text-muted-foreground">See how your menu looks to customers</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => window.open(customerPreviewUrl, '_blank')}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Open in New Tab
-                    </Button>
-                  </div>
-                  <div className="rounded-xl border bg-muted/30 overflow-hidden" style={{ height: '75vh' }}>
-                    <iframe
-                      src={customerPreviewUrl}
-                      className="w-full h-full border-0"
-                      title="Customer Menu Preview"
-                    />
-                  </div>
+                  <OffersManager restaurantId={restaurantId} />
                 </motion.div>
+              )}
+
+              {/* Preview Tab */}
+              {activeTab === "preview" && (
+                <PreviewTabContent customerPreviewUrl={customerPreviewUrl} />
               )}
 
               {/* Settings Tab */}
