@@ -1,199 +1,178 @@
 
-# Super Admin Complete Overhaul: Tenant Management, User Management, Settings, and Real-Time Sync
+
+# Admin Login + Tenant Onboarding Wizard + Branding + Menu Theming
 
 ## Overview
-This plan implements the full PRD for the Super Admin panel, including an expanded sidebar, a "Create Hotel" flow with auto-provisioning (edge function), platform settings with new DB tables, system logs, and real-time synchronization across all dashboards.
+This plan extends the admin login flow with a multi-step onboarding wizard for newly created restaurant admins (those with `restaurant_admin` role but no restaurant yet, or incomplete setup). It removes public signup, adds branding uploads, menu theme selection, and applies tenant branding to customer-facing menus.
+
+**Important architectural note:** The PRD mentions per-tenant schema creation (`CREATE SCHEMA tenant_204`). This project already uses RLS-based multi-tenancy with `restaurant_id` filtering on shared tables, which is the correct approach for this architecture. Separate schemas would be a massive, unnecessary change. Instead, the "schema provisioning" step will seed default data (categories, sample menu items) for the new tenant within the existing shared tables.
 
 ---
 
-## Phase 1: Database Migrations
+## Phase 1: Database Migration
 
-### New Tables
-
-1. **`platform_settings`** (single-row config table)
-   - `id` uuid PK, `platform_name` text, `logo_url` text, `favicon_url` text, `primary_color` text, `secondary_color` text, `email_logo_url` text, `login_bg_url` text, `updated_at` timestamptz
-   - RLS: Only `super_admin` can read/write
-
-2. **`default_tax_settings`** (single-row defaults for new tenants)
-   - `id` uuid PK, `gst_percent` numeric, `service_charge_percent` numeric, `vat_percent` numeric, `tax_mode` text (inclusive/exclusive), `currency` text, `updated_at` timestamptz
-   - RLS: Only `super_admin` can read/write
-
-3. **`email_templates`**
-   - `id` uuid PK, `template_name` text, `subject` text, `body_html` text, `variables_json` jsonb, `created_at` timestamptz, `updated_at` timestamptz
-   - RLS: Only `super_admin` can CRUD
-   - Seed 5 default templates: admin_credentials, staff_invite, subscription_invoice, password_reset, trial_expiry
-
-4. **`system_logs`**
-   - `id` uuid PK, `actor_id` uuid, `actor_email` text, `action` text, `entity_type` text, `entity_id` text, `details` jsonb, `created_at` timestamptz
-   - RLS: Only `super_admin` can SELECT
-   - INSERT via edge functions (service role)
-
-### Realtime
-- Add `restaurants`, `staff_profiles`, `user_roles`, `system_logs` to `supabase_realtime` publication (staff_profiles and user_roles already added in previous migration, so only restaurants and system_logs needed).
-
----
-
-## Phase 2: Edge Function - `create-tenant`
-
-A new edge function `supabase/functions/create-tenant/index.ts` that:
-
-1. Validates caller is `super_admin`
-2. Creates the restaurant record in `restaurants` table
-3. Auto-generates username (`slug_admin`) and password (12-char random)
-4. Creates auth user via `adminClient.auth.admin.createUser()` with `email_confirm: true`
-5. Inserts `user_roles` (role: `restaurant_admin`, restaurant_id)
-6. Inserts `staff_profiles`
-7. Copies default tax settings to the new restaurant's `tax_rate` and `service_charge_rate`
-8. Logs action to `system_logs`
-9. Returns credentials (email, generated password, login URL)
-
-Config: `verify_jwt = false` in `supabase/config.toml`
-
----
-
-## Phase 3: Update `manage-staff` Edge Function
-
-Modify to support `restaurant_admin` role creation when caller is `super_admin`:
-- Currently blocks all admin role creation. Change to: if caller is `super_admin`, allow creating `restaurant_admin` roles (but not `super_admin`).
-- Accept optional `restaurant_id` parameter from super_admin callers.
-- Log staff creation to `system_logs`.
-
----
-
-## Phase 4: Super Admin Sidebar Expansion
-
-Update `SuperAdminSidebar.tsx` nav items to the final layout:
-
-| Icon | Label | Value |
-|------|-------|-------|
-| LayoutDashboard | Dashboard | dashboard |
-| Building2 | Tenants / Hotels | restaurants |
-| Users | User Management | users |
-| CreditCard | Subscription Plans | plans |
-| Megaphone | Platform Ads | ads |
-| BarChart3 | Analytics | analytics |
-| Settings | Settings | settings |
-| ScrollText | System Logs | logs |
-
----
-
-## Phase 5: Super Admin Dashboard Content Sections
-
-### 5a. Tenants / Hotels (Enhanced)
-- Replace the simple "Add Restaurant" form with a full **Create Hotel** dialog/panel:
-  - Restaurant info: name, branch count (text field), cuisine type, address, phone, email
-  - Branding: logo upload (to `menu-images` bucket), theme color picker
-  - Admin credentials: admin email (required), auto-generated username shown, auto-generated password shown with copy button
-  - On submit: calls `create-tenant` edge function
-  - Success: shows credentials card with copy-all button
-- Keep existing TenantTable with edit/delete/toggle
-
-### 5b. User Management (Enhanced)
-- Add a **restaurant selector dropdown** at the top (for super_admin to pick a restaurant context)
-- Show "All Restaurants" option that lists all staff globally
-- When a restaurant is selected, allow creating staff scoped to that restaurant
-- For super_admin: allow creating `restaurant_admin` role (calls updated `manage-staff` edge function)
-- Auto-generate password with a "Generate" button
-
-### 5c. Subscription Plans
-- New component `SubscriptionPlansManager.tsx`
-- CRUD on `subscription_plans` table
-- Fields: name, tier, price_monthly, price_yearly, max_tables, max_orders_per_month, features (JSON editor or checkboxes), is_active
-
-### 5d. Platform Ads
-- New component `PlatformAdsManager.tsx`
-- CRUD on `ads` table (already exists)
-- Fields: title, description, image_url (upload), link_url, target categories, date range, is_active
-
-### 5e. Settings (3 sub-tabs)
-- **Platform Branding**: reads/writes `platform_settings`
-- **Default Tax Config**: reads/writes `default_tax_settings`
-- **Email Templates**: reads/writes `email_templates` with variable preview
-
-### 5f. System Logs
-- New component `SystemLogs.tsx`
-- Read-only table from `system_logs`
-- Columns: timestamp, actor email, action, entity, details
-- Search/filter by action type
-- Real-time subscription for live updates
-
----
-
-## Phase 6: Real-Time Subscriptions
-
-Add Supabase realtime listeners in `SuperAdminDashboard.tsx`:
+Add a `theme_config` JSONB column to the `restaurants` table to store theme presets and custom values:
 
 ```text
-Channel: 'super-admin-realtime'
-Tables: restaurants, staff_profiles, user_roles, system_logs
-On change: invalidate relevant react-query keys
+ALTER TABLE restaurants ADD COLUMN theme_config jsonb DEFAULT '{
+  "preset": "classic",
+  "custom_primary": null,
+  "custom_secondary": null,
+  "custom_font": null,
+  "button_style": "rounded"
+}'::jsonb;
 ```
 
-This ensures:
-- New tenant created -> dashboard count updates instantly
-- Staff added/removed -> user management refreshes
-- Logs appear in real-time
+Also add an `onboarding_completed` boolean column:
+
+```text
+ALTER TABLE restaurants ADD COLUMN onboarding_completed boolean DEFAULT false;
+```
+
+The `restaurants` table already has: `logo_url`, `favicon_url`, `banner_image_url`, `cover_image_url`, `primary_color`, `secondary_color`, `font_family`. These will be used for branding.
 
 ---
 
-## Phase 7: Hooks
+## Phase 2: Remove Public Signup
 
-### New hooks:
-- `usePlatformSettings()` - CRUD for platform_settings
-- `useDefaultTaxSettings()` - CRUD for default_tax_settings  
-- `useEmailTemplates()` - CRUD for email_templates
-- `useSubscriptionPlans()` - CRUD for subscription_plans (already have table)
-- `useSystemLogs()` - read-only for system_logs
-- `usePlatformAds()` - CRUD for ads table (extend existing useAds)
+### 2a. TenantAdminLogin (`/admin/login`)
+- Remove the Tabs component (Login / Sign Up toggle)
+- Show only the login form
+- Keep the staff role info section at the bottom
+- Update description to: "Sign in with credentials provided by your platform admin"
+
+### 2b. Staff Login (`/login`)
+- Remove the Tabs component (Login / Sign Up toggle)
+- Show only the login form
+- Update description to: "Sign in with credentials provided by your restaurant admin"
 
 ---
 
-## Phase 8: Login Flow Validation
+## Phase 3: Onboarding Wizard Page
 
-Ensure `useAuth.ts` routes correctly:
-- `super_admin` -> `/super-admin` (already works)
-- `restaurant_admin` -> `/admin` (already works)  
-- `kitchen_staff` -> `/kitchen` (already works)
-- `billing_staff` -> `/billing` (already works)
+### New file: `src/pages/AdminOnboarding.tsx`
+### New route: `/admin/onboarding`
 
-No public signup - the Login and TenantAdminLogin pages only show login forms (no signup option). Verify this is the case.
+A multi-step wizard with 5 steps:
+
+**Step 1 - Hotel Details**
+- Hotel name, address, phone, email, cuisine type
+- Saves to `restaurants` table (updates the record created by Super Admin during `create-tenant`)
+
+**Step 2 - Branding Upload**
+- Logo upload (PNG/SVG, max 2MB) -> stored in `menu-images` bucket under `tenants/{restaurant_id}/`
+- Favicon upload (ICO/PNG, 64x64) -> same bucket
+- Menu banner upload -> same bucket
+- Cover image upload -> same bucket
+- Updates `logo_url`, `favicon_url`, `banner_image_url`, `cover_image_url` on the restaurant
+
+**Step 3 - Menu UI Theme**
+- Theme preset selector with preview cards:
+  - Classic (warm white, orange accents)
+  - Dark (dark bg, light text)
+  - Premium (gold/black)
+  - Minimal (clean white, thin borders)
+  - Custom (shows color pickers)
+- Custom fields when "Custom" selected: primary color, secondary color, font family, button style (rounded/square/pill)
+- Saves to `restaurants.theme_config` and `restaurants.primary_color` / `secondary_color` / `font_family`
+
+**Step 4 - Default Config Review**
+- Shows the tax rates, currency, service charge inherited from platform defaults (applied during `create-tenant`)
+- Admin can adjust if needed
+- Saves to `restaurants.tax_rate`, `restaurants.service_charge_rate`, `restaurants.currency`
+
+**Step 5 - Complete**
+- Seeds 3 default categories (Starters, Main Course, Beverages) for the restaurant
+- Sets `onboarding_completed = true`
+- Shows success screen with links to:
+  - "Go to Dashboard"
+  - "Add Menu Items"
+  - "Set Up Tables & QR"
+
+### Progress indicator
+- Stepper component at the top showing all 5 steps with current progress
+
+---
+
+## Phase 4: Auth Flow Update
+
+### Update `useAuth.ts` - `getRouteForRole()`
+- `restaurant_admin` with `restaurantId` AND `onboarding_completed = true` -> `/admin`
+- `restaurant_admin` with `restaurantId` AND `onboarding_completed = false/null` -> `/admin/onboarding`
+- `restaurant_admin` with NO `restaurantId` -> `/admin/onboarding` (edge case)
+
+### Update `AdminDashboard.tsx`
+- Add check: if `restaurant.onboarding_completed !== true`, redirect to `/admin/onboarding`
+
+### Update `App.tsx`
+- Add route: `/admin/onboarding` -> `AdminOnboarding`
+
+---
+
+## Phase 5: Branding Application in Customer Menu
+
+### Update `CustomerMenu.tsx`
+- Fetch `theme_config` from restaurant data
+- Apply CSS variables based on preset or custom values:
+  - `--primary-color`
+  - `--secondary-color`
+  - `--font-family`
+- Show restaurant logo, banner, and cover image in the home view
+- Apply font family from restaurant settings
+
+### Theme preset mappings:
+```text
+classic:  primary=#F97316, secondary=#FDE68A, font=Inter
+dark:     primary=#A78BFA, secondary=#6366F1, font=Inter
+premium:  primary=#D4A574, secondary=#1A1A2E, font=Playfair Display
+minimal:  primary=#374151, secondary=#E5E7EB, font=Inter
+custom:   uses restaurant.primary_color / secondary_color / font_family
+```
+
+---
+
+## Phase 6: Conditional Admin Sidebar
+
+### Update `AdminSidebar.tsx`
+- Accept `onboardingCompleted` prop
+- Before onboarding: show only "Onboarding", "Settings (limited)", "Logout"
+- After onboarding: show full nav (Dashboard, Menu, Tables, Orders, Kitchen, Billing, etc.)
+
+---
+
+## Phase 7: QR Generator Guard
+
+### Update QR section in `AdminDashboard.tsx`
+- If `onboarding_completed !== true`: show disabled state with message "Complete onboarding to enable QR codes"
+- If no tables exist: show prompt to create tables first
+- Otherwise: normal QR generation
 
 ---
 
 ## Files to Create
-1. `supabase/functions/create-tenant/index.ts`
-2. `src/components/superadmin/CreateHotelForm.tsx`
-3. `src/components/superadmin/SubscriptionPlansManager.tsx`
-4. `src/components/superadmin/PlatformAdsManager.tsx`
-5. `src/components/superadmin/PlatformSettings.tsx`
-6. `src/components/superadmin/DefaultTaxSettings.tsx`
-7. `src/components/superadmin/EmailTemplateManager.tsx`
-8. `src/components/superadmin/SystemLogs.tsx`
-9. `src/hooks/usePlatformSettings.ts`
-10. `src/hooks/useDefaultTaxSettings.ts`
-11. `src/hooks/useEmailTemplates.ts`
-12. `src/hooks/useSubscriptionPlans.ts`
-13. `src/hooks/useSystemLogs.ts`
+1. `src/pages/AdminOnboarding.tsx` - Multi-step onboarding wizard
+2. `src/components/onboarding/OnboardingStep.tsx` - Reusable step wrapper
+3. `src/components/onboarding/ThemePresetCard.tsx` - Theme preview card
 
 ## Files to Modify
-1. `supabase/functions/manage-staff/index.ts` - Allow super_admin to create restaurant_admin
-2. `supabase/config.toml` - Add create-tenant function config
-3. `src/components/superadmin/SuperAdminSidebar.tsx` - 8-item nav
-4. `src/pages/SuperAdminDashboard.tsx` - All new sections + realtime
-5. `src/components/admin/UserManagement.tsx` - Restaurant selector for super_admin
+1. `src/pages/TenantAdminLogin.tsx` - Remove signup tab, login only
+2. `src/pages/Login.tsx` - Remove signup tab, login only
+3. `src/pages/AdminDashboard.tsx` - Add onboarding redirect check
+4. `src/components/admin/AdminSidebar.tsx` - Conditional nav based on onboarding status
+5. `src/pages/CustomerMenu.tsx` - Apply tenant theme/branding
+6. `src/hooks/useAuth.ts` - Update routing for onboarding flow
+7. `src/App.tsx` - Add `/admin/onboarding` route
 
 ## Database Migrations
-1. Create `platform_settings`, `default_tax_settings`, `email_templates`, `system_logs` tables with RLS
-2. Seed default email templates
-3. Add new tables to realtime publication
-
----
+1. Add `theme_config` JSONB and `onboarding_completed` boolean to `restaurants`
 
 ## Implementation Order
-1. Database migrations (tables + RLS + seeds + realtime)
-2. `create-tenant` edge function
-3. Update `manage-staff` edge function
-4. New hooks
-5. New UI components
-6. Update sidebar + dashboard
-7. End-to-end testing
+1. Database migration (add columns)
+2. Remove signup from login pages
+3. Create onboarding wizard page + components
+4. Update auth routing logic
+5. Update AdminDashboard redirect
+6. Update AdminSidebar conditional nav
+7. Apply branding in CustomerMenu
+8. QR generator guard
+
