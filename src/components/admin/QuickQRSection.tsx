@@ -1,6 +1,7 @@
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import { Download, QrCode } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
 
 interface Table {
   id: string;
@@ -27,34 +30,22 @@ export function QuickQRSection({
   tables,
   selectedTableId,
   onTableChange,
-  baseUrl = window.location.origin,
+  baseUrl = PUBLISHED_URL,
 }: QuickQRSectionProps) {
+  const canvasRef = useRef<HTMLDivElement>(null);
   const selectedTable = tables.find((t) => t.id === selectedTableId);
   const qrValue = selectedTable
     ? `${baseUrl}/menu?table=${selectedTable.table_number}`
     : "";
 
   const handleDownload = () => {
-    const svg = document.querySelector("#admin-qr-code svg");
-    if (!svg) return;
-
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-
-    img.onload = () => {
-      canvas.width = 300;
-      canvas.height = 300;
-      ctx?.drawImage(img, 0, 0, 300, 300);
-      const pngFile = canvas.toDataURL("image/png");
-      const downloadLink = document.createElement("a");
-      downloadLink.download = `QR-${selectedTable?.table_number || "table"}.png`;
-      downloadLink.href = pngFile;
-      downloadLink.click();
-    };
-
-    img.src = "data:image/svg+xml;base64," + btoa(svgData);
+    const canvas = canvasRef.current?.querySelector("canvas");
+    if (!canvas) return;
+    const pngUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.download = `QR-${selectedTable?.table_number || "table"}.png`;
+    link.href = pngUrl;
+    link.click();
   };
 
   return (
@@ -86,11 +77,13 @@ export function QuickQRSection({
 
           {selectedTable && (
             <div className="flex flex-col items-center">
-              <div
-                id="admin-qr-code"
-                className="bg-white p-4 rounded-xl shadow-sm mb-4"
-              >
-                <QRCodeSVG value={qrValue} size={160} level="H" />
+              {/* Visible QR */}
+              <div className="bg-white p-4 rounded-xl shadow-sm mb-4">
+                <QRCodeSVG value={qrValue} size={256} level="H" includeMargin />
+              </div>
+              {/* Hidden high-res canvas for download */}
+              <div ref={canvasRef} style={{ position: "absolute", left: "-9999px" }}>
+                <QRCodeCanvas value={qrValue} size={512} level="H" includeMargin />
               </div>
               <p className="text-sm text-muted-foreground text-center mb-4">
                 Scan to order from {selectedTable.table_number}
