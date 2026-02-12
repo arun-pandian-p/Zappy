@@ -114,7 +114,7 @@ const CustomerMenu = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'offers', filter: `restaurant_id=eq.${restaurantId}` },
-        () => { queryClient.invalidateQueries({ queryKey: ['offers', restaurantId] }); }
+        () => { queryClient.invalidateQueries({ queryKey: ['offers'] }); }
       )
       .on(
         'postgres_changes',
