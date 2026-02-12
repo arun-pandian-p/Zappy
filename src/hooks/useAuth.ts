@@ -107,6 +107,7 @@ export const useAuth = () => {
   const getRouteForRole = (role: AppRole | null): string => {
     switch (role) {
       case 'super_admin':
+        return '/super-admin';
       case 'restaurant_admin':
         return '/admin';
       case 'kitchen_staff':

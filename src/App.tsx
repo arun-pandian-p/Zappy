@@ -13,6 +13,7 @@ import KitchenDashboard from "./pages/KitchenDashboard";
 import WaiterDashboard from "./pages/WaiterDashboard";
 import BillingCounter from "./pages/BillingCounter";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminOnboarding from "./pages/AdminOnboarding";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import FeedbackPage from "./pages/FeedbackPage";
 import NotFound from "./pages/NotFound";
@@ -43,6 +44,7 @@ const App = () => (
 
           {/* Admin routes */}
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/onboarding" element={<AdminOnboarding />} />
           <Route path="/super-admin" element={<SuperAdminDashboard />} />
           <Route path="/architecture" element={<ArchitectureDiagram />} />
 
