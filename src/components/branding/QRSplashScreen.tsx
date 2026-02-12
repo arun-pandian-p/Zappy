@@ -83,7 +83,7 @@ export function QRSplashScreen({
             <Progress value={progress} className="h-1.5" />
           </div>
 
-          <p className="text-xs text-muted-foreground">Loading menu…</p>
+          <p className="text-xs text-muted-foreground">Loading {restaurantName !== 'Restaurant' ? restaurantName : 'menu'}…</p>
         </motion.div>
       )}
     </AnimatePresence>
