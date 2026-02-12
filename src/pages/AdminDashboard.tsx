@@ -22,6 +22,8 @@ import {
   X,
   Ticket,
   FileSpreadsheet,
+  Eye,
+  ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -340,8 +342,11 @@ const AdminDashboard = () => {
     { value: "reviews", label: "Reviews", icon: Star },
     { value: "users", label: "Users", icon: Users },
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
+    { value: "preview", label: "Preview Site", icon: Eye },
     { value: "settings", label: "Settings", icon: Settings },
   ];
+
+  const customerPreviewUrl = `/menu?r=${restaurantId}`;
 
   return (
     <SidebarProvider defaultOpen>
@@ -892,6 +897,39 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <UserManagement />
+                </motion.div>
+              )}
+
+              {/* Preview Tab */}
+              {activeTab === "preview" && (
+                <motion.div
+                  key="preview"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold">Customer Site Preview</h2>
+                      <p className="text-sm text-muted-foreground">See how your menu looks to customers</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open(customerPreviewUrl, '_blank')}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Open in New Tab
+                    </Button>
+                  </div>
+                  <div className="rounded-xl border bg-muted/30 overflow-hidden" style={{ height: '75vh' }}>
+                    <iframe
+                      src={customerPreviewUrl}
+                      className="w-full h-full border-0"
+                      title="Customer Menu Preview"
+                    />
+                  </div>
                 </motion.div>
               )}
 
