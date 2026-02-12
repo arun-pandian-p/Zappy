@@ -428,7 +428,7 @@ const AdminDashboard = () => {
     { value: "settings", label: "Settings", icon: Settings },
   ];
 
-  const customerPreviewUrl = `/menu?r=${restaurantId}`;
+  const customerPreviewUrl = `/order?r=${restaurantId}`;
 
   return (
     <SidebarProvider defaultOpen>

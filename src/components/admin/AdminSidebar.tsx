@@ -14,6 +14,9 @@ import {
   Star,
   Users,
   Gift,
+  Eye,
+  FileSpreadsheet,
+  Ticket,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,10 +45,13 @@ const allNavItems: NavItem[] = [
   { title: "Orders", icon: ClipboardList, value: "orders" },
   { title: "Kitchen", icon: ChefHat, value: "kitchen" },
   { title: "Billing", icon: Receipt, value: "billing" },
+  { title: "Coupons", icon: Ticket, value: "coupons" },
   { title: "Ads", icon: Megaphone, value: "ads" },
   { title: "Offers", icon: Gift, value: "offers" },
   { title: "Reviews", icon: Star, value: "reviews" },
   { title: "Users", icon: Users, value: "users" },
+  { title: "Exports", icon: FileSpreadsheet, value: "exports" },
+  { title: "Preview Site", icon: Eye, value: "preview" },
   { title: "Settings", icon: Settings, value: "settings" },
 ];
 
