@@ -31,9 +31,7 @@ const testimonials = [
 
 
 const TestimonialsSection = () => {
-  return (
-    <section className="py-24 bg-background">
-      
+  return;
 
 
 
@@ -135,7 +133,9 @@ const TestimonialsSection = () => {
 
 
 
-    </section>);
+
+
+
 
 };
 
