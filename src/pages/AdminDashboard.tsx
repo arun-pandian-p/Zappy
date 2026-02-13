@@ -30,6 +30,7 @@ import {
   Tablet,
   Monitor,
   Globe,
+  QrCode,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,8 @@ import BillingCounter from "@/pages/BillingCounter";
 import { OffersManager } from "@/components/admin/OffersManager";
 import { MarketResearch } from "@/components/admin/MarketResearch";
 import { CustomerBehaviorPanel } from "@/components/analytics/CustomerBehaviorPanel";
+import { QRCodeManager } from "@/components/admin/QRCodeManager";
+import { QRScanAnalytics } from "@/components/analytics/QRScanAnalytics";
 import { useRestaurants, useRestaurant } from "@/hooks/useRestaurant";
 import { 
   useMenuItems, 
@@ -444,6 +447,7 @@ const AdminDashboard = () => {
     { value: "users", label: "Users", icon: Users },
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
     { value: "offers", label: "Offers", icon: Gift },
+    { value: "qr-manager", label: "QR Manager", icon: QrCode },
     { value: "research", label: "Research", icon: Globe },
     { value: "preview", label: "Preview Site", icon: Eye },
     { value: "settings", label: "Settings", icon: Settings },
@@ -1024,6 +1028,21 @@ const AdminDashboard = () => {
               {/* Preview Tab */}
               {activeTab === "preview" && (
                 <PreviewTabContent customerPreviewUrl={customerPreviewUrl} externalRefreshKey={previewRefreshKey} />
+              )}
+
+              {/* QR Manager Tab */}
+              {activeTab === "qr-manager" && (
+                <motion.div
+                  key="qr-manager"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-8"
+                >
+                  <QRCodeManager restaurantId={restaurantId} />
+                  <QRScanAnalytics restaurantId={restaurantId} />
+                </motion.div>
               )}
 
               {/* Market Research Tab */}

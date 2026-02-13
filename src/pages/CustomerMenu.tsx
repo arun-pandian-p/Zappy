@@ -35,8 +35,28 @@ type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 const CustomerMenu = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const restaurantId = searchParams.get('r') || '';
+  const slug = searchParams.get('slug') || '';
+  const restaurantIdParam = searchParams.get('r') || '';
   const tableId = searchParams.get('table') || '';
+
+  // Slug-based tenant resolution
+  const [resolvedRestaurantId, setResolvedRestaurantId] = useState(restaurantIdParam);
+  
+  useEffect(() => {
+    if (slug && !restaurantIdParam) {
+      supabase
+        .from('restaurants')
+        .select('id')
+        .eq('slug', slug)
+        .eq('is_active', true)
+        .single()
+        .then(({ data }) => {
+          if (data) setResolvedRestaurantId(data.id);
+        });
+    }
+  }, [slug, restaurantIdParam]);
+
+  const restaurantId = resolvedRestaurantId;
   const isPreviewMode = !tableId;
   const { toast } = useToast();
 

@@ -758,6 +758,47 @@ export type Database = {
           },
         ]
       }
+      pages: {
+        Row: {
+          content_json: Json | null
+          created_at: string
+          id: string
+          is_published: boolean
+          page_slug: string
+          page_type: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          content_json?: Json | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          page_slug: string
+          page_type?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          content_json?: Json | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          page_slug?: string
+          page_type?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           email_logo_url: string | null
@@ -842,6 +883,56 @@ export type Database = {
           {
             foreignKeyName: "printer_queue_restaurant_id_fkey"
             columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qr_codes: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          metadata: Json | null
+          qr_name: string
+          qr_type: string
+          scan_count: number
+          target_url: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          qr_name: string
+          qr_type?: string
+          scan_count?: number
+          target_url: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          qr_name?: string
+          qr_type?: string
+          scan_count?: number
+          target_url?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_codes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
@@ -952,6 +1043,57 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      scan_analytics: {
+        Row: {
+          city: string | null
+          country: string | null
+          device: string | null
+          id: string
+          qr_id: string
+          referrer: string | null
+          scanned_at: string
+          tenant_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          device?: string | null
+          id?: string
+          qr_id: string
+          referrer?: string | null
+          scanned_at?: string
+          tenant_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          device?: string | null
+          id?: string
+          qr_id?: string
+          referrer?: string | null
+          scanned_at?: string
+          tenant_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_analytics_qr_id_fkey"
+            columns: ["qr_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scan_analytics_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff_profiles: {
         Row: {
@@ -1273,6 +1415,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_scan_count: { Args: { qr_code_id: string }; Returns: undefined }
     }
     Enums: {
       app_role:
