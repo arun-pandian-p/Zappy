@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.firecrawl-search]
 verify_jwt = false
+
+[functions.qr-redirect]
+verify_jwt = false

@@ -18,6 +18,7 @@ import {
   FileSpreadsheet,
   Ticket,
   Globe,
+  QrCode,
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,7 @@ const allNavItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
   { title: "Menu", icon: UtensilsCrossed, value: "menu" },
   { title: "Tables & QR", icon: Grid3X3, value: "tables" },
+  { title: "QR Manager", icon: QrCode, value: "qr-manager" },
   { title: "Orders", icon: ClipboardList, value: "orders" },
   { title: "Kitchen", icon: ChefHat, value: "kitchen" },
   { title: "Billing", icon: Receipt, value: "billing" },
