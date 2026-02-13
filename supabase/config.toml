@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.create-tenant]
 verify_jwt = false
+
+[functions.firecrawl-scrape]
+verify_jwt = false
+
+[functions.firecrawl-search]
+verify_jwt = false

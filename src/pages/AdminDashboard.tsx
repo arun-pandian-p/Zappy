@@ -29,6 +29,7 @@ import {
   Smartphone,
   Tablet,
   Monitor,
+  Globe,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,8 @@ import { RevenueTrends } from "@/components/analytics/RevenueTrends";
 import KitchenDashboard from "@/pages/KitchenDashboard";
 import BillingCounter from "@/pages/BillingCounter";
 import { OffersManager } from "@/components/admin/OffersManager";
+import { MarketResearch } from "@/components/admin/MarketResearch";
+import { CustomerBehaviorPanel } from "@/components/analytics/CustomerBehaviorPanel";
 import { useRestaurants, useRestaurant } from "@/hooks/useRestaurant";
 import { 
   useMenuItems, 
@@ -441,6 +444,7 @@ const AdminDashboard = () => {
     { value: "users", label: "Users", icon: Users },
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
     { value: "offers", label: "Offers", icon: Gift },
+    { value: "research", label: "Research", icon: Globe },
     { value: "preview", label: "Preview Site", icon: Eye },
     { value: "settings", label: "Settings", icon: Settings },
   ];
@@ -502,6 +506,9 @@ const AdminDashboard = () => {
                     <RevenueChart orders={orders} currencySymbol={currencySymbol} days={7} />
                     <RevenueTrends orders={orders} currencySymbol={currencySymbol} days={7} />
                   </div>
+
+                  {/* Customer Behavior */}
+                  <CustomerBehaviorPanel restaurantId={restaurantId} />
 
                   {/* Content Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1017,6 +1024,19 @@ const AdminDashboard = () => {
               {/* Preview Tab */}
               {activeTab === "preview" && (
                 <PreviewTabContent customerPreviewUrl={customerPreviewUrl} externalRefreshKey={previewRefreshKey} />
+              )}
+
+              {/* Market Research Tab */}
+              {activeTab === "research" && (
+                <motion.div
+                  key="research"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <MarketResearch />
+                </motion.div>
               )}
 
               {/* Settings Tab */}

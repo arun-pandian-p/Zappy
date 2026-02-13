@@ -17,6 +17,7 @@ import {
   Eye,
   FileSpreadsheet,
   Ticket,
+  Globe,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +52,7 @@ const allNavItems: NavItem[] = [
   { title: "Reviews", icon: Star, value: "reviews" },
   { title: "Users", icon: Users, value: "users" },
   { title: "Exports", icon: FileSpreadsheet, value: "exports" },
+  { title: "Research", icon: Globe, value: "research" },
   { title: "Preview Site", icon: Eye, value: "preview" },
   { title: "Settings", icon: Settings, value: "settings" },
 ];
