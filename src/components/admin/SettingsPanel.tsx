@@ -13,6 +13,7 @@ import {
   Usb,
   QrCode,
   UserCircle,
+  Lock,
 } from "lucide-react";
 import { BrandingAnimationSettings, type BrandingConfig, defaultBrandingConfig } from "@/components/branding/BrandingAnimationSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import {
@@ -472,7 +474,15 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
+        className="relative"
       >
+        {restaurant?.subscription_tier !== "enterprise" && (
+          <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center gap-3">
+            <Lock className="w-8 h-8 text-muted-foreground" />
+            <p className="text-sm font-medium text-muted-foreground">Business plan required</p>
+            <Badge variant="outline" className="text-xs">Upgrade to unlock branding animations</Badge>
+          </div>
+        )}
         <BrandingAnimationSettings
           config={settings.branding}
           onChange={(branding) => setSettings({ ...settings, branding })}
