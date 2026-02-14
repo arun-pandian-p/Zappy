@@ -51,7 +51,7 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-grid-dots">
       <ScrollProgress />
 
       {/* Header */}
