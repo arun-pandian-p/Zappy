@@ -330,6 +330,16 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
+/* Dot grid background */
+.bg-grid-dots {
+  background-image: radial-gradient(circle, hsl(var(--muted-foreground) / 0.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.dark .bg-grid-dots {
+  background-image: radial-gradient(circle, hsl(var(--muted-foreground) / 0.08) 1px, transparent 1px);
+}
+
 .dark .glass-card {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.08);
