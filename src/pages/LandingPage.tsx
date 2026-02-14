@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UtensilsCrossed, LogIn, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import ScrollProgress from '@/components/landing/ScrollProgress';
 import HeroSection from '@/components/landing/HeroSection';
@@ -18,10 +18,23 @@ import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import FAQSection from '@/components/landing/FAQSection';
 import CTABanner from '@/components/landing/CTABanner';
 import Footer from '@/components/landing/Footer';
+import { useLandingCMS } from '@/hooks/useLandingCMS';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { sections } = useLandingCMS();
+
+  // Build a map of section_key -> content for easy access
+  const cms = useMemo(() => {
+    const map: Record<string, { content: Record<string, any>; visible: boolean }> = {};
+    sections.forEach((s) => {
+      map[s.section_key] = { content: s.content_json as Record<string, any>, visible: s.is_visible };
+    });
+    return map;
+  }, [sections]);
+
+  const isVisible = (key: string) => cms[key]?.visible !== false;
 
   const handleGetStarted = () => navigate('/login');
   const handleScanDemo = () => navigate('/order?table=T1');
@@ -118,32 +131,44 @@ const LandingPage = () => {
 
       {/* Main Content */}
       <main className="pt-16">
-        <HeroSection onGetStarted={handleGetStarted} onScanDemo={handleScanDemo} />
+        {isVisible('hero') && (
+          <HeroSection onGetStarted={handleGetStarted} onScanDemo={handleScanDemo} cms={cms.hero?.content} />
+        )}
         <BrandStrip />
         <LiveDashboardTeaser />
-        <div id="features">
-          <FeaturesSection />
-        </div>
+        {isVisible('features') && (
+          <div id="features">
+            <FeaturesSection cms={cms.features?.content} />
+          </div>
+        )}
         <ProductDemo />
-        <div id="how-it-works">
-          <HowItWorks />
-        </div>
+        {isVisible('how_it_works') && (
+          <div id="how-it-works">
+            <HowItWorks cms={cms.how_it_works?.content} />
+          </div>
+        )}
         <DashboardCarousel />
         <LiveDashboardSection />
         <IntegrationsCloud />
-        <div id="pricing">
-          <PricingSection onSelectPlan={handleSelectPlan} />
-        </div>
-        <div id="testimonials">
-          <TestimonialsSection />
-        </div>
+        {isVisible('pricing') && (
+          <div id="pricing">
+            <PricingSection onSelectPlan={handleSelectPlan} cms={cms.pricing?.content} />
+          </div>
+        )}
+        {isVisible('testimonials') && (
+          <div id="testimonials">
+            <TestimonialsSection cms={cms.testimonials?.content} />
+          </div>
+        )}
         <div id="faq">
           <FAQSection />
         </div>
-        <CTABanner onGetStarted={handleGetStarted} />
+        {isVisible('cta_banner') && (
+          <CTABanner onGetStarted={handleGetStarted} cms={cms.cta_banner?.content} />
+        )}
       </main>
 
-      <Footer />
+      {isVisible('footer') && <Footer cms={cms.footer?.content} />}
     </div>
   );
 };
