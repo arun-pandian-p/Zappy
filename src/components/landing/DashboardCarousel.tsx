@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, ShoppingCart, BarChart3, Settings, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { mockOrders, menuItems } from '@/data/mockData';
 
 const screens = [
   {
@@ -9,28 +10,32 @@ const screens = [
     description: 'Real-time order tracking with status updates',
     icon: ShoppingCart,
     color: 'from-primary to-primary/60',
-    mockRows: ['Order #142 - Table 3 - Preparing', 'Order #141 - Table 7 - Ready', 'Order #140 - Table 1 - Served'],
+    mockRows: mockOrders.map(
+      (o) => `Order #${o.order_number} - ${o.table_number} - ${o.status.charAt(0).toUpperCase() + o.status.slice(1)}`
+    ),
   },
   {
     title: 'Kitchen Display',
     description: 'Live order queue for kitchen staff',
     icon: ChefHat,
     color: 'from-orange-500 to-amber-500',
-    mockRows: ['Butter Chicken x2 - 5min', 'Paneer Tikka x1 - 3min', 'Biryani x3 - 8min'],
+    mockRows: menuItems.slice(0, 3).map(
+      (m) => `${m.name} x${Math.ceil(Math.random() * 3)} - ${m.prep_time_minutes}min`
+    ),
   },
   {
     title: 'Analytics Dashboard',
     description: 'Revenue, trends, and customer insights',
     icon: BarChart3,
     color: 'from-green-500 to-emerald-500',
-    mockRows: ['Revenue: ₹45,230 today', 'Orders: 87 completed', 'Avg time: 12 min'],
+    mockRows: ['Revenue: ₹45,230 today', `Orders: ${mockOrders.length * 29} completed`, 'Avg time: 12 min'],
   },
   {
     title: 'Admin Panel',
     description: 'Full control over menu, tables, and staff',
     icon: Settings,
     color: 'from-purple-500 to-pink-500',
-    mockRows: ['12 menu items active', '8 tables configured', '5 staff members'],
+    mockRows: [`${menuItems.length} menu items active`, '8 tables configured', '5 staff members'],
   },
 ];
 
@@ -41,7 +46,7 @@ const DashboardCarousel = () => {
   const prev = () => setActive((p) => (p - 1 + screens.length) % screens.length);
 
   return (
-    <section className="py-24 bg-background overflow-hidden">
+    <section className="py-16 md:py-24 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

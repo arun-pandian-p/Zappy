@@ -48,7 +48,7 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   return (
-    <section className="py-24 bg-background overflow-hidden">
+    <section className="py-16 md:py-24 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -77,7 +77,7 @@ const TestimonialsSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: (i % testimonials.length) * 0.1 }}
-                className="shrink-0 w-[340px] mx-3"
+                className="shrink-0 w-[280px] sm:w-[340px] mx-3"
               >
                 <Card className="h-full border bg-card/80 backdrop-blur-sm hover:shadow-lg transition-shadow duration-300">
                   <CardContent className="p-6">

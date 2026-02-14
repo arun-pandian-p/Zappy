@@ -9,43 +9,29 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[80vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Animated gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20 animate-gradient-shift" />
       
-      {/* Floating food elements */}
+      {/* Floating food elements - hidden on mobile */}
       <motion.div
-        className="absolute top-20 left-10 w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-red-500 opacity-60 blur-sm"
-        animate={{
-          y: [0, -20, 0],
-          x: [0, 10, 0],
-          scale: [1, 1.1, 1],
-        }}
+        className="absolute top-20 left-10 w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-orange-400 to-red-500 opacity-60 blur-sm hidden sm:block"
+        animate={{ y: [0, -20, 0], x: [0, 10, 0], scale: [1, 1.1, 1] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute top-40 right-20 w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 opacity-50 blur-sm"
-        animate={{
-          y: [0, 15, 0],
-          x: [0, -15, 0],
-          scale: [1, 0.9, 1],
-        }}
+        className="absolute top-40 right-20 w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 opacity-50 blur-sm hidden sm:block"
+        animate={{ y: [0, 15, 0], x: [0, -15, 0], scale: [1, 0.9, 1] }}
         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
       />
       <motion.div
-        className="absolute bottom-32 left-1/4 w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 opacity-40 blur-md"
-        animate={{
-          y: [0, -25, 0],
-          rotate: [0, 10, 0],
-        }}
+        className="absolute bottom-32 left-1/4 w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 opacity-40 blur-md hidden md:block"
+        animate={{ y: [0, -25, 0], rotate: [0, 10, 0] }}
         transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
       />
       <motion.div
-        className="absolute bottom-20 right-1/4 w-14 h-14 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 opacity-50 blur-sm"
-        animate={{
-          y: [0, 20, 0],
-          x: [0, -10, 0],
-        }}
+        className="absolute bottom-20 right-1/4 w-14 h-14 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 opacity-50 blur-sm hidden md:block"
+        animate={{ y: [0, 20, 0], x: [0, -10, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
       />
 
@@ -72,7 +58,7 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
+            className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
           >
             <span className="bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
               Scan.{' '}
@@ -105,7 +91,7 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
           >
             <Button
               size="lg"
-              className="px-8 py-6 text-lg rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/25 group"
+              className="w-full sm:w-auto px-8 py-6 text-lg rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/25 group"
               onClick={onGetStarted}
             >
               Get Started Free
@@ -114,7 +100,7 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
             <Button
               size="lg"
               variant="outline"
-              className="px-8 py-6 text-lg rounded-xl border-2 group"
+              className="w-full sm:w-auto px-8 py-6 text-lg rounded-xl border-2 group"
               onClick={onScanDemo}
             >
               <QrCode className="mr-2 w-5 h-5" />
@@ -135,7 +121,7 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <div className="relative bg-card/80 backdrop-blur-sm rounded-3xl p-8 border shadow-2xl shadow-primary/10">
+            <div className="relative bg-card/80 backdrop-blur-sm rounded-3xl p-5 md:p-8 border shadow-2xl shadow-primary/10">
               <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
                 <motion.div
                   animate={{ scale: [1, 1.2, 1] }}

@@ -89,7 +89,7 @@ const itemVariants = {
 
 const FeaturesSection = () => {
   return (
-    <section className="py-24 bg-muted/30">
+    <section className="py-16 md:py-24 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <motion.div
@@ -118,7 +118,7 @@ const FeaturesSection = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-100px' }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
         >
           {features.map((feature, index) => (
             <motion.div key={feature.title} variants={itemVariants}>

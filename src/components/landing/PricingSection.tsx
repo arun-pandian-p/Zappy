@@ -66,7 +66,7 @@ const PricingSection = ({ onSelectPlan }: PricingSectionProps) => {
   const [yearly, setYearly] = useState(false);
 
   return (
-    <section className="py-24 bg-muted/30">
+    <section className="py-16 md:py-24 bg-muted/30">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -119,7 +119,7 @@ const PricingSection = ({ onSelectPlan }: PricingSectionProps) => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ scale: plan.popular ? 1.02 : 1.04 }}
-                className={plan.popular ? 'relative' : ''}
+                className={plan.popular ? 'relative order-first md:order-none' : ''}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
@@ -132,7 +132,7 @@ const PricingSection = ({ onSelectPlan }: PricingSectionProps) => {
                 <Card
                   className={`h-full ${
                     plan.popular
-                      ? 'border-primary shadow-lg shadow-primary/20 scale-105'
+                      ? 'border-primary shadow-lg shadow-primary/20 md:scale-105'
                       : 'border-border'
                   }`}
                 >

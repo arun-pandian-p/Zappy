@@ -30,7 +30,7 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-24 bg-muted/30">
+    <section className="py-16 md:py-24 bg-muted/30">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -60,8 +60,8 @@ const HowItWorks = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: i * 0.15 }}
-              className={`relative flex items-start gap-6 mb-12 last:mb-0 ${
-                i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
+              className={`relative flex items-start gap-6 mb-12 last:mb-0 flex-row ${
+                i % 2 !== 0 ? 'md:flex-row-reverse' : ''
               }`}
             >
               {/* Step number circle */}
