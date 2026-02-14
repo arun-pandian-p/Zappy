@@ -1,40 +1,40 @@
 import { motion } from 'framer-motion';
-import { Monitor, CreditCard, Bell, BarChart3 } from 'lucide-react';
+import { Smartphone, RefreshCw, Printer, UtensilsCrossed } from 'lucide-react';
 
 const features = [
   {
-    icon: Monitor,
-    title: 'Kitchen Display',
-    description: 'Real-time order management with KDS.',
+    icon: Smartphone,
+    title: 'Mobile First',
+    description: 'Your fast mobile menu with ease and spending.',
+    iconBg: 'bg-violet-100 dark:bg-violet-900/40',
+    iconColor: 'text-violet-500',
+  },
+  {
+    icon: RefreshCw,
+    title: 'Real-time Sync',
+    description: 'Fast sync of your orders.',
     iconBg: 'bg-sky-100 dark:bg-sky-900/40',
     iconColor: 'text-sky-500',
   },
   {
-    icon: CreditCard,
-    title: 'Easy Billing',
-    description: 'Fast checkout and receipt printing.',
+    icon: Printer,
+    title: 'Thermal Print',
+    description: 'Add items to cart, and customize receipts.',
     iconBg: 'bg-orange-100 dark:bg-orange-900/40',
     iconColor: 'text-orange-500',
   },
   {
-    icon: Bell,
-    title: 'Waiter Calls',
-    description: 'Instant table-side assistance with orders.',
+    icon: UtensilsCrossed,
+    title: 'Get Served',
+    description: 'Kitchen prepares, serves & manages orders.',
     iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
     iconColor: 'text-emerald-500',
   },
-  {
-    icon: BarChart3,
-    title: 'Analytics',
-    description: 'Track sales, reviews, & revenue in orders.',
-    iconBg: 'bg-indigo-100 dark:bg-indigo-900/40',
-    iconColor: 'text-indigo-500',
-  },
 ];
 
-const FeaturesSection = () => {
+const LiveDashboardSection = () => {
   return (
-    <section className="py-16 md:py-24 bg-muted/30">
+    <section className="py-16 md:py-24 bg-gradient-to-br from-orange-50 via-amber-50/50 to-yellow-50 dark:from-orange-950/20 dark:via-background dark:to-amber-950/10">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -44,13 +44,13 @@ const FeaturesSection = () => {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Streamline Your{' '}
+            Live Dashboard for Smart{' '}
             <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
-              Restaurant
+              Management
             </span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Powerful features to improve your service &amp; sales.
+            Get started today and join 1,500+ restaurants supercharging their service.
           </p>
         </motion.div>
 
@@ -77,4 +77,4 @@ const FeaturesSection = () => {
   );
 };
 
-export default FeaturesSection;
+export default LiveDashboardSection;
