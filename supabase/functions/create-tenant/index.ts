@@ -154,15 +154,15 @@ serve(async (req) => {
     if (createUserError) {
       // If user already exists, find them
       if (createUserError.message.includes("already been registered")) {
-        const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers();
-        const existingUser = users?.find((u) => u.email === admin_email);
-        if (!existingUser || listError) {
+        const { data: existingUserData, error: getUserError } =
+          await adminClient.auth.admin.getUserByEmail(admin_email);
+        if (!existingUserData?.user || getUserError) {
           await adminClient.from("restaurants").delete().eq("id", restaurant.id);
           return new Response(JSON.stringify({ error: "User exists but could not be found" }), {
             status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        userId = existingUser.id;
+        userId = existingUserData.user.id;
         passwordToReturn = "(existing account — password unchanged)";
       } else {
         await adminClient.from("restaurants").delete().eq("id", restaurant.id);
