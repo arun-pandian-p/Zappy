@@ -67,13 +67,15 @@ interface AdminSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onboardingCompleted?: boolean;
+  restaurantName?: string;
+  restaurantLogo?: string | null;
 }
 
-export function AdminSidebar({ activeTab, onTabChange, onboardingCompleted = true }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, onboardingCompleted = true, restaurantName, restaurantLogo }: AdminSidebarProps) {
   const navigate = useNavigate();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navItems = onboardingCompleted ? allNavItems : onboardingNavItems;
 
   const handleLogout = async () => {
@@ -97,7 +99,7 @@ export function AdminSidebar({ activeTab, onTabChange, onboardingCompleted = tru
               animate={{ opacity: 1, x: 0 }}
               className="flex flex-col"
             >
-              <span className="font-bold text-sidebar-foreground">QR Dine Pro</span>
+              <span className="font-bold text-sidebar-foreground">{restaurantName || "QR Dine Pro"}</span>
               <span className="text-xs text-sidebar-foreground/60">Admin Dashboard</span>
             </motion.div>
           )}
@@ -132,8 +134,10 @@ export function AdminSidebar({ activeTab, onTabChange, onboardingCompleted = tru
       <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border">
         <div className="flex items-center gap-3 mb-3">
           <Avatar className="w-10 h-10 shrink-0">
-            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" />
-            <AvatarFallback className="bg-primary/20 text-primary">AD</AvatarFallback>
+            <AvatarImage src={restaurantLogo || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`} />
+            <AvatarFallback className="bg-primary/20 text-primary">
+              {(restaurantName || "Admin").charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <motion.div
@@ -142,10 +146,10 @@ export function AdminSidebar({ activeTab, onTabChange, onboardingCompleted = tru
               className="flex flex-col overflow-hidden"
             >
               <span className="font-medium text-sm text-sidebar-foreground truncate">
-                Restaurant Admin
+                {restaurantName || "Restaurant Admin"}
               </span>
               <span className="text-xs text-sidebar-foreground/60 truncate">
-                admin@restaurant.com
+                {user?.email || "admin@restaurant.com"}
               </span>
             </motion.div>
           )}
