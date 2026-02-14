@@ -40,6 +40,10 @@ import { PlatformSettings } from '@/components/superadmin/PlatformSettings';
 import { DefaultTaxSettings } from '@/components/superadmin/DefaultTaxSettings';
 import { EmailTemplateManager } from '@/components/superadmin/EmailTemplateManager';
 import { SystemLogs } from '@/components/superadmin/SystemLogs';
+import { Leaderboard } from '@/components/superadmin/Leaderboard';
+import { LandingCMS } from '@/components/superadmin/LandingCMS';
+import { PlatformBrandingPanel } from '@/components/superadmin/PlatformBrandingPanel';
+import { SuperAdminProfileEditor } from '@/components/superadmin/SuperAdminProfileEditor';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import UserManagement from '@/components/admin/UserManagement';
 import { supabase } from '@/integrations/supabase/client';
@@ -260,6 +264,18 @@ const SuperAdminDashboard = () => {
           </div>
         );
 
+      case 'leaderboard':
+        return <Leaderboard />;
+
+      case 'landing-cms':
+        return <LandingCMS />;
+
+      case 'branding':
+        return <PlatformBrandingPanel />;
+
+      case 'profile':
+        return <SuperAdminProfileEditor />;
+
       case 'users':
         return <UserManagement />;
 
@@ -271,13 +287,11 @@ const SuperAdminDashboard = () => {
 
       case 'settings':
         return (
-          <Tabs defaultValue="branding" className="space-y-4">
+          <Tabs defaultValue="tax" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="branding">Platform Branding</TabsTrigger>
               <TabsTrigger value="tax">Default Tax Config</TabsTrigger>
               <TabsTrigger value="emails">Email Templates</TabsTrigger>
             </TabsList>
-            <TabsContent value="branding"><PlatformSettings /></TabsContent>
             <TabsContent value="tax"><DefaultTaxSettings /></TabsContent>
             <TabsContent value="emails"><EmailTemplateManager /></TabsContent>
           </Tabs>
@@ -294,12 +308,16 @@ const SuperAdminDashboard = () => {
   const pageTitles: Record<string, { title: string; description: string }> = {
     dashboard: { title: 'Dashboard', description: 'Platform overview and metrics' },
     restaurants: { title: 'Tenants / Hotels', description: 'Manage all tenants' },
+    leaderboard: { title: 'Leaderboard', description: 'Top revenue-generating restaurants' },
     analytics: { title: 'Analytics', description: 'Revenue and performance trends' },
     users: { title: 'User Management', description: 'Manage all staff across restaurants' },
     plans: { title: 'Subscription Plans', description: 'Manage platform subscription tiers' },
     ads: { title: 'Platform Ads', description: 'Manage promotional advertisements' },
+    'landing-cms': { title: 'Landing Page CMS', description: 'Edit landing page content' },
+    branding: { title: 'Platform Branding', description: 'White-label appearance controls' },
     settings: { title: 'Settings', description: 'Platform configuration' },
     logs: { title: 'System Logs', description: 'Audit trail of platform actions' },
+    profile: { title: 'My Profile', description: 'Customize your admin identity' },
   };
 
   const currentPage = editingRestaurant

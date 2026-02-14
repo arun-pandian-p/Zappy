@@ -34,6 +34,7 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
     cuisine_type: '',
     branch_count: '1',
     admin_email: '',
+    admin_password: '',
     logo_url: '',
     theme_color: '#3B82F6',
     subscription_tier: 'free' as 'free' | 'pro' | 'enterprise',
@@ -137,11 +138,12 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
         {/* Admin Credentials */}
         <div>
           <h4 className="font-medium mb-3 text-sm text-muted-foreground uppercase tracking-wide">Admin Credentials</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2"><Label>Admin Email *</Label><Input type="email" value={form.admin_email} onChange={(e) => setForm({ ...form, admin_email: e.target.value })} placeholder="admin@hotel.com" /></div>
-            <div className="space-y-2"><Label>Auto Username</Label><Input value={form.slug ? `${form.slug.replace(/-/g, '')}_admin` : ''} disabled className="bg-muted" /></div>
+            <div className="space-y-2"><Label>Username</Label><Input value={form.slug ? `${form.slug.replace(/-/g, '')}_admin` : ''} disabled className="bg-muted" /></div>
+            <div className="space-y-2"><Label>Password (optional)</Label><Input type="password" value={form.admin_password} onChange={(e) => setForm({ ...form, admin_password: e.target.value })} placeholder="Leave blank to auto-generate" /></div>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">Password will be auto-generated (12 chars) and shown after creation.</p>
+          <p className="text-xs text-muted-foreground mt-2">Set a custom password or leave blank to auto-generate a 12-character password.</p>
         </div>
 
         <div className="flex gap-2">

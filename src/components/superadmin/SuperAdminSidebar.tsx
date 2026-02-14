@@ -11,6 +11,10 @@ import {
   CreditCard,
   Megaphone,
   ScrollText,
+  Trophy,
+  FileText,
+  Palette,
+  UserCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,12 +39,16 @@ interface NavItem {
 const navItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
   { title: "Tenants / Hotels", icon: Building2, value: "restaurants" },
+  { title: "Leaderboard", icon: Trophy, value: "leaderboard" },
   { title: "User Management", icon: Users, value: "users" },
   { title: "Subscription Plans", icon: CreditCard, value: "plans" },
   { title: "Platform Ads", icon: Megaphone, value: "ads" },
+  { title: "Landing CMS", icon: FileText, value: "landing-cms" },
+  { title: "Platform Branding", icon: Palette, value: "branding" },
   { title: "Analytics", icon: BarChart3, value: "analytics" },
   { title: "Settings", icon: Settings, value: "settings" },
   { title: "System Logs", icon: ScrollText, value: "logs" },
+  { title: "My Profile", icon: UserCircle, value: "profile" },
 ];
 
 interface SuperAdminSidebarProps {

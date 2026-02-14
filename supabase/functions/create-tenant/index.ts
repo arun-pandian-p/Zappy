@@ -61,7 +61,7 @@ serve(async (req) => {
     const body = await req.json();
     const {
       name, slug, email, phone, address, cuisine_type, branch_count,
-      admin_email, logo_url, theme_color, subscription_tier,
+      admin_email, admin_password, logo_url, theme_color, subscription_tier,
     } = body;
 
     if (!name || !admin_email) {
@@ -71,7 +71,7 @@ serve(async (req) => {
     }
 
     const restaurantSlug = slug || slugify(name);
-    const generatedPassword = generatePassword(12);
+    const generatedPassword = admin_password && admin_password.length >= 6 ? admin_password : generatePassword(12);
     const generatedUsername = `${restaurantSlug}_admin`;
 
     // 1. Create restaurant
