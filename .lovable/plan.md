@@ -1,67 +1,96 @@
 
 
-# Add Tenant Profile Sync to Admin Sidebar and Header
+# Update Landing Page to Match Reference Design
 
 ## Overview
 
-Enhance the admin sidebar footer and header to display the authenticated user's email, profile picture, and restaurant branding in a polished chip/badge layout.
+Redesign the landing page sections to match the uploaded reference image, featuring a warm gradient aesthetic, glassmorphism cards, and restructured content sections.
 
 ---
 
-## 1. Sidebar Footer -- Avatar + Name Chip with Restaurant Logo
+## 1. Hero Section Redesign
 
-**File**: `src/components/admin/AdminSidebar.tsx`
+**File**: `src/components/landing/HeroSection.tsx`
 
-Current footer shows restaurant name and user email in plain text. Upgrade to:
+- Keep the "Scan. Order. Enjoy." heading with bold styling
+- Add subtitle: "Digitize Dining in Seconds."
+- Keep existing description text and CTA buttons (Get Started Free + Try Demo)
+- Replace the animated QR code block with a warm gradient background (orange/amber tones blending into a soft glow)
+- Add floating decorative orbs with warm amber/orange gradients instead of the current cold-tone ones
+- Remove the scroll indicator at the bottom
 
-- Show two distinct elements: a **restaurant logo** (small rounded icon) and a **user avatar** (from auth metadata or DiceBear seed)
-- Add a name chip below the avatar with the user's display name (from `user.user_metadata.full_name` or email prefix) styled as a subtle badge
-- When collapsed, show only the user avatar icon
-- Layout: Restaurant logo on left, user info (name chip + email) on right
+## 2. Features Section -- "Streamline Your Restaurant"
 
-## 2. Admin Header -- User Email Badge
+**File**: `src/components/landing/FeaturesSection.tsx`
 
-**File**: `src/components/admin/AdminHeader.tsx`
+- Change heading to: "Streamline Your Restaurant"
+- Change subtitle to: "Powerful features to improve your service & sales."
+- Reduce the 9-card grid down to **4 key feature cards** in a single row:
+  1. **Kitchen Display** -- Monitor icon (blue/teal), "Real-time order management with KDS."
+  2. **Easy Billing** -- CreditCard icon (orange/red), "Fast checkout and receipt printing."
+  3. **Waiter Calls** -- Bell icon (green), "Instant table-side assistance with orders."
+  4. **Analytics** -- BarChart icon (blue/indigo), "Track sales, reviews, & revenue in orders."
+- Cards use glassmorphism style: `bg-white/60 backdrop-blur-sm border border-white/40 rounded-2xl shadow-lg`
+- Each card has a colored circular icon container matching the reference
 
-- Import `useAuth` hook to access the authenticated user's email
-- Add a `Badge` component next to the avatar in the header's right section showing the user's email (e.g., `admin@hotel.com`)
-- On mobile, truncate the email badge to just show the first part before `@`
-- Style: `variant="secondary"` with a small user icon
+## 3. How It Works Section Redesign
 
-## 3. Pass Additional Auth Data
+**File**: `src/components/landing/HowItWorks.tsx`
 
-**File**: `src/pages/AdminDashboard.tsx`
+- Keep heading: "How It **Works**"
+- Change subtitle to: "Powerful features to improve your service & sales."
+- Replace the vertical timeline with a **two-column layout**:
+  - Left column: a card showing "Scan QR Code" header with a mini order status pipeline:
+    - T11 - Pending (yellow dot, "Sub" badge)
+    - TT3 - Preparing (blue dot, "Eat" badge)
+    - TT5 - Ready (green dot, "Eat" badge)
+  - Right column: placeholder illustration area (styled card with gradient background)
+- Use glassmorphism card styling consistent with the features section
 
-- Already passes `restaurantName` and `restaurantLogo` to sidebar -- no changes needed there
-- Pass `userEmail` and `userDisplayName` to `AdminHeader` so it can render the email badge without needing its own `useAuth` call (though using the hook directly in the header is also fine)
+## 4. New Section -- "Live Dashboard for Smart Management"
+
+**File**: `src/components/landing/FeaturesSection.tsx` (add as a second features block) or create a new component
+
+Create a new component: `src/components/landing/LiveDashboardSection.tsx`
+
+- Heading: "Live Dashboard for Smart **Management**"
+- Subtitle: "Get started today and join 1,500+ restaurants supercharging their service."
+- 4 feature cards in a row:
+  1. **Mobile First** -- Smartphone icon, "Your fast mobile menu with ease and spending."
+  2. **Real-time Sync** -- RefreshCw icon, "Fast sync of your orders."
+  3. **Thermal Print** -- Printer icon, "Add items to cart, and customize receipts."
+  4. **Get Served** -- UtensilsCrossed icon, "Kitchen prepares, serves & manages orders."
+- Same glassmorphism card style as the features section
+- Warm gradient background section
+
+## 5. Landing Page Assembly
+
+**File**: `src/pages/LandingPage.tsx`
+
+- Insert the new `LiveDashboardSection` component after `DashboardCarousel` and before `IntegrationsCloud`
+
+## 6. Global Style Touches
+
+- Add warm gradient backgrounds (orange/amber glow) to hero and bottom sections
+- Use consistent glassmorphism card styling across all new/updated sections
+- Ensure all sections have proper Framer Motion scroll-reveal animations
 
 ---
 
 ## Technical Details
 
-### AdminSidebar.tsx Changes
+### Files to Create
 
-- Split footer into two rows: top row with restaurant logo + restaurant name, bottom row with user avatar + name chip + email
-- User avatar uses `user.user_metadata.avatar_url` if available, falls back to DiceBear seeded by email
-- Name chip extracts display name from `user.user_metadata.full_name` or derives it from the email prefix (e.g., `admin` from `admin@hotel.com`)
-- Import `Badge` from `@/components/ui/badge`
+| File | Purpose |
+|------|---------|
+| `src/components/landing/LiveDashboardSection.tsx` | New "Live Dashboard for Smart Management" section |
 
-### AdminHeader.tsx Changes
-
-- Import `useAuth` from `@/hooks/useAuth`
-- Import `Badge` from `@/components/ui/badge`
-- Add `Mail` icon from `lucide-react`
-- Render email badge between the settings icon button and the avatar: `<Badge variant="secondary" className="hidden sm:flex items-center gap-1"><Mail className="w-3 h-3" />{user?.email}</Badge>`
-- On mobile (`sm:hidden`), show a truncated version or just the avatar
-
-### Files Modified
+### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/admin/AdminSidebar.tsx` | Redesign footer with restaurant logo + user avatar + name chip layout |
-| `src/components/admin/AdminHeader.tsx` | Add authenticated user email badge, import useAuth and Badge |
-
-### No New Files
-
-All changes are modifications to existing components.
+| `src/components/landing/HeroSection.tsx` | Add subtitle, warm gradients, remove scroll indicator |
+| `src/components/landing/FeaturesSection.tsx` | Reduce to 4 cards, glassmorphism style, new heading |
+| `src/components/landing/HowItWorks.tsx` | Two-column layout with order status pipeline card |
+| `src/pages/LandingPage.tsx` | Add LiveDashboardSection to page flow |
 
