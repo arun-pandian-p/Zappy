@@ -381,7 +381,7 @@ const AdminDashboard = () => {
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full bg-muted/30">
-        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} />
+        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} restaurantName={(restaurant as any)?.name} restaurantLogo={(restaurant as any)?.logo_url} />
 
         <SidebarInset className="flex-1">
           <AdminHeader
