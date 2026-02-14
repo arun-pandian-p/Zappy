@@ -1,7 +1,9 @@
-import { Search, Settings, Bell } from "lucide-react";
+import { Search, Settings, Bell, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
 import { AnimatedHotelName, type LetterAnimation, type AnimationSpeed } from "@/components/branding/AnimatedHotelName";
 import { MascotIcon, type MascotType } from "@/components/branding/MascotIcon";
 
@@ -34,7 +36,9 @@ export function AdminHeader({
   adminAvatar,
   adminDisplayName,
 }: AdminHeaderProps) {
+  const { user } = useAuth();
   const animEnabled = branding?.animation_enabled ?? false;
+  const emailPrefix = user?.email?.split('@')[0] || "";
 
   return (
     <header className="sticky top-0 z-40 bg-card border-b">
@@ -70,6 +74,18 @@ export function AdminHeader({
           <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
             <Settings className="w-5 h-5" />
           </Button>
+          {user?.email && (
+            <Badge variant="secondary" className="hidden sm:flex items-center gap-1 text-xs">
+              <Mail className="w-3 h-3" />
+              {user.email}
+            </Badge>
+          )}
+          {user?.email && (
+            <Badge variant="secondary" className="flex sm:hidden items-center gap-1 text-xs">
+              <Mail className="w-3 h-3" />
+              {emailPrefix}
+            </Badge>
+          )}
           <Avatar className="w-9 h-9 ml-2">
             {adminAvatar?.type === "emoji" && adminAvatar.value ? (
               <AvatarFallback className="text-lg bg-primary/10">{adminAvatar.value}</AvatarFallback>
