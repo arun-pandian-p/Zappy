@@ -1,51 +1,56 @@
 
 
-# Fix QR System: Redirect, Dynamic Table Binding, Auto-Sync, and QA Tests
+# Enhance Table Binding Persistence and Add Missing Test Coverage
 
-## Bugs Found
+## Current State
 
-Three critical bugs prevent the QR system from working end-to-end:
+Most of the requested features are already implemented:
+- TablePickerDialog component exists with 4 tests
+- Base restaurant QR auto-creates on QR Manager load
+- Table-specific QR codes auto-generate when tables are added
+- qr-redirect edge function uses query params (`?id=...`) and resolves to absolute URLs
+- Dynamic table selection works via the TablePickerDialog
 
-1. **Edge function ignores query params**: The `qr-redirect` function extracts QR ID from the URL path first (`pathParts[pathParts.length - 1]`), which yields `"qr-redirect"` when using `?id=...`. Since `"qr-redirect"` is truthy, the `||` never reaches `url.searchParams.get("id")`. Then the `=== "qr-redirect"` check returns a 400 error. The fix: check query params first.
+## What's Missing
 
-2. **Redirect uses relative URLs**: The `target_url` stored in `qr_codes` is a relative path like `/order?r=...`. The HTTP 302 `Location` header requires an absolute URL, so browsers either fail or redirect to the edge function domain. The fix: prepend the published app URL in the redirect function.
+### 1. Session persistence across browser sessions
 
-3. **Order placement fails after table picker**: `handlePlaceOrder` validates `!tableId`, but `tableId` comes from the original URL search param, which is empty when the user selected a table via the picker. The state `dynamicTableId` has the correct value but isn't used in validation. The fix: use `dynamicTableId` instead of `tableId`.
+Currently, the selected table is stored only in React state + URL params. If the customer closes the browser and re-opens the link without the `table` param, they must re-select. The fix: persist the table selection in `localStorage` keyed by restaurant ID, and restore it on load.
 
-4. **Redundant broken update**: Lines 104-108 in qr-redirect attempt `update({ scan_count: undefined })` which does nothing or errors. The RPC call on line 111 already handles this correctly. Remove the dead code.
+### 2. Auto-sync for existing tables without QR entries
+
+If tables were created before the unified QR system was added, they have no matching `qr_codes` entry. The QR Manager should detect orphaned tables and auto-create their QR codes on load.
+
+### 3. Additional test coverage
+
+The existing tests cover basics but miss:
+- Session persistence (localStorage restore)
+- Table capacity display
+- Restaurant name display in dialog
+- Re-selection blocked when dialog is closed
 
 ---
 
 ## Plan
 
-### 1. Fix `qr-redirect` edge function
+### 1. Add localStorage persistence in CustomerMenu.tsx
 
-- Prioritize `url.searchParams.get("id")` over path extraction
-- Resolve relative `target_url` to absolute URL using the published app base URL
-- Remove the redundant `scan_count` update (keep only the RPC call)
+- On `handleTableSelect`: save `{ restaurantId, tableNumber }` to `localStorage`
+- On component mount: if no `table` URL param, check `localStorage` for a saved table for the current restaurant and auto-restore it
+- This ensures the table binding survives page refreshes and re-visits
 
-### 2. Fix `CustomerMenu.tsx` order validation
+### 2. Auto-sync orphaned tables in QRCodeManager.tsx
 
-- Change `handlePlaceOrder` to check `dynamicTableId` instead of `tableId` (which is only the initial URL param)
+- After tables and QR codes load, compare the tables list against `tableQRCodes`
+- For any table that has no matching QR code (by `metadata.table_id`), auto-create a dynamic QR entry
+- This handles tables created before the unified system was introduced
 
-### 3. Fix `QRCodeManager.tsx` published URL
+### 3. Expand TablePickerDialog tests
 
-- Update the `PUBLISHED_URL` constant from the incorrect `qr-pal-maker.lovable.app` to the actual published URL `qr-restaurant.lovable.app`
-
-### 4. Add QA tests for the QR redirect edge function
-
-Create `supabase/functions/qr-redirect/index.test.ts` covering:
-- Valid QR ID via `?id=...` query param returns 302 redirect
-- Missing ID returns 400
-- Invalid/nonexistent ID returns 404
-- Rate limiting returns 429 after excessive requests
-
-### 5. Add frontend test for TablePickerDialog
-
-Create `src/components/menu/__tests__/TablePickerDialog.test.tsx` covering:
-- Renders table buttons for active tables
-- Calls `onSelectTable` with correct table number on click
-- Shows empty state when no tables are available
+Add new test cases:
+- Displays restaurant name in the welcome message
+- Shows seat capacity for each table
+- Does not render dialog when `open` is false
 
 ---
 
@@ -53,42 +58,35 @@ Create `src/components/menu/__tests__/TablePickerDialog.test.tsx` covering:
 
 ### Files to Modify
 
-| File | Change |
-|------|--------|
-| `supabase/functions/qr-redirect/index.ts` | Fix ID extraction order; resolve relative URLs to absolute; remove dead scan_count update |
-| `src/pages/CustomerMenu.tsx` | Use `dynamicTableId` in order validation instead of `tableId` |
-| `src/components/admin/QRCodeManager.tsx` | Fix `PUBLISHED_URL` constant |
-
-### Files to Create
-
-| File | Purpose |
+| File | Changes |
 |------|---------|
-| `supabase/functions/qr-redirect/index.test.ts` | Edge function QA tests |
-| `src/components/menu/__tests__/TablePickerDialog.test.tsx` | Frontend component test |
+| `src/pages/CustomerMenu.tsx` | Add localStorage save/restore for table selection. On mount, check `localStorage` key `qr_table_{restaurantId}` and initialize `dynamicTableId` from it if URL param is absent. |
+| `src/components/admin/QRCodeManager.tsx` | Add `useEffect` that compares `tables` against `tableQRCodes` and auto-creates missing QR entries for orphaned tables. |
+| `src/components/menu/__tests__/TablePickerDialog.test.tsx` | Add 3 new test cases for restaurant name display, capacity display, and closed state. |
 
-### Edge Function Fix Detail
-
-```text
-Before (broken):
-  qrId = pathParts.last || searchParams.get("id")
-  --> "qr-redirect" || "actual-uuid" --> "qr-redirect" --> 400 error
-
-After (fixed):
-  qrId = searchParams.get("id") || pathParts.last
-  --> "actual-uuid" || "qr-redirect" --> "actual-uuid" --> works
-```
-
-### Redirect URL Fix
+### localStorage Schema
 
 ```text
-Before: Location: /order?r=abc&table=T1  (relative -- broken)
-After:  Location: https://qr-restaurant.lovable.app/order?r=abc&table=T1  (absolute -- works)
+Key:   qr_table_{restaurantId}
+Value: { tableNumber: "T1", timestamp: 1700000000000 }
 ```
 
-### Order Validation Fix
+Entries older than 4 hours are ignored (session expiry).
+
+### Auto-Sync Logic
 
 ```text
-Before: if (!tableId || ...) -- tableId is from URL param only, empty after picker
-After:  if (!dynamicTableId || ...) -- dynamicTableId has the picker selection
+On QR Manager load:
+  For each table in tables[]:
+    If no qrCode exists where metadata.table_id === table.id:
+      Create dynamic QR code for that table
 ```
+
+### New Test Cases
+
+| Test | Assertion |
+|------|-----------|
+| "displays restaurant name" | `screen.getByText(/Welcome to My Restaurant/)` |
+| "shows capacity per table" | `screen.getByText("4 seats")` |
+| "does not render when closed" | `queryByText("Select Your Table")` returns null |
 
