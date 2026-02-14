@@ -140,7 +140,10 @@ serve(async (req) => {
         .eq("id", restaurant.id);
     }
 
-    // 3. Create auth user
+    // 3. Create or find auth user
+    let userId: string;
+    let passwordToReturn = generatedPassword;
+
     const { data: newUser, error: createUserError } = await adminClient.auth.admin.createUser({
       email: admin_email,
       password: generatedPassword,
@@ -149,23 +152,38 @@ serve(async (req) => {
     });
 
     if (createUserError) {
-      // Rollback restaurant
-      await adminClient.from("restaurants").delete().eq("id", restaurant.id);
-      return new Response(JSON.stringify({ error: createUserError.message }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // If user already exists, find them
+      if (createUserError.message.includes("already been registered")) {
+        const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers();
+        const existingUser = users?.find((u) => u.email === admin_email);
+        if (!existingUser || listError) {
+          await adminClient.from("restaurants").delete().eq("id", restaurant.id);
+          return new Response(JSON.stringify({ error: "User exists but could not be found" }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        userId = existingUser.id;
+        passwordToReturn = "(existing account — password unchanged)";
+      } else {
+        await adminClient.from("restaurants").delete().eq("id", restaurant.id);
+        return new Response(JSON.stringify({ error: createUserError.message }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      userId = newUser.user.id;
     }
 
     // 4. Assign role
     await adminClient.from("user_roles").insert({
-      user_id: newUser.user.id,
+      user_id: userId,
       role: "restaurant_admin",
       restaurant_id: restaurant.id,
     });
 
     // 5. Create staff profile
     await adminClient.from("staff_profiles").insert({
-      user_id: newUser.user.id,
+      user_id: userId,
       email: admin_email,
       name: generatedUsername,
       restaurant_id: restaurant.id,
@@ -192,7 +210,7 @@ serve(async (req) => {
       credentials: {
         email: admin_email,
         username: generatedUsername,
-        password: generatedPassword,
+        password: passwordToReturn,
         login_url: "/admin/login",
       },
     }), {
