@@ -469,51 +469,57 @@ const CustomerMenu = () => {
   );
 
   const renderMenu = () => (
-    <div className="space-y-4">
+    <div>
       {/* Offers Slider */}
       {offers.length > 0 && (
-        <OffersSlider offers={offers} />
+        <div className="mb-4">
+          <OffersSlider offers={offers} />
+        </div>
       )}
 
-      {/* Search + View Toggle */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search menu..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 rounded-full bg-muted/50 border-0"
-          />
+      {/* Sticky Search + Categories */}
+      <div className="sticky top-[57px] z-30 bg-background pb-3 -mx-4 px-4 pt-1">
+        {/* Search + View Toggle */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search menu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 rounded-full bg-muted/50 border-0"
+            />
+          </div>
+          <div className="flex items-center bg-muted rounded-lg p-0.5">
+            <Button
+              variant={menuViewMode === 'list' ? 'default' : 'ghost'}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setMenuViewMode('list')}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={menuViewMode === 'grid' ? 'default' : 'ghost'}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setMenuViewMode('grid')}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center bg-muted rounded-lg p-0.5">
-          <Button
-            variant={menuViewMode === 'list' ? 'default' : 'ghost'}
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setMenuViewMode('list')}
-          >
-            <List className="w-4 h-4" />
-          </Button>
-          <Button
-            variant={menuViewMode === 'grid' ? 'default' : 'ghost'}
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setMenuViewMode('grid')}
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </Button>
-        </div>
+
+        {/* Categories */}
+        <CategorySlider
+          categories={categoryNames}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
       </div>
 
-      {/* Categories */}
-      <CategorySlider
-        categories={categoryNames}
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-      />
-
       {/* Menu Items */}
+      <div className="mt-4">
       {menuViewMode === 'list' ? (
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
@@ -566,6 +572,7 @@ const CustomerMenu = () => {
           No items found
         </div>
       )}
+      </div>
     </div>
   );
 
