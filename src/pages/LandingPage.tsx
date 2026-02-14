@@ -10,6 +10,7 @@ import FeaturesSection from '@/components/landing/FeaturesSection';
 import ProductDemo from '@/components/landing/ProductDemo';
 import HowItWorks from '@/components/landing/HowItWorks';
 import DashboardCarousel from '@/components/landing/DashboardCarousel';
+import LiveDashboardSection from '@/components/landing/LiveDashboardSection';
 import IntegrationsCloud from '@/components/landing/IntegrationsCloud';
 import PricingSection from '@/components/landing/PricingSection';
 import TestimonialsSection from '@/components/landing/TestimonialsSection';
@@ -126,6 +127,7 @@ const LandingPage = () => {
           <HowItWorks />
         </div>
         <DashboardCarousel />
+        <LiveDashboardSection />
         <IntegrationsCloud />
         <div id="pricing">
           <PricingSection onSelectPlan={handleSelectPlan} />
