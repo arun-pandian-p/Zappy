@@ -8,7 +8,7 @@ interface CTABannerProps {
 
 const CTABanner = ({ onGetStarted }: CTABannerProps) => {
   return (
-    <section className="py-24 relative overflow-hidden">
+    <section className="py-16 md:py-24 relative overflow-hidden">
       {/* Gradient background */}
       <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-accent" />
 
@@ -36,7 +36,7 @@ const CTABanner = ({ onGetStarted }: CTABannerProps) => {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-6">
             Ready to Transform Your Restaurant?
           </h2>
           <p className="text-lg text-white/80 max-w-2xl mx-auto mb-10">
@@ -45,7 +45,7 @@ const CTABanner = ({ onGetStarted }: CTABannerProps) => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
               size="lg"
-              className="bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg rounded-xl shadow-lg group"
+              className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg rounded-xl shadow-lg group"
               onClick={onGetStarted}
             >
               Get Started Free
@@ -54,7 +54,7 @@ const CTABanner = ({ onGetStarted }: CTABannerProps) => {
             <Button
               size="lg"
               variant="outline"
-              className="border-white/30 text-white hover:bg-white/10 px-8 py-6 text-lg rounded-xl"
+              className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10 px-8 py-6 text-lg rounded-xl"
             >
               <Headphones className="mr-2 w-5 h-5" />
               Contact Sales

@@ -51,7 +51,7 @@ const LandingPage = () => {
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                 <UtensilsCrossed className="w-6 h-6 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold hidden sm:block">QR Dine Pro</span>
+              <span className="text-xl font-bold">QR Dine Pro</span>
             </div>
 
             <nav className="hidden md:flex items-center gap-8">
