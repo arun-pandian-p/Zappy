@@ -1,60 +1,51 @@
 
 
-# Sync QR Manager with Table QR System
+# Fix QR System: Redirect, Dynamic Table Binding, Auto-Sync, and QA Tests
 
-## Problem
+## Bugs Found
 
-The app currently has two disconnected QR systems:
+Three critical bugs prevent the QR system from working end-to-end:
 
-1. **Tables & QR tab** -- generates per-table QR codes with direct URLs like `/order?r={id}&table=T1`, but these are NOT stored in the `qr_codes` database table, so they have no scan tracking or management.
-2. **QR Manager tab** -- uses the `qr_codes` table for full CRUD and analytics, but has no concept of tables.
+1. **Edge function ignores query params**: The `qr-redirect` function extracts QR ID from the URL path first (`pathParts[pathParts.length - 1]`), which yields `"qr-redirect"` when using `?id=...`. Since `"qr-redirect"` is truthy, the `||` never reaches `url.searchParams.get("id")`. Then the `=== "qr-redirect"` check returns a 400 error. The fix: check query params first.
 
-The PDR requires a unified system where:
-- The restaurant has a **single base QR URL** (same QR for the restaurant)
-- Table selection happens **dynamically** (via URL param or a table picker UI after scanning)
-- All QR scans are tracked in `scan_analytics`
+2. **Redirect uses relative URLs**: The `target_url` stored in `qr_codes` is a relative path like `/order?r=...`. The HTTP 302 `Location` header requires an absolute URL, so browsers either fail or redirect to the edge function domain. The fix: prepend the published app URL in the redirect function.
+
+3. **Order placement fails after table picker**: `handlePlaceOrder` validates `!tableId`, but `tableId` comes from the original URL search param, which is empty when the user selected a table via the picker. The state `dynamicTableId` has the correct value but isn't used in validation. The fix: use `dynamicTableId` instead of `tableId`.
+
+4. **Redundant broken update**: Lines 104-108 in qr-redirect attempt `update({ scan_count: undefined })` which does nothing or errors. The RPC call on line 111 already handles this correctly. Remove the dead code.
 
 ---
 
-## Solution: Unified QR System
+## Plan
 
-### 1. Merge "Tables & QR" into "QR Manager"
+### 1. Fix `qr-redirect` edge function
 
-Remove the separate "Tables & QR" tab. Move table CRUD (add/delete/list) into the QR Manager tab as a sub-section. The QR Manager becomes the single source of truth for all QR codes.
+- Prioritize `url.searchParams.get("id")` over path extraction
+- Resolve relative `target_url` to absolute URL using the published app base URL
+- Remove the redundant `scan_count` update (keep only the RPC call)
 
-### 2. Auto-Generate Table QR Codes
+### 2. Fix `CustomerMenu.tsx` order validation
 
-When a table is created, automatically create a corresponding entry in the `qr_codes` table with:
-- `qr_name`: "Table {number}"
-- `target_url`: `/order?r={restaurantId}&table={tableNumber}`
-- `qr_type`: "dynamic" (so scans go through the redirect function and get tracked)
-- `metadata`: `{ table_id: "{uuid}", table_number: "{number}" }`
+- Change `handlePlaceOrder` to check `dynamicTableId` instead of `tableId` (which is only the initial URL param)
 
-When a table is deleted, deactivate its corresponding QR code.
+### 3. Fix `QRCodeManager.tsx` published URL
 
-### 3. Restaurant Base QR Code
+- Update the `PUBLISHED_URL` constant from the incorrect `qr-pal-maker.lovable.app` to the actual published URL `qr-restaurant.lovable.app`
 
-Add a "Restaurant QR" -- a single QR code that points to the restaurant menu WITHOUT a table parameter. When scanned:
-- The customer lands on `/order?r={restaurantId}` (already works in preview mode)
-- A table picker UI appears asking "Select your table" before ordering
+### 4. Add QA tests for the QR redirect edge function
 
-This satisfies the PDR requirement: **Same QR, dynamic table selection**.
+Create `supabase/functions/qr-redirect/index.test.ts` covering:
+- Valid QR ID via `?id=...` query param returns 302 redirect
+- Missing ID returns 400
+- Invalid/nonexistent ID returns 404
+- Rate limiting returns 429 after excessive requests
 
-### 4. Table Picker on Customer Menu
+### 5. Add frontend test for TablePickerDialog
 
-Update `CustomerMenu.tsx` so when a customer arrives via QR without a `table` param:
-- Show a table selection dialog (not just preview mode)
-- Once selected, bind the table to the session
-- The customer can then place orders normally
-
-### 5. Update QR Manager UI
-
-The QR Manager tab will show:
-- **Restaurant Base QR** card at the top (single QR for the whole restaurant)
-- **Table QR Codes** section showing auto-generated QR codes per table (linked to tables)
-- **Custom QR Codes** section for any manually created QR codes (campaigns, etc.)
-- Table management (add/delete) integrated as a sub-section
-- Scan analytics below everything (already there)
+Create `src/components/menu/__tests__/TablePickerDialog.test.tsx` covering:
+- Renders table buttons for active tables
+- Calls `onSelectTable` with correct table number on click
+- Shows empty state when no tables are available
 
 ---
 
@@ -62,63 +53,42 @@ The QR Manager tab will show:
 
 ### Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/pages/AdminDashboard.tsx` | Remove "Tables & QR" tab, merge table CRUD into QR Manager tab. Remove `tables` from mainTabs array. Pass `tables` data to QRCodeManager. |
-| `src/components/admin/QRCodeManager.tsx` | Add table management section (add/delete tables). Add "Restaurant Base QR" card. Show table-linked QR codes separately from custom ones. Auto-create QR codes when tables are added. |
-| `src/components/admin/AdminSidebar.tsx` | Remove "Tables & QR" nav item (keep QR Manager). |
-| `src/pages/CustomerMenu.tsx` | Replace "preview mode" with a table picker dialog when no table param is present. Bind selected table to session. |
-| `src/hooks/useQRCodes.ts` | Add a helper to find/create a QR code for a given table. |
-
-### Files to Remove (no longer needed separately)
-
-| File | Reason |
+| File | Change |
 |------|--------|
-| `src/components/admin/QuickQRSection.tsx` | Functionality merged into QRCodeManager |
+| `supabase/functions/qr-redirect/index.ts` | Fix ID extraction order; resolve relative URLs to absolute; remove dead scan_count update |
+| `src/pages/CustomerMenu.tsx` | Use `dynamicTableId` in order validation instead of `tableId` |
+| `src/components/admin/QRCodeManager.tsx` | Fix `PUBLISHED_URL` constant |
 
-### Auto-Sync Logic
+### Files to Create
 
-When admin creates a table:
-1. Insert into `tables` table (existing)
-2. Insert into `qr_codes` table with `metadata.table_id` and dynamic type
-3. QR Manager auto-refreshes to show the new table QR
+| File | Purpose |
+|------|---------|
+| `supabase/functions/qr-redirect/index.test.ts` | Edge function QA tests |
+| `src/components/menu/__tests__/TablePickerDialog.test.tsx` | Frontend component test |
 
-When admin deletes a table:
-1. Delete from `tables` table (existing)
-2. Soft-delete (deactivate) the matching `qr_codes` entry
-
-### Customer Table Picker Flow
+### Edge Function Fix Detail
 
 ```text
-QR Scan --> /order?r={restaurantId}
-  |
-  +--> Has table param? --> Yes --> Bind table, show menu
-  |
-  +--> No table param? --> Show table picker dialog
-                            |
-                            +--> Customer selects table
-                            |
-                            +--> Update URL to include table param
-                            |
-                            +--> Show menu with table bound
+Before (broken):
+  qrId = pathParts.last || searchParams.get("id")
+  --> "qr-redirect" || "actual-uuid" --> "qr-redirect" --> 400 error
+
+After (fixed):
+  qrId = searchParams.get("id") || pathParts.last
+  --> "actual-uuid" || "qr-redirect" --> "actual-uuid" --> works
 ```
 
-### QR URL Patterns
+### Redirect URL Fix
 
-| QR Type | URL Pattern | Behavior |
-|---------|-------------|----------|
-| Restaurant Base | `{redirect}/qr-id` --> `/order?r={id}` | Table picker shown |
-| Table-Specific | `{redirect}/qr-id` --> `/order?r={id}&table=T1` | Direct to menu |
-| Custom Campaign | `{redirect}/qr-id` --> any URL | Direct redirect |
+```text
+Before: Location: /order?r=abc&table=T1  (relative -- broken)
+After:  Location: https://qr-restaurant.lovable.app/order?r=abc&table=T1  (absolute -- works)
+```
 
-All dynamic QR codes route through the `qr-redirect` edge function for scan tracking.
+### Order Validation Fix
 
-### Implementation Order
-
-1. Update `QRCodeManager.tsx` -- add table management + auto-sync + base QR
-2. Update `AdminDashboard.tsx` -- remove Tables & QR tab, pass tables to QR Manager
-3. Update `AdminSidebar.tsx` -- remove Tables & QR nav item
-4. Update `CustomerMenu.tsx` -- add table picker dialog
-5. Update `useQRCodes.ts` -- add table QR helper
-6. Remove `QuickQRSection.tsx` (dead code)
+```text
+Before: if (!tableId || ...) -- tableId is from URL param only, empty after picker
+After:  if (!dynamicTableId || ...) -- dynamicTableId has the picker selection
+```
 
