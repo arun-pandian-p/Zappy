@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Loader2, Check, Copy, Building2, Key } from 'lucide-react';
+import { Loader2, Check, Copy, Building2, Key, Shield, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -24,6 +25,7 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
+  const [credentialMode, setCredentialMode] = useState<'auto' | 'manual'>('auto');
 
   const [form, setForm] = useState({
     name: '',
@@ -45,9 +47,16 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
       toast({ title: 'Missing Fields', description: 'Hotel name and admin email are required.', variant: 'destructive' });
       return;
     }
+    if (credentialMode === 'manual') {
+      if (!form.admin_password || form.admin_password.length < 6) {
+        toast({ title: 'Weak Password', description: 'Manual password must be at least 6 characters.', variant: 'destructive' });
+        return;
+      }
+    }
     setIsSubmitting(true);
     try {
-      const response = await supabase.functions.invoke('create-tenant', { body: form });
+      const body = credentialMode === 'auto' ? { ...form, admin_password: '' } : form;
+      const response = await supabase.functions.invoke('create-tenant', { body });
       if (response.error) throw new Error(response.error.message);
       if (response.data?.error) throw new Error(response.data.error);
 
@@ -135,15 +144,60 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
           </div>
         </div>
 
-        {/* Admin Credentials */}
+        {/* Admin Credentials - Tabbed */}
         <div>
           <h4 className="font-medium mb-3 text-sm text-muted-foreground uppercase tracking-wide">Admin Credentials</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2"><Label>Admin Email *</Label><Input type="email" value={form.admin_email} onChange={(e) => setForm({ ...form, admin_email: e.target.value })} placeholder="admin@hotel.com" /></div>
-            <div className="space-y-2"><Label>Username</Label><Input value={form.slug ? `${form.slug.replace(/-/g, '')}_admin` : ''} disabled className="bg-muted" /></div>
-            <div className="space-y-2"><Label>Password (optional)</Label><Input type="password" value={form.admin_password} onChange={(e) => setForm({ ...form, admin_password: e.target.value })} placeholder="Leave blank to auto-generate" /></div>
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">Set a custom password or leave blank to auto-generate a 12-character password.</p>
+          <Tabs value={credentialMode} onValueChange={(v) => setCredentialMode(v as 'auto' | 'manual')}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="auto" className="gap-2">
+                <Wand2 className="w-4 h-4" />
+                Auto-Generate
+              </TabsTrigger>
+              <TabsTrigger value="manual" className="gap-2">
+                <Shield className="w-4 h-4" />
+                Set Manually
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Admin Email *</Label>
+                  <Input type="email" value={form.admin_email} onChange={(e) => setForm({ ...form, admin_email: e.target.value })} placeholder="admin@hotel.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Username (auto)</Label>
+                  <Input value={form.slug ? `${form.slug.replace(/-/g, '')}_admin` : ''} disabled className="bg-muted" />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">A secure 12-character password will be auto-generated and shown after creation.</p>
+            </TabsContent>
+
+            <TabsContent value="manual">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Admin Email *</Label>
+                  <Input type="email" value={form.admin_email} onChange={(e) => setForm({ ...form, admin_email: e.target.value })} placeholder="admin@hotel.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Username (auto)</Label>
+                  <Input value={form.slug ? `${form.slug.replace(/-/g, '')}_admin` : ''} disabled className="bg-muted" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Password *</Label>
+                  <Input
+                    type="password"
+                    value={form.admin_password}
+                    onChange={(e) => setForm({ ...form, admin_password: e.target.value })}
+                    placeholder="Min 6 characters"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                You are setting the admin password manually. Make sure to share it securely.
+              </p>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div className="flex gap-2">
