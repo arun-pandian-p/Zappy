@@ -71,4 +71,40 @@ describe("TablePickerDialog", () => {
     expect(screen.getByText("T1")).toBeInTheDocument();
     expect(screen.queryByText("T2")).not.toBeInTheDocument();
   });
+
+  it("displays restaurant name in welcome message", () => {
+    render(
+      <TablePickerDialog
+        open={true}
+        tables={makeTables(1)}
+        restaurantName="My Restaurant"
+        onSelectTable={() => {}}
+      />
+    );
+    expect(screen.getByText(/Welcome to My Restaurant/)).toBeInTheDocument();
+  });
+
+  it("shows seat capacity for each table", () => {
+    render(
+      <TablePickerDialog
+        open={true}
+        tables={makeTables(1)}
+        restaurantName="Test"
+        onSelectTable={() => {}}
+      />
+    );
+    expect(screen.getByText("4 seats")).toBeInTheDocument();
+  });
+
+  it("does not render dialog content when open is false", () => {
+    render(
+      <TablePickerDialog
+        open={false}
+        tables={makeTables(2)}
+        restaurantName="Test"
+        onSelectTable={() => {}}
+      />
+    );
+    expect(screen.queryByText("Select Your Table")).not.toBeInTheDocument();
+  });
 });

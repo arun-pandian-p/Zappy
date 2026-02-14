@@ -109,6 +109,25 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
     }
   }, [isLoading, baseQR, restaurantId]);
 
+  // Auto-sync orphaned tables: create QR entries for tables missing one
+  useEffect(() => {
+    if (isLoading || tablesLoading || !restaurantId || tables.length === 0) return;
+
+    const orphaned = tables.filter(
+      (t) => !activeQRCodes.some((q) => (q.metadata as any)?.table_id === t.id)
+    );
+
+    orphaned.forEach((table) => {
+      createQR.mutate({
+        tenant_id: restaurantId,
+        qr_name: `Table ${table.table_number}`,
+        target_url: `/order?r=${restaurantId}&table=${table.table_number}`,
+        qr_type: "dynamic",
+        metadata: { table_id: table.id, table_number: table.table_number },
+      });
+    });
+  }, [isLoading, tablesLoading, tables.length, activeQRCodes.length, restaurantId]);
+
   const handleCreateCustomQR = async () => {
     if (!newQR.qr_name || !newQR.target_url) {
       toast({ title: "Missing fields", description: "Name and URL are required.", variant: "destructive" });
