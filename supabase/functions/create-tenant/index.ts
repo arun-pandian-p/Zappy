@@ -62,6 +62,9 @@ serve(async (req) => {
     const {
       name, slug, email, phone, address, cuisine_type, branch_count,
       admin_email, admin_password, logo_url, theme_color, subscription_tier,
+      description, tagline, secondary_color, accent_color, font_family,
+      button_style, table_count, avg_seating, billing_mode, kitchen_screens,
+      printer_count,
     } = body;
 
     if (!name || !admin_email) {
@@ -83,11 +86,32 @@ serve(async (req) => {
         email: email || admin_email,
         phone: phone || null,
         address: address || null,
+        description: description || null,
         logo_url: logo_url || null,
         primary_color: theme_color || "#3B82F6",
+        secondary_color: secondary_color || "#10B981",
+        font_family: font_family || "Inter",
         subscription_tier: subscription_tier || "free",
         is_active: true,
-        settings: { cuisine_type: cuisine_type || null, branch_count: branch_count || "1" },
+        settings: {
+          cuisine_type: cuisine_type || null,
+          branch_count: branch_count || "1",
+          tagline: tagline || null,
+          table_count: table_count || "10",
+          avg_seating: avg_seating || "4",
+          billing_mode: billing_mode || "saas",
+          kitchen_screens: kitchen_screens || false,
+          printer_count: printer_count || "1",
+          accent_color: accent_color || null,
+          button_style: button_style || "rounded",
+        },
+        theme_config: {
+          preset: "custom",
+          custom_primary: theme_color || "#3B82F6",
+          custom_secondary: secondary_color || "#10B981",
+          custom_font: font_family || "Inter",
+          button_style: button_style || "rounded",
+        },
       })
       .select()
       .single();
