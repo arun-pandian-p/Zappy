@@ -53,7 +53,7 @@ import { useTables, useCreateTable, useDeleteTable, type Table } from "@/hooks/u
 import { format } from "date-fns";
 
 const REDIRECT_BASE = `https://syvoshzxoedamaijongb.supabase.co/functions/v1/qr-redirect`;
-const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
+const PUBLISHED_URL = "https://qr-restaurant.lovable.app";
 
 interface QRCodeManagerProps {
   restaurantId: string;
