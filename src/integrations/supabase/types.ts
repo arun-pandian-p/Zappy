@@ -536,6 +536,39 @@ export type Database = {
           },
         ]
       }
+      landing_page_sections: {
+        Row: {
+          content_json: Json
+          created_at: string
+          display_order: number
+          id: string
+          is_visible: boolean
+          section_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content_json?: Json
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_visible?: boolean
+          section_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content_json?: Json
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_visible?: boolean
+          section_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           category_id: string | null
@@ -849,6 +882,7 @@ export type Database = {
       }
       platform_settings: {
         Row: {
+          creator_email: string | null
           email_logo_url: string | null
           favicon_url: string | null
           id: string
@@ -860,6 +894,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          creator_email?: string | null
           email_logo_url?: string | null
           favicon_url?: string | null
           id?: string
@@ -871,6 +906,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          creator_email?: string | null
           email_logo_url?: string | null
           favicon_url?: string | null
           id?: string
@@ -1223,6 +1259,39 @@ export type Database = {
           price_yearly?: number | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      super_admin_profile: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          phone: string | null
+          theme_preference: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          phone?: string | null
+          theme_preference?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          phone?: string | null
+          theme_preference?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
