@@ -40,6 +40,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 import {
   Select,
@@ -91,6 +92,9 @@ import { useOrders } from "@/hooks/useOrders";
 import { useInvoiceStats } from "@/hooks/useInvoices";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useFeatureGate, type FeatureKey, type LockReason } from "@/hooks/useFeatureGate";
+import { FeatureLockedModal } from "@/components/admin/FeatureLockedModal";
+import { Lock } from "lucide-react";
 
 // Demo restaurant ID - fallback if no restaurant in DB
 const DEMO_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
@@ -238,6 +242,27 @@ const AdminDashboard = () => {
   
   // Fetch live data
   const { data: restaurant } = useRestaurant(restaurantId);
+  const { canAccess, isLocked } = useFeatureGate(
+    restaurant?.subscription_tier,
+    restaurant?.ads_enabled
+  );
+
+  // Feature lock modal state
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+  const [lockModalFeature, setLockModalFeature] = useState("");
+  const [lockModalReason, setLockModalReason] = useState<LockReason>(null);
+
+  const handleTabChange = (tabValue: string) => {
+    const reason = isLocked(tabValue as FeatureKey);
+    if (reason) {
+      const tab = mainTabs.find(t => t.value === tabValue);
+      setLockModalFeature(tab?.label || tabValue);
+      setLockModalReason(reason);
+      setLockModalOpen(true);
+    } else {
+      setActiveTab(tabValue);
+    }
+  };
 
   // Realtime: bump preview key when restaurant/offers/menu change
   useEffect(() => {
@@ -429,7 +454,7 @@ const AdminDashboard = () => {
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full bg-muted/30">
-        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} restaurantName={(restaurant as any)?.name} restaurantLogo={(restaurant as any)?.logo_url} />
+        <AdminSidebar activeTab={activeTab} onTabChange={handleTabChange} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} restaurantName={(restaurant as any)?.name} restaurantLogo={(restaurant as any)?.logo_url} subscriptionTier={restaurant?.subscription_tier} adsEnabled={restaurant?.ads_enabled} />
 
         <SidebarInset className="flex-1">
           <AdminHeader
@@ -443,18 +468,26 @@ const AdminDashboard = () => {
           {/* Tab Navigation */}
           <div className="border-b bg-card overflow-x-auto">
             <div className="px-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList className="h-12 bg-transparent border-0 p-0 gap-4 flex-wrap">
-                  {mainTabs.map((tab) => (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 px-0"
-                    >
-                      <tab.icon className="w-4 h-4 mr-2" />
-                      {tab.label}
-                    </TabsTrigger>
-                  ))}
+                  {mainTabs.map((tab) => {
+                    const reason = isLocked(tab.value as FeatureKey);
+                    const locked = !!reason;
+                    return (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        className={cn(
+                          "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 px-0",
+                          locked && "opacity-50"
+                        )}
+                      >
+                        <tab.icon className="w-4 h-4 mr-2" />
+                        {tab.label}
+                        {locked && <Lock className="w-3 h-3 ml-1 opacity-60" />}
+                      </TabsTrigger>
+                    );
+                  })}
                 </TabsList>
               </Tabs>
             </div>
@@ -882,6 +915,14 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <FeatureLockedModal
+              open={lockModalOpen}
+              onOpenChange={setLockModalOpen}
+              featureName={lockModalFeature}
+              lockReason={lockModalReason}
+              onGoToSettings={() => setActiveTab("settings")}
+            />
           </main>
         </SidebarInset>
       </div>
