@@ -1,21 +1,74 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Save, Loader2, User, Upload, X, ImageIcon } from 'lucide-react';
+import { Save, Loader2, User, Upload, X, ImageIcon, Plus, Trash2, Users, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useSuperAdminProfile } from '@/hooks/useSuperAdminProfile';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const EMOJI_AVATARS = ['👨‍💼', '👩‍💼', '🧑‍💻', '👨‍🍳', '🦸', '🧙', '🎭', '🤖'];
+
+interface TeamMember {
+  user_id: string;
+  email: string;
+  name: string | null;
+  created_at: string;
+}
+
+function useTeamMembers() {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['super-admin-team'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('manage-super-admins', {
+        body: { action: 'list' },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return (data?.members || []) as TeamMember[];
+    },
+  });
+
+  const addMember = useMutation({
+    mutationFn: async ({ email, name }: { email: string; name?: string }) => {
+      const { data, error } = await supabase.functions.invoke('manage-super-admins', {
+        body: { action: 'add', email, name },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['super-admin-team'] }),
+  });
+
+  const removeMember = useMutation({
+    mutationFn: async (user_id: string) => {
+      const { data, error } = await supabase.functions.invoke('manage-super-admins', {
+        body: { action: 'remove', user_id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['super-admin-team'] }),
+  });
+
+  return { members: query.data || [], isLoading: query.isLoading, addMember, removeMember };
+}
 
 export function SuperAdminProfileEditor() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { profile, isLoading, upsertProfile } = useSuperAdminProfile();
+  const { members, isLoading: teamLoading, addMember, removeMember } = useTeamMembers();
 
   const [form, setForm] = useState({
     display_name: '',
@@ -26,6 +79,8 @@ export function SuperAdminProfileEditor() {
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [newEmail, setNewEmail] = useState('');
+  const [isAddingMember, setIsAddingMember] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -48,7 +103,6 @@ export function SuperAdminProfileEditor() {
       toast({ title: 'File too large', description: 'Maximum file size is 5MB.', variant: 'destructive' });
       return;
     }
-
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
@@ -59,22 +113,10 @@ export function SuperAdminProfileEditor() {
     reader.readAsDataURL(file);
   }, [toast]);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
+  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }, []);
+  const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }, []);
   const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
+    e.preventDefault(); e.stopPropagation(); setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     if (file) handleFileSelect(file);
   }, [handleFileSelect]);
@@ -92,33 +134,45 @@ export function SuperAdminProfileEditor() {
   };
 
   const handleSave = () => {
-    const avatarUrl = selectedEmoji
-      ? `emoji:${selectedEmoji}`
-      : form.avatar_url;
-
+    const avatarUrl = selectedEmoji ? `emoji:${selectedEmoji}` : form.avatar_url;
     upsertProfile.mutate(
       { ...form, avatar_url: avatarUrl },
       {
-        onSuccess: () => {
-          toast({ title: 'Profile Updated', description: 'Your profile has been saved.' });
-          setSelectedEmoji(null);
-          setPreviewUrl(null);
-        },
+        onSuccess: () => { toast({ title: 'Profile Updated', description: 'Your profile has been saved.' }); setSelectedEmoji(null); setPreviewUrl(null); },
         onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
       }
     );
   };
 
+  const handleAddTeamMember = async () => {
+    if (!newEmail || !newEmail.includes('@')) {
+      toast({ title: 'Invalid Email', description: 'Please enter a valid email address.', variant: 'destructive' });
+      return;
+    }
+    setIsAddingMember(true);
+    try {
+      await addMember.mutateAsync({ email: newEmail });
+      toast({ title: 'Team Member Added', description: `${newEmail} has been granted Super Admin access.` });
+      setNewEmail('');
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
+  const handleRemoveMember = async (userId: string, email: string) => {
+    try {
+      await removeMember.mutateAsync(userId);
+      toast({ title: 'Removed', description: `${email} has been removed from the team.` });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+  };
+
   if (isLoading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>;
 
-  const displayAvatar = previewUrl
-    ? previewUrl
-    : selectedEmoji
-      ? null
-      : form.avatar_url?.startsWith('emoji:')
-        ? null
-        : form.avatar_url || null;
-
+  const displayAvatar = previewUrl ? previewUrl : selectedEmoji ? null : form.avatar_url?.startsWith('emoji:') ? null : form.avatar_url || null;
   const displayEmoji = selectedEmoji || (form.avatar_url?.startsWith('emoji:') ? form.avatar_url.replace('emoji:', '') : null);
 
   return (
@@ -131,6 +185,7 @@ export function SuperAdminProfileEditor() {
         <p className="text-sm text-muted-foreground">Customize your identity on the platform.</p>
       </div>
 
+      {/* Avatar Card */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Avatar</CardTitle>
@@ -138,45 +193,29 @@ export function SuperAdminProfileEditor() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-start gap-6">
-            {/* Avatar Preview */}
             <div className="relative group">
               <Avatar className="w-24 h-24">
-                {displayAvatar ? (
-                  <AvatarImage src={displayAvatar} />
-                ) : null}
+                {displayAvatar ? <AvatarImage src={displayAvatar} /> : null}
                 <AvatarFallback className="bg-primary/10 text-primary text-3xl">
                   {displayEmoji || (form.display_name?.charAt(0) || 'SA')}
                 </AvatarFallback>
               </Avatar>
               {(displayAvatar || displayEmoji) && (
-                <button
-                  onClick={clearAvatar}
-                  className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
+                <button onClick={clearAvatar} className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <X className="w-3 h-3" />
                 </button>
               )}
             </div>
-
-            {/* Drag & Drop Zone */}
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
               className={`flex-1 border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                isDragging
-                  ? 'border-primary bg-primary/5 scale-[1.02]'
-                  : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50'
+                isDragging ? 'border-primary bg-primary/5 scale-[1.02]' : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50'
               }`}
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileInputChange}
-                className="hidden"
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileInputChange} className="hidden" />
               <div className="flex flex-col items-center gap-2">
                 {isDragging ? (
                   <>
@@ -194,7 +233,6 @@ export function SuperAdminProfileEditor() {
             </div>
           </div>
 
-          {/* URL Input */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Or enter an image URL</Label>
             <Input
@@ -204,7 +242,6 @@ export function SuperAdminProfileEditor() {
             />
           </div>
 
-          {/* Emoji Picker */}
           <div>
             <Label className="text-xs text-muted-foreground mb-2 block">Or pick an emoji avatar</Label>
             <div className="flex gap-2 flex-wrap">
@@ -224,6 +261,7 @@ export function SuperAdminProfileEditor() {
         </CardContent>
       </Card>
 
+      {/* Profile Details Card */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Profile Details</CardTitle>
@@ -252,6 +290,76 @@ export function SuperAdminProfileEditor() {
         {upsertProfile.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
         Save Profile
       </Button>
+
+      {/* Team Management Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            Team Login Management
+          </CardTitle>
+          <CardDescription>Add or remove Super Admin team members by email address.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Add member */}
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="Enter email address to add..."
+                className="pl-9"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddTeamMember()}
+              />
+            </div>
+            <Button onClick={handleAddTeamMember} disabled={isAddingMember || !newEmail}>
+              {isAddingMember ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+              Add
+            </Button>
+          </div>
+
+          {/* Team members list */}
+          {teamLoading ? (
+            <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin" /></div>
+          ) : members.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No team members found.</p>
+          ) : (
+            <div className="space-y-2">
+              {members.map((member) => (
+                <div key={member.user_id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-9 h-9">
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                        {member.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">{member.name || member.email?.split('@')[0]}</p>
+                      <p className="text-xs text-muted-foreground">{member.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {member.user_id === user?.id ? (
+                      <Badge variant="secondary" className="text-xs">You</Badge>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleRemoveMember(member.user_id, member.email)}
+                        disabled={removeMember.isPending}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
