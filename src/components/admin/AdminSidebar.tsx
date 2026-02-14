@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard,
   UtensilsCrossed,
-  Grid3X3,
+  
   Settings,
   LogOut,
   ClipboardList,
@@ -43,7 +43,7 @@ interface NavItem {
 const allNavItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
   { title: "Menu", icon: UtensilsCrossed, value: "menu" },
-  { title: "Tables & QR", icon: Grid3X3, value: "tables" },
+  
   { title: "QR Manager", icon: QrCode, value: "qr-manager" },
   { title: "Orders", icon: ClipboardList, value: "orders" },
   { title: "Kitchen", icon: ChefHat, value: "kitchen" },
