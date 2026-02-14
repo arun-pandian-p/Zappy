@@ -1,116 +1,165 @@
 
 
-# Upgrade Landing Page with Real Menu Data and Full Responsiveness
+# Extend POS Billing with Sync API, Split Payments, and Enhanced Analytics
 
-## Overview
+## Current State
 
-Update the landing page to use real menu items from `mockData.ts` instead of hardcoded demo data, enhance the phone mockup in the ProductDemo section to reflect the actual customer UI, and fix responsiveness across all landing page sections and key app screens.
+The BillingCounter already implements most of the requested features:
+- Order cards with table badges, customer metadata, item summaries, and time-ago timestamps
+- Table filter badges with order counts
+- Invoice preview with quantity chips, metadata badges, discount buttons, and calculation engine
+- Expandable history rows with full itemized breakdowns
+- Analytics tab with revenue, invoice count, average value, and payment method breakdown
+- Thermal receipt printing (ESC/POS via Bluetooth/USB) with kitchen order support
+- Dynamic pay button showing amount and payment method
 
----
+## What Needs to Be Added
 
-## 1. ProductDemo -- Use Real Menu Data
+### 1. Push Invoice Edge Function (ERPNext Sync API)
 
-**File**: `src/components/landing/ProductDemo.tsx`
+Create a new edge function `push-invoice` that accepts invoice data and forwards it to an external ERPNext instance. This enables the `Lovable QR SaaS -> ERPNext Backend -> POS Awesome` architecture described in the spec.
 
-Currently the phone mockup has 4 hardcoded menu items (Butter Chicken, Paneer Tikka, etc.). This will be replaced with items imported from `src/data/mockData.ts` and rendered with the same card style used in the real customer menu.
+**File**: `supabase/functions/push-invoice/index.ts`
 
-Changes:
-- Import `menuItems` and `categories` from `@/data/mockData`
-- Render the first 4 available items dynamically with their real names, prices, images (thumbnail from Unsplash URLs), and category tags (Veg badge for vegetarian items, "Popular" for selected items)
-- Add interactive category pills pulled from real categories data
-- Show a mini cart bar at the bottom that updates item count/total from the displayed items
-- Match the visual style to the actual `FoodCard` / `MenuItemRow` components (green Veg badge, blue add button, proper typography)
+- Accepts POST with invoice payload (table_no, customer, phone, items, discount)
+- Validates the request and checks auth
+- Stores the sync attempt in a new `invoice_sync_log` table for audit
+- Forwards data to an ERPNext endpoint (URL configurable via secret `ERPNEXT_URL`)
+- Returns success/failure status
 
-## 2. DashboardCarousel -- Richer Mock Content
+### 2. Invoice Sync Log Table
 
-**File**: `src/components/landing/DashboardCarousel.tsx`
+New database table `invoice_sync_log` to track sync attempts:
 
-Update the carousel mock rows to use real order data from `mockData.ts` for the Order Management slide, and real menu item names for the Kitchen Display slide, making the demo feel authentic.
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| invoice_id | uuid | FK to invoices |
+| restaurant_id | uuid | |
+| payload | jsonb | What was sent |
+| status | text | pending/success/failed |
+| response | jsonb | ERPNext response |
+| error_message | text | |
+| created_at | timestamptz | |
 
-## 3. HeroSection -- Responsive Improvements
+RLS: Restaurant staff can view their own sync logs.
 
-**File**: `src/components/landing/HeroSection.tsx`
+### 3. Split Payment Support
 
-- Reduce floating element sizes on mobile (hidden on small screens to reduce clutter)
-- Adjust heading font sizes: `text-3xl` on mobile instead of `text-4xl`
-- Make CTA buttons full-width on mobile (`w-full sm:w-auto`)
-- Reduce QR code preview padding on mobile
-- Lower the `min-h` to `min-h-[80vh]` on mobile to avoid excessive whitespace
+Add split payment capability to the billing flow. A customer can pay part cash, part UPI, part card.
 
-## 4. FeaturesSection -- Responsive Grid
+**Changes to `BillingCounter.tsx`**:
+- Add a "Split" payment method option alongside Cash/UPI/Card
+- When "Split" is selected, show a split payment panel with amount fields for each method
+- Validate that split amounts sum to the total
+- Store split details in invoice `notes` field as structured text
 
-**File**: `src/components/landing/FeaturesSection.tsx`
+**New component**: `src/components/billing/SplitPaymentPanel.tsx`
+- Three input fields (Cash, UPI, Card) with remaining amount calculation
+- Real-time validation showing remaining balance
+- Auto-fill button to assign remaining to a method
 
-- Change grid to `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3` (currently jumps from 1 to 2 to 3 correctly, but icon sizes and padding need mobile optimization)
-- Reduce section padding on mobile: `py-16 md:py-24`
+### 4. Auto-Refresh Revenue Stats
 
-## 5. PricingSection -- Mobile Card Stack
+Add a 60-second polling interval to the header revenue stat and analytics tab.
 
-**File**: `src/components/landing/PricingSection.tsx`
+**Changes to `BillingCounter.tsx`**:
+- Add `refetchInterval: 60000` to the `useInvoiceStats` and `useTodayInvoices` query options
+- Add a subtle pulse animation on the revenue badge when it updates
 
-- On mobile, cards stack vertically with the "Popular" card first (reorder with `order-first` on mobile)
-- Remove the `scale-105` on the popular card at mobile breakpoint to prevent overflow
-- Reduce padding: `py-16 md:py-24`
+### 5. Enhanced Analytics - Discount Tracking
 
-## 6. TestimonialsSection -- Mobile Scroll Fix
+Add a "Discount Given" stat card to both the History and Analytics tabs.
 
-**File**: `src/components/landing/TestimonialsSection.tsx`
+**Changes to `useInvoices.ts`**:
+- Extend `useInvoiceStats` to also compute `totalDiscount` from `SUM(discount_amount)`
 
-- Reduce card width on mobile: `w-[280px] sm:w-[340px]`
-- Reduce section padding on mobile
+**Changes to `BillingCounter.tsx`**:
+- Add a 4th stat card in History tab showing total discount given today
+- Add Wallet as a 4th payment method option (stored as `wallet` in payment_method)
 
-## 7. HowItWorks -- Mobile Timeline Fix
+### 6. Kitchen Ticket Auto-Print on Order Accept
 
-**File**: `src/components/landing/HowItWorks.tsx`
+When an order transitions to "preparing", automatically trigger a kitchen ticket print if a printer is connected.
 
-- On mobile, all steps should align left (currently the alternating layout breaks on small screens)
-- Remove `flex-row-reverse` on mobile: keep `flex-row` always on mobile, alternate only on `md:`
-- Reduce section padding on mobile
-
-## 8. CTABanner -- Responsive Text
-
-**File**: `src/components/landing/CTABanner.tsx`
-
-- Reduce heading to `text-2xl md:text-3xl lg:text-5xl`
-- Full-width buttons on mobile
-- Reduce section padding on mobile: `py-16 md:py-24`
-
-## 9. Landing Header -- Mobile Menu Polish
-
-**File**: `src/pages/LandingPage.tsx`
-
-- Show brand name on all screen sizes (remove `hidden sm:block` from the logo text)
-- Ensure mobile menu has proper spacing and touch targets
-
-## 10. CustomerMenu -- Responsive Grid Fix
-
-**File**: `src/pages/CustomerMenu.tsx`
-
-- Ensure the food card grid uses `grid-cols-2` on mobile and scales up properly
-- This is already mostly correct but verify the search bar and category slider don't overflow on small screens
+**Changes to `KitchenDashboard.tsx`**:
+- After `startPreparing` succeeds, call `printKitchenOrder` from `usePrinter` if connected
+- Show a toast confirming the KOT was printed
 
 ---
 
 ## Technical Details
 
-### Files Modified
+### Files to Create
 
-| File | Change Summary |
-|------|---------------|
-| `src/components/landing/ProductDemo.tsx` | Import real menu data, render dynamic items with images and badges, interactive category pills |
-| `src/components/landing/DashboardCarousel.tsx` | Use real mock order/menu data in carousel slides |
-| `src/components/landing/HeroSection.tsx` | Mobile-first responsive sizing for text, buttons, floating elements |
-| `src/components/landing/FeaturesSection.tsx` | Mobile padding reduction |
-| `src/components/landing/PricingSection.tsx` | Mobile card stacking, remove scale on mobile |
-| `src/components/landing/TestimonialsSection.tsx` | Smaller card width on mobile |
-| `src/components/landing/HowItWorks.tsx` | Fix mobile timeline alignment |
-| `src/components/landing/CTABanner.tsx` | Responsive text and button sizing |
-| `src/pages/LandingPage.tsx` | Show brand name on mobile |
+| File | Purpose |
+|------|---------|
+| `supabase/functions/push-invoice/index.ts` | Edge function for ERPNext sync |
+| `src/components/billing/SplitPaymentPanel.tsx` | Split payment UI component |
 
-### No New Files Created
+### Files to Modify
 
-All changes are modifications to existing components.
+| File | Changes |
+|------|---------|
+| `src/pages/BillingCounter.tsx` | Add split payment mode, wallet payment, auto-refresh, discount stat card |
+| `src/hooks/useInvoices.ts` | Add `totalDiscount` to stats, add `refetchInterval` support |
+| `src/pages/KitchenDashboard.tsx` | Auto-print KOT on order accept |
+| `supabase/config.toml` | Add `push-invoice` function config with `verify_jwt = false` |
 
-### Data Source
+### Database Migration
 
-Real menu items come from `src/data/mockData.ts` which contains 12 items across 6 categories with Unsplash image URLs, prices, and dietary flags -- all used to populate the landing page demo sections.
+```sql
+CREATE TABLE invoice_sync_log (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  invoice_id uuid NOT NULL,
+  restaurant_id uuid NOT NULL,
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  status text NOT NULL DEFAULT 'pending',
+  response jsonb,
+  error_message text,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE invoice_sync_log ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Restaurant staff can view sync logs"
+  ON invoice_sync_log FOR SELECT
+  USING (restaurant_id = get_user_restaurant_id(auth.uid()));
+
+CREATE POLICY "Restaurant staff can insert sync logs"
+  ON invoice_sync_log FOR INSERT
+  WITH CHECK (restaurant_id = get_user_restaurant_id(auth.uid()));
+```
+
+### Push Invoice Edge Function Payload
+
+```json
+{
+  "invoice_id": "uuid",
+  "table_no": "12",
+  "customer": "Arun",
+  "phone": "9xxxxxxx21",
+  "items": [
+    { "item_code": "FR", "qty": 2, "rate": 120, "name": "Fried Rice" }
+  ],
+  "subtotal": 420,
+  "tax": 42,
+  "service_charge": 21,
+  "discount": 10,
+  "total": 473,
+  "payment_method": "upi"
+}
+```
+
+### Split Payment Data Model
+
+When split payment is used, the invoice `payment_method` is set to `"split"` and the `notes` field stores the breakdown:
+
+```
+Split: Cash ₹500 + UPI ₹420 + Card ₹500
+```
+
+### Secret Required
+
+The `push-invoice` edge function needs an `ERPNEXT_URL` secret to know where to forward invoices. This will be requested from the user before deploying the function. If not configured, the sync simply logs the attempt locally without forwarding.
+
