@@ -60,10 +60,13 @@ const plans = [
 
 interface PricingSectionProps {
   onSelectPlan: (plan: string) => void;
+  cms?: Record<string, any>;
 }
 
-const PricingSection = ({ onSelectPlan }: PricingSectionProps) => {
+const PricingSection = ({ onSelectPlan, cms }: PricingSectionProps) => {
   const [yearly, setYearly] = useState(false);
+  const heading = cms?.heading || 'Simple, Transparent Pricing';
+  const subheading = cms?.subheading || 'Choose the plan that fits your restaurant. No hidden fees, cancel anytime.';
 
   return (
     <section className="py-16 md:py-24 bg-muted/30">
@@ -76,17 +79,9 @@ const PricingSection = ({ onSelectPlan }: PricingSectionProps) => {
           className="text-center mb-12"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Simple,{' '}
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Transparent
-            </span>{' '}
-            Pricing
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{heading}</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Choose the plan that fits your restaurant. No hidden fees, cancel anytime.
-          </p>
-
-          {/* Toggle */}
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">{subheading}</p>
           <div className="inline-flex items-center gap-3 bg-card border rounded-full px-1 py-1">
             <button
               onClick={() => setYearly(false)}

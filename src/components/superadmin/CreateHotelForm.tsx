@@ -57,7 +57,11 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
     try {
       const body = credentialMode === 'auto' ? { ...form, admin_password: '' } : form;
       const response = await supabase.functions.invoke('create-tenant', { body });
-      if (response.error) throw new Error(response.error.message);
+      if (response.error) {
+        // Try to extract the actual error message from the response data
+        const detail = response.data?.error || response.error.message;
+        throw new Error(detail);
+      }
       if (response.data?.error) throw new Error(response.data.error);
 
       setCredentials(response.data.credentials);

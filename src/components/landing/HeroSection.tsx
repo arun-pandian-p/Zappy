@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 interface HeroSectionProps {
   onGetStarted: () => void;
   onScanDemo: () => void;
+  cms?: Record<string, any>;
 }
 
 const floatAnimation = (delay: number, duration: number = 6) => ({
@@ -25,7 +26,12 @@ const GlassPanel = ({ children, className = '', delay = 0 }: { children: React.R
   </motion.div>
 );
 
-const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
+const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
+  const badgeText = cms?.badge_text || 'QR-Powered Dining Experience';
+  const title = cms?.title || 'Scan. Order. Serve. Scale.';
+  const subtitle = cms?.subtitle || 'Let customers scan, browse menus, place orders, and get billed instantly — powered by real-time kitchen sync and automated POS integration.';
+  const ctaText = cms?.cta_text || 'Get Started Free';
+
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden">
       {/* Warm cinematic gradient background */}
@@ -74,22 +80,30 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-6"
             >
               <Sparkles className="w-4 h-4 text-orange-500" />
-              <span className="text-sm font-medium text-orange-600 dark:text-orange-400">QR-Powered Dining Experience</span>
+              <span className="text-sm font-medium text-orange-600 dark:text-orange-400">{badgeText}</span>
             </motion.div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 leading-[1.1]">
-              <span className="bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
-                Scan.{' '}
-              </span>
-              <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
-                Order.{' '}
-              </span>
-              <span className="bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent">
-                Serve.{' '}
-              </span>
-              <span className="bg-gradient-to-r from-foreground/80 to-foreground/60 bg-clip-text text-transparent">
-                Scale.
-              </span>
+              {cms?.title ? (
+                <span className="bg-gradient-to-r from-foreground via-orange-500 to-foreground/70 bg-clip-text text-transparent">
+                  {title}
+                </span>
+              ) : (
+                <>
+                  <span className="bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
+                    Scan.{' '}
+                  </span>
+                  <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+                    Order.{' '}
+                  </span>
+                  <span className="bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent">
+                    Serve.{' '}
+                  </span>
+                  <span className="bg-gradient-to-r from-foreground/80 to-foreground/60 bg-clip-text text-transparent">
+                    Scale.
+                  </span>
+                </>
+              )}
             </h1>
 
             <p className="text-xl md:text-2xl font-semibold text-orange-600 dark:text-orange-400 mb-4">
@@ -97,7 +111,7 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
             </p>
 
             <p className="text-lg text-muted-foreground max-w-xl mb-8">
-              Let customers scan, browse menus, place orders, and get billed instantly — powered by real-time kitchen sync and automated POS integration.
+              {subtitle}
             </p>
 
             <div className="flex flex-col sm:flex-row items-start gap-3">
@@ -106,7 +120,7 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
                 className="w-full sm:w-auto px-8 py-6 text-lg rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg shadow-orange-500/25 group"
                 onClick={onGetStarted}
               >
-                Get Started Free
+                {ctaText}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button
@@ -131,7 +145,6 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
 
           {/* Right - Floating Glass Panels */}
           <div className="relative h-[420px] md:h-[500px] hidden lg:block">
-            {/* Order Card Panel */}
             <GlassPanel className="absolute top-4 left-8 w-56 p-4" delay={0}>
               <div className="flex items-center gap-2 mb-3">
                 <UtensilsCrossed className="w-4 h-4 text-orange-400" />
@@ -146,7 +159,6 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
               ))}
             </GlassPanel>
 
-            {/* Revenue Chip */}
             <GlassPanel className="absolute top-2 right-4 px-5 py-3" delay={0.2}>
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
@@ -155,7 +167,6 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
               </div>
             </GlassPanel>
 
-            {/* QR Scan Box */}
             <GlassPanel className="absolute bottom-16 left-16 w-28 h-28 flex items-center justify-center" delay={0.4}>
               <div className="relative">
                 <div className="absolute inset-0 rounded-full bg-orange-400/30 blur-xl animate-pulse-ring" />
@@ -163,7 +174,6 @@ const HeroSection = ({ onGetStarted, onScanDemo }: HeroSectionProps) => {
               </div>
             </GlassPanel>
 
-            {/* Receipt Panel */}
             <GlassPanel className="absolute bottom-8 right-8 w-44 p-3" delay={0.6}>
               <div className="flex items-center gap-2 mb-2">
                 <Receipt className="w-3.5 h-3.5 text-orange-400" />
