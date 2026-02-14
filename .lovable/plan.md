@@ -1,200 +1,124 @@
 
 
-# QR Generator System -- Hosted Subdomain SaaS Enhancement
+# Sync QR Manager with Table QR System
 
-## What Already Exists
+## Problem
 
-Your app already has a strong multi-tenant foundation:
-- Restaurant management with tenant isolation (restaurant_id on all tables)
-- Table-based QR code generation (QuickQRSection component)
-- Customer menu loaded via QR scan (/order?r=ID&table=N)
-- Admin and Super Admin dashboards
-- Analytics events tracking
+The app currently has two disconnected QR systems:
 
-## What This Plan Adds
+1. **Tables & QR tab** -- generates per-table QR codes with direct URLs like `/order?r={id}&table=T1`, but these are NOT stored in the `qr_codes` database table, so they have no scan tracking or management.
+2. **QR Manager tab** -- uses the `qr_codes` table for full CRUD and analytics, but has no concept of tables.
 
-The PDR identifies several gaps to turn this into a full QR SaaS platform. Here is the implementation plan:
-
----
-
-## Phase 1: Database -- New Tables
-
-### 1.1 `qr_codes` Table
-Dedicated QR code management separate from tables, supporting dynamic/static QR, scan tracking, and expiration.
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID | Primary key |
-| tenant_id | UUID | References restaurants |
-| qr_name | TEXT | Label for the QR |
-| target_url | TEXT | Destination URL |
-| qr_type | TEXT | 'static' or 'dynamic' |
-| scan_count | INTEGER | Auto-incremented on scan |
-| expires_at | TIMESTAMPTZ | Optional expiry |
-| is_active | BOOLEAN | Default true |
-| metadata | JSONB | Logo, colors, frame config |
-| created_at | TIMESTAMPTZ | |
-
-RLS: Restaurant staff can manage their own QR codes. Public can view active QR codes for redirect resolution.
-
-### 1.2 `scan_analytics` Table
-Tracks every QR scan with device/geo data.
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID | Primary key |
-| qr_id | UUID | References qr_codes |
-| tenant_id | UUID | References restaurants |
-| scanned_at | TIMESTAMPTZ | Default now() |
-| device | TEXT | Mobile/Desktop/Tablet |
-| country | TEXT | From IP geolocation |
-| city | TEXT | From IP geolocation |
-| user_agent | TEXT | Raw UA string |
-| referrer | TEXT | Where scan originated |
-
-RLS: Anyone can INSERT (scans are anonymous). Restaurant staff can SELECT their own analytics.
-
-### 1.3 `pages` Table
-Content pages per tenant (menu, landing, custom).
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID | Primary key |
-| tenant_id | UUID | References restaurants |
-| page_slug | TEXT | e.g., /menu, /landing |
-| page_type | TEXT | 'menu', 'landing', 'custom' |
-| content_json | JSONB | Layout/content data |
-| is_published | BOOLEAN | Default false |
-| created_at | TIMESTAMPTZ | |
-| updated_at | TIMESTAMPTZ | |
-
-RLS: Restaurant staff can manage their pages. Public can view published pages for active restaurants.
+The PDR requires a unified system where:
+- The restaurant has a **single base QR URL** (same QR for the restaurant)
+- Table selection happens **dynamically** (via URL param or a table picker UI after scanning)
+- All QR scans are tracked in `scan_analytics`
 
 ---
 
-## Phase 2: QR Scan Redirect Edge Function
+## Solution: Unified QR System
 
-### `supabase/functions/qr-redirect/index.ts`
-- Accepts QR code ID as path parameter
-- Looks up the QR code's target_url
-- Logs scan analytics (device from User-Agent, IP for geo)
-- Returns 302 redirect to target_url
-- Handles expired/inactive QR codes with a friendly error page
-- Config: `verify_jwt = false` (public endpoint)
+### 1. Merge "Tables & QR" into "QR Manager"
 
-URL pattern: `https://{project}.supabase.co/functions/v1/qr-redirect/{qr_id}`
+Remove the separate "Tables & QR" tab. Move table CRUD (add/delete/list) into the QR Manager tab as a sub-section. The QR Manager becomes the single source of truth for all QR codes.
 
-Dynamic QR codes resolve through this function. Static QR codes point directly to the tenant URL.
+### 2. Auto-Generate Table QR Codes
 
----
+When a table is created, automatically create a corresponding entry in the `qr_codes` table with:
+- `qr_name`: "Table {number}"
+- `target_url`: `/order?r={restaurantId}&table={tableNumber}`
+- `qr_type`: "dynamic" (so scans go through the redirect function and get tracked)
+- `metadata`: `{ table_id: "{uuid}", table_number: "{number}" }`
 
-## Phase 3: Enhanced QR Generator (Admin Panel)
+When a table is deleted, deactivate its corresponding QR code.
 
-### 3.1 New Component: `src/components/admin/QRCodeManager.tsx`
-Replaces/extends the current "Tables & QR" tab with a full QR management system:
+### 3. Restaurant Base QR Code
 
-- **QR List View**: Table showing all QR codes with name, target URL, scan count, status, created date
-- **Create QR Dialog**: Form with name, target URL, type (static/dynamic), optional expiry
-- **QR Design Customization**:
-  - Logo embed (upload restaurant logo into QR center)
-  - Color picker for QR foreground/background
-  - Frame text (e.g., "Scan to Order")
-  - Shape style selection (squares, dots, rounded)
-- **Bulk QR Generator**: Upload CSV with columns (name, target_url) to create multiple QR codes at once
-- **Download Options**: PNG (high-res 512px) and SVG export per QR code
-- **Analytics Preview**: Mini chart showing scan count trend per QR code
+Add a "Restaurant QR" -- a single QR code that points to the restaurant menu WITHOUT a table parameter. When scanned:
+- The customer lands on `/order?r={restaurantId}` (already works in preview mode)
+- A table picker UI appears asking "Select your table" before ordering
 
-### 3.2 New Hook: `src/hooks/useQRCodes.ts`
-- `useQRCodes(restaurantId)` -- fetch all QR codes
-- `useCreateQRCode()` -- create new QR
-- `useUpdateQRCode()` -- update target URL, design
-- `useDeleteQRCode()` -- soft delete
-- `useQRScanAnalytics(qrId)` -- fetch scan data for a specific QR
+This satisfies the PDR requirement: **Same QR, dynamic table selection**.
 
-### 3.3 Update AdminSidebar
-- Rename "Tables & QR" to "QR Codes" or add a separate "QR Manager" nav item
-- Keep table management as a sub-section within the tab
+### 4. Table Picker on Customer Menu
+
+Update `CustomerMenu.tsx` so when a customer arrives via QR without a `table` param:
+- Show a table selection dialog (not just preview mode)
+- Once selected, bind the table to the session
+- The customer can then place orders normally
+
+### 5. Update QR Manager UI
+
+The QR Manager tab will show:
+- **Restaurant Base QR** card at the top (single QR for the whole restaurant)
+- **Table QR Codes** section showing auto-generated QR codes per table (linked to tables)
+- **Custom QR Codes** section for any manually created QR codes (campaigns, etc.)
+- Table management (add/delete) integrated as a sub-section
+- Scan analytics below everything (already there)
 
 ---
 
-## Phase 4: Scan Analytics Dashboard
+## Technical Details
 
-### New Component: `src/components/analytics/QRScanAnalytics.tsx`
-Added to the admin Dashboard tab:
+### Files to Modify
 
-- **Scan Volume Chart**: Line chart showing scans over time (daily/weekly)
-- **Device Breakdown**: Pie chart (Mobile vs Desktop vs Tablet)
-- **Top QR Codes**: Ranked list by scan count
-- **Geographic Distribution**: Table showing top cities/countries
-- **Scan Heatmap**: Hourly heatmap showing peak scan times
+| File | Changes |
+|------|---------|
+| `src/pages/AdminDashboard.tsx` | Remove "Tables & QR" tab, merge table CRUD into QR Manager tab. Remove `tables` from mainTabs array. Pass `tables` data to QRCodeManager. |
+| `src/components/admin/QRCodeManager.tsx` | Add table management section (add/delete tables). Add "Restaurant Base QR" card. Show table-linked QR codes separately from custom ones. Auto-create QR codes when tables are added. |
+| `src/components/admin/AdminSidebar.tsx` | Remove "Tables & QR" nav item (keep QR Manager). |
+| `src/pages/CustomerMenu.tsx` | Replace "preview mode" with a table picker dialog when no table param is present. Bind selected table to session. |
+| `src/hooks/useQRCodes.ts` | Add a helper to find/create a QR code for a given table. |
 
----
+### Files to Remove (no longer needed separately)
 
-## Phase 5: Subdomain Architecture (Documentation + Config)
-
-Since this is a Vite SPA deployed on Lovable/Vercel, true wildcard subdomain routing requires DNS and server-side configuration that cannot be done purely in the frontend. The plan:
-
-### 5.1 Tenant Resolver Middleware
-- Update `CustomerMenu.tsx` to also accept a `slug` parameter: `/order?slug=hotel123`
-- QR codes can generate URLs like `yourdomain.com/order?slug=hotel123&table=1`
-- This achieves the same tenant isolation without needing wildcard DNS
-
-### 5.2 For Future Subdomain Support
-- Document the Nginx/Vercel wildcard configuration in a `DEPLOYMENT.md` file
-- The app already resolves tenants by `restaurant_id`; adding slug-based resolution makes it subdomain-ready
-- When deployed on a VPS with wildcard DNS, the same resolver logic applies
-
-### 5.3 Update `vercel.json`
-- No changes needed -- the existing SPA rewrite already handles all routes
-
----
-
-## Phase 6: Security Enhancements
-
-### 6.1 QR Link Signing (Dynamic QR)
-- Dynamic QR redirect URLs include a short HMAC signature
-- The `qr-redirect` edge function validates the signature before redirecting
-- Prevents URL tampering on dynamic QR codes
-
-### 6.2 Rate Limiting on Scan Endpoint
-- Add basic rate limiting in the `qr-redirect` function (e.g., max 100 scans/minute per IP)
-- Prevents scan count inflation attacks
-
----
-
-## Files to Create
-
-| File | Purpose |
-|------|-------|
-| `src/hooks/useQRCodes.ts` | CRUD hooks for qr_codes table |
-| `src/components/admin/QRCodeManager.tsx` | Full QR management panel |
-| `src/components/analytics/QRScanAnalytics.tsx` | Scan analytics dashboard |
-| `supabase/functions/qr-redirect/index.ts` | Dynamic QR redirect + analytics logging |
-
-## Files to Modify
-
-| File | Change |
+| File | Reason |
 |------|--------|
-| `src/pages/AdminDashboard.tsx` | Add QR Manager tab, scan analytics to dashboard |
-| `src/components/admin/AdminSidebar.tsx` | Add "QR Manager" nav item |
-| `src/pages/CustomerMenu.tsx` | Add slug-based tenant resolution |
-| `supabase/config.toml` | Add qr-redirect function config |
+| `src/components/admin/QuickQRSection.tsx` | Functionality merged into QRCodeManager |
 
-## Database Migration
+### Auto-Sync Logic
 
-One migration with:
-- CREATE TABLE qr_codes (with RLS policies)
-- CREATE TABLE scan_analytics (with RLS policies)
-- CREATE TABLE pages (with RLS policies)
-- Enable realtime on qr_codes and scan_analytics
+When admin creates a table:
+1. Insert into `tables` table (existing)
+2. Insert into `qr_codes` table with `metadata.table_id` and dynamic type
+3. QR Manager auto-refreshes to show the new table QR
 
-## Implementation Order
+When admin deletes a table:
+1. Delete from `tables` table (existing)
+2. Soft-delete (deactivate) the matching `qr_codes` entry
 
-1. Database migration (3 new tables + RLS)
-2. QR redirect edge function
-3. useQRCodes hook
-4. QRCodeManager component (admin panel)
-5. QR Scan Analytics component
-6. Wire into AdminDashboard and sidebar
-7. Update CustomerMenu for slug-based resolution
+### Customer Table Picker Flow
+
+```text
+QR Scan --> /order?r={restaurantId}
+  |
+  +--> Has table param? --> Yes --> Bind table, show menu
+  |
+  +--> No table param? --> Show table picker dialog
+                            |
+                            +--> Customer selects table
+                            |
+                            +--> Update URL to include table param
+                            |
+                            +--> Show menu with table bound
+```
+
+### QR URL Patterns
+
+| QR Type | URL Pattern | Behavior |
+|---------|-------------|----------|
+| Restaurant Base | `{redirect}/qr-id` --> `/order?r={id}` | Table picker shown |
+| Table-Specific | `{redirect}/qr-id` --> `/order?r={id}&table=T1` | Direct to menu |
+| Custom Campaign | `{redirect}/qr-id` --> any URL | Direct redirect |
+
+All dynamic QR codes route through the `qr-redirect` edge function for scan tracking.
+
+### Implementation Order
+
+1. Update `QRCodeManager.tsx` -- add table management + auto-sync + base QR
+2. Update `AdminDashboard.tsx` -- remove Tables & QR tab, pass tables to QR Manager
+3. Update `AdminSidebar.tsx` -- remove Tables & QR nav item
+4. Update `CustomerMenu.tsx` -- add table picker dialog
+5. Update `useQRCodes.ts` -- add table QR helper
+6. Remove `QuickQRSection.tsx` (dead code)
 
