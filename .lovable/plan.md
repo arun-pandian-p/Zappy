@@ -1,126 +1,91 @@
 
 
-# Cinematic Landing Page Upgrade
+# Feature Gating + Ads Control System
 
 ## Overview
 
-Transform the landing page into a cinematic SaaS storytelling experience with warm glassmorphism, floating glass UI panels in the hero, a live dashboard teaser with animated metrics, and smooth section transitions -- all using Framer Motion (no GSAP/Three.js needed).
+Implement a dual-layer feature gating system where SaaS modules unlock based on subscription plan (free/pro/enterprise), and Ads specifically requires both plan eligibility AND a tenant-level toggle. Branding animations and multi-outlet remain Business-exclusive.
 
 ---
 
-## 1. Hero Section -- Cinematic Glass Redesign
+## 1. Feature Gate Hook
 
-**File**: `src/components/landing/HeroSection.tsx` (full rewrite)
+**New File**: `src/hooks/useFeatureGate.ts`
 
-### Changes
+Create a central hook that reads the restaurant's `subscription_tier` and `ads_enabled` from the already-loaded restaurant data and returns:
 
-- **Two-column layout**: Left side has headline + CTAs, right side has floating glass panels
-- **Updated headline**: "Scan. Order. Serve. Scale." with subtitle "The Smart Operating System for Restaurants."
-- **Updated description**: Mentions kitchen sync, POS integration, automated billing
-- **3 CTA buttons**: Get Started Free, View Live Demo, Scan Demo QR
-- **Remove scroll indicator** (already removed)
-- **Add floating glass UI panels** on the right side:
-  - Order card panel (table + items list)
-  - Revenue chip (shows a stat like "42,880")
-  - QR scan box with glow pulse animation
-  - Printer receipt panel with subtle roll animation
-- **Glass panel style**: `backdrop-blur-[30px]`, `bg-white/[0.08]`, `border border-white/[0.18]`, warm gradient overlays
-- **Cinematic lighting**: Radial light glow behind the floating panels, warm gradient orbs (keep existing but enhance)
-- **Floating particles**: Small dot elements that drift slowly for atmospheric depth
+- `canAccess(feature)` -- boolean check
+- `isLocked(feature)` -- returns lock reason (plan upgrade needed, ads toggle needed, or null)
+- Feature matrix constants mapping each module to its required tier
 
-### Props
+Feature matrix:
 
-- Keep existing `onGetStarted` and `onScanDemo` props
+| Module | Free | Pro | Business |
+|--------|------|-----|----------|
+| QR Ordering, Menu, Orders, Kitchen, Basic Billing | Yes | Yes | Yes |
+| Advanced Billing, Re-Billing, Analytics Pro | No | Yes | Yes |
+| Ads Manager | No | Pro+ AND ads_enabled | Business+ AND ads_enabled |
+| Branding Animations | No | No | Yes |
+| Multi-Outlet | No | No | Yes |
+
+The hook uses the existing `restaurant.subscription_tier` and `restaurant.ads_enabled` columns -- no new database columns needed for the core gate.
 
 ---
 
-## 2. Live Dashboard Teaser Section (New Component)
+## 2. Upgrade/Enable Modal Component
 
-**File**: `src/components/landing/LiveDashboardTeaser.tsx` (new)
+**New File**: `src/components/admin/FeatureLockedModal.tsx`
 
-### Layout
+A reusable dialog that appears when a locked feature is clicked:
 
-- Section title: "Live Restaurant Insights" with a pulsing "Live" badge
-- 4 floating glass metric cards in a responsive grid:
-
-| Card | Value | Visual |
-|------|-------|--------|
-| Today Revenue | 42,880 (animated count-up) | Mini gradient sparkline chart |
-| Orders Today | 128 (animated count-up) | Pulse counter dot |
-| Active Tables | 23 | Color-shifting heat indicator |
-| Pending Orders | 7 | Alert glow ring animation |
-
-### Card Style
-
-- Glass background: `bg-white/[0.08] dark:bg-white/[0.04]`
-- Backdrop blur: `backdrop-blur-[24px]`
-- Border: `border border-white/[0.12]`
-- Shadow: `shadow-[0_20px_60px_rgba(0,0,0,0.35)]`
-- Floating hover lift with `whileHover={{ y: -8 }}`
-
-### Animations
-
-- Revenue chart: SVG path draw animation using Framer Motion `pathLength`
-- Orders/Revenue counters: Count-up animation from 0 to target value over 2s using `useMotionValue` + `useTransform`
-- Pending orders: Pulse glow ring (`animate-pulse-ring`)
-- Active tables: Subtle color shift between warm tones
-- "Live data updating" pulse indicator at the bottom
-- Restaurant count ticker: "1,500+ restaurants trust us"
+- Shows the feature name and what plan is required
+- For Ads: shows either "Upgrade to Pro" or "Enable Ads in Settings" depending on which condition fails
+- CTA buttons: "Upgrade Plan" (navigates to settings or contacts super admin) and "Enable in Settings" (navigates to settings tab)
+- Glass-style card design consistent with the app
 
 ---
 
-## 3. Hero Floating Glass Panels Detail
+## 3. Admin Sidebar Lock States
 
-Each panel floats with gentle `y` oscillation and staggered delays:
+**File**: `src/components/admin/AdminSidebar.tsx`
 
-### Order Card Panel
-- Shows "Table 5" header, 2-3 mini item rows (Truffle Fries, Biriyani, etc.)
-- Glass style with warm inner glow
-- Subtle shadow
-
-### Revenue Chip
-- Small pill showing "42,880" with an up-arrow icon
-- Green accent glow
-
-### QR Scan Box
-- QR code icon centered in a glass square
-- Radial orange glow pulse behind it
-
-### Receipt Panel
-- Narrow tall card mimicking thermal receipt
-- Shows restaurant name, items, total
-- Subtle "printing" slide-down animation on scroll into view
+- Import `useFeatureGate` (pass restaurant data via props or context)
+- Add `subscriptionTier` and `adsEnabled` props
+- For locked items, show a lock icon next to the nav label
+- On click of a locked item, instead of switching tabs, trigger the `FeatureLockedModal`
+- Ads and Offers items show lock icon when plan is Free or ads_enabled is false
 
 ---
 
-## 4. Update LiveDashboardSection
+## 4. Admin Header Tab Bar Lock States
 
-**File**: `src/components/landing/LiveDashboardSection.tsx` (modify)
+**File**: `src/pages/AdminDashboard.tsx`
 
-- Add warm atmospheric gradient background with radial light spots
-- Add a subtle gradient-wipe transition effect at the top edge using a pseudo-element gradient overlay
-- Enhance cards with the deeper glass style (blur-[24px] instead of blur-sm)
-
----
-
-## 5. Section Transition Atmospheres
-
-**File**: `src/pages/LandingPage.tsx` (modify)
-
-- Insert `LiveDashboardTeaser` between `BrandStrip` and `FeaturesSection`
-- Add gradient divider elements between major sections for smooth visual flow
-- Reorder: Hero -> BrandStrip -> LiveDashboardTeaser -> Features -> ProductDemo -> HowItWorks -> DashboardCarousel -> LiveDashboardSection -> Integrations -> Pricing -> Testimonials -> FAQ -> CTA
+- In the `mainTabs` array, add a `requiredTier` field to each tab definition
+- Before switching tabs via `setActiveTab`, check `canAccess(tab.value)` 
+- If locked, show `FeatureLockedModal` instead of switching
+- Locked tabs show a small lock icon in the tab bar (matching the uploaded reference images)
+- Pass `subscriptionTier` and `adsEnabled` down to AdminSidebar
 
 ---
 
-## 6. Warm Gradient System Enhancement
+## 5. Ads Tab Content Gating
 
-**File**: `src/index.css` (minor additions)
+**File**: `src/pages/AdminDashboard.tsx` (ads tab section)
 
-- Add a `@keyframes float` for reusable floating animation
-- Add `.glass-card` utility class for the deep glassmorphism style
-- Add `.glass-card-warm` variant with warm gradient border
-- Add `@keyframes count-pulse` for the metric counter flash
+- Wrap the existing `{activeTab === "ads"}` block with a feature gate check
+- If the restaurant's plan allows ads but `ads_enabled` is false, show a settings prompt card instead of the full AdsManager
+- If the plan doesn't allow ads at all, the tab is already locked by the sidebar/header gate
+
+---
+
+## 6. Branding Gate in Settings
+
+**File**: `src/components/admin/SettingsPanel.tsx`
+
+- The branding/animation settings section checks if plan is "enterprise"
+- If not, show a locked overlay with "Business plan required" message
+- This uses the same `useFeatureGate` hook
 
 ---
 
@@ -130,27 +95,58 @@ Each panel floats with gentle `y` oscillation and staggered delays:
 
 | File | Purpose |
 |------|---------|
-| `src/components/landing/LiveDashboardTeaser.tsx` | Animated metric cards with count-up, sparklines, glass styling |
+| `src/hooks/useFeatureGate.ts` | Central feature access logic based on subscription tier + ads_enabled |
+| `src/components/admin/FeatureLockedModal.tsx` | Reusable upgrade/enable prompt dialog |
 
 ### Modified Files
 
 | File | Changes |
 |------|---------|
-| `src/components/landing/HeroSection.tsx` | Two-column layout, floating glass panels, updated copy, cinematic lighting |
-| `src/components/landing/LiveDashboardSection.tsx` | Enhanced glass depth, atmospheric gradient, radial lights |
-| `src/pages/LandingPage.tsx` | Insert LiveDashboardTeaser, add gradient dividers between sections |
-| `src/index.css` | Add `.glass-card` utility, `@keyframes float`, `@keyframes count-pulse` |
+| `src/components/admin/AdminSidebar.tsx` | Add lock icons, gate click handlers, new props for tier/adsEnabled |
+| `src/pages/AdminDashboard.tsx` | Pass tier props to sidebar, gate tab switching, lock icons in tab bar |
+| `src/components/admin/SettingsPanel.tsx` | Lock branding section for non-Business plans |
 
-### Animation Approach
+### No Database Changes Required
 
-All animations use Framer Motion (already installed):
-- `motion.div` with `animate` for continuous floating
-- `whileInView` for scroll-triggered reveals
-- `useMotionValue` + `useTransform` + `useSpring` for count-up numbers
-- SVG `motion.path` with `pathLength` for chart draw effects
-- Staggered `transition.delay` for card entrance sequences
+The existing `restaurants.subscription_tier` (enum: free/pro/enterprise) and `restaurants.ads_enabled` (boolean, default true) columns already provide all the data needed. The feature gating is purely a frontend enforcement layer -- the backend RLS policies already restrict data access appropriately.
 
-### No New Dependencies Required
+### Feature Gate Logic (Key Code Pattern)
 
-Everything is achievable with existing `framer-motion`, `lucide-react`, and `recharts` packages.
+```text
+FEATURE_TIERS = {
+  "menu": "free",
+  "orders": "free",
+  "kitchen": "free",
+  "billing": "free",
+  "coupons": "pro",
+  "ads": "pro",         // + ads_enabled check
+  "offers": "pro",
+  "exports": "pro",
+  "research": "pro",
+  "branding": "enterprise",
+  "multi-outlet": "enterprise"
+}
+
+canAccess(feature):
+  requiredTier = FEATURE_TIERS[feature]
+  tierRank = { free: 0, pro: 1, enterprise: 2 }
+  
+  if tierRank[currentTier] < tierRank[requiredTier]:
+    return false
+  
+  if feature === "ads" && !ads_enabled:
+    return false
+  
+  return true
+```
+
+### Props Flow
+
+```text
+AdminDashboard
+  -- reads restaurant.subscription_tier, restaurant.ads_enabled
+  -- passes to AdminSidebar as props
+  -- uses useFeatureGate internally for tab gating
+  -- renders FeatureLockedModal when locked tab clicked
+```
 
