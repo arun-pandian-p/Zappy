@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Loader2, Save, Lock, Palette } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Loader2, Save, Lock, Palette, Upload, X, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,69 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { usePlatformSettings } from '@/hooks/usePlatformSettings';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const CREATOR_EMAIL = 'arunpandi47777@gmail.com';
+
+function LogoUploadField({ label, value, onChange }: { label: string; value: string; onChange: (url: string) => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Invalid file', description: 'Please upload an image.', variant: 'destructive' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Too large', description: 'Max 5MB.', variant: 'destructive' });
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `branding/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('platform-assets').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: publicData } = supabase.storage.from('platform-assets').getPublicUrl(path);
+      onChange(publicData.publicUrl);
+    } catch (e: any) {
+      toast({ title: 'Upload failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="flex items-center gap-3">
+        <div className="w-16 h-16 rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
+          {value ? (
+            <img src={value} alt={label} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          ) : (
+            <ImageIcon className="w-6 h-6 text-muted-foreground/40" />
+          )}
+        </div>
+        <div className="flex-1 space-y-1.5">
+          <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="https://..." className="text-xs" />
+          <div className="flex gap-2">
+            <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+              {uploading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Upload className="w-3 h-3 mr-1" />}
+              Upload
+            </Button>
+            {value && (
+              <Button type="button" size="sm" variant="ghost" className="h-7 text-xs text-destructive" onClick={() => onChange('')}>
+                <X className="w-3 h-3 mr-1" /> Remove
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+    </div>
+  );
+}
 
 export function PlatformBrandingPanel() {
   const { toast } = useToast();
@@ -57,12 +118,7 @@ export function PlatformBrandingPanel() {
           <Lock className="w-12 h-12 mx-auto text-muted-foreground" />
           <div>
             <h3 className="text-lg font-semibold">Platform Branding Locked</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Only the platform creator can modify branding settings.
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Contact the platform creator for branding changes.
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">Only the platform creator can modify branding settings.</p>
           </div>
         </CardContent>
       </Card>
@@ -87,9 +143,9 @@ export function PlatformBrandingPanel() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2"><Label>Platform Name</Label><Input value={form.platform_name} onChange={(e) => setForm({ ...form, platform_name: e.target.value })} /></div>
-            <div className="space-y-2"><Label>Logo URL</Label><Input value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://..." /></div>
-            <div className="space-y-2"><Label>Favicon URL</Label><Input value={form.favicon_url} onChange={(e) => setForm({ ...form, favicon_url: e.target.value })} placeholder="https://..." /></div>
-            <div className="space-y-2"><Label>Email Header Logo</Label><Input value={form.email_logo_url} onChange={(e) => setForm({ ...form, email_logo_url: e.target.value })} placeholder="https://..." /></div>
+            <LogoUploadField label="Logo" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} />
+            <LogoUploadField label="Favicon" value={form.favicon_url} onChange={(url) => setForm({ ...form, favicon_url: url })} />
+            <LogoUploadField label="Email Header Logo" value={form.email_logo_url} onChange={(url) => setForm({ ...form, email_logo_url: url })} />
           </CardContent>
         </Card>
 
@@ -113,7 +169,7 @@ export function PlatformBrandingPanel() {
                 <Input value={form.secondary_color} onChange={(e) => setForm({ ...form, secondary_color: e.target.value })} className="flex-1" />
               </div>
             </div>
-            <div className="space-y-2"><Label>Login Background URL</Label><Input value={form.login_bg_url} onChange={(e) => setForm({ ...form, login_bg_url: e.target.value })} placeholder="https://..." /></div>
+            <LogoUploadField label="Login Background" value={form.login_bg_url} onChange={(url) => setForm({ ...form, login_bg_url: url })} />
           </CardContent>
         </Card>
       </div>
