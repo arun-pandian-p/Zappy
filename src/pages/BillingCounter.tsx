@@ -1,10 +1,10 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, Volume2, VolumeX, BarChart3, Receipt, Clock, ArrowLeft,
   FileText, Banknote, Smartphone, CreditCard as CardIcon, Printer,
   AlertCircle, RefreshCw, Users, TrendingUp, Percent, Eye, ChevronDown, ChevronUp,
-  User, Phone, Hash, Calendar, IndianRupee
+  User, Phone, Hash, Calendar, IndianRupee, Wallet, Split
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ import { useRestaurant, useRestaurants } from '@/hooks/useRestaurant';
 import { useCreateInvoice, useTodayInvoices, useInvoiceStats, generateInvoiceNumber, type Invoice } from '@/hooks/useInvoices';
 import { useTables } from '@/hooks/useTables';
 import DiscountButtons from '@/components/billing/DiscountButtons';
+import SplitPaymentPanel from '@/components/billing/SplitPaymentPanel';
 import { format } from 'date-fns';
 
 const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
@@ -58,7 +59,8 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   const createInvoice = useCreateInvoice();
 
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'upi' | 'card'>('cash');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'upi' | 'card' | 'wallet' | 'split'>('cash');
+  const [splitAmounts, setSplitAmounts] = useState({ cash: 0, upi: 0, card: 0 });
   const [activeTab, setActiveTab] = useState<'billing' | 'history' | 'analytics'>('billing');
   const [showReceiptPreview, setShowReceiptPreview] = useState(false);
   const [orderToPrint, setOrderToPrint] = useState<OrderWithItems | null>(null);
@@ -112,6 +114,10 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
         total: Number(item.price) * item.quantity,
       })) || [];
 
+      const splitNote = selectedPaymentMethod === 'split'
+        ? `Split: Cash ₹${splitAmounts.cash} + UPI ₹${splitAmounts.upi} + Card ₹${splitAmounts.card}`
+        : undefined;
+
       await createInvoice.mutateAsync({
         restaurant_id: restaurantId,
         order_id: selectedOrder.id,
@@ -125,6 +131,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
         items: invoiceItems,
         customer_name: selectedOrder.customer_name || undefined,
         customer_phone: selectedOrder.customer_phone || undefined,
+        notes: splitNote,
       });
 
       if (!isMuted) playSound();
@@ -161,7 +168,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
   const todayTotal = invoiceStats?.totalRevenue || 0;
   const completedCount = invoiceStats?.invoiceCount || 0;
-  const paymentBreakdown = invoiceStats?.paymentBreakdown || { cash: 0, card: 0, upi: 0 };
+  const paymentBreakdown = invoiceStats?.paymentBreakdown || { cash: 0, card: 0, upi: 0, wallet: 0, split: 0 };
 
   if (!restaurantId) {
     return (
@@ -473,11 +480,13 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                       {/* Payment Methods */}
                       <div className="pt-2">
                         <p className="text-sm font-medium mb-3">Payment Method</p>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-5 gap-2">
                           {[
                             { id: 'cash', icon: Banknote, label: 'Cash' },
                             { id: 'upi', icon: Smartphone, label: 'UPI' },
                             { id: 'card', icon: CardIcon, label: 'Card' },
+                            { id: 'wallet', icon: Wallet, label: 'Wallet' },
+                            { id: 'split', icon: Split, label: 'Split' },
                           ].map(({ id, icon: Icon, label }) => (
                             <Button
                               key={id}
@@ -492,11 +501,20 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                         </div>
                       </div>
 
+                      {/* Split Payment Panel */}
+                      {selectedPaymentMethod === 'split' && (
+                        <SplitPaymentPanel
+                          total={adjustedTotal}
+                          currencySymbol={currencySymbol}
+                          onSplitChange={setSplitAmounts}
+                        />
+                      )}
+
                       <Button
                         className="w-full bg-success hover:bg-success/90"
                         size="lg"
                         onClick={handleCompletePayment}
-                        disabled={isProcessing}
+                        disabled={isProcessing || (selectedPaymentMethod === 'split' && Math.abs(adjustedTotal - splitAmounts.cash - splitAmounts.upi - splitAmounts.card) > 0.01)}
                       >
                         {isProcessing ? 'Processing...' : `Pay ${currencySymbol}${adjustedTotal.toFixed(2)} via ${selectedPaymentMethod.toUpperCase()}`}
                       </Button>
@@ -515,7 +533,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
           {/* ════════════════════════ HISTORY TAB ════════════════════════ */}
           <TabsContent value="history">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <Card className="bg-primary/5 border-primary/20">
                 <CardContent className="p-4 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -548,6 +566,17 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                     <p className="text-xl font-bold">
                       {currencySymbol}{completedCount > 0 ? (todayTotal / completedCount).toFixed(2) : '0.00'}
                     </p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-warning/5 border-warning/20">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
+                    <Percent className="w-5 h-5 text-warning" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Discount Given</p>
+                    <p className="text-xl font-bold text-warning">{currencySymbol}{(invoiceStats?.totalDiscount || 0).toFixed(2)}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -707,11 +736,13 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                 <CardTitle className="text-base">Payment Method Breakdown</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-5 gap-4">
                   {[
                     { label: 'Cash', count: paymentBreakdown.cash, icon: Banknote, color: 'text-success' },
                     { label: 'Card', count: paymentBreakdown.card, icon: CardIcon, color: 'text-primary' },
                     { label: 'UPI', count: paymentBreakdown.upi, icon: Smartphone, color: 'text-accent-foreground' },
+                    { label: 'Wallet', count: paymentBreakdown.wallet || 0, icon: Wallet, color: 'text-warning' },
+                    { label: 'Split', count: paymentBreakdown.split || 0, icon: Split, color: 'text-muted-foreground' },
                   ].map(({ label, count, icon: Icon, color }) => {
                     const pct = completedCount > 0 ? Math.round((count / completedCount) * 100) : 0;
                     return (

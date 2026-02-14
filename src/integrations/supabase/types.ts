@@ -413,6 +413,54 @@ export type Database = {
           },
         ]
       }
+      invoice_sync_log: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          invoice_id: string
+          payload: Json
+          response: Json | null
+          restaurant_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          invoice_id: string
+          payload?: Json
+          response?: Json | null
+          restaurant_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          invoice_id?: string
+          payload?: Json
+          response?: Json | null
+          restaurant_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_sync_log_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_sync_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           created_at: string | null

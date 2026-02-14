@@ -115,7 +115,7 @@ export function useInvoiceStats(restaurantId?: string) {
       
       const { data, error } = await supabase
         .from("invoices")
-        .select("total_amount, payment_method, created_at")
+        .select("total_amount, payment_method, created_at, discount_amount")
         .eq("restaurant_id", restaurantId)
         .gte("created_at", today.toISOString());
 
@@ -123,15 +123,19 @@ export function useInvoiceStats(restaurantId?: string) {
 
       const invoices = data || [];
       const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.total_amount), 0);
+      const totalDiscount = invoices.reduce((sum, inv) => sum + Number(inv.discount_amount || 0), 0);
       const invoiceCount = invoices.length;
       const paymentBreakdown = {
         cash: invoices.filter(i => i.payment_method === "cash").length,
         card: invoices.filter(i => i.payment_method === "card").length,
         upi: invoices.filter(i => i.payment_method === "upi").length,
+        wallet: invoices.filter(i => i.payment_method === "wallet").length,
+        split: invoices.filter(i => i.payment_method === "split").length,
       };
 
       return {
         totalRevenue,
+        totalDiscount,
         invoiceCount,
         paymentBreakdown,
       };
