@@ -141,57 +141,59 @@ function PreviewTabContent({ customerPreviewUrl, restaurantId, externalRefreshKe
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      className="space-y-4"
     >
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold">Site Preview</h2>
-          <p className="text-sm text-muted-foreground">Preview all customer & staff interfaces</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Device selector */}
-          <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
-            <Button variant={effectiveDevice === "mobile" ? "default" : "ghost"} size="sm" onClick={() => setDevice("mobile")}>
-              <Smartphone className="w-4 h-4" />
+      {/* Sticky Header + Mode Tabs */}
+      <div className="sticky top-0 z-30 bg-background pb-4 space-y-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
+          <div>
+            <h2 className="text-xl font-bold">Site Preview</h2>
+            <p className="text-sm text-muted-foreground">Preview all customer & staff interfaces</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Device selector */}
+            <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
+              <Button variant={effectiveDevice === "mobile" ? "default" : "ghost"} size="sm" onClick={() => setDevice("mobile")}>
+                <Smartphone className="w-4 h-4" />
+              </Button>
+              <Button variant={effectiveDevice === "tablet" ? "default" : "ghost"} size="sm" onClick={() => setDevice("tablet")}>
+                <Tablet className="w-4 h-4" />
+              </Button>
+              <Button variant={effectiveDevice === "desktop" ? "default" : "ghost"} size="sm" onClick={() => setDevice("desktop")}>
+                <Monitor className="w-4 h-4" />
+              </Button>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)}>
+              <RefreshCw className="w-4 h-4" />
             </Button>
-            <Button variant={effectiveDevice === "tablet" ? "default" : "ghost"} size="sm" onClick={() => setDevice("tablet")}>
-              <Tablet className="w-4 h-4" />
-            </Button>
-            <Button variant={effectiveDevice === "desktop" ? "default" : "ghost"} size="sm" onClick={() => setDevice("desktop")}>
-              <Monitor className="w-4 h-4" />
+            <Button variant="outline" size="sm" onClick={() => window.open(getPreviewUrl(), '_blank')}>
+              <ExternalLink className="w-4 h-4 mr-1" />
+              Open
             </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)}>
-            <RefreshCw className="w-4 h-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => window.open(getPreviewUrl(), '_blank')}>
-            <ExternalLink className="w-4 h-4 mr-1" />
-            Open
-          </Button>
         </div>
-      </div>
 
-      {/* Preview Mode Tabs */}
-      <div className="flex items-center gap-2 bg-muted/50 rounded-xl p-1.5">
-        {previewModes.map((mode) => (
-          <button
-            key={mode.value}
-            onClick={() => setPreviewMode(mode.value)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex-1 justify-center ${
-              previewMode === mode.value
-                ? "bg-background shadow-sm text-foreground border border-border"
-                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-            }`}
-          >
-            <mode.icon className="w-4 h-4" />
-            <span className="hidden sm:inline">{mode.label}</span>
-          </button>
-        ))}
+        {/* Preview Mode Tabs */}
+        <div className="flex items-center gap-2 bg-muted/50 rounded-xl p-1.5">
+          {previewModes.map((mode) => (
+            <button
+              key={mode.value}
+              onClick={() => setPreviewMode(mode.value)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex-1 justify-center ${
+                previewMode === mode.value
+                  ? "bg-background shadow-sm text-foreground border border-border"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+              }`}
+            >
+              <mode.icon className="w-4 h-4" />
+              <span className="hidden sm:inline">{mode.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Preview Frame */}
-      <div className="flex justify-center bg-muted/30 rounded-xl border p-4" style={{ minHeight: '80vh' }}>
+      <div className="flex justify-center bg-muted/30 rounded-xl border p-4 mt-4" style={{ minHeight: '80vh' }}>
         <div
           className={`bg-background rounded-2xl shadow-2xl border-4 border-foreground/10 overflow-hidden transition-all duration-300 ${
             effectiveDevice === "desktop" ? "w-full" : ""
