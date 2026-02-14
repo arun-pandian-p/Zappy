@@ -96,17 +96,39 @@ import { supabase } from "@/integrations/supabase/client";
 const DEMO_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
 
 type DeviceType = "mobile" | "tablet" | "desktop";
+type PreviewMode = "customer" | "kitchen" | "billing";
 
-function PreviewTabContent({ customerPreviewUrl, externalRefreshKey }: { customerPreviewUrl: string; externalRefreshKey: number }) {
+function PreviewTabContent({ customerPreviewUrl, restaurantId, externalRefreshKey }: { customerPreviewUrl: string; restaurantId: string; externalRefreshKey: number }) {
   const [device, setDevice] = useState<DeviceType>("mobile");
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("customer");
   const [refreshKey, setRefreshKey] = useState(0);
-  const combinedKey = `${refreshKey}-${externalRefreshKey}`;
+  const combinedKey = `${previewMode}-${refreshKey}-${externalRefreshKey}`;
 
   const deviceConfig = {
     mobile: { width: 375, height: 812, label: "Mobile" },
     tablet: { width: 768, height: 1024, label: "Tablet" },
-    desktop: { width: "100%", height: "100%", label: "Desktop" },
+    desktop: { width: "100%" as const, height: "100%" as const, label: "Desktop" },
   };
+
+  const previewModes = [
+    { value: "customer" as const, label: "Customer Menu", icon: Eye, description: "Menu & ordering flow" },
+    { value: "kitchen" as const, label: "Kitchen Display", icon: ChefHat, description: "KDS order management" },
+    { value: "billing" as const, label: "Billing Counter", icon: Receipt, description: "POS & invoicing" },
+  ];
+
+  const getPreviewUrl = () => {
+    switch (previewMode) {
+      case "kitchen":
+        return `/kitchen?r=${restaurantId}&preview=true`;
+      case "billing":
+        return `/billing?r=${restaurantId}&preview=true`;
+      default:
+        return customerPreviewUrl;
+    }
+  };
+
+  // Kitchen & billing are better previewed at tablet/desktop
+  const effectiveDevice = previewMode !== "customer" && device === "mobile" ? "tablet" : device;
 
   return (
     <motion.div
@@ -117,44 +139,70 @@ function PreviewTabContent({ customerPreviewUrl, externalRefreshKey }: { custome
       transition={{ duration: 0.2 }}
       className="space-y-4"
     >
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold">Customer Site Preview</h2>
-          <p className="text-sm text-muted-foreground">See how your menu looks to customers</p>
+          <h2 className="text-xl font-bold">Site Preview</h2>
+          <p className="text-sm text-muted-foreground">Preview all customer & staff interfaces</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Device selector */}
           <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
-            <Button variant={device === "mobile" ? "default" : "ghost"} size="sm" onClick={() => setDevice("mobile")}>
+            <Button variant={effectiveDevice === "mobile" ? "default" : "ghost"} size="sm" onClick={() => setDevice("mobile")}>
               <Smartphone className="w-4 h-4" />
             </Button>
-            <Button variant={device === "tablet" ? "default" : "ghost"} size="sm" onClick={() => setDevice("tablet")}>
+            <Button variant={effectiveDevice === "tablet" ? "default" : "ghost"} size="sm" onClick={() => setDevice("tablet")}>
               <Tablet className="w-4 h-4" />
             </Button>
-            <Button variant={device === "desktop" ? "default" : "ghost"} size="sm" onClick={() => setDevice("desktop")}>
+            <Button variant={effectiveDevice === "desktop" ? "default" : "ghost"} size="sm" onClick={() => setDevice("desktop")}>
               <Monitor className="w-4 h-4" />
             </Button>
           </div>
           <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)}>
             <RefreshCw className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={() => window.open(customerPreviewUrl, '_blank')}>
+          <Button variant="outline" size="sm" onClick={() => window.open(getPreviewUrl(), '_blank')}>
             <ExternalLink className="w-4 h-4 mr-1" />
             Open
           </Button>
         </div>
       </div>
-      <div className="flex justify-center bg-muted/30 rounded-xl border p-4" style={{ minHeight: '85vh' }}>
+
+      {/* Preview Mode Tabs */}
+      <div className="flex items-center gap-2 bg-muted/50 rounded-xl p-1.5">
+        {previewModes.map((mode) => (
+          <button
+            key={mode.value}
+            onClick={() => setPreviewMode(mode.value)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex-1 justify-center ${
+              previewMode === mode.value
+                ? "bg-background shadow-sm text-foreground border border-border"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+            }`}
+          >
+            <mode.icon className="w-4 h-4" />
+            <span className="hidden sm:inline">{mode.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Preview Frame */}
+      <div className="flex justify-center bg-muted/30 rounded-xl border p-4" style={{ minHeight: '80vh' }}>
         <div
           className={`bg-background rounded-2xl shadow-2xl border-4 border-foreground/10 overflow-hidden transition-all duration-300 ${
-            device === "desktop" ? "w-full h-full" : ""
+            effectiveDevice === "desktop" ? "w-full" : ""
           }`}
-          style={device !== "desktop" ? { width: deviceConfig[device].width, height: deviceConfig[device].height } : { height: '80vh' }}
+          style={
+            effectiveDevice !== "desktop"
+              ? { width: deviceConfig[effectiveDevice].width, height: deviceConfig[effectiveDevice].height, maxHeight: '78vh' }
+              : { height: '78vh', width: '100%' }
+          }
         >
           <iframe
             key={combinedKey}
-            src={customerPreviewUrl}
+            src={getPreviewUrl()}
             className="w-full h-full border-0"
-            title="Customer Menu Preview"
+            title={`${previewModes.find(m => m.value === previewMode)?.label} Preview`}
           />
         </div>
       </div>
@@ -790,7 +838,7 @@ const AdminDashboard = () => {
 
               {/* Preview Tab */}
               {activeTab === "preview" && (
-                <PreviewTabContent customerPreviewUrl={customerPreviewUrl} externalRefreshKey={previewRefreshKey} />
+                <PreviewTabContent customerPreviewUrl={customerPreviewUrl} restaurantId={restaurantId} externalRefreshKey={previewRefreshKey} />
               )}
 
               {/* QR Manager Tab */}
