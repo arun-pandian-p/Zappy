@@ -34,7 +34,10 @@ const features = [
 
 const LiveDashboardSection = () => {
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-br from-orange-50 via-amber-50/50 to-yellow-50 dark:from-orange-950/20 dark:via-background dark:to-amber-950/10">
+    <section className="py-16 md:py-24 relative overflow-hidden bg-gradient-to-br from-orange-50 via-amber-50/50 to-yellow-50 dark:from-orange-950/20 dark:via-background dark:to-amber-950/10">
+      {/* Radial light spots */}
+      <div className="absolute top-0 left-1/3 w-[400px] h-[300px] rounded-full bg-orange-300/10 blur-[100px]" />
+      <div className="absolute bottom-0 right-1/4 w-[300px] h-[200px] rounded-full bg-amber-300/10 blur-[80px]" />
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -62,7 +65,7 @@ const LiveDashboardSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="bg-white/60 dark:bg-card/60 backdrop-blur-sm border border-white/40 dark:border-border/40 rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow"
+              className="glass-card rounded-2xl p-6 text-center hover:shadow-xl transition-shadow bg-white/60 dark:bg-white/[0.04]"
             >
               <div className={`w-14 h-14 rounded-full ${feature.iconBg} flex items-center justify-center mx-auto mb-4`}>
                 <feature.icon className={`w-7 h-7 ${feature.iconColor}`} />

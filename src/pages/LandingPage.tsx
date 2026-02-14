@@ -11,6 +11,7 @@ import ProductDemo from '@/components/landing/ProductDemo';
 import HowItWorks from '@/components/landing/HowItWorks';
 import DashboardCarousel from '@/components/landing/DashboardCarousel';
 import LiveDashboardSection from '@/components/landing/LiveDashboardSection';
+import LiveDashboardTeaser from '@/components/landing/LiveDashboardTeaser';
 import IntegrationsCloud from '@/components/landing/IntegrationsCloud';
 import PricingSection from '@/components/landing/PricingSection';
 import TestimonialsSection from '@/components/landing/TestimonialsSection';
@@ -119,6 +120,7 @@ const LandingPage = () => {
       <main className="pt-16">
         <HeroSection onGetStarted={handleGetStarted} onScanDemo={handleScanDemo} />
         <BrandStrip />
+        <LiveDashboardTeaser />
         <div id="features">
           <FeaturesSection />
         </div>
