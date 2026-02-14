@@ -2,40 +2,23 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, ShoppingCart, BarChart3, Settings, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { mockOrders, menuItems } from '@/data/mockData';
+import superAdminImg from '@/assets/dashboard-super-admin.png';
+import kitchenImg from '@/assets/dashboard-kitchen.png';
 
 const screens = [
   {
-    title: 'Order Management',
-    description: 'Real-time order tracking with status updates',
-    icon: ShoppingCart,
+    title: 'Super Admin Dashboard',
+    description: 'Platform overview — tenants, plans, revenue at a glance',
+    icon: BarChart3,
     color: 'from-primary to-primary/60',
-    mockRows: mockOrders.map(
-      (o) => `Order #${o.order_number} - ${o.table_number} - ${o.status.charAt(0).toUpperCase() + o.status.slice(1)}`
-    ),
+    image: superAdminImg,
   },
   {
     title: 'Kitchen Display',
-    description: 'Live order queue for kitchen staff',
+    description: 'Live order queue organised by status for kitchen staff',
     icon: ChefHat,
     color: 'from-orange-500 to-amber-500',
-    mockRows: menuItems.slice(0, 3).map(
-      (m) => `${m.name} x${Math.ceil(Math.random() * 3)} - ${m.prep_time_minutes}min`
-    ),
-  },
-  {
-    title: 'Analytics Dashboard',
-    description: 'Revenue, trends, and customer insights',
-    icon: BarChart3,
-    color: 'from-green-500 to-emerald-500',
-    mockRows: ['Revenue: ₹45,230 today', `Orders: ${mockOrders.length * 29} completed`, 'Avg time: 12 min'],
-  },
-  {
-    title: 'Admin Panel',
-    description: 'Full control over menu, tables, and staff',
-    icon: Settings,
-    color: 'from-purple-500 to-pink-500',
-    mockRows: [`${menuItems.length} menu items active`, '8 tables configured', '5 staff members'],
+    image: kitchenImg,
   },
 ];
 
@@ -65,7 +48,7 @@ const DashboardCarousel = () => {
           </p>
         </motion.div>
 
-        <div className="relative max-w-4xl mx-auto">
+        <div className="relative max-w-5xl mx-auto">
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" className="shrink-0 rounded-full" onClick={prev}>
               <ChevronLeft className="w-5 h-5" />
@@ -88,20 +71,13 @@ const DashboardCarousel = () => {
                       <p className="text-white/70 text-xs">{screens[active].description}</p>
                     </div>
                   </div>
-                  {/* Mock content */}
-                  <div className="p-6 space-y-3">
-                    {screens[active].mockRows.map((row, i) => (
-                      <motion.div
-                        key={row}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
-                      >
-                        <div className="w-2 h-2 rounded-full bg-primary" />
-                        <span className="text-sm text-muted-foreground">{row}</span>
-                      </motion.div>
-                    ))}
+                  {/* Screenshot */}
+                  <div className="relative">
+                    <img
+                      src={screens[active].image}
+                      alt={screens[active].title}
+                      className="w-full h-auto object-cover"
+                    />
                   </div>
                 </div>
               </motion.div>
