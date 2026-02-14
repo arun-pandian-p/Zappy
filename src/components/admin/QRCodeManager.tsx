@@ -199,7 +199,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
 
   const getQRValue = (qr: QRCode) => {
     if (qr.qr_type === "dynamic") {
-      return `${REDIRECT_BASE}/${qr.id}`;
+      return `${REDIRECT_BASE}?id=${qr.id}`;
     }
     return qr.target_url;
   };
