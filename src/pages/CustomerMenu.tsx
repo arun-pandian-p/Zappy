@@ -15,7 +15,8 @@ import { useRestaurant } from '@/hooks/useRestaurant';
 import { useOrders, useCreateOrder } from '@/hooks/useOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
 import { useRandomActiveAd, useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
-import { useTableByNumber } from '@/hooks/useTables';
+import { useTableByNumber, useTables } from '@/hooks/useTables';
+import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
 import { useActiveOffers } from '@/hooks/useOffers';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
 import { AdsPopup } from '@/components/menu/AdsPopup';
@@ -57,7 +58,9 @@ const CustomerMenu = () => {
   }, [slug, restaurantIdParam]);
 
   const restaurantId = resolvedRestaurantId;
-  const isPreviewMode = !tableId;
+  const [dynamicTableId, setDynamicTableId] = useState(tableId);
+  const isPreviewMode = false; // No longer preview - show table picker instead
+  const showTablePicker = !dynamicTableId && !!restaurantId;
   const { toast } = useToast();
 
   const [currentView, setCurrentView] = useState<ViewType>('menu');
@@ -81,8 +84,11 @@ const CustomerMenu = () => {
   // Fetch categories
   const { data: categories = [] } = useCategories(restaurantId);
 
-  // Resolve table number to table UUID (skip in preview mode)
-  const { data: tableData, isLoading: tableLoading } = useTableByNumber(restaurantId, tableId);
+  // Fetch all tables for picker
+  const { data: allTables = [] } = useTables(restaurantId);
+
+  // Resolve table number to table UUID
+  const { data: tableData, isLoading: tableLoading } = useTableByNumber(restaurantId, dynamicTableId || undefined);
   const resolvedTableId = tableData?.id;
 
   // Fetch customer orders
@@ -113,12 +119,20 @@ const CustomerMenu = () => {
   // Query client for realtime invalidation
   const queryClient = useQueryClient();
 
-  // Set table from URL
+  // Set table from URL or dynamic selection
   useEffect(() => {
-    if (tableId) {
-      setTableNumber(tableId);
+    if (dynamicTableId) {
+      setTableNumber(dynamicTableId);
     }
-  }, [tableId, setTableNumber]);
+  }, [dynamicTableId, setTableNumber]);
+
+  const handleTableSelect = (tableNumber: string) => {
+    setDynamicTableId(tableNumber);
+    // Update URL without reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('table', tableNumber);
+    window.history.replaceState({}, '', url.toString());
+  };
 
   // Realtime subscriptions for live sync
   useEffect(() => {
@@ -334,8 +348,8 @@ const CustomerMenu = () => {
     });
   };
 
-  // Loading state — show splash (skip table loading in preview mode)
-  if (restaurantLoading || menuLoading || (!isPreviewMode && tableLoading)) {
+  // Loading state
+  if (restaurantLoading || menuLoading || (dynamicTableId && tableLoading)) {
     return (
       <QRSplashScreen
         restaurantName={restaurant?.name || 'Restaurant'}
@@ -726,12 +740,13 @@ const CustomerMenu = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Preview Mode Banner */}
-      {isPreviewMode && (
-        <div className="bg-warning/20 text-warning-foreground text-center py-2 text-xs font-medium border-b border-warning/30">
-          👁️ Preview Mode — Ordering is disabled
-        </div>
-      )}
+      {/* Table Picker Dialog */}
+      <TablePickerDialog
+        open={showTablePicker}
+        tables={allTables}
+        restaurantName={restaurant?.name || 'Restaurant'}
+        onSelectTable={handleTableSelect}
+      />
 
       {/* Ads Popup */}
       <AdsPopup
@@ -750,10 +765,10 @@ const CustomerMenu = () => {
       <CustomerTopBar
         restaurantName={restaurant?.name || 'Restaurant'}
         logoUrl={restaurant?.logo_url}
-        tableNumber={isPreviewMode ? 'Preview' : tableNumber}
-        cartCount={isPreviewMode ? 0 : getTotalItems()}
+        tableNumber={tableNumber || 'Select Table'}
+        cartCount={getTotalItems()}
         onCallWaiter={handleCallWaiter}
-        onCartClick={() => !isPreviewMode && setCurrentView('cart')}
+        onCartClick={() => dynamicTableId && setCurrentView('cart')}
         isCallingWaiter={createWaiterCall.isPending}
         primaryColor={primaryColor}
         branding={brandingConfig}
@@ -763,19 +778,22 @@ const CustomerMenu = () => {
       <main className="container mx-auto px-4 py-4">
         {currentView === 'home' && renderHome()}
         {currentView === 'menu' && renderMenu()}
-        {!isPreviewMode && currentView === 'cart' && renderCart()}
-        {!isPreviewMode && currentView === 'orders' && renderOrders()}
+        {dynamicTableId && currentView === 'cart' && renderCart()}
+        {dynamicTableId && currentView === 'orders' && renderOrders()}
         {currentView === 'profile' && renderProfile()}
-        {isPreviewMode && (currentView === 'cart' || currentView === 'orders') && (
+        {!dynamicTableId && (currentView === 'cart' || currentView === 'orders') && (
           <div className="text-center py-12 text-muted-foreground">
-            <p className="text-lg font-medium">Not available in preview mode</p>
-            <p className="text-sm mt-1">Scan a QR code at a table to place orders</p>
+            <p className="text-lg font-medium">Please select a table first</p>
+            <p className="text-sm mt-1">Tap to select your table</p>
+            <Button variant="outline" className="mt-4" onClick={() => setDynamicTableId('')}>
+              Select Table
+            </Button>
           </div>
         )}
       </main>
 
-      {/* Floating Cart Bar (menu view only, not in preview) */}
-      {!isPreviewMode && currentView === 'menu' && (
+      {/* Floating Cart Bar (menu view only, when table selected) */}
+      {dynamicTableId && currentView === 'menu' && (
         <FloatingCartBar
           itemCount={getTotalItems()}
           totalPrice={getTotalPrice()}
@@ -788,8 +806,8 @@ const CustomerMenu = () => {
       <BottomNav
         currentView={currentView}
         onViewChange={setCurrentView}
-        cartCount={isPreviewMode ? 0 : getTotalItems()}
-        orderCount={isPreviewMode ? 0 : customerOrders.filter(o => o.status !== 'completed').length}
+        cartCount={getTotalItems()}
+        orderCount={customerOrders.filter(o => o.status !== 'completed').length}
       />
     </div>
   );

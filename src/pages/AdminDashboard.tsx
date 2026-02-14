@@ -4,7 +4,7 @@ import {
   Settings,
   LayoutDashboard,
   UtensilsCrossed,
-  Grid3X3,
+  
   Plus,
   Trash2,
   Wallet,
@@ -40,7 +40,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
+
 import {
   Select,
   SelectContent,
@@ -56,7 +56,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { StatCard } from "@/components/admin/StatCard";
 import { RecentOrdersTable } from "@/components/admin/RecentOrdersTable";
 import { MenuPreviewCard } from "@/components/admin/MenuPreviewCard";
-import { QuickQRSection } from "@/components/admin/QuickQRSection";
+
 import { OrderHistory } from "@/components/admin/OrderHistory";
 import { AdsManager } from "@/components/admin/AdsManager";
 import { FeedbackManager } from "@/components/admin/FeedbackManager";
@@ -86,7 +86,7 @@ import {
   useDeleteMenuItem, 
   useToggleMenuItemAvailability 
 } from "@/hooks/useMenuItems";
-import { useTables, useCreateTable, useDeleteTable } from "@/hooks/useTables";
+import { useTables } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
 import { useInvoiceStats } from "@/hooks/useInvoices";
 import { useAuth } from "@/hooks/useAuth";
@@ -218,14 +218,6 @@ const AdminDashboard = () => {
   const { data: orders = [] } = useOrders(restaurantId);
   const { data: invoiceStats } = useInvoiceStats(restaurantId);
   
-  const [selectedTableId, setSelectedTableId] = useState<string>("");
-
-  // Set first table when tables load
-  useEffect(() => {
-    if (tables.length > 0 && !selectedTableId) {
-      setSelectedTableId(tables[0].id);
-    }
-  }, [tables, selectedTableId]);
 
   // New item form state
   const [newItem, setNewItem] = useState({
@@ -241,19 +233,11 @@ const AdminDashboard = () => {
   // Restaurant settings with defaults
   const currencySymbol = restaurant?.currency || "₹";
   const restaurantName = restaurant?.name || "QR Dine Pro";
-  const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
-  const qrBaseUrl = ((restaurant?.settings as Record<string, unknown>)?.qr_base_url as string) || PUBLISHED_URL;
 
   // Mutations
   const createMenuItem = useCreateMenuItem();
   const deleteMenuItem = useDeleteMenuItem();
   const toggleAvailability = useToggleMenuItemAvailability();
-  const createTable = useCreateTable();
-  const deleteTable = useDeleteTable();
-
-  // New table form state
-  const [newTableNumber, setNewTableNumber] = useState('');
-  const [newTableCapacity, setNewTableCapacity] = useState('4');
 
   const handleAddItem = async () => {
     if (!newItem.name || !newItem.price) {
@@ -338,67 +322,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleAddTable = async () => {
-    if (!newTableNumber.trim()) {
-      toast({
-        title: "Enter table number",
-        description: "Table number is required.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await createTable.mutateAsync({
-        restaurant_id: restaurantId,
-        table_number: newTableNumber.trim(),
-        capacity: parseInt(newTableCapacity) || 4,
-        status: 'available',
-      });
-      
-      toast({
-        title: "Table Added",
-        description: `Table ${newTableNumber} has been created.`,
-      });
-      
-      setNewTableNumber('');
-      setNewTableCapacity('4');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create table.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteTable = async (id: string, tableNumber: string) => {
-    if (!confirm(`Delete table ${tableNumber}?`)) return;
-    
-    try {
-      await deleteTable.mutateAsync({ id, restaurantId });
-      toast({
-        title: "Table Deleted",
-        description: `Table ${tableNumber} has been removed.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete table.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const downloadQRCode = (tableNumber: string) => {
-    const canvas = document.getElementById(`qr-canvas-${tableNumber}`) as HTMLCanvasElement;
-    if (!canvas) return;
-    const pngUrl = canvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.download = `QR-Table-${tableNumber}.png`;
-    link.href = pngUrl;
-    link.click();
-  };
 
   // Computed stats from live data
   const completedOrders = orders.filter((o) => o.status === "completed");
@@ -419,7 +342,7 @@ const AdminDashboard = () => {
     }));
   }, [orders]);
 
-  const selectedTable = tables.find((t) => t.id === selectedTableId);
+  
 
   // Loading state
   if (restaurantsLoading) {
@@ -437,7 +360,7 @@ const AdminDashboard = () => {
   const mainTabs = [
     { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { value: "menu", label: "Menu", icon: UtensilsCrossed },
-    { value: "tables", label: "Tables & QR", icon: Grid3X3 },
+    
     { value: "orders", label: "Orders", icon: ClipboardList },
     { value: "kitchen", label: "Kitchen", icon: ChefHat },
     { value: "billing", label: "Billing", icon: Receipt },
@@ -532,16 +455,6 @@ const AdminDashboard = () => {
                       {/* Table Session Timers */}
                       <TableSessionTimers restaurantId={restaurantId} />
 
-                      <QuickQRSection
-                        tables={tables.map((t) => ({
-                          id: t.id,
-                          table_number: t.table_number,
-                        }))}
-                        selectedTableId={selectedTableId}
-                        onTableChange={setSelectedTableId}
-                        baseUrl={qrBaseUrl}
-                        restaurantId={restaurantId}
-                      />
 
                       {/* Mini Menu Preview */}
                       <Card className="border-0 shadow-md">
@@ -748,156 +661,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Tables & QR Tab */}
-              {activeTab === "tables" && (
-                <motion.div
-                  key="tables"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Add Table */}
-                    <Card className="border-0 shadow-md">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Plus className="w-5 h-5" />
-                          Add Table
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Table Number *</Label>
-                          <Input
-                            value={newTableNumber}
-                            onChange={(e) => setNewTableNumber(e.target.value)}
-                            placeholder="e.g. T1, Table 1, A1"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Capacity</Label>
-                          <Input
-                            type="number"
-                            value={newTableCapacity}
-                            onChange={(e) => setNewTableCapacity(e.target.value)}
-                            placeholder="4"
-                            min="1"
-                            max="20"
-                          />
-                        </div>
-                        <Button 
-                          className="w-full" 
-                          onClick={handleAddTable}
-                          disabled={createTable.isPending}
-                        >
-                          {createTable.isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : (
-                            <Plus className="w-4 h-4 mr-2" />
-                          )}
-                          Add Table
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    {/* Tables List */}
-                    <Card className="border-0 shadow-md">
-                      <CardHeader>
-                        <CardTitle>Restaurant Tables ({tables.length})</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto">
-                          {tables.map((table) => (
-                            <div
-                              key={table.id}
-                              className={`relative group p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                                selectedTableId === table.id 
-                                  ? "border-primary bg-primary/5" 
-                                  : "border-border hover:border-primary/50"
-                              }`}
-                              onClick={() => setSelectedTableId(table.id)}
-                            >
-                              <div className="text-center">
-                                <span className="font-bold text-lg block">
-                                  {table.table_number}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {table.capacity} seats
-                                </span>
-                              </div>
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                className="absolute -top-2 -right-2 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteTable(table.id, table.table_number);
-                                }}
-                              >
-                                <X className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                        {tables.length === 0 && (
-                          <p className="text-center text-muted-foreground py-8">
-                            No tables yet. Add one to generate QR codes.
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    {/* QR Code Generator */}
-                    <Card className="border-0 shadow-md">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Grid3X3 className="w-5 h-5" />
-                          QR Code {selectedTable ? `- ${selectedTable.table_number}` : ''}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex flex-col items-center">
-                        {selectedTable ? (
-                          <>
-                            <div className="bg-white p-4 rounded-xl shadow-sm mb-4">
-                              <QRCodeSVG
-                                value={`${qrBaseUrl}/order?r=${restaurantId}&table=${selectedTable.table_number}`}
-                                size={256}
-                                level="H"
-                                includeMargin
-                              />
-                            </div>
-                            {/* Hidden canvas for high-res download */}
-                            <div style={{ position: "absolute", left: "-9999px" }}>
-                              <QRCodeCanvas
-                                id={`qr-canvas-${selectedTable.table_number}`}
-                                value={`${qrBaseUrl}/order?r=${restaurantId}&table=${selectedTable.table_number}`}
-                                size={512}
-                                level="H"
-                                includeMargin
-                              />
-                            </div>
-                            <p className="text-sm text-muted-foreground text-center mb-4">
-                              Scan to order from {selectedTable.table_number}
-                            </p>
-                            <Button 
-                              variant="outline"
-                              onClick={() => downloadQRCode(selectedTable.table_number)}
-                            >
-                              <Download className="w-4 h-4 mr-2" />
-                              Download QR Code
-                            </Button>
-                          </>
-                        ) : (
-                          <div className="text-center py-8 text-muted-foreground">
-                            Select a table to view its QR code
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                </motion.div>
-              )}
 
               {/* Orders Tab */}
               {activeTab === "orders" && (
