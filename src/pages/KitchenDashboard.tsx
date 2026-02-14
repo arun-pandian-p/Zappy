@@ -10,6 +10,7 @@ import { useSound, SOUNDS } from '@/hooks/useSound';
 import { useOrders, useKitchenOrderActions, type OrderWithItems } from '@/hooks/useOrders';
 import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
 import { useRestaurants } from '@/hooks/useRestaurant';
+import { usePrinter } from '@/hooks/usePrinter';
 
 // Demo restaurant ID - fallback if no restaurant in DB
 const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
@@ -86,14 +87,39 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
     }
   }, [waiterCallsCount, isMuted, playWaiterCallSound]);
 
+  const { isConnected: printerConnected, printKitchenOrder } = usePrinter(restaurantId);
+
   const handleStartPrep = useCallback(async (orderId: string) => {
     try {
       await startPreparing(orderId);
       toast({ title: 'Order Started', description: 'Order is now being prepared.' });
+
+      // Auto-print KOT if printer is connected
+      if (printerConnected) {
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          const kotItems = order.order_items?.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            notes: item.special_instructions || undefined,
+          })) || [];
+          try {
+            await printKitchenOrder(
+              String(order.order_number),
+              order.table?.table_number || 'N/A',
+              kotItems,
+              order.id
+            );
+            toast({ title: 'KOT Printed', description: 'Kitchen order ticket sent to printer.' });
+          } catch {
+            toast({ title: 'KOT Print Failed', description: 'Order started but ticket failed to print.', variant: 'destructive' });
+          }
+        }
+      }
     } catch (err) {
       toast({ title: 'Error', description: 'Failed to update order status.', variant: 'destructive' });
     }
-  }, [startPreparing, toast]);
+  }, [startPreparing, toast, printerConnected, printKitchenOrder, orders]);
 
   const handleMarkReady = useCallback(async (orderId: string) => {
     try {
