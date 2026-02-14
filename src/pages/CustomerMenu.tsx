@@ -252,7 +252,7 @@ const CustomerMenu = () => {
       return;
     }
 
-    if (!tableId || !restaurantId || !resolvedTableId) {
+    if (!dynamicTableId || !restaurantId || !resolvedTableId) {
       toast({
         title: 'Invalid table',
         description: 'Please scan a valid QR code at your table.',

@@ -6,6 +6,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Published app base URL for resolving relative target_urls
+const APP_BASE_URL = "https://qr-restaurant.lovable.app";
+
 // Simple in-memory rate limiter
 const scanCounts = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 100;
@@ -28,6 +31,15 @@ function detectDevice(ua: string): string {
   return "Desktop";
 }
 
+function resolveTargetUrl(targetUrl: string): string {
+  // If already absolute, return as-is
+  if (targetUrl.startsWith("http://") || targetUrl.startsWith("https://")) {
+    return targetUrl;
+  }
+  // Resolve relative URL against the published app base
+  return `${APP_BASE_URL}${targetUrl.startsWith("/") ? "" : "/"}${targetUrl}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -35,11 +47,14 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    // Extract QR ID from path: /qr-redirect/QR_ID or ?id=QR_ID
-    const pathParts = url.pathname.split("/");
-    const qrId = pathParts[pathParts.length - 1] || url.searchParams.get("id");
 
-    if (!qrId || qrId === "qr-redirect") {
+    // Extract QR ID: prioritize query param over path segment
+    const queryId = url.searchParams.get("id");
+    const pathParts = url.pathname.split("/");
+    const pathId = pathParts[pathParts.length - 1];
+    const qrId = queryId || (pathId && pathId !== "qr-redirect" ? pathId : null);
+
+    if (!qrId) {
       return new Response(
         "<html><body><h1>Invalid QR Code</h1><p>This QR code link is invalid.</p></body></html>",
         { status: 400, headers: { ...corsHeaders, "Content-Type": "text/html" } }
@@ -101,21 +116,17 @@ Deno.serve(async (req) => {
       referrer,
     }).then(() => {});
 
-    // Increment scan count
-    supabase.from("qr_codes")
-      .update({ scan_count: undefined }) // We'll use RPC or raw increment
-      .eq("id", qr.id)
-      .then(() => {});
-
-    // Use raw SQL to increment atomically
+    // Increment scan count atomically via RPC
     supabase.rpc("increment_scan_count" as any, { qr_code_id: qrId }).then(() => {});
 
-    // Redirect
+    // Resolve target URL to absolute and redirect
+    const absoluteUrl = resolveTargetUrl(qr.target_url);
+
     return new Response(null, {
       status: 302,
       headers: {
         ...corsHeaders,
-        Location: qr.target_url,
+        Location: absoluteUrl,
       },
     });
   } catch (err) {
