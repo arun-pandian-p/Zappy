@@ -31,6 +31,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,7 @@ export function AdminSidebar({ activeTab, onTabChange, onboardingCompleted = tru
   const collapsed = state === "collapsed";
   const { signOut, user } = useAuth();
   const navItems = onboardingCompleted ? allNavItems : onboardingNavItems;
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Admin";
 
   const handleLogout = async () => {
     await signOut();
@@ -132,28 +134,41 @@ export function AdminSidebar({ activeTab, onTabChange, onboardingCompleted = tru
       </SidebarContent>
 
       <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border">
-        <div className="flex items-center gap-3 mb-3">
-          <Avatar className="w-10 h-10 shrink-0">
-            <AvatarImage src={restaurantLogo || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`} />
-            <AvatarFallback className="bg-primary/20 text-primary">
-              {(restaurantName || "Admin").charAt(0).toUpperCase()}
+        {/* Restaurant branding row */}
+        <div className="flex items-center gap-3 mb-2">
+          <Avatar className="w-8 h-8 shrink-0 rounded-lg">
+            <AvatarImage src={restaurantLogo || undefined} className="rounded-lg" />
+            <AvatarFallback className="bg-primary/20 text-primary rounded-lg text-xs">
+              {(restaurantName || "R").charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col overflow-hidden"
-            >
-              <span className="font-medium text-sm text-sidebar-foreground truncate">
-                {restaurantName || "Restaurant Admin"}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="overflow-hidden">
+              <span className="font-semibold text-sm text-sidebar-foreground truncate block">
+                {restaurantName || "Restaurant"}
               </span>
+            </motion.div>
+          )}
+        </div>
+
+        {/* User profile row */}
+        <div className="flex items-center gap-3 mb-3">
+          <Avatar className="w-9 h-9 shrink-0">
+            <AvatarImage src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`} />
+            <AvatarFallback className="bg-primary/20 text-primary text-sm">
+              {displayName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          {!collapsed && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col overflow-hidden">
+              <Badge variant="secondary" className="w-fit text-xs mb-0.5">{displayName}</Badge>
               <span className="text-xs text-sidebar-foreground/60 truncate">
                 {user?.email || "admin@restaurant.com"}
               </span>
             </motion.div>
           )}
         </div>
+
         <Button
           variant="ghost"
           onClick={handleLogout}
