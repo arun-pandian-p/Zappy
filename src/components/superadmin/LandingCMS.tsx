@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Save, Eye, EyeOff, GripVertical, Loader2, FileText } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Save, Eye, EyeOff, Loader2, FileText, ExternalLink, RefreshCw, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useLandingCMS, type LandingSection } from '@/hooks/useLandingCMS';
 
@@ -143,12 +142,17 @@ export function LandingCMS() {
   const { toast } = useToast();
   const { sections, isLoading, updateSection } = useLandingCMS();
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(true);
+  const [previewKey, setPreviewKey] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const handleSave = async (id: string, content: Record<string, any>, visible: boolean) => {
     setSavingId(id);
     try {
       await updateSection.mutateAsync({ id, updates: { content_json: content, is_visible: visible } });
       toast({ title: 'Saved', description: 'Section updated successfully.' });
+      // Refresh preview after save
+      setTimeout(() => setPreviewKey((k) => k + 1), 500);
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
@@ -156,29 +160,84 @@ export function LandingCMS() {
     }
   };
 
+  const refreshPreview = () => setPreviewKey((k) => k + 1);
+
   if (isLoading) {
     return <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin" /></div>;
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <FileText className="w-5 h-5 text-primary" />
-          Landing Page CMS
-        </h2>
-        <p className="text-sm text-muted-foreground">Edit your landing page sections. Toggle visibility to show/hide sections.</p>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            Landing Page CMS
+          </h2>
+          <p className="text-sm text-muted-foreground">Edit sections and see live preview side-by-side.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={refreshPreview}>
+            <RefreshCw className="w-4 h-4 mr-1" />
+            Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowPreview(!showPreview)}>
+            {showPreview ? <PanelLeftClose className="w-4 h-4 mr-1" /> : <PanelLeft className="w-4 h-4 mr-1" />}
+            {showPreview ? 'Hide Preview' : 'Show Preview'}
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href="/landing" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-4 h-4 mr-1" />
+              Open Landing
+            </a>
+          </Button>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {sections.map((section) => (
-          <SectionEditor
-            key={section.id}
-            section={section}
-            onSave={handleSave}
-            isSaving={savingId === section.id}
-          />
-        ))}
+      <div className={`flex gap-6 ${showPreview ? '' : ''}`}>
+        {/* Editor Panel */}
+        <div className={`space-y-4 overflow-y-auto ${showPreview ? 'w-1/2' : 'w-full'}`} style={{ maxHeight: 'calc(100vh - 180px)' }}>
+          {sections.map((section) => (
+            <SectionEditor
+              key={section.id}
+              section={section}
+              onSave={handleSave}
+              isSaving={savingId === section.id}
+            />
+          ))}
+        </div>
+
+        {/* Live Preview Panel */}
+        {showPreview && (
+          <div className="w-1/2 sticky top-0" style={{ height: 'calc(100vh - 180px)' }}>
+            <Card className="h-full flex flex-col">
+              <CardHeader className="pb-2 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-primary" />
+                    Live Preview
+                  </CardTitle>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-destructive/60" />
+                    <div className="w-3 h-3 rounded-full bg-accent-foreground/40" />
+                    <div className="w-3 h-3 rounded-full bg-primary/60" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 p-2 pt-0">
+                <div className="w-full h-full rounded-lg overflow-hidden border bg-white">
+                  <iframe
+                    ref={iframeRef}
+                    key={previewKey}
+                    src="/landing"
+                    className="w-full h-full border-0"
+                    title="Landing Page Preview"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
