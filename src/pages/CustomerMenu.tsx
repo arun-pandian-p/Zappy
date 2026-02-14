@@ -58,8 +58,27 @@ const CustomerMenu = () => {
   }, [slug, restaurantIdParam]);
 
   const restaurantId = resolvedRestaurantId;
-  const [dynamicTableId, setDynamicTableId] = useState(tableId);
-  const isPreviewMode = false; // No longer preview - show table picker instead
+  // Restore table from localStorage if URL param is absent (4-hour expiry)
+  const getPersistedTable = (rId: string): string => {
+    try {
+      const raw = localStorage.getItem(`qr_table_${rId}`);
+      if (!raw) return '';
+      const { tableNumber, timestamp } = JSON.parse(raw);
+      const FOUR_HOURS = 4 * 60 * 60 * 1000;
+      if (Date.now() - timestamp > FOUR_HOURS) {
+        localStorage.removeItem(`qr_table_${rId}`);
+        return '';
+      }
+      return tableNumber || '';
+    } catch {
+      return '';
+    }
+  };
+
+  const [dynamicTableId, setDynamicTableId] = useState(
+    tableId || (restaurantId ? getPersistedTable(restaurantId) : '')
+  );
+  const isPreviewMode = false;
   const showTablePicker = !dynamicTableId && !!restaurantId;
   const { toast } = useToast();
 
@@ -128,6 +147,13 @@ const CustomerMenu = () => {
 
   const handleTableSelect = (tableNumber: string) => {
     setDynamicTableId(tableNumber);
+    // Persist to localStorage for session survival
+    if (restaurantId) {
+      localStorage.setItem(
+        `qr_table_${restaurantId}`,
+        JSON.stringify({ tableNumber, timestamp: Date.now() })
+      );
+    }
     // Update URL without reload
     const url = new URL(window.location.href);
     url.searchParams.set('table', tableNumber);
