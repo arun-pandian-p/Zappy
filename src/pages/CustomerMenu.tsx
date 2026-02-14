@@ -1,4 +1,16 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+
+/** Append cache-busting param to storage URLs */
+function cacheBustUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const u = new URL(url);
+    u.searchParams.set('v', String(Math.floor(Date.now() / 60000)));
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatePresence } from 'framer-motion';
@@ -379,7 +391,7 @@ const CustomerMenu = () => {
     return (
       <QRSplashScreen
         restaurantName={restaurant?.name || 'Restaurant'}
-        logoUrl={restaurant?.logo_url}
+        logoUrl={cacheBustUrl(restaurant?.logo_url)}
         animation={brandingConfig.letter_animation}
         speed={brandingConfig.animation_speed}
         mascot={brandingConfig.mascot}
@@ -424,7 +436,7 @@ const CustomerMenu = () => {
       <div className="text-center py-6">
         {restaurant?.logo_url && (
           <img 
-            src={restaurant.logo_url} 
+            src={cacheBustUrl(restaurant.logo_url)} 
             alt={restaurant.name}
             className="w-20 h-20 mx-auto mb-3 rounded-2xl object-cover shadow-md"
           />
@@ -797,7 +809,7 @@ const CustomerMenu = () => {
       {/* Branded Top Bar */}
       <CustomerTopBar
         restaurantName={restaurant?.name || 'Restaurant'}
-        logoUrl={restaurant?.logo_url}
+        logoUrl={cacheBustUrl(restaurant?.logo_url)}
         tableNumber={tableNumber || 'Select Table'}
         cartCount={getTotalItems()}
         onCallWaiter={handleCallWaiter}
