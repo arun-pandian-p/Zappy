@@ -17,17 +17,8 @@ import AdminOnboarding from "./pages/AdminOnboarding";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import FeedbackPage from "./pages/FeedbackPage";
 import NotFound from "./pages/NotFound";
-import ArchitectureDiagram from "./pages/ArchitectureDiagram";
-import Shop from "./pages/Shop";
-import ShopProduct from "./pages/ShopProduct";
-import { useCartSync } from "./hooks/useCartSync";
 
 const queryClient = new QueryClient();
-
-function CartSyncProvider({ children }: { children: React.ReactNode }) {
-  useCartSync();
-  return <>{children}</>;
-}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -35,12 +26,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <CartSyncProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/shop/product/:handle" element={<ShopProduct />} />
           <Route path="/roles" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/super-admin/login" element={<SuperAdminLogin />} />
@@ -57,12 +45,10 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/onboarding" element={<AdminOnboarding />} />
           <Route path="/super-admin" element={<SuperAdminDashboard />} />
-          <Route path="/architecture" element={<ArchitectureDiagram />} />
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-        </CartSyncProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
