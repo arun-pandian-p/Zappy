@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Loader2, Save, Edit2, Eye } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,7 +52,10 @@ export function EmailTemplateManager() {
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                     <DialogHeader><DialogTitle>Preview: {t.template_name}</DialogTitle></DialogHeader>
-                    <div className="border rounded p-4" dangerouslySetInnerHTML={{ __html: t.body_html }} />
+                    <div className="border rounded p-4" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t.body_html, {
+                      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'p', 'a', 'strong', 'em', 'br', 'div', 'span', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'img', 'hr'],
+                      ALLOWED_ATTR: ['href', 'class', 'style', 'target', 'src', 'alt', 'width', 'height'],
+                    }) }} />
                     <div className="flex flex-wrap gap-1 mt-2">
                       {(t.variables_json as string[])?.map((v: string) => (
                         <Badge key={v} variant="secondary" className="font-mono text-xs">{`{{${v}}}`}</Badge>

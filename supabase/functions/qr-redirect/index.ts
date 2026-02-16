@@ -31,6 +31,15 @@ function detectDevice(ua: string): string {
   return "Desktop";
 }
 
+function isValidUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    return ['http:', 'https:'].includes(url.protocol);
+  } catch {
+    return false;
+  }
+}
+
 function resolveTargetUrl(targetUrl: string): string {
   // If already absolute, return as-is
   if (targetUrl.startsWith("http://") || targetUrl.startsWith("https://")) {
@@ -119,8 +128,15 @@ Deno.serve(async (req) => {
     // Increment scan count atomically via RPC
     supabase.rpc("increment_scan_count" as any, { qr_code_id: qrId }).then(() => {});
 
-    // Resolve target URL to absolute and redirect
+    // Resolve target URL to absolute and validate
     const absoluteUrl = resolveTargetUrl(qr.target_url);
+
+    if (!isValidUrl(absoluteUrl)) {
+      return new Response(
+        "<html><body><h1>Invalid Redirect URL</h1><p>This QR code contains an invalid destination.</p></body></html>",
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "text/html" } }
+      );
+    }
 
     return new Response(null, {
       status: 302,
