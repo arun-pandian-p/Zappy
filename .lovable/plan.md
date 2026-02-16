@@ -1,101 +1,83 @@
 
-# Admin Onboarding Redesign + Customer Menu Control + Security Fixes
+# Replace Icons with Avatar Components on All Login Pages
 
-This plan covers three areas: (1) redesigning the onboarding wizard UI to match the dark glassmorphism style used in login pages, (2) adding customer menu customization controls during onboarding, and (3) fixing all outstanding security issues.
-
----
-
-## 1. Onboarding UI Redesign
-
-Redesign `/admin/onboarding` to use the same dark glassmorphism split-layout aesthetic as the login pages.
-
-**Changes to `src/pages/AdminOnboarding.tsx`:**
-- Dark gradient background (`slate-950` to `slate-900`) with grid overlay and ambient glow
-- Glass card containers (`bg-white/5 backdrop-blur-xl border-white/10`) for each step
-- Stepper bar with glowing active indicators on dark surface
-- Improved typography with white/light text for dark theme
-- Framer Motion entrance animations for each step transition
-- Add input validation (hotel name required, email format, phone format)
+Transform all three login pages to use Avatar components with themed emoji/icon fallbacks instead of plain Lucide icons, inspired by the reference image showing avatar-style circular portraits. Each page will have a unique personality.
 
 ---
 
-## 2. Customer Menu Control (New Step 3)
+## Changes Overview
 
-Insert a new **"Menu Display"** step between Branding and Configuration (making it a 6-step wizard) that lets admins control how the customer-facing menu looks and behaves.
+### What Changes
+Replace the square icon badges (both on the left form header and right feature cards) with circular Avatar components using the existing `Avatar`, `AvatarImage`, and `AvatarFallback` from `src/components/ui/avatar.tsx`. Since we cannot use real photographs, each avatar will use a large themed emoji as the fallback content inside a glowing ring border that matches the portal's color theme.
 
-**New step fields:**
-- **Menu Title** -- custom heading shown on customer menu (uses existing `menu_title` column)
-- **Default View Mode** -- toggle between Grid (2-column cards) or List view as default for customers
-- **Show Offers Slider** -- toggle to enable/disable the offers carousel on the menu
-- **Show Veg/Non-veg Badges** -- toggle for dietary indicator badges on food cards
-- **Card Style** -- choose between Compact, Standard, or Detailed food card density
+### Left Panel -- Hero Avatar
+- Replace the 16x16 square icon badge with a large (24x24) circular Avatar with a glowing ring border
+- Each portal gets a unique emoji character as fallback
+- Title changes to "Welcome Back!" with role-specific subtitle (matching the reference)
 
-These preferences will be stored in the restaurant's `settings` JSONB column under a `menu_display` key, so no new database tables are needed.
-
-**Updated steps array:**
-1. Hotel Details
-2. Branding
-3. Menu Theme (colors/fonts)
-4. Menu Display (NEW -- customer menu controls)
-5. Configuration (tax/currency)
-6. Complete
+### Right Panel -- Feature Card Avatars
+- Replace the 10x10 square icon badges with 12x12 circular Avatars
+- Each feature card gets its own themed emoji representing the role
 
 ---
 
-## 3. Security Fixes
+## Per-Page Customization
 
-### 3a. Shopify Token Finding -- Delete
-The Shopify integration was already removed. Delete this resolved finding.
+### 1. Staff Portal (`/login`) -- Blue Theme
+- **Hero avatar**: Ring border `ring-blue-500/50`, emoji fallback: office worker emoji, glow `shadow-blue-500/30`
+- **Title**: "Welcome Back!" / "Sign in to access staff operations"
+- **Feature avatars**:
+  - Admin Control: shield emoji
+  - Kitchen Display: cook emoji  
+  - Billing POS: receipt emoji
 
-### 3b. Email Template XSS Fix
-**File: `src/components/superadmin/EmailTemplateManager.tsx`**
-- Install `dompurify` package
-- Sanitize `body_html` before rendering with `dangerouslySetInnerHTML`
-- Restrict allowed tags to safe email HTML elements
+### 2. Restaurant Admin (`/admin/login`) -- Orange Theme
+- **Hero avatar**: Ring border `ring-orange-500/50`, emoji fallback: chef emoji, glow `shadow-orange-500/30`
+- **Title**: "Welcome Back!" / "Sign in to manage your restaurant"
+- **Feature avatars**:
+  - Menu Manager: fork-and-knife emoji
+  - Order Tracking: clipboard emoji
+  - Analytics: chart emoji
 
-### 3c. Firecrawl Edge Functions -- Proper JWT Validation
-**Files: `supabase/functions/firecrawl-scrape/index.ts` and `supabase/functions/firecrawl-search/index.ts`**
-- Replace simple auth header presence check with actual JWT validation using Supabase client
-- Verify user exists and has `super_admin` or `restaurant_admin` role
-- Return 401/403 for invalid/unauthorized requests
-
-### 3d. System Logs -- Explicit Deny INSERT Policy
-**Database migration:**
-- Add explicit INSERT policy `WITH CHECK (false)` to block direct inserts
-- Edge functions using service role key will still bypass RLS
-
-### 3e. QR Scan Count -- Revoke Public Execute
-**Database migration:**
-- Revoke EXECUTE on `increment_scan_count` from `public`, `anon`, and `authenticated` roles
-- Add validation that QR code is active before incrementing
-- Edge function (service role) still works since it bypasses permissions
-
-### 3f. QR Redirect -- URL Validation
-**File: `supabase/functions/qr-redirect/index.ts`**
-- Add URL scheme validation to only allow `http:` and `https:` protocols
-- Return 400 error for invalid/malicious URLs
-- The `resolveTargetUrl` function already handles relative URLs
-
-### 3g. Feedback Table -- Remove Public Read
-**Database migration:**
-- The feedback table currently has no public SELECT policy (only staff can read via `restaurant_id = get_user_restaurant_id(auth.uid())`), but the INSERT policy doesn't restrict reading customer PII
-- Verify and confirm the existing policies are correctly restrictive (they already are -- only staff can SELECT)
-
-### 3h. Order Items Anonymous Read -- Mark as Acceptable
-- This is by design: customers need to see their order items without authentication (QR-based ordering)
-- Update the finding to mark it as ignored with reason
+### 3. Super Admin (`/super-admin/login`) -- Indigo Theme
+- **Hero avatar**: Ring border `ring-indigo-500/50`, emoji fallback: technologist emoji, glow `shadow-indigo-500/30`
+- **Title**: "Welcome Back!" / "Sign in to the platform console"
+- **Feature avatars**:
+  - Tenant Management: building emoji
+  - System Monitoring: satellite emoji
+  - Platform Config: gear emoji
 
 ---
 
-## Technical Summary
+## Technical Details
 
-| Area | Files Modified |
-|------|---------------|
-| Onboarding UI | `src/pages/AdminOnboarding.tsx` |
-| Menu Display Controls | `src/pages/AdminOnboarding.tsx`, `src/pages/CustomerMenu.tsx` |
-| Email XSS Fix | `src/components/superadmin/EmailTemplateManager.tsx` |
-| Firecrawl Auth | `supabase/functions/firecrawl-scrape/index.ts`, `supabase/functions/firecrawl-search/index.ts` |
-| QR Redirect Validation | `supabase/functions/qr-redirect/index.ts` |
-| DB Migrations | System logs INSERT deny, scan count function hardening |
-| Security Findings | Delete resolved, ignore by-design, fix actionable |
-| New Dependency | `dompurify` (for HTML sanitization) |
+### Files Modified
+- `src/pages/Login.tsx`
+- `src/pages/TenantAdminLogin.tsx`
+- `src/pages/SuperAdminLogin.tsx`
+
+### Implementation Pattern
+
+The hero avatar section (replacing the square icon) will look like:
+
+```text
++----------------------------------+
+|         (large avatar)           |
+|     glowing ring + emoji         |
+|                                  |
+|       "Welcome Back!"           |
+|   "Sign in to manage your..."   |
++----------------------------------+
+```
+
+Feature card avatars will use smaller Avatar components with gradient ring borders matching each card's color theme, replacing the current square gradient icon boxes.
+
+### New Imports (per file)
+- `Avatar`, `AvatarFallback` from `@/components/ui/avatar`
+
+### Removed Imports
+- Unused Lucide icons that were previously used for the badges (LogIn, Shield, etc. where no longer needed)
+- Feature card data will store an `emoji` string instead of an `icon` component reference
+
+### No New Dependencies
+Uses the existing Avatar component from shadcn/ui already installed in the project.
