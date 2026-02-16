@@ -1,67 +1,101 @@
 
+# Admin Onboarding Redesign + Customer Menu Control + Security Fixes
 
-# Redesign All Login Pages with Dark Glassmorphism Split Layout
-
-Redesign all three login pages (`/login`, `/admin/login`, `/super-admin/login`) to use a consistent dark, glassmorphism-based split layout inspired by the reference image: login form on the left, feature/role showcase on the right, with a deep dark background and glass card surfaces.
-
----
-
-## Layout Structure (All Three Pages)
-
-Each login page will follow a two-column split layout:
-
-- **Left panel**: Glass card containing the icon, title, subtitle, email/password form, sign-in button, and back link
-- **Right panel**: Bold headline, descriptive paragraph, and 3 glass feature cards with colored icon badges
-- **Background**: Dark gradient (`slate-950` to `slate-900`) with a subtle grid overlay and ambient glow effects
-- **Mobile**: Stacks vertically (form on top, features below)
+This plan covers three areas: (1) redesigning the onboarding wizard UI to match the dark glassmorphism style used in login pages, (2) adding customer menu customization controls during onboarding, and (3) fixing all outstanding security issues.
 
 ---
 
-## Page-Specific Adaptations
+## 1. Onboarding UI Redesign
 
-### 1. Staff Portal (`/login`)
-- Icon: LogIn (blue gradient badge)
-- Title: "Staff Portal"
-- Subtitle: "Secure access for restaurant staff operations"
-- Right headline: "Smart Staff Workspace"
-- Right description: "Role-based access for seamless restaurant operations from kitchen to billing -- all synchronized in real time."
-- Feature cards: Admin Control (blue, Shield), Kitchen Display (orange, ChefHat), Billing POS (green, Receipt)
+Redesign `/admin/onboarding` to use the same dark glassmorphism split-layout aesthetic as the login pages.
 
-### 2. Restaurant Admin Portal (`/admin/login`)
-- Icon: UtensilsCrossed (orange/amber gradient badge)
-- Title: "Restaurant Admin"
-- Subtitle: "Manage your restaurant operations"
-- Right headline: "Complete Restaurant Control"
-- Right description: "Full management suite for menu, orders, staff, and analytics -- everything in one place."
-- Feature cards: Menu Manager (orange), Order Tracking (blue), Analytics (purple)
-
-### 3. Super Admin Portal (`/super-admin/login`)
-- Icon: Shield (indigo/purple gradient badge)
-- Title: "Super Admin Portal"
-- Subtitle: "Platform Management Console Access"
-- Right headline: "Platform Command Center"
-- Right description: "Manage all tenants, monitor platform health, and control system-wide settings."
-- Feature cards: Tenant Management (blue), System Monitoring (amber), Platform Config (emerald)
+**Changes to `src/pages/AdminOnboarding.tsx`:**
+- Dark gradient background (`slate-950` to `slate-900`) with grid overlay and ambient glow
+- Glass card containers (`bg-white/5 backdrop-blur-xl border-white/10`) for each step
+- Stepper bar with glowing active indicators on dark surface
+- Improved typography with white/light text for dark theme
+- Framer Motion entrance animations for each step transition
+- Add input validation (hotel name required, email format, phone format)
 
 ---
 
-## Technical Details
+## 2. Customer Menu Control (New Step 3)
 
-### Files Modified
-- `src/pages/Login.tsx` -- Full redesign with split layout
-- `src/pages/TenantAdminLogin.tsx` -- Full redesign with split layout
-- `src/pages/SuperAdminLogin.tsx` -- Full redesign with split layout
+Insert a new **"Menu Display"** step between Branding and Configuration (making it a 6-step wizard) that lets admins control how the customer-facing menu looks and behaves.
 
-### Shared Styling Patterns
-- Background: `bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950`
-- Grid overlay: subtle CSS grid lines with low-opacity white
-- Ambient glow: absolute positioned blurred circles with color matching the portal theme
-- Glass card: `bg-white/5 backdrop-blur-xl border border-white/10` (using existing `glass-card` utility where appropriate)
-- Inputs: dark background (`bg-white/5 border-white/10 text-white`)
-- Sign-in button: gradient matching each portal's accent color
-- Feature cards on the right: `bg-white/5 border border-white/10` with rounded colored icon badges
-- Framer Motion entrance animations (stagger for right-side cards)
+**New step fields:**
+- **Menu Title** -- custom heading shown on customer menu (uses existing `menu_title` column)
+- **Default View Mode** -- toggle between Grid (2-column cards) or List view as default for customers
+- **Show Offers Slider** -- toggle to enable/disable the offers carousel on the menu
+- **Show Veg/Non-veg Badges** -- toggle for dietary indicator badges on food cards
+- **Card Style** -- choose between Compact, Standard, or Detailed food card density
 
-### No New Dependencies
-All changes use existing libraries (framer-motion, lucide-react, shadcn components, Tailwind).
+These preferences will be stored in the restaurant's `settings` JSONB column under a `menu_display` key, so no new database tables are needed.
 
+**Updated steps array:**
+1. Hotel Details
+2. Branding
+3. Menu Theme (colors/fonts)
+4. Menu Display (NEW -- customer menu controls)
+5. Configuration (tax/currency)
+6. Complete
+
+---
+
+## 3. Security Fixes
+
+### 3a. Shopify Token Finding -- Delete
+The Shopify integration was already removed. Delete this resolved finding.
+
+### 3b. Email Template XSS Fix
+**File: `src/components/superadmin/EmailTemplateManager.tsx`**
+- Install `dompurify` package
+- Sanitize `body_html` before rendering with `dangerouslySetInnerHTML`
+- Restrict allowed tags to safe email HTML elements
+
+### 3c. Firecrawl Edge Functions -- Proper JWT Validation
+**Files: `supabase/functions/firecrawl-scrape/index.ts` and `supabase/functions/firecrawl-search/index.ts`**
+- Replace simple auth header presence check with actual JWT validation using Supabase client
+- Verify user exists and has `super_admin` or `restaurant_admin` role
+- Return 401/403 for invalid/unauthorized requests
+
+### 3d. System Logs -- Explicit Deny INSERT Policy
+**Database migration:**
+- Add explicit INSERT policy `WITH CHECK (false)` to block direct inserts
+- Edge functions using service role key will still bypass RLS
+
+### 3e. QR Scan Count -- Revoke Public Execute
+**Database migration:**
+- Revoke EXECUTE on `increment_scan_count` from `public`, `anon`, and `authenticated` roles
+- Add validation that QR code is active before incrementing
+- Edge function (service role) still works since it bypasses permissions
+
+### 3f. QR Redirect -- URL Validation
+**File: `supabase/functions/qr-redirect/index.ts`**
+- Add URL scheme validation to only allow `http:` and `https:` protocols
+- Return 400 error for invalid/malicious URLs
+- The `resolveTargetUrl` function already handles relative URLs
+
+### 3g. Feedback Table -- Remove Public Read
+**Database migration:**
+- The feedback table currently has no public SELECT policy (only staff can read via `restaurant_id = get_user_restaurant_id(auth.uid())`), but the INSERT policy doesn't restrict reading customer PII
+- Verify and confirm the existing policies are correctly restrictive (they already are -- only staff can SELECT)
+
+### 3h. Order Items Anonymous Read -- Mark as Acceptable
+- This is by design: customers need to see their order items without authentication (QR-based ordering)
+- Update the finding to mark it as ignored with reason
+
+---
+
+## Technical Summary
+
+| Area | Files Modified |
+|------|---------------|
+| Onboarding UI | `src/pages/AdminOnboarding.tsx` |
+| Menu Display Controls | `src/pages/AdminOnboarding.tsx`, `src/pages/CustomerMenu.tsx` |
+| Email XSS Fix | `src/components/superadmin/EmailTemplateManager.tsx` |
+| Firecrawl Auth | `supabase/functions/firecrawl-scrape/index.ts`, `supabase/functions/firecrawl-search/index.ts` |
+| QR Redirect Validation | `supabase/functions/qr-redirect/index.ts` |
+| DB Migrations | System logs INSERT deny, scan count function hardening |
+| Security Findings | Delete resolved, ignore by-design, fix actionable |
+| New Dependency | `dompurify` (for HTML sanitization) |
