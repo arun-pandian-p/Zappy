@@ -261,6 +261,22 @@ const CustomerMenu = () => {
   const brandingConfig = ((restaurant?.settings as any)?.branding) || {};
   const primaryColor = restaurant?.primary_color || undefined;
 
+  // Menu display settings from restaurant
+  const menuDisplaySettings = useMemo(() => {
+    const md = (restaurant?.settings as any)?.menu_display;
+    return {
+      view_mode: md?.view_mode || 'grid',
+      show_offers: md?.show_offers ?? true,
+      show_dietary_badges: md?.show_dietary_badges ?? true,
+      card_style: md?.card_style || 'standard',
+    };
+  }, [restaurant]);
+
+  // Sync view mode from restaurant settings on initial load
+  useEffect(() => {
+    setMenuViewMode(menuDisplaySettings.view_mode);
+  }, [menuDisplaySettings.view_mode]);
+
   // Get item quantity in cart
   const getItemQuantity = useCallback((itemId: string) => {
     const cartItem = cartItems.find(i => i.id === itemId);
@@ -421,7 +437,7 @@ const CustomerMenu = () => {
   const renderHome = () => (
     <div className="space-y-6">
       {/* Offers Slider */}
-      {offers.length > 0 && (
+      {menuDisplaySettings.show_offers && offers.length > 0 && (
         <OffersSlider offers={offers} />
       )}
 
@@ -483,7 +499,7 @@ const CustomerMenu = () => {
   const renderMenu = () => (
     <div>
       {/* Offers Slider */}
-      {offers.length > 0 && (
+      {menuDisplaySettings.show_offers && offers.length > 0 && (
         <div className="mb-4">
           <OffersSlider offers={offers} />
         </div>
