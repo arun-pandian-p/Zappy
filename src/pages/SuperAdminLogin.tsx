@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogIn, Eye, EyeOff, Shield, Building2, Activity, Settings } from 'lucide-react';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 const featureCards = [
-  { icon: Building2, title: 'Tenant Management', desc: 'Onboard, configure & monitor all restaurants', color: 'from-blue-500 to-blue-600' },
-  { icon: Activity, title: 'System Monitoring', desc: 'Platform health, logs & real-time metrics', color: 'from-amber-500 to-orange-500' },
-  { icon: Settings, title: 'Platform Config', desc: 'Global settings, plans & email templates', color: 'from-emerald-500 to-green-500' },
+  { emoji: '🏢', title: 'Tenant Management', desc: 'Onboard, configure & monitor all restaurants', ringColor: 'ring-blue-500/40' },
+  { emoji: '🛰️', title: 'System Monitoring', desc: 'Platform health, logs & real-time metrics', ringColor: 'ring-amber-500/40' },
+  { emoji: '⚙️', title: 'Platform Config', desc: 'Global settings, plans & email templates', ringColor: 'ring-emerald-500/40' },
 ];
 
 const SuperAdminLogin = () => {
@@ -69,12 +70,12 @@ const SuperAdminLogin = () => {
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 space-y-6">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
+              <Avatar className="h-24 w-24 ring-4 ring-indigo-500/50 shadow-lg shadow-indigo-500/30">
+                <AvatarFallback className="text-4xl bg-indigo-500/10 text-white">🧑‍💻</AvatarFallback>
+              </Avatar>
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-white">Super Admin Portal</h1>
-                <p className="text-sm text-slate-400 mt-1">Platform Management Console Access</p>
+                <h1 className="text-2xl font-bold text-white">Welcome Back!</h1>
+                <p className="text-sm text-slate-400 mt-1">Sign in to the platform console</p>
               </div>
             </div>
 
@@ -117,9 +118,9 @@ const SuperAdminLogin = () => {
           <div className="space-y-4">
             {featureCards.map((f, i) => (
               <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-start gap-4">
-                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${f.color} flex items-center justify-center shrink-0`}>
-                  <f.icon className="w-5 h-5 text-white" />
-                </div>
+                <Avatar className={`h-12 w-12 ring-2 ${f.ringColor} shrink-0`}>
+                  <AvatarFallback className="text-xl bg-white/5">{f.emoji}</AvatarFallback>
+                </Avatar>
                 <div>
                   <h3 className="text-white font-semibold text-sm">{f.title}</h3>
                   <p className="text-slate-400 text-xs mt-0.5">{f.desc}</p>

@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogIn, Eye, EyeOff, ChefHat, Shield, Receipt } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 const featureCards = [
-  { icon: Shield, title: 'Admin Control', desc: 'Full dashboard access & staff management', color: 'from-blue-500 to-blue-600' },
-  { icon: ChefHat, title: 'Kitchen Display', desc: 'Real-time order queue & prep tracking', color: 'from-orange-500 to-amber-500' },
-  { icon: Receipt, title: 'Billing POS', desc: 'Fast checkout, splits & receipt printing', color: 'from-emerald-500 to-green-500' },
+  { emoji: '🛡️', title: 'Admin Control', desc: 'Full dashboard access & staff management', ringColor: 'ring-blue-500/40' },
+  { emoji: '👨‍🍳', title: 'Kitchen Display', desc: 'Real-time order queue & prep tracking', ringColor: 'ring-orange-500/40' },
+  { emoji: '🧾', title: 'Billing POS', desc: 'Fast checkout, splits & receipt printing', ringColor: 'ring-emerald-500/40' },
 ];
 
 const Login = () => {
@@ -58,9 +59,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 overflow-hidden">
-      {/* Grid overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:48px_48px]" />
-      {/* Ambient glows */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/8 rounded-full blur-[120px]" />
 
@@ -69,12 +68,12 @@ const Login = () => {
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 space-y-6">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <LogIn className="w-8 h-8 text-white" />
-              </div>
+              <Avatar className="h-24 w-24 ring-4 ring-blue-500/50 shadow-lg shadow-blue-500/30">
+                <AvatarFallback className="text-4xl bg-blue-500/10 text-white">🧑‍💼</AvatarFallback>
+              </Avatar>
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-white">Staff Portal</h1>
-                <p className="text-sm text-slate-400 mt-1">Secure access for restaurant staff operations</p>
+                <h1 className="text-2xl font-bold text-white">Welcome Back!</h1>
+                <p className="text-sm text-slate-400 mt-1">Sign in to access staff operations</p>
               </div>
             </div>
 
@@ -112,9 +111,9 @@ const Login = () => {
           <div className="space-y-4">
             {featureCards.map((f, i) => (
               <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-start gap-4">
-                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${f.color} flex items-center justify-center shrink-0`}>
-                  <f.icon className="w-5 h-5 text-white" />
-                </div>
+                <Avatar className={`h-12 w-12 ring-2 ${f.ringColor} shrink-0`}>
+                  <AvatarFallback className="text-xl bg-white/5">{f.emoji}</AvatarFallback>
+                </Avatar>
                 <div>
                   <h3 className="text-white font-semibold text-sm">{f.title}</h3>
                   <p className="text-slate-400 text-xs mt-0.5">{f.desc}</p>

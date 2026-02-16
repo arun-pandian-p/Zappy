@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, UtensilsCrossed, ClipboardList, BarChart3 } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 const featureCards = [
-  { icon: UtensilsCrossed, title: 'Menu Manager', desc: 'Create, update & organize your full menu', color: 'from-orange-500 to-amber-500' },
-  { icon: ClipboardList, title: 'Order Tracking', desc: 'Live order pipeline from placed to served', color: 'from-blue-500 to-blue-600' },
-  { icon: BarChart3, title: 'Analytics', desc: 'Revenue trends, top items & customer insights', color: 'from-purple-500 to-violet-500' },
+  { emoji: '🍴', title: 'Menu Manager', desc: 'Create, update & organize your full menu', ringColor: 'ring-orange-500/40' },
+  { emoji: '📋', title: 'Order Tracking', desc: 'Live order pipeline from placed to served', ringColor: 'ring-blue-500/40' },
+  { emoji: '📊', title: 'Analytics', desc: 'Revenue trends, top items & customer insights', ringColor: 'ring-purple-500/40' },
 ];
 
 const TenantAdminLogin = () => {
@@ -71,12 +72,12 @@ const TenantAdminLogin = () => {
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 space-y-6">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/25">
-                <UtensilsCrossed className="w-8 h-8 text-white" />
-              </div>
+              <Avatar className="h-24 w-24 ring-4 ring-orange-500/50 shadow-lg shadow-orange-500/30">
+                <AvatarFallback className="text-4xl bg-orange-500/10 text-white">👨‍🍳</AvatarFallback>
+              </Avatar>
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-white">Restaurant Admin</h1>
-                <p className="text-sm text-slate-400 mt-1">Manage your restaurant operations</p>
+                <h1 className="text-2xl font-bold text-white">Welcome Back!</h1>
+                <p className="text-sm text-slate-400 mt-1">Sign in to manage your restaurant</p>
               </div>
             </div>
 
@@ -114,9 +115,9 @@ const TenantAdminLogin = () => {
           <div className="space-y-4">
             {featureCards.map((f, i) => (
               <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-start gap-4">
-                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${f.color} flex items-center justify-center shrink-0`}>
-                  <f.icon className="w-5 h-5 text-white" />
-                </div>
+                <Avatar className={`h-12 w-12 ring-2 ${f.ringColor} shrink-0`}>
+                  <AvatarFallback className="text-xl bg-white/5">{f.emoji}</AvatarFallback>
+                </Avatar>
                 <div>
                   <h3 className="text-white font-semibold text-sm">{f.title}</h3>
                   <p className="text-slate-400 text-xs mt-0.5">{f.desc}</p>
