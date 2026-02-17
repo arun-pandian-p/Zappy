@@ -191,7 +191,7 @@ const CustomerMenu = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'menu_items', filter: `restaurant_id=eq.${restaurantId}` },
-        () => { queryClient.invalidateQueries({ queryKey: ['menuItems', restaurantId] }); }
+        () => { queryClient.invalidateQueries({ queryKey: ['menu_items', restaurantId] }); }
       )
       .subscribe();
 
@@ -271,6 +271,68 @@ const CustomerMenu = () => {
       card_style: md?.card_style || 'standard',
     };
   }, [restaurant]);
+
+  // Dynamic theme: convert hex to HSL for CSS variable injection
+  const themeStyles = useMemo(() => {
+    const hexToHSL = (hex: string): string | null => {
+      if (!hex) return null;
+      const h = hex.replace('#', '');
+      if (h.length !== 6) return null;
+      const r = parseInt(h.substring(0, 2), 16) / 255;
+      const g = parseInt(h.substring(2, 4), 16) / 255;
+      const b = parseInt(h.substring(4, 6), 16) / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let hue = 0, sat = 0;
+      const l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: hue = ((g - b) / d + (g < b ? 6 : 0)) * 60; break;
+          case g: hue = ((b - r) / d + 2) * 60; break;
+          case b: hue = ((r - g) / d + 4) * 60; break;
+        }
+      }
+      return `${Math.round(hue)} ${Math.round(sat * 100)}% ${Math.round(l * 100)}%`;
+    };
+
+    const styles: Record<string, string> = {};
+    if (restaurant?.primary_color) {
+      const hsl = hexToHSL(restaurant.primary_color);
+      if (hsl) styles['--primary'] = hsl;
+    }
+    if (restaurant?.secondary_color) {
+      const hsl = hexToHSL(restaurant.secondary_color);
+      if (hsl) styles['--success'] = hsl;
+    }
+    if (restaurant?.font_family) {
+      styles['fontFamily'] = restaurant.font_family;
+    }
+    return styles;
+  }, [restaurant?.primary_color, restaurant?.secondary_color, restaurant?.font_family]);
+
+  // Group filtered items by category for banner support
+  const groupedItems = useMemo(() => {
+    if (selectedCategory !== 'All') return null; // no grouping when category is selected
+    const groups: { category: { name: string; image_url?: string | null }; items: typeof filteredItems }[] = [];
+    const catMap = new Map<string, typeof filteredItems>();
+    const catInfo = new Map<string, { name: string; image_url?: string | null }>();
+    
+    filteredItems.forEach(item => {
+      const catName = item.category?.name || 'Other';
+      if (!catMap.has(catName)) {
+        catMap.set(catName, []);
+        const cat = categories.find(c => c.name === catName);
+        catInfo.set(catName, { name: catName, image_url: cat?.image_url });
+      }
+      catMap.get(catName)!.push(item);
+    });
+    
+    catMap.forEach((items, catName) => {
+      groups.push({ category: catInfo.get(catName)!, items });
+    });
+    return groups;
+  }, [filteredItems, selectedCategory, categories]);
 
   // Sync view mode from restaurant settings on initial load
   useEffect(() => {
@@ -548,52 +610,87 @@ const CustomerMenu = () => {
 
       {/* Menu Items */}
       <div className="mt-4">
-      {menuViewMode === 'list' ? (
-        <div className="space-y-3">
-          <AnimatePresence mode="popLayout">
-            {filteredItems.map((item) => (
-              <MenuItemRow
-                key={item.id}
-                id={item.id}
-                name={item.name}
-                description={item.description}
-                price={Number(item.price)}
-                imageUrl={item.image_url}
-                isVegetarian={item.is_vegetarian || false}
-                isPopular={item.is_popular || false}
-                prepTime={item.prep_time_minutes}
-                currencySymbol={currencySymbol}
-                quantity={getItemQuantity(item.id)}
-                onAdd={() => handleAddToCart(item)}
-                onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
-                onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
-              />
-            ))}
-          </AnimatePresence>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          <AnimatePresence mode="popLayout">
-            {filteredItems.map((item) => (
-              <FoodCard
-                key={item.id}
-                id={item.id}
-                name={item.name}
-                description={item.description}
-                price={Number(item.price)}
-                imageUrl={item.image_url}
-                isVegetarian={item.is_vegetarian || false}
-                isPopular={item.is_popular || false}
-                currencySymbol={currencySymbol}
-                quantity={getItemQuantity(item.id)}
-                onAdd={() => handleAddToCart(item)}
-                onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
-                onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
-              />
-            ))}
-          </AnimatePresence>
-        </div>
-      )}
+      {(() => {
+        const renderItemList = (items: typeof filteredItems) => (
+          <div className="space-y-3">
+            <AnimatePresence mode="popLayout">
+              {items.map((item) => (
+                <MenuItemRow
+                  key={item.id}
+                  id={item.id}
+                  name={item.name}
+                  description={item.description}
+                  price={Number(item.price)}
+                  imageUrl={item.image_url}
+                  isVegetarian={item.is_vegetarian || false}
+                  isPopular={item.is_popular || false}
+                  prepTime={item.prep_time_minutes}
+                  spicyLevel={item.spicy_level}
+                  currencySymbol={currencySymbol}
+                  cardStyle={menuDisplaySettings.card_style as any}
+                  quantity={getItemQuantity(item.id)}
+                  onAdd={() => handleAddToCart(item)}
+                  onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
+                  onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        );
+
+        const renderItemGrid = (items: typeof filteredItems) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            <AnimatePresence mode="popLayout">
+              {items.map((item) => (
+                <FoodCard
+                  key={item.id}
+                  id={item.id}
+                  name={item.name}
+                  description={item.description}
+                  price={Number(item.price)}
+                  imageUrl={item.image_url}
+                  isVegetarian={item.is_vegetarian || false}
+                  isPopular={item.is_popular || false}
+                  prepTime={item.prep_time_minutes}
+                  spicyLevel={item.spicy_level}
+                  currencySymbol={currencySymbol}
+                  cardStyle={menuDisplaySettings.card_style as any}
+                  quantity={getItemQuantity(item.id)}
+                  onAdd={() => handleAddToCart(item)}
+                  onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
+                  onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        );
+
+        // Category banners + grouped items when viewing "All"
+        if (groupedItems) {
+          return (
+            <div className="space-y-6">
+              {groupedItems.map((group) => (
+                <div key={group.category.name}>
+                  {/* Category Banner */}
+                  {group.category.image_url ? (
+                    <div className="relative rounded-xl overflow-hidden mb-3 h-24">
+                      <img src={group.category.image_url} alt={group.category.name} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center px-4">
+                        <h3 className="text-white font-bold text-lg">{group.category.name}</h3>
+                      </div>
+                    </div>
+                  ) : (
+                    <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wide mb-2 px-1">{group.category.name}</h3>
+                  )}
+                  {menuViewMode === 'list' ? renderItemList(group.items) : renderItemGrid(group.items)}
+                </div>
+              ))}
+            </div>
+          );
+        }
+
+        return menuViewMode === 'list' ? renderItemList(filteredItems) : renderItemGrid(filteredItems);
+      })()}
 
       {filteredItems.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
@@ -800,7 +897,7 @@ const CustomerMenu = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-24" style={themeStyles as React.CSSProperties}>
       {/* Table Picker Dialog */}
       <TablePickerDialog
         open={showTablePicker}
