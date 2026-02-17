@@ -1,13 +1,14 @@
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, Volume2, VolumeX, BarChart3, Receipt, Clock, ArrowLeft,
   FileText, Banknote, Smartphone, CreditCard as CardIcon, Printer,
   AlertCircle, RefreshCw, Users, TrendingUp, Percent, Eye, ChevronDown, ChevronUp,
-  User, Phone, Hash, Calendar, IndianRupee, Wallet, Split
+  User, Phone, Hash, Calendar, IndianRupee, Wallet, Split, Search, Keyboard
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -68,8 +69,26 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   const [selectedTableFilter, setSelectedTableFilter] = useState<string | null>(null);
   const [selectedDiscount, setSelectedDiscount] = useState(0);
   const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
+  const [cashReceived, setCashReceived] = useState<number>(0);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const itemSearchRef = useRef<HTMLInputElement>(null);
+  const [itemSearchQuery, setItemSearchQuery] = useState('');
 
   const { isMuted, toggleMute, play: playSound } = useSound(SOUNDS.ORDER_READY);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      
+      if (e.key === 'F1') { e.preventDefault(); itemSearchRef.current?.focus(); }
+      if (e.key === 'F9') { e.preventDefault(); setSelectedDiscount(prev => prev === 0 ? 5 : prev === 5 ? 10 : prev === 10 ? 15 : prev === 15 ? 20 : 0); }
+      if (e.ctrlKey && e.key === 'p') { e.preventDefault(); handlePrintReceipt(); }
+      if (e.key === '?') { setShowShortcuts(prev => !prev); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const readyOrders = useMemo(() => {
     const orders = allOrders.filter((o) => o.status === 'ready' || o.status === 'served');
@@ -225,6 +244,9 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
               <Button variant="outline" size="icon" onClick={toggleMute}>
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
+              <Button variant="outline" size="icon" onClick={() => setShowShortcuts(!showShortcuts)} title="Keyboard shortcuts (?)">
+                <Keyboard className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         </div>
@@ -250,6 +272,43 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
           {/* ════════════════════════ BILLING TAB ════════════════════════ */}
           <TabsContent value="billing">
+            {/* Keyboard Shortcuts Banner */}
+            <AnimatePresence>
+              {showShortcuts && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden mb-4"
+                >
+                  <Card className="bg-muted/50 border-dashed">
+                    <CardContent className="p-4">
+                      <p className="text-xs font-medium mb-2 text-muted-foreground">Keyboard Shortcuts</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                        <span><kbd className="px-1.5 py-0.5 bg-background rounded border text-[10px]">F1</kbd> Search items</span>
+                        <span><kbd className="px-1.5 py-0.5 bg-background rounded border text-[10px]">F9</kbd> Cycle discount</span>
+                        <span><kbd className="px-1.5 py-0.5 bg-background rounded border text-[10px]">Ctrl+P</kbd> Print receipt</span>
+                        <span><kbd className="px-1.5 py-0.5 bg-background rounded border text-[10px]">?</kbd> Toggle shortcuts</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Item Search Bar */}
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  ref={itemSearchRef}
+                  placeholder="Search items to add to order (F1)..."
+                  value={itemSearchQuery}
+                  onChange={(e) => setItemSearchQuery(e.target.value)}
+                  className="pl-10 h-10"
+                />
+              </div>
+            </div>
             {/* Table Selector */}
             {tables.length > 0 && (
               <div className="mb-6">
@@ -518,6 +577,31 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                       >
                         {isProcessing ? 'Processing...' : `Pay ${currencySymbol}${adjustedTotal.toFixed(2)} via ${selectedPaymentMethod.toUpperCase()}`}
                       </Button>
+
+                      {/* Cash Received & Change */}
+                      {selectedPaymentMethod === 'cash' && (
+                        <div className="mt-3 p-3 bg-muted/30 rounded-lg space-y-2">
+                          <label className="text-xs font-medium text-muted-foreground">Cash Received</label>
+                          <Input
+                            type="number"
+                            placeholder="Enter amount received..."
+                            value={cashReceived || ''}
+                            onChange={(e) => setCashReceived(Number(e.target.value))}
+                            className="h-10"
+                          />
+                          {cashReceived > 0 && cashReceived >= adjustedTotal && (
+                            <div className="flex justify-between items-center pt-1">
+                              <span className="text-sm font-medium text-success">Change to Return</span>
+                              <span className="text-lg font-bold text-success">
+                                {currencySymbol}{(cashReceived - adjustedTotal).toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                          {cashReceived > 0 && cashReceived < adjustedTotal && (
+                            <p className="text-xs text-destructive">Insufficient amount (short by {currencySymbol}{(adjustedTotal - cashReceived).toFixed(2)})</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-16 text-muted-foreground">
