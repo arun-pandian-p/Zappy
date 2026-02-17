@@ -14,6 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      addon_groups: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          max_select: number
+          min_select: number
+          name: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          max_select?: number
+          min_select?: number
+          name: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          max_select?: number
+          min_select?: number
+          name?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_groups_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      addon_options: {
+        Row: {
+          addon_group_id: string
+          created_at: string
+          display_order: number
+          id: string
+          is_available: boolean
+          name: string
+          price: number
+        }
+        Insert: {
+          addon_group_id: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_available?: boolean
+          name: string
+          price?: number
+        }
+        Update: {
+          addon_group_id?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_available?: boolean
+          name?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_options_addon_group_id_fkey"
+            columns: ["addon_group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ads: {
         Row: {
           clicks: number | null
@@ -413,6 +492,47 @@ export type Database = {
           },
         ]
       }
+      inventory_items: {
+        Row: {
+          created_at: string
+          current_stock: number
+          id: string
+          low_stock_threshold: number
+          name: string
+          restaurant_id: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_stock?: number
+          id?: string
+          low_stock_threshold?: number
+          name: string
+          restaurant_id: string
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_stock?: number
+          id?: string
+          low_stock_threshold?: number
+          name?: string
+          restaurant_id?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_sync_log: {
         Row: {
           created_at: string | null
@@ -571,6 +691,7 @@ export type Database = {
       }
       menu_items: {
         Row: {
+          addon_group_ids: string[] | null
           category_id: string | null
           created_at: string | null
           description: string | null
@@ -590,6 +711,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          addon_group_ids?: string[] | null
           category_id?: string | null
           created_at?: string | null
           description?: string | null
@@ -609,6 +731,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          addon_group_ids?: string[] | null
           category_id?: string | null
           created_at?: string | null
           description?: string | null
@@ -716,6 +839,8 @@ export type Database = {
           order_id: string
           price: number
           quantity: number
+          selected_addons: Json | null
+          selected_variants: Json | null
           special_instructions: string | null
           status: Database["public"]["Enums"]["order_status"] | null
         }
@@ -727,6 +852,8 @@ export type Database = {
           order_id: string
           price: number
           quantity?: number
+          selected_addons?: Json | null
+          selected_variants?: Json | null
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
         }
@@ -738,6 +865,8 @@ export type Database = {
           order_id?: string
           price?: number
           quantity?: number
+          selected_addons?: Json | null
+          selected_variants?: Json | null
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
         }
@@ -760,6 +889,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
           created_at: string | null
           customer_name: string | null
           customer_phone: string | null
@@ -781,6 +912,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string | null
           customer_name?: string | null
           customer_phone?: string | null
@@ -802,6 +935,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string | null
           customer_name?: string | null
           customer_phone?: string | null
@@ -1019,6 +1154,45 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_mappings: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string
+          menu_item_id: string
+          quantity_used: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          menu_item_id: string
+          quantity_used?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          menu_item_id?: string
+          quantity_used?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_mappings_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_mappings_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
             referencedColumns: ["id"]
           },
         ]
@@ -1467,6 +1641,88 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      variant_groups: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_required: boolean
+          max_select: number
+          menu_item_id: string
+          min_select: number
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_required?: boolean
+          max_select?: number
+          menu_item_id: string
+          min_select?: number
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_required?: boolean
+          max_select?: number
+          menu_item_id?: string
+          min_select?: number
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "variant_groups_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      variant_options: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_available: boolean
+          name: string
+          price_modifier: number
+          variant_group_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_available?: boolean
+          name: string
+          price_modifier?: number
+          variant_group_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_available?: boolean
+          name?: string
+          price_modifier?: number
+          variant_group_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "variant_options_variant_group_id_fkey"
+            columns: ["variant_group_id"]
+            isOneToOne: false
+            referencedRelation: "variant_groups"
             referencedColumns: ["id"]
           },
         ]
