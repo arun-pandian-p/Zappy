@@ -1,168 +1,129 @@
 
+# Customer Menu UI Builder + Realtime Sync + Compact Design
 
-# Feature Gap Analysis & Enhancement Plan
-
-After scraping quickmenu.ai and analyzing the PRD against the current QR Dine Pro codebase, here is a gap analysis and implementation plan for **missing features and enhancements only**. No existing features will be removed or degraded.
-
----
-
-## Gap Analysis Summary
-
-| PRD Feature | Current Status | Action |
-|---|---|---|
-| QR ordering + table mapping | Done | -- |
-| Menu browsing + categories | Done | -- |
-| Image upload for menu items | Done (ImageUpload component) | -- |
-| Cart + checkout + tax | Done | -- |
-| Coupons/discounts | Done | -- |
-| Order lifecycle (5 statuses) | Done | -- |
-| KDS with real-time + sounds | Done | -- |
-| POS/Billing with split pay | Done | -- |
-| Waiter dashboard | Exists but uses **mock data** | **Fix: connect to live DB** |
-| Customer order tracking | Done | -- |
-| Feedback/reviews | Done | -- |
-| Analytics/reports | Done | -- |
-| QR management | Done | -- |
-| User roles + permissions | Done | -- |
-| Super Admin panel | Done | -- |
-| **Variants engine** | **Missing** | **Add** |
-| **Add-ons engine** | **Missing** | **Add** |
-| **Order cancel with reason** | **Missing** | **Add** |
-| **Menu item edit (inline)** | **Missing** (only add/delete) | **Add** |
-| **Inventory/stock tracking** | **Missing** | **Add (basic)** |
-| **Customer special instructions per item** | Partial (order-level only) | **Enhance** |
+This plan addresses the full PDR: fixing the broken admin preview sync, adding an Appearance Studio to the admin panel, applying tenant theme/branding dynamically on the customer menu, and improving the menu's compact layout.
 
 ---
 
-## Implementation Plan (5 Phases)
+## What's Broken Now
 
-### Phase 1: Variants & Add-ons System (Database + Admin + Customer)
+1. **Admin preview URL is stale**: `AdminDashboard.tsx` line 464 still points to `/order` instead of `/customer-menu` -- the preview iframe loads nothing.
+2. **Realtime sync partially working**: The customer menu already subscribes to `restaurants`, `offers`, and `menu_items` changes via Supabase Realtime, but the query key for menu items uses `menuItems` in the subscription but `menu_items` in the hook -- mismatch needs fixing.
+3. **Theme/branding not applied**: The customer menu fetches `primary_color`, `font_family`, `theme_config` from the restaurant record but never applies them as CSS custom properties. Colors and fonts are hardcoded via Tailwind defaults.
+4. **No Appearance Studio**: Settings panel has basic restaurant info, tax, printer, reviews -- no dedicated section for colors, fonts, logo management, or menu density controls.
 
-**Database migration** -- Create 4 new tables:
+---
 
-- `variant_groups` (id, menu_item_id, name, is_required, min_select, max_select, display_order)
-- `variant_options` (id, variant_group_id, name, price_modifier, is_available, display_order)
-- `addon_groups` (id, restaurant_id, name, min_select, max_select, display_order)
-- `addon_options` (id, addon_group_id, name, price, is_available, display_order)
-- Add `addon_group_ids` (text array) column to `menu_items` for linking
-- Add `selected_variants` and `selected_addons` JSONB columns to `order_items`
+## Implementation Phases
 
-**Admin UI** -- New component `VariantAddonManager.tsx`:
-- Inline variant group editor on the menu item form
-- Add variant options with price modifiers (e.g., Size: Small +0, Medium +30, Large +60)
-- Addon group manager (e.g., "Extra Toppings" with options like Cheese +20)
-
-**Customer UI** -- New component `ItemCustomizationSheet.tsx`:
-- Bottom sheet triggered when customer taps "Add" on an item with variants/addons
-- Shows variant groups as radio/checkbox selections
-- Shows addon groups as multi-select checkboxes
-- Updates price dynamically
-- Special instructions text field per item
-
-**Cart store update** -- Extend cart item type to include selectedVariants, selectedAddons, and specialInstructions.
-
-**Files created:**
-- `src/components/admin/VariantAddonManager.tsx`
-- `src/components/menu/ItemCustomizationSheet.tsx`
-- `src/hooks/useVariants.ts`
-- `src/hooks/useAddons.ts`
+### Phase 1: Fix Preview URL + Realtime Query Key
 
 **Files modified:**
-- `src/stores/cartStore.ts` (extend CartItem type)
-- `src/pages/AdminDashboard.tsx` (add variant/addon UI to menu tab)
-- `src/pages/CustomerMenu.tsx` (open customization sheet before adding)
-- `src/components/menu/FoodCard.tsx` (show "Customizable" badge)
-- `src/pages/KitchenDashboard.tsx` (display selected variants/addons in order card)
-- `src/pages/BillingCounter.tsx` (show variants/addons in item summary)
+- `src/pages/AdminDashboard.tsx` -- Change `customerPreviewUrl` from `/order?r=` to `/customer-menu?r=`
+- `src/pages/CustomerMenu.tsx` -- Fix realtime subscription query key from `menuItems` to `menu_items` to match the hook's queryKey
 
----
+### Phase 2: Dynamic Theme Application on Customer Menu
 
-### Phase 2: Menu Item Edit & Order Cancel with Reason
+Apply the tenant's `primary_color`, `secondary_color`, `font_family`, and `theme_config` as inline CSS custom properties on the customer menu root element. This makes all Tailwind theme tokens (`--primary`, `--success`, etc.) respond to admin changes instantly via realtime.
 
-**Menu item inline editing:**
-- New `EditMenuItemDialog.tsx` component -- dialog with all fields (name, price, description, category, image, vegetarian, variants)
-- Add "Edit" button to each menu item card in admin dashboard
-- Uses existing `useMenuItems` hook with a new `useUpdateMenuItem` mutation
-
-**Order cancel with reason:**
-- Add `cancel_reason` and `cancelled_at` columns to `orders` table
-- New `CancelOrderDialog.tsx` component with predefined reasons (Out of stock, Customer request, Kitchen issue, Other) + free text
-- Add Cancel button to KDS pending/preparing orders
-- Notify customer side via realtime status change
-
-**Files created:**
-- `src/components/admin/EditMenuItemDialog.tsx`
-- `src/components/admin/CancelOrderDialog.tsx`
+**How it works:**
+- When `restaurant` data loads, convert `primary_color` (hex) to HSL and inject as `--primary` CSS variable
+- Apply `font_family` to the root container's `fontFamily` style
+- The `theme_config.button_style` controls border-radius on Add buttons
 
 **Files modified:**
-- `src/hooks/useMenuItems.ts` (add updateMenuItem mutation)
-- `src/hooks/useOrders.ts` (add cancelOrder mutation)
-- `src/pages/AdminDashboard.tsx` (add edit button)
-- `src/pages/KitchenDashboard.tsx` (add cancel button + dialog)
-- `src/pages/CustomerMenu.tsx` (show cancel reason if order cancelled)
+- `src/pages/CustomerMenu.tsx` -- Add a `useMemo` that converts hex colors to HSL, wrap the root `<div>` with `style={{ }}` containing CSS custom properties and fontFamily
+- `src/components/menu/CustomerTopBar.tsx` -- Apply tenant primary color to the logo border and name color
 
----
+**No database changes needed** -- the `restaurants` table already has `primary_color`, `secondary_color`, `font_family`, and `theme_config` (JSONB) columns.
 
-### Phase 3: Waiter Dashboard -- Connect to Live Data
+### Phase 3: Appearance Studio in Admin Panel
 
-The current `WaiterDashboard.tsx` uses **hardcoded mock data** (`mockTables`, `mockOrders`, `mockWaiterCalls`). This needs to be connected to the live database.
+A new admin tab called "Appearance" that consolidates all visual customization into one place.
 
-**Changes to `src/pages/WaiterDashboard.tsx`:**
-- Replace all mock data imports with live hooks (`useTables`, `useOrders`, `usePendingWaiterCalls`, `useRespondToWaiterCall`)
-- Add restaurant ID resolution (same pattern as KitchenDashboard)
-- Add real-time subscriptions for order + waiter call updates
-- Add sound alerts for new waiter calls
-- Add "Take Order" action -- navigate to customer menu in staff mode
+**New file: `src/components/admin/AppearanceStudio.tsx`**
 
----
+Sections inside the studio:
 
-### Phase 4: Basic Inventory & Stock Management
+1. **Logo Manager** -- Upload/replace header logo, favicon, banner, cover image (reuses existing `ImageUpload` component and the existing `menu-images` storage bucket)
+2. **Theme Colors** -- Color pickers for primary, secondary, accent colors with live preview swatch
+3. **Typography** -- Font family selector (Inter, Playfair Display, Roboto, Poppins, Lato, Montserrat) for headings and body
+4. **Menu Layout** -- Grid/List toggle, card density slider (compact/standard/detailed), offers slider toggle, dietary badges toggle
+5. **Theme Presets** -- Quick-apply presets (Classic, Dark, Premium, Minimal) same as onboarding
+6. **Animation Controls** -- Enable/disable fade-in on items, hover zoom on images (stored in `theme_config`)
 
-**Database migration:**
-- `inventory_items` table (id, restaurant_id, name, unit, current_stock, low_stock_threshold, updated_at)
-- `recipe_mappings` table (id, menu_item_id, inventory_item_id, quantity_used)
-
-**Admin UI** -- New tab "Inventory" in AdminDashboard:
-- `InventoryManager.tsx` component
-- Table view of inventory items with stock levels
-- Color-coded low stock warnings (red/yellow/green)
-- Manual stock adjustment (add/subtract with reason)
-- Recipe linking -- map menu items to inventory ingredients
-- Auto-deduction logic: when order moves to "preparing", deduct mapped quantities
-
-**Files created:**
-- `src/components/admin/InventoryManager.tsx`
-- `src/hooks/useInventory.ts`
+All settings save to the existing `restaurants` table columns (`primary_color`, `secondary_color`, `font_family`, `theme_config`, `logo_url`, `favicon_url`, `banner_image_url`, `cover_image_url`, `settings.menu_display`).
 
 **Files modified:**
-- `src/pages/AdminDashboard.tsx` (add Inventory tab)
-- `src/components/admin/AdminSidebar.tsx` (add Inventory nav item)
+- `src/pages/AdminDashboard.tsx` -- Add "Appearance" tab to `mainTabs` array, render `AppearanceStudio` component
+- `src/components/admin/AdminSidebar.tsx` -- Add "Appearance" nav item with Palette icon
 
----
+### Phase 4: Compact Menu Card Enhancements
 
-### Phase 5: Enhanced Billing POS (Keyboard Shortcuts + Item Search)
+Improve the FoodCard and MenuItemRow components to respect the admin's `card_style` setting:
 
-Inspired by the reference POS image (image-63), enhance the BillingCounter:
-
-- **Keyboard shortcuts**: F1 (search items), F2 (change qty), F8 (additional charges), F9 (bill discount), Ctrl+P (print), Ctrl+M (other payments)
-- **Item search bar** at the top of billing -- search and add items directly to a new order (for walk-in/counter orders without QR)
-- **Change to Return** calculation -- show change amount when cash received exceeds total
-- **"New Bill" button** -- create orders directly from the POS for counter sales
+- **Compact mode**: Smaller image (aspect 2:1), no description, tighter padding, height under 140px
+- **Standard mode**: Current layout (unchanged)
+- **Detailed mode**: Larger image, full description, prep time, spicy level indicator
 
 **Files modified:**
-- `src/pages/BillingCounter.tsx` (add keyboard shortcuts, item search, change calculation)
+- `src/components/menu/FoodCard.tsx` -- Accept `cardStyle` prop, adjust aspect ratio and content based on density
+- `src/components/menu/MenuItemRow.tsx` -- Accept `cardStyle` prop for compact/detailed variants
+- `src/pages/CustomerMenu.tsx` -- Pass `menuDisplaySettings.card_style` to FoodCard and MenuItemRow
+
+### Phase 5: Category Banner Support
+
+Allow category images (already in `categories.image_url` column) to display as banners between menu sections when the customer scrolls.
+
+**Files modified:**
+- `src/pages/CustomerMenu.tsx` -- Group filtered items by category, render category header with image if available before each group
 
 ---
 
-## Technical Summary
+## Technical Details
 
-| Phase | New Tables | New Files | Modified Files |
-|---|---|---|---|
-| 1 - Variants/Addons | 4 tables + 3 columns | 4 files | 6 files |
-| 2 - Edit/Cancel | 2 columns | 2 files | 5 files |
-| 3 - Waiter Live | 0 | 0 | 1 file |
-| 4 - Inventory | 2 tables | 2 files | 2 files |
-| 5 - POS Enhance | 0 | 0 | 1 file |
+### Hex to HSL Conversion (for CSS variables)
+```text
+function hexToHSL(hex: string): string {
+  // Convert hex -> RGB -> HSL
+  // Return "H S% L%" format for CSS var injection
+}
+```
 
-**No existing features are removed.** All changes are additive enhancements.
+### CSS Variable Injection Pattern
+```text
+<div style={{
+  '--primary': hexToHSL(restaurant.primary_color),
+  '--success': hexToHSL(restaurant.secondary_color),
+  fontFamily: restaurant.font_family || 'Inter',
+}}>
+```
+This makes all existing Tailwind `text-primary`, `bg-success`, `border-primary` classes automatically adopt tenant colors.
 
+### Realtime Flow
+```text
+Admin saves color in Appearance Studio
+  -> Supabase UPDATE restaurants
+  -> Realtime postgres_changes fires
+  -> Customer menu invalidates 'restaurant' query
+  -> New colors loaded -> CSS vars update
+  -> UI re-renders with new theme (<1 sec)
+```
+
+### Files Summary
+
+| Action | File |
+|---|---|
+| Fix | `src/pages/AdminDashboard.tsx` (preview URL) |
+| Fix | `src/pages/CustomerMenu.tsx` (query key + theme injection + card style + category banners) |
+| Create | `src/components/admin/AppearanceStudio.tsx` |
+| Modify | `src/components/admin/AdminSidebar.tsx` (add Appearance nav) |
+| Modify | `src/components/menu/FoodCard.tsx` (card density) |
+| Modify | `src/components/menu/MenuItemRow.tsx` (card density) |
+| Modify | `src/components/menu/CustomerTopBar.tsx` (tenant color) |
+
+### No New Database Tables or Migrations
+All data is stored in existing `restaurants` columns. No schema changes needed.
+
+### No New Dependencies
+Pure CSS/Tailwind + existing Framer Motion for animations.
