@@ -23,6 +23,7 @@ import {
   Globe,
   QrCode,
   Lock,
+  Package,
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +60,7 @@ const allNavItems: NavItem[] = [
   { title: "Offers", icon: Gift, value: "offers" },
   { title: "Reviews", icon: Star, value: "reviews" },
   { title: "Users", icon: Users, value: "users" },
+  { title: "Inventory", icon: Package, value: "inventory" },
   { title: "Exports", icon: FileSpreadsheet, value: "exports" },
   { title: "Research", icon: Globe, value: "research" },
   { title: "Preview Site", icon: Eye, value: "preview" },

@@ -85,8 +85,13 @@ import {
   useCategories, 
   useCreateMenuItem, 
   useDeleteMenuItem, 
-  useToggleMenuItemAvailability 
+  useToggleMenuItemAvailability,
+  type MenuItem,
+  type Category,
 } from "@/hooks/useMenuItems";
+import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
+import { InventoryManager } from "@/components/admin/InventoryManager";
+import { Package } from "lucide-react";
 import { useTables } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
 import { useInvoiceStats } from "@/hooks/useInvoices";
@@ -294,6 +299,9 @@ const AdminDashboard = () => {
   const { data: invoiceStats } = useInvoiceStats(restaurantId);
   
 
+  // Edit menu item dialog state
+  const [editingItem, setEditingItem] = useState<(MenuItem & { category?: Pick<Category, "id" | "name"> | null }) | null>(null);
+
   // New item form state
   const [newItem, setNewItem] = useState({
     name: "",
@@ -432,6 +440,7 @@ const AdminDashboard = () => {
   }
 
   // Tab triggers for top navigation
+
   const mainTabs = [
     { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { value: "menu", label: "Menu", icon: UtensilsCrossed },
@@ -443,6 +452,7 @@ const AdminDashboard = () => {
     { value: "ads", label: "Ads", icon: Megaphone },
     { value: "reviews", label: "Reviews", icon: Star },
     { value: "users", label: "Users", icon: Users },
+    { value: "inventory", label: "Inventory", icon: Package },
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
     { value: "offers", label: "Offers", icon: Gift },
     { value: "qr-manager", label: "QR Manager", icon: QrCode },
@@ -713,6 +723,14 @@ const AdminDashboard = () => {
                                   index={index}
                                 />
                                 <div className="absolute top-2 right-2 flex gap-1">
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="w-7 h-7"
+                                    onClick={() => setEditingItem(item as any)}
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </Button>
                                 <Switch
                                     checked={item.is_available}
                                     onCheckedChange={() =>
@@ -741,6 +759,16 @@ const AdminDashboard = () => {
                       </Card>
                     </div>
                   </div>
+                  {/* Edit Menu Item Dialog */}
+                  {editingItem && (
+                    <EditMenuItemDialog
+                      open={!!editingItem}
+                      onOpenChange={(open) => !open && setEditingItem(null)}
+                      item={editingItem}
+                      categories={categories}
+                      restaurantId={restaurantId}
+                    />
+                  )}
                 </motion.div>
               )}
 
@@ -855,6 +883,19 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <UserManagement />
+                </motion.div>
+              )}
+
+              {/* Inventory Tab */}
+              {activeTab === "inventory" && (
+                <motion.div
+                  key="inventory"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <InventoryManager restaurantId={restaurantId} />
                 </motion.div>
               )}
 

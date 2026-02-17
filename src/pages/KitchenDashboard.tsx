@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell, RefreshCw, AlertCircle, UtensilsCrossed } from 'lucide-react';
+import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell, RefreshCw, AlertCircle, UtensilsCrossed, XCircle } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { useOrders, useKitchenOrderActions, type OrderWithItems } from '@/hooks/
 import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
 import { useRestaurants } from '@/hooks/useRestaurant';
 import { usePrinter } from '@/hooks/usePrinter';
-
+import { CancelOrderDialog } from '@/components/admin/CancelOrderDialog';
 // Demo restaurant ID - fallback if no restaurant in DB
 const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -44,6 +44,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   const { startPreparing, markReady, markServed, isLoading: isUpdating } = useKitchenOrderActions(restaurantId);
 
   const [lastOrderCount, setLastOrderCount] = useState(0);
+  const [cancelOrder, setCancelOrder] = useState<{ id: string; number: number } | null>(null);
   const { play: playNewOrderSound, isMuted, toggleMute } = useSound(SOUNDS.NEW_ORDER);
   const { play: playWaiterCallSound } = useSound(SOUNDS.WAITER_CALL);
 
@@ -214,9 +215,20 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
           <CardContent className="space-y-3">
             <div className="space-y-2">
               {order.order_items?.map((item) => (
-                <div key={item.id} className="flex items-center gap-2 text-sm">
+                <div key={item.id} className="text-sm">
                   <span>
                     <span className="font-medium">{item.quantity}x</span> {item.name}
+                    {/* Show selected variants/addons */}
+                    {item.selected_variants && Array.isArray(item.selected_variants) && (item.selected_variants as any[]).length > 0 && (
+                      <span className="block text-xs text-info ml-4">
+                        {(item.selected_variants as any[]).map((v: any) => v.name).join(', ')}
+                      </span>
+                    )}
+                    {item.selected_addons && Array.isArray(item.selected_addons) && (item.selected_addons as any[]).length > 0 && (
+                      <span className="block text-xs text-info ml-4">
+                        + {(item.selected_addons as any[]).map((a: any) => a.name).join(', ')}
+                      </span>
+                    )}
                     {item.special_instructions && (
                       <span className="block text-xs text-muted-foreground">
                         Note: {item.special_instructions}
@@ -228,17 +240,27 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
             </div>
 
             {showActions === 'start' && (
-              <Button className="w-full" onClick={() => handleStartPrep(order.id)} disabled={isUpdating}>
-                <Play className="w-4 h-4 mr-2" />
-                Start Preparation
-              </Button>
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={() => handleStartPrep(order.id)} disabled={isUpdating}>
+                  <Play className="w-4 h-4 mr-2" />
+                  Start Prep
+                </Button>
+                <Button variant="outline" size="icon" className="text-destructive hover:text-destructive" onClick={() => setCancelOrder({ id: order.id, number: order.order_number })}>
+                  <XCircle className="w-4 h-4" />
+                </Button>
+              </div>
             )}
 
             {showActions === 'ready' && (
-              <Button className="w-full bg-success hover:bg-success/90" onClick={() => handleMarkReady(order.id)} disabled={isUpdating}>
-                <Check className="w-4 h-4 mr-2" />
-                Mark Ready
-              </Button>
+              <div className="flex gap-2">
+                <Button className="flex-1 bg-success hover:bg-success/90" onClick={() => handleMarkReady(order.id)} disabled={isUpdating}>
+                  <Check className="w-4 h-4 mr-2" />
+                  Mark Ready
+                </Button>
+                <Button variant="outline" size="icon" className="text-destructive hover:text-destructive" onClick={() => setCancelOrder({ id: order.id, number: order.order_number })}>
+                  <XCircle className="w-4 h-4" />
+                </Button>
+              </div>
             )}
 
             {showActions === 'served' && (
@@ -385,6 +407,15 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
           </div>
         )}
       </main>
+      {/* Cancel Order Dialog */}
+      {cancelOrder && (
+        <CancelOrderDialog
+          open={!!cancelOrder}
+          onOpenChange={(open) => !open && setCancelOrder(null)}
+          orderId={cancelOrder.id}
+          orderNumber={cancelOrder.number}
+        />
+      )}
     </div>
   );
 };
