@@ -35,15 +35,20 @@ const SuperAdminLogin = () => {
       return;
     }
     setLoading(true);
-    // Clear any stale session first
-    await supabase.auth.signOut();
-    const { error } = await signIn(email, password);
-    if (error) {
-      toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+    try {
+      // Local-only signout clears localStorage without network call
+      await supabase.auth.signOut({ scope: 'local' });
+      const { error } = await signIn(email, password);
+      if (error) {
+        toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
       setLoading(false);
-      return;
+    } catch (err) {
+      toast({ title: 'Login Failed', description: 'Network error. Please try again.', variant: 'destructive' });
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (authLoading) {

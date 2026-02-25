@@ -80,6 +80,8 @@ export const useAuth = () => {
       } else {
         setAuthState(prev => ({ ...prev, loading: false }));
       }
+    }).catch(() => {
+      setAuthState(prev => ({ ...prev, loading: false }));
     });
 
     return () => subscription.unsubscribe();
