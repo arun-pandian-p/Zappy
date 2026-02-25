@@ -1,76 +1,141 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, RefreshCw, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+
+// Clear ALL stale Supabase auth data immediately (before any hook runs)
+const STORAGE_KEY = `sb-syvoshzxoedamaijongb-auth-token`;
+try {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    const parsed = JSON.parse(stored);
+    if (!parsed?.access_token || !parsed?.refresh_token || (parsed?.expires_at && parsed.expires_at * 1000 < Date.now())) {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+} catch {
+  localStorage.removeItem(STORAGE_KEY);
+}
 
 const SuperAdminLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, user, role, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Clear any stale auth tokens from localStorage on mount
-  // This prevents the Supabase client from endlessly retrying expired refresh tokens
+  // Check existing session on mount — bypasses useAuth to avoid stale token loops
   useEffect(() => {
-    const storageKey = `sb-syvoshzxoedamaijongb-auth-token`;
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
+    let cancelled = false;
+    const checkSession = async () => {
       try {
-        const parsed = JSON.parse(stored);
-        const expiresAt = parsed?.expires_at;
-        // If token is expired, clear it immediately
-        if (expiresAt && expiresAt * 1000 < Date.now()) {
-          localStorage.removeItem(storageKey);
+        // Force clear any stale session first
+        await supabase.auth.signOut({ scope: 'local' });
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (data.session?.user) {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.session.user.id)
+            .single();
+          if (roleData?.role === 'super_admin') {
+            navigate('/super-admin');
+            return;
+          }
         }
       } catch {
-        localStorage.removeItem(storageKey);
+        // Network error on session check is fine — just show the login form
       }
-    }
-  }, []);
+      if (!cancelled) setCheckingAuth(false);
+    };
+    checkSession();
+    return () => { cancelled = true; };
+  }, [navigate]);
 
-  useEffect(() => {
-    if (user && !authLoading) {
-      if (role === 'super_admin') {
-        navigate('/super-admin');
-      } else if (role) {
-        toast({ title: 'Access Denied', description: 'This portal is for Super Admins only.', variant: 'destructive' });
-      }
-    }
-  }, [user, role, authLoading, navigate, toast]);
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast({ title: 'Error', description: 'Please enter email and password', variant: 'destructive' });
       return;
     }
     setLoading(true);
-    try {
-      // Local-only signout clears localStorage without network call
-      await supabase.auth.signOut({ scope: 'local' });
-      const { error } = await signIn(email, password);
-      if (error) {
-        toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
-        setLoading(false);
-        return;
+    setNetworkError(false);
+
+    // Retry logic — try up to 3 times with increasing delay
+    let lastError: string | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        if (attempt > 0) {
+          await new Promise(r => setTimeout(r, attempt * 1000));
+        }
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        
+        if (error) {
+          if (error.message === 'Failed to fetch') {
+            lastError = 'network';
+            continue; // retry
+          }
+          toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+
+        if (data.session?.user) {
+          // Check role
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.session.user.id)
+            .single();
+
+          if (roleData?.role === 'super_admin') {
+            toast({ title: 'Welcome!', description: 'Redirecting to dashboard...' });
+            navigate('/super-admin');
+          } else {
+            toast({ title: 'Access Denied', description: 'This portal is for Super Admins only.', variant: 'destructive' });
+            await supabase.auth.signOut({ scope: 'local' });
+          }
+          setLoading(false);
+          return;
+        }
+      } catch (err: any) {
+        if (err?.message?.includes('Failed to fetch') || err?.name === 'TypeError') {
+          lastError = 'network';
+          continue; // retry
+        }
+        lastError = err?.message || 'Unknown error';
       }
-      setLoading(false);
-    } catch (err) {
-      toast({ title: 'Login Failed', description: 'Network error. Please try again.', variant: 'destructive' });
-      setLoading(false);
     }
+
+    // All retries exhausted
+    setLoading(false);
+    if (lastError === 'network') {
+      setNetworkError(true);
+      toast({
+        title: 'Connection Failed',
+        description: 'Cannot reach the server. Please check your internet, disable ad blockers, or try incognito mode.',
+        variant: 'destructive',
+      });
+    } else {
+      toast({ title: 'Login Failed', description: lastError || 'Please try again.', variant: 'destructive' });
+    }
+  }, [email, password, navigate, toast]);
+
+  const handleRetry = () => {
+    setNetworkError(false);
+    window.location.reload();
   };
 
-  if (authLoading) {
+  if (checkingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-indigo-600">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
@@ -95,7 +160,6 @@ const SuperAdminLogin = () => {
         <div className="text-center space-y-6 max-w-md">
           <h1 className="text-5xl font-bold text-white tracking-tight">QR Dine</h1>
           <p className="text-indigo-100 text-lg leading-relaxed">Platform Command Center — Manage tenants, monitor health, and control settings.</p>
-          {/* CSS illustration: geometric command center */}
           <div className="relative mx-auto w-48 h-40 mt-8">
             <div className="absolute top-4 left-1/2 -translate-x-1/2 w-32 h-20 bg-white/10 rounded-lg border-2 border-white/20" />
             <div className="absolute top-6 left-1/2 -translate-x-1/2 w-28 h-16 flex flex-wrap gap-1.5 items-center justify-center p-2">
@@ -124,6 +188,29 @@ const SuperAdminLogin = () => {
             <h2 className="text-3xl font-bold italic text-gray-800">Welcome Back</h2>
             <p className="text-gray-500 mt-2 text-sm">Sign in to the platform console</p>
           </div>
+
+          {networkError && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+              <WifiOff className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium text-red-800">Connection Failed</p>
+                <p className="text-red-600 mt-1">Cannot reach the server. Try:</p>
+                <ul className="text-red-600 mt-1 list-disc list-inside space-y-0.5">
+                  <li>Disable ad blockers / privacy extensions</li>
+                  <li>Open in incognito / private window</li>
+                  <li>Check your internet connection</li>
+                </ul>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-3 text-red-700 border-red-300 hover:bg-red-100"
+                  onClick={handleRetry}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" /> Retry Connection
+                </Button>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="relative">
@@ -154,7 +241,11 @@ const SuperAdminLogin = () => {
               </button>
             </div>
             <Button type="submit" className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-base" disabled={loading}>
-              {loading ? 'Authenticating...' : 'Access Console'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4 animate-spin" /> Connecting...
+                </span>
+              ) : 'Access Console'}
             </Button>
           </form>
 
