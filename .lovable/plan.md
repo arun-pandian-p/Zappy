@@ -1,49 +1,57 @@
 
+# Fix "Failed to Fetch" Login Error
 
-# Fix Super Admin Login — "Failed to Fetch" Error
+## Root Cause
+The login fails because of two cascading issues:
+1. **`useAuth` hook**: The `getSession()` call on mount has no `.catch()` handler. When a stale token triggers a network error, the promise rejects silently and `loading` stays `true` forever, or the auth state becomes inconsistent.
+2. **`handleLogin`**: The `supabase.auth.signOut()` call tries to revoke the stale token on the server, which also fails with "Failed to fetch". Since this isn't wrapped in try/catch, it throws and prevents `signIn()` from executing.
 
-## Problem
-The login page has a stale/expired session stored in localStorage. The browser keeps trying to refresh this dead token, flooding requests that all fail with "Failed to fetch". When you try to sign in fresh, the same stale session interferes.
-
-## Solution
-Clear any existing stale session before attempting a new login. Two changes:
+## Fix
 
 ### 1. `src/pages/SuperAdminLogin.tsx`
-- Import `supabase` client directly
-- In `handleLogin`, call `supabase.auth.signOut()` before `signIn()` to clear any stale tokens from localStorage
-- This ensures a clean authentication attempt every time
+- Wrap the entire `handleLogin` body in a try/catch
+- Use `supabase.auth.signOut({ scope: 'local' })` instead of plain `signOut()` -- this clears localStorage tokens without making a network request to the server, avoiding the "Failed to fetch" on stale token revocation
+- Catch any unexpected errors and show a user-friendly toast
 
 ### 2. `src/hooks/useAuth.ts`
-- Add error handling in the `getSession` flow so that if the initial session refresh fails (stale token), it clears the loading state instead of hanging forever
+- Add `.catch()` to the `getSession()` promise chain so a network failure sets `loading: false` instead of hanging
+- Also add `.catch()` to the `onAuthStateChange` role-fetching `setTimeout` callback to prevent unhandled rejections
 
 ## Technical Details
 
-In `handleLogin`:
+**SuperAdminLogin.tsx handleLogin:**
 ```text
 const handleLogin = async (e) => {
   e.preventDefault();
+  if (!email || !password) { ... }
   setLoading(true);
-  // Clear any stale session first
-  await supabase.auth.signOut();
-  const { error } = await signIn(email, password);
-  ...
+  try {
+    // Local-only signout avoids network call on stale token
+    await supabase.auth.signOut({ scope: 'local' });
+    const { error } = await signIn(email, password);
+    if (error) {
+      toast({ title: 'Login Failed', description: error.message });
+      setLoading(false);
+      return;
+    }
+  } catch (err) {
+    toast({ title: 'Login Failed', description: 'Network error. Please try again.' });
+    setLoading(false);
+  }
 };
 ```
 
-In `useAuth.ts` initial session check:
+**useAuth.ts getSession chain:**
 ```text
-supabase.auth.getSession().then(({ data, error }) => {
-  if (error || !data.session) {
+supabase.auth.getSession()
+  .then(({ data, error }) => { ... })
+  .catch(() => {
     setAuthState(prev => ({ ...prev, loading: false }));
-    return;
-  }
-  // ... existing role fetch logic
-});
+  });
 ```
 
 ### Files Modified
 | File | Change |
 |---|---|
-| `src/pages/SuperAdminLogin.tsx` | Add stale session cleanup before login |
-| `src/hooks/useAuth.ts` | Handle getSession errors gracefully |
-
+| `src/pages/SuperAdminLogin.tsx` | Use `signOut({ scope: 'local' })` + try/catch |
+| `src/hooks/useAuth.ts` | Add `.catch()` to `getSession()` promise |
