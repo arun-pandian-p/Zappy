@@ -1,82 +1,56 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 
-const SuperAdminLogin = () => {
+const SuperAdminSignup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, user, role, loading: authLoading } = useAuth();
+  const { signUp } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Clear any stale auth tokens from localStorage on mount
-  // This prevents the Supabase client from endlessly retrying expired refresh tokens
-  useEffect(() => {
-    const storageKey = `sb-syvoshzxoedamaijongb-auth-token`;
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        const expiresAt = parsed?.expires_at;
-        // If token is expired, clear it immediately
-        if (expiresAt && expiresAt * 1000 < Date.now()) {
-          localStorage.removeItem(storageKey);
-        }
-      } catch {
-        localStorage.removeItem(storageKey);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user && !authLoading) {
-      if (role === 'super_admin') {
-        navigate('/super-admin');
-      } else if (role) {
-        toast({ title: 'Access Denied', description: 'This portal is for Super Admins only.', variant: 'destructive' });
-      }
-    }
-  }, [user, role, authLoading, navigate, toast]);
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast({ title: 'Error', description: 'Please enter email and password', variant: 'destructive' });
+    if (!email || !password || !confirmPassword) {
+      toast({ title: 'Error', description: 'Please fill in all fields', variant: 'destructive' });
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast({ title: 'Error', description: 'Passwords do not match', variant: 'destructive' });
+      return;
+    }
+    if (password.length < 6) {
+      toast({ title: 'Error', description: 'Password must be at least 6 characters', variant: 'destructive' });
       return;
     }
     setLoading(true);
     try {
-      // Local-only signout clears localStorage without network call
-      await supabase.auth.signOut({ scope: 'local' });
-      const { error } = await signIn(email, password);
+      const { error } = await signUp(email, password);
       if (error) {
-        toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+        toast({ title: 'Signup Failed', description: error.message, variant: 'destructive' });
         setLoading(false);
         return;
       }
+      toast({
+        title: 'Account Created',
+        description: 'Please check your email to verify your account before logging in.',
+      });
       setLoading(false);
+      navigate('/super-admin/login');
     } catch (err) {
-      toast({ title: 'Login Failed', description: 'Network error. Please try again.', variant: 'destructive' });
+      toast({ title: 'Signup Failed', description: 'Network error. Please try again.', variant: 'destructive' });
       setLoading(false);
     }
   };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-indigo-600">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-indigo-500 via-purple-600 to-violet-700 relative overflow-hidden">
@@ -94,8 +68,7 @@ const SuperAdminLogin = () => {
       >
         <div className="text-center space-y-6 max-w-md">
           <h1 className="text-5xl font-bold text-white tracking-tight">QR Dine</h1>
-          <p className="text-indigo-100 text-lg leading-relaxed">Platform Command Center — Manage tenants, monitor health, and control settings.</p>
-          {/* CSS illustration: geometric command center */}
+          <p className="text-indigo-100 text-lg leading-relaxed">Create your platform account — Join as a Super Admin to manage tenants and control settings.</p>
           <div className="relative mx-auto w-48 h-40 mt-8">
             <div className="absolute top-4 left-1/2 -translate-x-1/2 w-32 h-20 bg-white/10 rounded-lg border-2 border-white/20" />
             <div className="absolute top-6 left-1/2 -translate-x-1/2 w-28 h-16 flex flex-wrap gap-1.5 items-center justify-center p-2">
@@ -121,16 +94,16 @@ const SuperAdminLogin = () => {
       >
         <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md space-y-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold italic text-gray-800">Welcome Back</h2>
-            <p className="text-gray-500 mt-2 text-sm">Sign in to the platform console</p>
+            <h2 className="text-3xl font-bold italic text-gray-800">Create Account</h2>
+            <p className="text-gray-500 mt-2 text-sm">Sign up for the platform console</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleSignup} className="space-y-5">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="email"
-                placeholder="superadmin@qrdine.com"
+                placeholder="your@email.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 disabled={loading}
@@ -142,26 +115,37 @@ const SuperAdminLogin = () => {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
+                placeholder="Password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 disabled={loading}
-                autoComplete="current-password"
+                autoComplete="new-password"
                 className="pl-10 pr-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500"
               />
               <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                disabled={loading}
+                autoComplete="new-password"
+                className="pl-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500"
+              />
+            </div>
             <Button type="submit" className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-base" disabled={loading}>
-              {loading ? 'Authenticating...' : 'Access Console'}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
 
           <div className="pt-2 border-t border-gray-100 space-y-2 text-center">
-            <p className="text-xs text-gray-400">Restricted area. Unauthorized access attempts are logged.</p>
-            <button className="text-sm text-indigo-500 hover:text-indigo-700 transition-colors font-medium" onClick={() => navigate('/super-admin/signup')}>Don't have an account? Sign up →</button>
-            <button className="text-sm text-gray-400 hover:text-gray-600 transition-colors block mx-auto" onClick={() => navigate('/admin/login')}>Restaurant Admin Login →</button>
+            <p className="text-xs text-gray-400">After signup, a Super Admin must assign your role.</p>
+            <button className="text-sm text-indigo-500 hover:text-indigo-700 transition-colors font-medium" onClick={() => navigate('/super-admin/login')}>Already have an account? Sign in →</button>
           </div>
         </div>
       </motion.div>
@@ -169,4 +153,4 @@ const SuperAdminLogin = () => {
   );
 };
 
-export default SuperAdminLogin;
+export default SuperAdminSignup;
