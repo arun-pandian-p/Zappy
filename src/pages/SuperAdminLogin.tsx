@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const SuperAdminLogin = () => {
   const navigate = useNavigate();
@@ -34,6 +35,8 @@ const SuperAdminLogin = () => {
       return;
     }
     setLoading(true);
+    // Clear any stale session first
+    await supabase.auth.signOut();
     const { error } = await signIn(email, password);
     if (error) {
       toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
