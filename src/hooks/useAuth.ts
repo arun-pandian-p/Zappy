@@ -56,7 +56,12 @@ export const useAuth = () => {
     );
 
     // THEN get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error || !data.session) {
+        setAuthState(prev => ({ ...prev, loading: false }));
+        return;
+      }
+      const session = data.session;
       if (session?.user) {
         supabase
           .from('user_roles')
