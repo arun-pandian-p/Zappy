@@ -14,10 +14,11 @@ const SuperAdminLogin = () => {
   const { toast } = useToast();
   const { signIn, user, role, loading: authLoading } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('zappyscan@gmail.com');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -36,16 +37,14 @@ const SuperAdminLogin = () => {
       return;
     }
     setLoading(true);
-
-    // Clear all stale auth data from storage before login
-    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
-    keysToRemove.forEach(k => localStorage.removeItem(k));
+    setRetrying(false);
 
     const { error } = await signIn(email, password);
     if (error) {
       toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
     }
     setLoading(false);
+    setRetrying(false);
   };
 
   if (authLoading) {
@@ -134,7 +133,7 @@ const SuperAdminLogin = () => {
               </button>
             </div>
             <Button type="submit" className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-base" disabled={loading}>
-              {loading ? 'Authenticating...' : 'Access Console'}
+              {loading ? (retrying ? 'Retrying…' : 'Authenticating...') : 'Access Console'}
             </Button>
           </form>
 

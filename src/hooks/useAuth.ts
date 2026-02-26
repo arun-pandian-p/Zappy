@@ -93,16 +93,35 @@ export const useAuth = () => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return { data, error };
-    } catch (err) {
-      // Network-level failure (Failed to fetch)
-      return { data: null, error: { message: 'Network error. Please check your connection and try again.', status: 0 } as any };
+    const MAX_RETRIES = 3;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        // Auth errors (wrong password, etc.) — don't retry
+        if (error && !error.message?.toLowerCase().includes('failed to fetch')) {
+          return { data, error };
+        }
+        // Network error — retry
+        if (error) {
+          if (attempt < MAX_RETRIES) {
+            await new Promise(r => setTimeout(r, 1500 * attempt));
+            continue;
+          }
+          return { data: null, error: { message: 'Network error after multiple retries. Please try again.', status: 0 } as any };
+        }
+        return { data, error: null };
+      } catch (err) {
+        if (attempt < MAX_RETRIES) {
+          await new Promise(r => setTimeout(r, 1500 * attempt));
+          continue;
+        }
+        return { data: null, error: { message: 'Network error after multiple retries. Please check your connection.', status: 0 } as any };
+      }
     }
+    return { data: null, error: { message: 'Login failed. Please try again.', status: 0 } as any };
   };
 
   const signUp = async (email: string, password: string) => {
