@@ -1,30 +1,52 @@
 
+# Fresh Login System - Complete Rebuild
 
-# Fix Auto-Login: Create zappyscan@gmail.com Account + Update Credentials
+## Problem
+The current login page has an auto-login loop that spams the backend with requests. When the backend has temporary connectivity hiccups ("Failed to fetch"), it retries endlessly, creating a bad experience.
 
-## Root Cause
-The auto-login is failing because `zappyscan@gmail.com` does not exist in the database. Only `arun@gmail.com` exists. This is NOT a CORS or network issue — the backend is responding correctly.
+## Solution: Clean, Manual Login System
 
-The intermittent "Failed to fetch" errors are from temporary backend restarts affecting other queries (landing page data), not the login itself.
+### What Changes
 
-## Solution: Two-Part Fix
+**1. Rewrite `src/pages/Login.tsx` from scratch**
+- Remove ALL auto-login logic (no hardcoded credentials)
+- Clean email/password form with proper validation
+- Google SSO button using `lovable.auth.signInWithOAuth`
+- "Forgot password?" link
+- Single sign-in attempt per form submit (no retry loops)
+- Clear error messages for network failures vs wrong credentials
+- Loading spinner only during active login attempt
+- Auto-redirect if user is already authenticated (check session once, not in a loop)
 
-### Part 1 — Create `zappyscan@gmail.com` as a Super Admin
-- Use a backend function to create the user account with email `zappyscan@gmail.com` and password `zappy1234`
-- Assign the `super_admin` role in the `user_roles` table
-- This ensures the hardcoded credentials in the login page actually work
+**2. Rewrite `src/hooks/useAuth.ts` - Simplified**
+- Remove the 3-retry loop from `signIn` -- just make one attempt and show the error
+- Keep the `onAuthStateChange` listener and `getSession` initialization
+- Keep role fetching from `user_roles` table
+- Keep `getRouteForRole` for dashboard routing
+- Remove aggressive localStorage clearing on every attempt
 
-### Part 2 — Keep auto-login with retry logic
-- The auto-login code already has retry logic for network errors
-- Credentials (`zappyscan@gmail.com` / `zappy1234`) will now match a real account
-- On page load, auto-login fires, authenticates successfully, and redirects to `/super-admin`
+**3. Keep existing supporting files unchanged**
+- `src/pages/ForgotPassword.tsx` - already works
+- `src/pages/ResetPassword.tsx` - already works
+- `src/pages/SuperAdminLogin.tsx` - redirects to `/login`
+- `src/pages/TenantAdminLogin.tsx` - redirects to `/login`
+- `src/App.tsx` - routes already correct
 
-## What This Fixes
-- No more "Invalid login credentials" errors from auto-login
-- The retry logic already handles temporary "Failed to fetch" network hiccups
-- Login will succeed automatically on page load
+### Login Flow
+1. User visits `/login`
+2. If already authenticated, redirect to their dashboard immediately
+3. If not, show login form
+4. User enters email + password, clicks "Sign In"
+5. One request to backend -- success redirects, failure shows toast error
+6. Google SSO button available as alternative
 
-## Files Modified
-- **Database**: Create user `zappyscan@gmail.com` with password `zappy1234`, assign `super_admin` role
-- **No code changes needed** — the current `SuperAdminLogin.tsx` already has the right credentials and auto-login logic
+### Technical Details
+- No hardcoded credentials anywhere
+- No auto-login on page load
+- No retry loops -- single attempt, clear error feedback
+- Session check on mount is a one-time `getSession()` call
+- Default test account: `zappyscan@gmail.com` / `zappy1234` (user types it manually)
 
+### Database
+- No changes needed -- both super admin accounts already exist and work
+- `user_roles` table has correct role assignments
