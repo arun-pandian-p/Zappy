@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+// supabase import removed - using localStorage cleanup instead
 import { lovable } from '@/integrations/lovable/index';
 
 const SuperAdminLogin = () => {
@@ -37,28 +37,14 @@ const SuperAdminLogin = () => {
     }
     setLoading(true);
 
-    // Clear any stale session first to prevent "Failed to fetch" errors
-    try {
-      await supabase.auth.signOut({ scope: 'local' });
-    } catch (_) {
-      // Ignore signout errors
-    }
+    // Clear all stale auth data from storage before login
+    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
+    keysToRemove.forEach(k => localStorage.removeItem(k));
 
-    // Attempt login with retry
-    let lastError: any = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const { error } = await signIn(email, password);
-      if (!error) {
-        setLoading(false);
-        return;
-      }
-      lastError = error;
-      if (error.message !== 'Failed to fetch') break;
-      // Wait before retry
-      await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+    const { error } = await signIn(email, password);
+    if (error) {
+      toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
     }
-
-    toast({ title: 'Login Failed', description: lastError?.message || 'Unknown error', variant: 'destructive' });
     setLoading(false);
   };
 
@@ -85,7 +71,9 @@ const SuperAdminLogin = () => {
         className="hidden lg:flex flex-1 flex-col justify-center items-center relative z-10 px-12"
       >
         <div className="text-center space-y-6 max-w-md">
-          <h1 className="text-5xl font-bold text-white tracking-tight">QR Dine</h1>
+          <img src="/zappy-logo.jpg" alt="ZAPPY" className="h-20 mx-auto rounded-xl" />
+          <h1 className="text-5xl font-bold text-white tracking-tight">ZAPPY</h1>
+          <p className="text-sm text-indigo-200 italic">Scan, Order, Eat, Repeat</p>
           <p className="text-indigo-100 text-lg leading-relaxed">Platform Command Center — Manage tenants, monitor health, and control settings.</p>
           {/* CSS illustration: geometric command center */}
           <div className="relative mx-auto w-48 h-40 mt-8">
@@ -122,7 +110,7 @@ const SuperAdminLogin = () => {
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="email"
-                placeholder="superadmin@qrdine.com"
+                placeholder="admin@zappy.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 disabled={loading}

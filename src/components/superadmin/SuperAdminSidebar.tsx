@@ -73,10 +73,9 @@ export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarP
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
             <img
-              src="/qr-logo.svg"
-              alt="QR Dine Pro"
-              className="w-6 h-6"
-              style={{ filter: "brightness(0) invert(1)" }}
+              src="/zappy-logo.jpg"
+              alt="ZAPPY"
+              className="w-6 h-6 rounded"
             />
           </div>
           {!collapsed && (

@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const defaultTestimonials = [
-  { name: 'Priya Sharma', role: 'Owner, Spice Garden', content: 'QR Dine Pro transformed our restaurant. Orders are 40% faster and our customers love the seamless experience!', rating: 5, initials: 'PS', color: 'bg-pink-500' },
+  { name: 'Priya Sharma', role: 'Owner, Spice Garden', content: 'ZAPPY transformed our restaurant. Orders are 40% faster and our customers love the seamless experience!', rating: 5, initials: 'PS', color: 'bg-pink-500' },
   { name: 'Rahul Verma', role: 'Manager, Urban Bites', content: 'The kitchen display system is a game-changer. No more missed orders or confusion. Our team efficiency skyrocketed.', rating: 5, initials: 'RV', color: 'bg-blue-500' },
   { name: 'Anita Desai', role: 'Owner, Café Bliss', content: 'From a single table to 20 tables in 6 months. The analytics helped us understand what customers really want.', rating: 5, initials: 'AD', color: 'bg-purple-500' },
   { name: 'Vikram Patel', role: 'Chef, Tandoor Tales', content: 'The kitchen dashboard keeps my team in sync. We cut prep errors by 60% in the first month alone.', rating: 5, initials: 'VP', color: 'bg-green-500' },
@@ -38,7 +38,7 @@ const TestimonialsSection = ({ cms }: TestimonialsSectionProps) => {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{heading}</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">See what our customers have to say about QR Dine Pro.</p>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">See what our customers have to say about ZAPPY.</p>
         </motion.div>
 
         <div className="relative group">

@@ -126,7 +126,7 @@ export function AdminSidebar({
         <SidebarHeader className="p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
-              <img src="/qr-logo.svg" alt="QR Dine Pro" className="w-6 h-6 text-primary-foreground" style={{ filter: 'brightness(0) invert(1)' }} />
+              <img src="/zappy-logo.jpg" alt="ZAPPY" className="w-6 h-6 rounded" />
             </div>
             {!collapsed && (
               <motion.div
@@ -134,7 +134,7 @@ export function AdminSidebar({
                 animate={{ opacity: 1, x: 0 }}
                 className="flex flex-col"
               >
-                <span className="font-bold text-sidebar-foreground">{restaurantName || "QR Dine Pro"}</span>
+                <span className="font-bold text-sidebar-foreground">{restaurantName || "ZAPPY"}</span>
                 <span className="text-xs text-sidebar-foreground/60">Admin Dashboard</span>
               </motion.div>
             )}

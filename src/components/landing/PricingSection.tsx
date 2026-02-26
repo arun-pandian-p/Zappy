@@ -10,7 +10,7 @@ const plans = [
     name: 'Free',
     priceMonthly: 0,
     priceYearly: 0,
-    description: 'Perfect for trying out QR Dine Pro',
+    description: 'Perfect for trying out ZAPPY',
     features: [
       '1 Table',
       'Basic menu management',

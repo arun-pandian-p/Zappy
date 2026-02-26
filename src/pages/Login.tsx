@@ -64,7 +64,9 @@ const Login = () => {
         className="hidden lg:flex flex-1 flex-col justify-center items-center relative z-10 px-12"
       >
         <div className="text-center space-y-6 max-w-md">
-          <h1 className="text-5xl font-bold text-white tracking-tight">QR Dine</h1>
+          <img src="/zappy-logo.jpg" alt="ZAPPY" className="h-20 mx-auto rounded-xl" />
+          <h1 className="text-5xl font-bold text-white tracking-tight">ZAPPY</h1>
+          <p className="text-sm text-blue-200 italic">Scan, Order, Eat, Repeat</p>
           <p className="text-blue-100 text-lg leading-relaxed">Smart Staff Workspace — Role-based access for seamless restaurant operations.</p>
           {/* CSS illustration: monitor + desk */}
           <div className="relative mx-auto w-48 h-40 mt-8">
