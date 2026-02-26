@@ -18,40 +18,21 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Auto-login with default super admin account
+  // Redirect already-authenticated users once
   useEffect(() => {
-    if (authLoading) return;
-    if (user && role) {
-      const route = getRouteForRole(role);
-      navigate(route, { replace: true });
-      return;
+    if (!authLoading && user && role) {
+      navigate(getRouteForRole(role), { replace: true });
     }
-    // Skip login — auto sign-in
-    if (!user && !loading) {
-      setLoading(true);
-      signIn('zappyscan@gmail.com', 'zappy1234').then(({ error }) => {
-        if (error) {
-          toast({ title: 'Auto-login failed', description: error.message, variant: 'destructive' });
-          setLoading(false);
-        }
-      });
-    }
-  }, [user, role, authLoading]);
+  }, [user, role, authLoading, navigate, getRouteForRole]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!email.trim() || !password) {
       toast({ title: 'Missing fields', description: 'Please enter both email and password.', variant: 'destructive' });
       return;
     }
     setLoading(true);
-
-    // Clear stale session tokens
-    Object.keys(localStorage)
-      .filter(k => k.startsWith('sb-'))
-      .forEach(k => localStorage.removeItem(k));
-
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email.trim(), password);
     if (error) {
       toast({ title: 'Login failed', description: error.message, variant: 'destructive' });
     }
@@ -71,7 +52,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-      {/* Subtle background accents */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px]" />
 
@@ -101,7 +81,6 @@ const Login = () => {
         className="flex-1 flex items-center justify-center p-6 relative z-10"
       >
         <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10 w-full max-w-[420px] space-y-7">
-          {/* Mobile logo */}
           <div className="lg:hidden flex justify-center">
             <img src="/zappy-logo.jpg" alt="ZAPPY" className="h-12 rounded-lg" />
           </div>
