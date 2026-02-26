@@ -15,10 +15,26 @@ const SuperAdminLogin = () => {
   const { signIn, user, role, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState('zappyscan@gmail.com');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('zappy1234');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
+
+  // Auto-login on mount
+  useEffect(() => {
+    if (!authLoading && !user && !autoLoginAttempted && email && password) {
+      setAutoLoginAttempted(true);
+      (async () => {
+        setLoading(true);
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast({ title: 'Auto-login Failed', description: error.message, variant: 'destructive' });
+        }
+        setLoading(false);
+      })();
+    }
+  }, [authLoading, user, autoLoginAttempted]);
 
   useEffect(() => {
     if (user && !authLoading) {
