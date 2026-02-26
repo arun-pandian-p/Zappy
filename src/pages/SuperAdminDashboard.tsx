@@ -55,7 +55,7 @@ type Restaurant = Tables<"restaurants">;
 const SuperAdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { role } = useAuth();
+  const { role, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -136,6 +136,14 @@ const SuperAdminDashboard = () => {
     setEditingRestaurant(null);
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   if (role !== 'super_admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
@@ -144,7 +152,7 @@ const SuperAdminDashboard = () => {
             <Power className="w-12 h-12 mx-auto mb-4 text-destructive" />
             <h2 className="text-lg font-semibold mb-2">Access Denied</h2>
             <p className="text-muted-foreground mb-4">You need Super Admin privileges.</p>
-            <Button onClick={() => navigate('/admin')}>Go to Admin Dashboard</Button>
+            <Button onClick={() => navigate('/login')}>Go to Login</Button>
           </CardContent>
         </Card>
       </div>
