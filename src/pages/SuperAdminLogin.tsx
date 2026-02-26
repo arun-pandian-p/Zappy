@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const SuperAdminLogin = () => {
   const navigate = useNavigate();
@@ -34,12 +35,29 @@ const SuperAdminLogin = () => {
       return;
     }
     setLoading(true);
-    const { error } = await signIn(email, password);
-    if (error) {
-      toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
-      setLoading(false);
-      return;
+
+    // Clear any stale session first to prevent "Failed to fetch" errors
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (_) {
+      // Ignore signout errors
     }
+
+    // Attempt login with retry
+    let lastError: any = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { error } = await signIn(email, password);
+      if (!error) {
+        setLoading(false);
+        return;
+      }
+      lastError = error;
+      if (error.message !== 'Failed to fetch') break;
+      // Wait before retry
+      await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+    }
+
+    toast({ title: 'Login Failed', description: lastError?.message || 'Unknown error', variant: 'destructive' });
     setLoading(false);
   };
 
