@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import TenantAdminLogin from "./pages/TenantAdminLogin";
 import CustomerMenu from "./pages/CustomerMenu";
@@ -31,6 +33,8 @@ const App = () => (
           <Route path="/" element={<LandingPage />} />
           <Route path="/roles" element={<Index />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/super-admin/login" element={<SuperAdminLogin />} />
           <Route path="/admin/login" element={<TenantAdminLogin />} />
           <Route path="/tenant-admin/login" element={<TenantAdminLogin />} />
