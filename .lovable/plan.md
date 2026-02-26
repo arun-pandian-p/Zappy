@@ -1,41 +1,30 @@
 
 
-# Fix "Failed to Fetch" Login Error with Auto-Retry
+# Fix Auto-Login: Create zappyscan@gmail.com Account + Update Credentials
 
-## Problem
-The Super Admin login keeps failing with "Failed to fetch" due to temporary backend connectivity issues (pooler restarts). Each failed attempt costs a credit in frustration.
+## Root Cause
+The auto-login is failing because `zappyscan@gmail.com` does not exist in the database. Only `arun@gmail.com` exists. This is NOT a CORS or network issue — the backend is responding correctly.
 
-## Solution
-Add robust retry logic with automatic recovery so the login succeeds even when the backend has momentary hiccups.
+The intermittent "Failed to fetch" errors are from temporary backend restarts affecting other queries (landing page data), not the login itself.
 
-### Changes
+## Solution: Two-Part Fix
 
-**1. `src/hooks/useAuth.ts` - Add retry logic to `signIn`**
-- Wrap the `signInWithPassword` call in a retry loop (up to 3 attempts)
-- Wait 1.5s between retries with exponential backoff
-- Only retry on network errors ("Failed to fetch"), not on wrong credentials
-- This ensures transient backend restarts don't block login
+### Part 1 — Create `zappyscan@gmail.com` as a Super Admin
+- Use a backend function to create the user account with email `zappyscan@gmail.com` and password `zappy1234`
+- Assign the `super_admin` role in the `user_roles` table
+- This ensures the hardcoded credentials in the login page actually work
 
-**2. `src/pages/SuperAdminLogin.tsx` - Auto-retry on failure + better UX**
-- If login fails with a network error, automatically retry up to 2 more times before showing the error toast
-- Show a "Retrying..." state in the button instead of immediately showing an error
-- Pre-fill the email field with `arun@gmail.com` as default so you don't have to type it each time
-- Remove the aggressive `localStorage.clear()` before every login (it was clearing valid sessions too)
+### Part 2 — Keep auto-login with retry logic
+- The auto-login code already has retry logic for network errors
+- Credentials (`zappyscan@gmail.com` / `zappy1234`) will now match a real account
+- On page load, auto-login fires, authenticates successfully, and redirects to `/super-admin`
 
-### Technical Details
+## What This Fixes
+- No more "Invalid login credentials" errors from auto-login
+- The retry logic already handles temporary "Failed to fetch" network hiccups
+- Login will succeed automatically on page load
 
-```text
-Login Flow (Updated):
-  User clicks "Access Console"
-    -> Attempt 1: signInWithPassword()
-       -> If "Failed to fetch": wait 1.5s -> Attempt 2
-          -> If "Failed to fetch": wait 3s -> Attempt 3
-             -> If still fails: show error toast
-       -> If auth error (wrong password): show error immediately
-       -> If success: redirect to /super-admin
-```
-
-**Files Modified:**
-- `src/hooks/useAuth.ts` (retry logic in signIn)
-- `src/pages/SuperAdminLogin.tsx` (auto-retry UX, default email)
+## Files Modified
+- **Database**: Create user `zappyscan@gmail.com` with password `zappy1234`, assign `super_admin` role
+- **No code changes needed** — the current `SuperAdminLogin.tsx` already has the right credentials and auto-login logic
 
