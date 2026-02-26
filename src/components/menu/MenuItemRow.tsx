@@ -3,8 +3,6 @@ import { Plus, Minus, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-type CardStyle = 'compact' | 'standard' | 'detailed';
-
 interface MenuItemRowProps {
   id: string;
   name: string;
@@ -14,10 +12,8 @@ interface MenuItemRowProps {
   isVegetarian?: boolean;
   isPopular?: boolean;
   prepTime?: number | null;
-  spicyLevel?: number | null;
   currencySymbol?: string;
   quantity?: number;
-  cardStyle?: CardStyle;
   onAdd: () => void;
   onIncrement?: () => void;
   onDecrement?: () => void;
@@ -31,27 +27,22 @@ export function MenuItemRow({
   isVegetarian,
   isPopular,
   prepTime,
-  spicyLevel,
   currencySymbol = "₹",
   quantity = 0,
-  cardStyle = "standard",
   onAdd,
   onIncrement,
   onDecrement,
 }: MenuItemRowProps) {
-  const isCompact = cardStyle === "compact";
-  const isDetailed = cardStyle === "detailed";
-
   return (
     <motion.div
       layout
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 10 }}
-      className={`flex items-center gap-3 rounded-xl bg-card border shadow-sm ${isCompact ? "p-2" : "p-3"}`}
+      className="flex items-center gap-3 p-3 rounded-xl bg-card border shadow-sm"
     >
       {/* Thumbnail */}
-      <div className={`rounded-xl overflow-hidden flex-shrink-0 ${isCompact ? "w-14 h-14" : isDetailed ? "w-24 h-24" : "w-20 h-20"}`}>
+      <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
         <img
           src={imageUrl || "/placeholder.svg"}
           alt={name}
@@ -67,11 +58,11 @@ export function MenuItemRow({
               <span className="w-2 h-2 rounded-full bg-success" />
             </span>
           )}
-          <h4 className={`font-semibold truncate ${isCompact ? "text-xs" : "text-sm"}`}>{name}</h4>
+          <h4 className="font-semibold text-sm truncate">{name}</h4>
         </div>
 
-        {!isCompact && description && (
-          <p className={`text-xs text-muted-foreground mb-1 ${isDetailed ? "line-clamp-2" : "line-clamp-1"}`}>
+        {description && (
+          <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
             {description}
           </p>
         )}
@@ -82,9 +73,6 @@ export function MenuItemRow({
               <Clock className="w-3 h-3" />
               {prepTime}m
             </span>
-          )}
-          {isDetailed && spicyLevel && spicyLevel > 0 && (
-            <span className="text-[11px]">{"🌶️".repeat(Math.min(spicyLevel, 3))}</span>
           )}
           {isPopular && (
             <Badge
@@ -99,7 +87,7 @@ export function MenuItemRow({
 
       {/* Price + Add */}
       <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-        <span className={`font-bold text-success ${isCompact ? "text-xs" : "text-sm"}`}>
+        <span className="font-bold text-sm text-success">
           {currencySymbol}
           {Number(price).toFixed(0)}
         </span>
@@ -108,18 +96,30 @@ export function MenuItemRow({
           <Button
             size="sm"
             onClick={onAdd}
-            className={`rounded-lg bg-success hover:bg-success/90 text-success-foreground font-semibold ${isCompact ? "h-7 px-3 text-[10px]" : "h-8 px-4 text-xs"}`}
+            className="h-8 px-4 rounded-lg bg-success hover:bg-success/90 text-success-foreground text-xs font-semibold"
           >
             <Plus className="w-3.5 h-3.5 mr-0.5" />
             ADD
           </Button>
         ) : (
           <div className="flex items-center gap-1 bg-success/10 rounded-lg px-1 h-8">
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-success hover:bg-success/20" onClick={onDecrement}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-success hover:bg-success/20"
+              onClick={onDecrement}
+            >
               <Minus className="w-3.5 h-3.5" />
             </Button>
-            <span className="w-5 text-center font-bold text-xs text-success">{quantity}</span>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-success hover:bg-success/20" onClick={onIncrement}>
+            <span className="w-5 text-center font-bold text-xs text-success">
+              {quantity}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-success hover:bg-success/20"
+              onClick={onIncrement}
+            >
               <Plus className="w-3.5 h-3.5" />
             </Button>
           </div>

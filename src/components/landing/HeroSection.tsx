@@ -145,26 +145,20 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
 
           {/* Right - Floating Glass Panels */}
           <div className="relative h-[420px] md:h-[500px] hidden lg:block">
-            {/* Mobile Menu Preview */}
             <GlassPanel className="absolute top-4 left-8 w-56 p-4" delay={0}>
               <div className="flex items-center gap-2 mb-3">
                 <UtensilsCrossed className="w-4 h-4 text-orange-400" />
-                <span className="text-sm font-semibold text-foreground/90">Hello, Alex! 👋</span>
+                <span className="text-sm font-semibold text-foreground/90">Table 5</span>
+                <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-500 font-medium">Active</span>
               </div>
-              <div className="flex gap-2 mb-3">
-                <span className="text-[10px] px-2.5 py-1 rounded-full bg-orange-500/20 text-orange-600 font-semibold">Lunch</span>
-                <span className="text-[10px] px-2.5 py-1 rounded-full bg-foreground/5 text-foreground/60 font-medium">Dinner</span>
-              </div>
-              <div className="text-[10px] font-semibold text-foreground/60 uppercase tracking-wider mb-1.5">Best Seller</div>
-              {[{name: 'Butter Chicken', price: '₹349'}, {name: 'Paneer Tikka', price: '₹249'}, {name: 'Mango Lassi', price: '₹99'}].map((item) => (
-                <div key={item.name} className="flex items-center justify-between py-1.5 border-b border-white/10 last:border-0">
-                  <span className="text-xs text-foreground/70">{item.name}</span>
-                  <span className="text-xs font-semibold text-orange-500">{item.price}</span>
+              {['Truffle Fries', 'Chicken Biriyani', 'Mango Lassi'].map((item, i) => (
+                <div key={item} className="flex items-center justify-between py-1.5 border-b border-white/10 last:border-0">
+                  <span className="text-xs text-foreground/70">{item}</span>
+                  <span className="text-xs text-foreground/50">×{i + 1}</span>
                 </div>
               ))}
             </GlassPanel>
 
-            {/* Revenue Badge */}
             <GlassPanel className="absolute top-2 right-4 px-5 py-3" delay={0.2}>
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
@@ -173,20 +167,17 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               </div>
             </GlassPanel>
 
-            {/* QR Digitize Card */}
-            <GlassPanel className="absolute bottom-16 left-12 w-36 p-3 text-center" delay={0.4}>
-              <div className="relative mb-2 flex justify-center">
+            <GlassPanel className="absolute bottom-16 left-16 w-28 h-28 flex items-center justify-center" delay={0.4}>
+              <div className="relative">
                 <div className="absolute inset-0 rounded-full bg-orange-400/30 blur-xl animate-pulse-ring" />
-                <QrCode className="w-9 h-9 text-orange-400 relative z-10" />
+                <QrCode className="w-10 h-10 text-orange-400 relative z-10" />
               </div>
-              <span className="text-[10px] font-semibold text-foreground/80 leading-tight block">Digitize Your Menu with QR</span>
             </GlassPanel>
 
-            {/* Order Summary */}
             <GlassPanel className="absolute bottom-8 right-8 w-44 p-3" delay={0.6}>
               <div className="flex items-center gap-2 mb-2">
                 <Receipt className="w-3.5 h-3.5 text-orange-400" />
-                <span className="text-[10px] font-semibold text-foreground/80 tracking-wider uppercase">Order #1024</span>
+                <span className="text-[10px] font-semibold text-foreground/80 tracking-wider uppercase">Receipt</span>
               </div>
               <div className="space-y-1 text-[10px] text-foreground/60 font-mono">
                 <div className="flex justify-between"><span>Subtotal</span><span>₹1,240</span></div>

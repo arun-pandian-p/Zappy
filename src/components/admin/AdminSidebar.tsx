@@ -24,7 +24,6 @@ import {
   QrCode,
   Lock,
   Package,
-  Palette,
 } from "lucide-react";
 import {
   Sidebar,
@@ -62,7 +61,6 @@ const allNavItems: NavItem[] = [
   { title: "Reviews", icon: Star, value: "reviews" },
   { title: "Users", icon: Users, value: "users" },
   { title: "Inventory", icon: Package, value: "inventory" },
-  { title: "Appearance", icon: Palette, value: "appearance" },
   { title: "Exports", icon: FileSpreadsheet, value: "exports" },
   { title: "Research", icon: Globe, value: "research" },
   { title: "Preview Site", icon: Eye, value: "preview" },

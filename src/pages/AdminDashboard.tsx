@@ -31,7 +31,6 @@ import {
   Monitor,
   Globe,
   QrCode,
-  Palette,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -92,7 +91,6 @@ import {
 } from "@/hooks/useMenuItems";
 import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
 import { InventoryManager } from "@/components/admin/InventoryManager";
-import { AppearanceStudio } from "@/components/admin/AppearanceStudio";
 import { Package } from "lucide-react";
 import { useTables } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
@@ -455,7 +453,6 @@ const AdminDashboard = () => {
     { value: "reviews", label: "Reviews", icon: Star },
     { value: "users", label: "Users", icon: Users },
     { value: "inventory", label: "Inventory", icon: Package },
-    { value: "appearance", label: "Appearance", icon: Palette },
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
     { value: "offers", label: "Offers", icon: Gift },
     { value: "qr-manager", label: "QR Manager", icon: QrCode },
@@ -464,7 +461,7 @@ const AdminDashboard = () => {
     { value: "settings", label: "Settings", icon: Settings },
   ];
 
-  const customerPreviewUrl = `/customer-menu?r=${restaurantId}`;
+  const customerPreviewUrl = `/order?r=${restaurantId}`;
 
   return (
     <SidebarProvider defaultOpen>
@@ -900,11 +897,6 @@ const AdminDashboard = () => {
                 >
                   <InventoryManager restaurantId={restaurantId} />
                 </motion.div>
-              )}
-
-              {/* Appearance Studio Tab */}
-              {activeTab === "appearance" && (
-                <AppearanceStudio restaurantId={restaurantId} restaurant={restaurant} />
               )}
 
               {/* Offers Tab */}

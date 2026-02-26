@@ -7,7 +7,6 @@ import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
-import SuperAdminSignup from "./pages/SuperAdminSignup";
 import TenantAdminLogin from "./pages/TenantAdminLogin";
 import CustomerMenu from "./pages/CustomerMenu";
 import KitchenDashboard from "./pages/KitchenDashboard";
@@ -33,7 +32,6 @@ const App = () => (
           <Route path="/roles" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/super-admin/login" element={<SuperAdminLogin />} />
-          <Route path="/super-admin/signup" element={<SuperAdminSignup />} />
           <Route path="/admin/login" element={<TenantAdminLogin />} />
           <Route path="/tenant-admin/login" element={<TenantAdminLogin />} />
           <Route path="/customer-menu" element={<CustomerMenu />} />
