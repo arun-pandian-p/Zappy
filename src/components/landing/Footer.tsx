@@ -9,8 +9,8 @@ interface FooterProps {
 
 const Footer = ({ cms }: FooterProps) => {
   const currentYear = new Date().getFullYear();
-  const companyName = cms?.company_name || 'QR Dine Pro';
-  const tagline = cms?.tagline || 'Transform your restaurant with QR-powered digital ordering. Increase efficiency, reduce costs, delight customers.';
+  const companyName = cms?.company_name || 'ZAPPY';
+  const tagline = cms?.tagline || 'Scan, Order, Eat, Repeat — Smart QR-powered digital ordering for restaurants.';
 
   return (
     <footer className="bg-card border-t">
@@ -59,9 +59,8 @@ const Footer = ({ cms }: FooterProps) => {
               <Button>Subscribe</Button>
             </div>
             <div className="mt-6 space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2"><Mail className="w-4 h-4" /><span>support@qrdinepro.com</span></div>
-              <div className="flex items-center gap-2"><Phone className="w-4 h-4" /><span>+91 98765 43210</span></div>
-              <div className="flex items-center gap-2"><MapPin className="w-4 h-4" /><span>Mumbai, India</span></div>
+              <div className="flex items-center gap-2"><Mail className="w-4 h-4" /><span>zappyscan@gmail.com</span></div>
+              <div className="flex items-center gap-2"><Phone className="w-4 h-4" /><span>+91 99940 93784</span></div>
             </div>
           </motion.div>
         </div>

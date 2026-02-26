@@ -4,7 +4,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 const faqs = [
   {
     q: 'Do my customers need to download an app?',
-    a: 'No! QR Dine Pro works entirely in the browser. Customers simply scan the QR code and the menu opens instantly — no downloads, no sign-ups required.',
+    a: 'No! ZAPPY works entirely in the browser. Customers simply scan the QR code and the menu opens instantly — no downloads, no sign-ups required.',
   },
   {
     q: 'How long does it take to set up?',
@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: 'Does it work with my existing POS or printer?',
-    a: 'QR Dine Pro supports Bluetooth and USB thermal printers (ESC/POS compatible). POS integration is available on the Enterprise plan.',
+    a: 'ZAPPY supports Bluetooth and USB thermal printers (ESC/POS compatible). POS integration is available on the Enterprise plan.',
   },
   {
     q: 'Is my data secure?',
@@ -45,7 +45,7 @@ const FAQSection = () => {
             </span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to know about QR Dine Pro.
+            Everything you need to know about ZAPPY.
           </p>
         </motion.div>
 

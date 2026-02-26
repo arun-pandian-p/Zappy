@@ -9,7 +9,7 @@ interface CTABannerProps {
 
 const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
   const headline = cms?.headline || 'Ready to Transform Your Restaurant?';
-  const subtitle = cms?.subtitle || 'Join 500+ restaurants already using QR Dine Pro to serve customers faster and smarter.';
+  const subtitle = cms?.subtitle || 'Join 500+ restaurants already using ZAPPY to serve customers faster and smarter.';
   const ctaText = cms?.cta_text || 'Get Started Free';
 
   return (

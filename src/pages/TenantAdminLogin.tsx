@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+// supabase import removed - using localStorage cleanup instead
 import { lovable } from '@/integrations/lovable/index';
 
 const TenantAdminLogin = () => {
@@ -38,25 +38,16 @@ const TenantAdminLogin = () => {
     }
     setLoading(true);
 
-    // Clear any stale session first
-    try {
-      await supabase.auth.signOut({ scope: 'local' });
-    } catch (_) {}
+    // Clear all stale auth data from storage before login
+    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
+    keysToRemove.forEach(k => localStorage.removeItem(k));
 
-    let lastError: any = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const { error } = await signIn(email, password);
-      if (!error) {
-        toast({ title: 'Welcome back!', description: 'Logged in successfully' });
-        setLoading(false);
-        return;
-      }
-      lastError = error;
-      if (error.message !== 'Failed to fetch') break;
-      await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+    const { error } = await signIn(email, password);
+    if (error) {
+      toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Welcome back!', description: 'Logged in successfully' });
     }
-
-    toast({ title: 'Login Failed', description: lastError?.message || 'Unknown error', variant: 'destructive' });
     setLoading(false);
   };
 
@@ -83,7 +74,9 @@ const TenantAdminLogin = () => {
         className="hidden lg:flex flex-1 flex-col justify-center items-center relative z-10 px-12"
       >
         <div className="text-center space-y-6 max-w-md">
-          <h1 className="text-5xl font-bold text-white tracking-tight">QR Dine</h1>
+          <img src="/zappy-logo.jpg" alt="ZAPPY" className="h-20 mx-auto rounded-xl" />
+          <h1 className="text-5xl font-bold text-white tracking-tight">ZAPPY</h1>
+          <p className="text-sm text-orange-200 italic">Scan, Order, Eat, Repeat</p>
           <p className="text-orange-100 text-lg leading-relaxed">Complete Restaurant Control — Menu, orders, staff, and analytics in one place.</p>
           {/* CSS illustration: plate + utensils */}
           <div className="relative mx-auto w-48 h-40 mt-8">
