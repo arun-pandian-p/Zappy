@@ -56,7 +56,14 @@ export const useAuth = () => {
     );
 
     // THEN get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        // If session fetch fails (e.g. stale token), clear storage and reset
+        const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+        setAuthState(prev => ({ ...prev, loading: false }));
+        return;
+      }
       if (session?.user) {
         supabase
           .from('user_roles')
@@ -75,17 +82,27 @@ export const useAuth = () => {
       } else {
         setAuthState(prev => ({ ...prev, loading: false }));
       }
+    }).catch(() => {
+      // Network failure — clear stale tokens and continue
+      const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      setAuthState(prev => ({ ...prev, loading: false }));
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { data, error };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      return { data, error };
+    } catch (err) {
+      // Network-level failure (Failed to fetch)
+      return { data: null, error: { message: 'Network error. Please check your connection and try again.', status: 0 } as any };
+    }
   };
 
   const signUp = async (email: string, password: string) => {
