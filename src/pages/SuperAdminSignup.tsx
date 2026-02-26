@@ -1,22 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, RefreshCw, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const SuperAdminSignup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signUp } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,10 +33,21 @@ const SuperAdminSignup = () => {
       return;
     }
     setLoading(true);
+    setNetworkError(false);
+
     try {
-      const { error } = await signUp(email, password);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.origin },
+      });
       if (error) {
-        toast({ title: 'Signup Failed', description: error.message, variant: 'destructive' });
+        if (error.message === 'Failed to fetch') {
+          setNetworkError(true);
+          toast({ title: 'Connection Failed', description: 'Cannot reach the server.', variant: 'destructive' });
+        } else {
+          toast({ title: 'Signup Failed', description: error.message, variant: 'destructive' });
+        }
         setLoading(false);
         return;
       }
@@ -46,20 +57,23 @@ const SuperAdminSignup = () => {
       });
       setLoading(false);
       navigate('/super-admin/login');
-    } catch (err) {
-      toast({ title: 'Signup Failed', description: 'Network error. Please try again.', variant: 'destructive' });
+    } catch (err: any) {
+      if (err?.message?.includes('Failed to fetch') || err?.name === 'TypeError') {
+        setNetworkError(true);
+        toast({ title: 'Connection Failed', description: 'Cannot reach the server after retries.', variant: 'destructive' });
+      } else {
+        toast({ title: 'Signup Failed', description: err?.message || 'Network error. Please try again.', variant: 'destructive' });
+      }
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-indigo-500 via-purple-600 to-violet-700 relative overflow-hidden">
-      {/* Decorative blobs */}
       <div className="absolute top-[-10%] left-[10%] w-80 h-80 bg-indigo-300/30 rounded-full blur-3xl" />
       <div className="absolute bottom-[-5%] right-[5%] w-72 h-72 bg-purple-400/20 rounded-full blur-3xl" />
       <div className="absolute top-[40%] right-[30%] w-48 h-48 bg-violet-300/15 rounded-full blur-2xl" />
 
-      {/* Left — Decorative Panel */}
       <motion.div
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
@@ -85,7 +99,6 @@ const SuperAdminSignup = () => {
         </div>
       </motion.div>
 
-      {/* Right — Form Card */}
       <motion.div
         initial={{ opacity: 0, x: 40 }}
         animate={{ opacity: 1, x: 0 }}
@@ -98,48 +111,39 @@ const SuperAdminSignup = () => {
             <p className="text-gray-500 mt-2 text-sm">Sign up for the platform console</p>
           </div>
 
+          {networkError && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+              <WifiOff className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium text-red-800">Connection Failed</p>
+                <p className="text-red-600 mt-1">Cannot reach the server. Try:</p>
+                <ul className="text-red-600 mt-1 list-disc list-inside space-y-0.5">
+                  <li>Disable ad blockers / privacy extensions</li>
+                  <li>Open in incognito / private window</li>
+                  <li>Check your internet connection</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSignup} className="space-y-5">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                disabled={loading}
-                autoComplete="email"
-                className="pl-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500"
-              />
+              <Input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} disabled={loading} autoComplete="email" className="pl-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500" />
             </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                disabled={loading}
-                autoComplete="new-password"
-                className="pl-10 pr-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500"
-              />
+              <Input type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} disabled={loading} autoComplete="new-password" className="pl-10 pr-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500" />
               <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                disabled={loading}
-                autoComplete="new-password"
-                className="pl-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500"
-              />
+              <Input type={showPassword ? 'text' : 'password'} placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} disabled={loading} autoComplete="new-password" className="pl-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500" />
             </div>
             <Button type="submit" className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-base" disabled={loading}>
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? <span className="flex items-center gap-2"><RefreshCw className="h-4 w-4 animate-spin" /> Creating...</span> : 'Create Account'}
             </Button>
           </form>
 

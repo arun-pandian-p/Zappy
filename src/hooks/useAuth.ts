@@ -23,25 +23,34 @@ export const useAuth = () => {
   });
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
-          // Fetch user role using setTimeout to avoid Supabase deadlock
           setTimeout(async () => {
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role, restaurant_id')
-              .eq('user_id', session.user.id)
-              .single();
+            try {
+              const { data: roleData } = await supabase
+                .from('user_roles')
+                .select('role, restaurant_id')
+                .eq('user_id', session.user.id)
+                .single();
 
-            setAuthState({
-              user: session.user,
-              session,
-              role: roleData?.role || null,
-              restaurantId: roleData?.restaurant_id || null,
-              loading: false,
-            });
+              setAuthState({
+                user: session.user,
+                session,
+                role: roleData?.role || null,
+                restaurantId: roleData?.restaurant_id || null,
+                loading: false,
+              });
+            } catch {
+              // Network error fetching role — still set user so page doesn't hang
+              setAuthState({
+                user: session.user,
+                session,
+                role: null,
+                restaurantId: null,
+                loading: false,
+              });
+            }
           }, 0);
         } else {
           setAuthState({
@@ -55,7 +64,7 @@ export const useAuth = () => {
       }
     );
 
-    // THEN get initial session
+    // Get initial session with error handling
     supabase.auth.getSession().then(({ data, error }) => {
       if (error || !data.session) {
         setAuthState(prev => ({ ...prev, loading: false }));
@@ -63,12 +72,13 @@ export const useAuth = () => {
       }
       const session = data.session;
       if (session?.user) {
-        supabase
-          .from('user_roles')
-          .select('role, restaurant_id')
-          .eq('user_id', session.user.id)
-          .single()
-          .then(({ data: roleData }) => {
+        Promise.resolve(
+          supabase
+            .from('user_roles')
+            .select('role, restaurant_id')
+            .eq('user_id', session.user.id)
+            .single()
+        ).then(({ data: roleData }) => {
             setAuthState({
               user: session.user,
               session,
@@ -76,11 +86,20 @@ export const useAuth = () => {
               restaurantId: roleData?.restaurant_id || null,
               loading: false,
             });
+          }).catch(() => {
+            setAuthState({
+              user: session.user,
+              session,
+              role: null,
+              restaurantId: null,
+              loading: false,
+            });
           });
       } else {
         setAuthState(prev => ({ ...prev, loading: false }));
       }
     }).catch(() => {
+      // getSession itself failed (network error) — don't hang
       setAuthState(prev => ({ ...prev, loading: false }));
     });
 

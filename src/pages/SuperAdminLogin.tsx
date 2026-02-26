@@ -7,20 +7,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-// Clear ALL stale Supabase auth data immediately (before any hook runs)
-const STORAGE_KEY = `sb-syvoshzxoedamaijongb-auth-token`;
-try {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    const parsed = JSON.parse(stored);
-    if (!parsed?.access_token || !parsed?.refresh_token || (parsed?.expires_at && parsed.expires_at * 1000 < Date.now())) {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  }
-} catch {
-  localStorage.removeItem(STORAGE_KEY);
-}
-
 const SuperAdminLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -32,13 +18,10 @@ const SuperAdminLogin = () => {
   const [networkError, setNetworkError] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Check existing session on mount — bypasses useAuth to avoid stale token loops
   useEffect(() => {
     let cancelled = false;
     const checkSession = async () => {
       try {
-        // Force clear any stale session first
-        await supabase.auth.signOut({ scope: 'local' });
         const { data } = await supabase.auth.getSession();
         if (cancelled) return;
         if (data.session?.user) {
@@ -53,7 +36,7 @@ const SuperAdminLogin = () => {
           }
         }
       } catch {
-        // Network error on session check is fine — just show the login form
+        // Network error — just show login form
       }
       if (!cancelled) setCheckingAuth(false);
     };
@@ -70,64 +53,44 @@ const SuperAdminLogin = () => {
     setLoading(true);
     setNetworkError(false);
 
-    // Retry logic — try up to 3 times with increasing delay
-    let lastError: string | null = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        if (attempt > 0) {
-          await new Promise(r => setTimeout(r, attempt * 1000));
-        }
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        
-        if (error) {
-          if (error.message === 'Failed to fetch') {
-            lastError = 'network';
-            continue; // retry
-          }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        if (error.message === 'Failed to fetch') {
+          setNetworkError(true);
+          toast({ title: 'Connection Failed', description: 'Cannot reach the server. Check your internet or try incognito mode.', variant: 'destructive' });
+        } else {
           toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
-          setLoading(false);
-          return;
         }
+        setLoading(false);
+        return;
+      }
 
-        if (data.session?.user) {
-          // Check role
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', data.session.user.id)
-            .single();
+      if (data.session?.user) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.session.user.id)
+          .single();
 
-          if (roleData?.role === 'super_admin') {
-            toast({ title: 'Welcome!', description: 'Redirecting to dashboard...' });
-            navigate('/super-admin');
-          } else {
-            toast({ title: 'Access Denied', description: 'This portal is for Super Admins only.', variant: 'destructive' });
-            await supabase.auth.signOut({ scope: 'local' });
-          }
-          setLoading(false);
-          return;
+        if (roleData?.role === 'super_admin') {
+          toast({ title: 'Welcome!', description: 'Redirecting to dashboard...' });
+          navigate('/super-admin');
+        } else {
+          toast({ title: 'Access Denied', description: 'This portal is for Super Admins only.', variant: 'destructive' });
+          await supabase.auth.signOut();
         }
-      } catch (err: any) {
-        if (err?.message?.includes('Failed to fetch') || err?.name === 'TypeError') {
-          lastError = 'network';
-          continue; // retry
-        }
-        lastError = err?.message || 'Unknown error';
+      }
+    } catch (err: any) {
+      if (err?.message?.includes('Failed to fetch') || err?.name === 'TypeError') {
+        setNetworkError(true);
+        toast({ title: 'Connection Failed', description: 'Cannot reach the server after retries.', variant: 'destructive' });
+      } else {
+        toast({ title: 'Login Failed', description: err?.message || 'Please try again.', variant: 'destructive' });
       }
     }
-
-    // All retries exhausted
     setLoading(false);
-    if (lastError === 'network') {
-      setNetworkError(true);
-      toast({
-        title: 'Connection Failed',
-        description: 'Cannot reach the server. Please check your internet, disable ad blockers, or try incognito mode.',
-        variant: 'destructive',
-      });
-    } else {
-      toast({ title: 'Login Failed', description: lastError || 'Please try again.', variant: 'destructive' });
-    }
   }, [email, password, navigate, toast]);
 
   const handleRetry = () => {
@@ -145,12 +108,10 @@ const SuperAdminLogin = () => {
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-indigo-500 via-purple-600 to-violet-700 relative overflow-hidden">
-      {/* Decorative blobs */}
       <div className="absolute top-[-10%] left-[10%] w-80 h-80 bg-indigo-300/30 rounded-full blur-3xl" />
       <div className="absolute bottom-[-5%] right-[5%] w-72 h-72 bg-purple-400/20 rounded-full blur-3xl" />
       <div className="absolute top-[40%] right-[30%] w-48 h-48 bg-violet-300/15 rounded-full blur-2xl" />
 
-      {/* Left — Decorative Panel */}
       <motion.div
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
@@ -176,7 +137,6 @@ const SuperAdminLogin = () => {
         </div>
       </motion.div>
 
-      {/* Right — Form Card */}
       <motion.div
         initial={{ opacity: 0, x: 40 }}
         animate={{ opacity: 1, x: 0 }}
@@ -200,12 +160,7 @@ const SuperAdminLogin = () => {
                   <li>Open in incognito / private window</li>
                   <li>Check your internet connection</li>
                 </ul>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-3 text-red-700 border-red-300 hover:bg-red-100"
-                  onClick={handleRetry}
-                >
+                <Button variant="outline" size="sm" className="mt-3 text-red-700 border-red-300 hover:bg-red-100" onClick={handleRetry}>
                   <RefreshCw className="h-3 w-3 mr-1" /> Retry Connection
                 </Button>
               </div>
@@ -215,37 +170,17 @@ const SuperAdminLogin = () => {
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="email"
-                placeholder="superadmin@qrdine.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                disabled={loading}
-                autoComplete="email"
-                className="pl-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500"
-              />
+              <Input type="email" placeholder="superadmin@qrdine.com" value={email} onChange={e => setEmail(e.target.value)} disabled={loading} autoComplete="email" className="pl-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500" />
             </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                disabled={loading}
-                autoComplete="current-password"
-                className="pl-10 pr-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500"
-              />
+              <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} disabled={loading} autoComplete="current-password" className="pl-10 pr-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-indigo-500" />
               <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             <Button type="submit" className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-base" disabled={loading}>
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4 animate-spin" /> Connecting...
-                </span>
-              ) : 'Access Console'}
+              {loading ? <span className="flex items-center gap-2"><RefreshCw className="h-4 w-4 animate-spin" /> Connecting...</span> : 'Access Console'}
             </Button>
           </form>
 
