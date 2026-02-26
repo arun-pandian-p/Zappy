@@ -102,7 +102,7 @@ const TenantAdminLogin = () => {
             <p className="text-gray-500 mt-2 text-sm">Sign in to manage your restaurant</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-5" autoComplete="off">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -111,7 +111,7 @@ const TenantAdminLogin = () => {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 disabled={loading}
-                autoComplete="email"
+                autoComplete="off"
                 className="pl-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-orange-500"
               />
             </div>
@@ -123,7 +123,7 @@ const TenantAdminLogin = () => {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 disabled={loading}
-                autoComplete="current-password"
+                autoComplete="off"
                 className="pl-10 pr-10 bg-gray-100 border-0 h-12 rounded-xl text-gray-800 placeholder:text-gray-400 focus-visible:ring-orange-500"
               />
               <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" onClick={() => setShowPassword(!showPassword)}>
