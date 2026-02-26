@@ -23,11 +23,9 @@ export const useAuth = () => {
   });
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         if (session?.user) {
-          // Fetch user role using setTimeout to avoid Supabase deadlock
           setTimeout(async () => {
             const { data: roleData } = await supabase
               .from('user_roles')
@@ -55,15 +53,7 @@ export const useAuth = () => {
       }
     );
 
-    // THEN get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        // If session fetch fails (e.g. stale token), clear storage and reset
-        const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
-        keysToRemove.forEach(k => localStorage.removeItem(k));
-        setAuthState(prev => ({ ...prev, loading: false }));
-        return;
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         supabase
           .from('user_roles')
@@ -82,55 +72,21 @@ export const useAuth = () => {
       } else {
         setAuthState(prev => ({ ...prev, loading: false }));
       }
-    }).catch(() => {
-      // Network failure — clear stale tokens and continue
-      const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
-      keysToRemove.forEach(k => localStorage.removeItem(k));
-      setAuthState(prev => ({ ...prev, loading: false }));
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const MAX_RETRIES = 3;
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        // Auth errors (wrong password, etc.) — don't retry
-        if (error && !error.message?.toLowerCase().includes('failed to fetch')) {
-          return { data, error };
-        }
-        // Network error — retry
-        if (error) {
-          if (attempt < MAX_RETRIES) {
-            await new Promise(r => setTimeout(r, 1500 * attempt));
-            continue;
-          }
-          return { data: null, error: { message: 'Network error after multiple retries. Please try again.', status: 0 } as any };
-        }
-        return { data, error: null };
-      } catch (err) {
-        if (attempt < MAX_RETRIES) {
-          await new Promise(r => setTimeout(r, 1500 * attempt));
-          continue;
-        }
-        return { data: null, error: { message: 'Network error after multiple retries. Please check your connection.', status: 0 } as any };
-      }
-    }
-    return { data: null, error: { message: 'Login failed. Please try again.', status: 0 } as any };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    return { data, error };
   };
 
   const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
+      options: { emailRedirectTo: window.location.origin },
     });
     return { data, error };
   };
@@ -142,26 +98,14 @@ export const useAuth = () => {
 
   const getRouteForRole = (role: AppRole | null): string => {
     switch (role) {
-      case 'super_admin':
-        return '/super-admin';
-      case 'restaurant_admin':
-        return '/admin';
-      case 'kitchen_staff':
-        return '/kitchen';
-      case 'waiter_staff':
-        return '/waiter';
-      case 'billing_staff':
-        return '/billing';
-      default:
-        return '/roles';
+      case 'super_admin': return '/super-admin';
+      case 'restaurant_admin': return '/admin';
+      case 'kitchen_staff': return '/kitchen';
+      case 'waiter_staff': return '/waiter';
+      case 'billing_staff': return '/billing';
+      default: return '/roles';
     }
   };
 
-  return {
-    ...authState,
-    signIn,
-    signUp,
-    signOut,
-    getRouteForRole,
-  };
+  return { ...authState, signIn, signUp, signOut, getRouteForRole };
 };
