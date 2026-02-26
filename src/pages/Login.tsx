@@ -34,7 +34,14 @@ const Login = () => {
     setLoading(true);
     const { error } = await signIn(email.trim(), password);
     if (error) {
-      toast({ title: 'Login failed', description: error.message, variant: 'destructive' });
+      const isNetworkError = error.message === 'Failed to fetch' || error.message?.includes('NetworkError');
+      toast({
+        title: isNetworkError ? 'Network error' : 'Login failed',
+        description: isNetworkError
+          ? 'Could not reach the server. Please check your internet connection and try again.'
+          : error.message,
+        variant: 'destructive',
+      });
     }
     setLoading(false);
   };
