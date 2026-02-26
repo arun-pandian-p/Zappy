@@ -18,13 +18,25 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Redirect authenticated users to their dashboard
+  // Auto-login with default super admin account
   useEffect(() => {
-    if (user && role && !authLoading) {
+    if (authLoading) return;
+    if (user && role) {
       const route = getRouteForRole(role);
       navigate(route, { replace: true });
+      return;
     }
-  }, [user, role, authLoading, navigate, getRouteForRole]);
+    // Skip login — auto sign-in
+    if (!user && !loading) {
+      setLoading(true);
+      signIn('zappyscan@gmail.com', 'zappy1234').then(({ error }) => {
+        if (error) {
+          toast({ title: 'Auto-login failed', description: error.message, variant: 'destructive' });
+          setLoading(false);
+        }
+      });
+    }
+  }, [user, role, authLoading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
