@@ -799,8 +799,19 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                   className="-m-6"
                 >
-                  <div className="h-[calc(100vh-180px)] overflow-auto">
-                    <KitchenDashboard embedded restaurantId={restaurantId} />
+                  <div className="flex items-center justify-between px-4 py-2 border-b bg-card">
+                    <h3 className="text-sm font-medium text-muted-foreground">Kitchen Display</h3>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewRefreshKey(k => k + 1)} title="Refresh">
+                        <RefreshCw className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(`/kitchen?r=${restaurantId}`, '_blank')} title="Open in new window">
+                        <ExternalLink className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="h-[calc(100vh-220px)] overflow-auto">
+                    <KitchenDashboard key={previewRefreshKey} embedded restaurantId={restaurantId} />
                   </div>
                 </motion.div>
               )}
@@ -815,8 +826,19 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                   className="-m-6"
                 >
-                  <div className="h-[calc(100vh-180px)] overflow-auto">
-                    <BillingCounter embedded restaurantId={restaurantId} />
+                  <div className="flex items-center justify-between px-4 py-2 border-b bg-card">
+                    <h3 className="text-sm font-medium text-muted-foreground">Billing Counter</h3>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewRefreshKey(k => k + 1)} title="Refresh">
+                        <RefreshCw className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(`/billing?r=${restaurantId}`, '_blank')} title="Open in new window">
+                        <ExternalLink className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="h-[calc(100vh-220px)] overflow-auto">
+                    <BillingCounter key={previewRefreshKey} embedded restaurantId={restaurantId} />
                   </div>
                 </motion.div>
               )}

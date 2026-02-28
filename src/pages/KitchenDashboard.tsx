@@ -315,62 +315,66 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/roles')}>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
-                  <ChefHat className="w-6 h-6 text-warning" />
-                </div>
-                <div>
-                  <h1 className="font-bold">Kitchen Display</h1>
-                  <p className="text-xs text-muted-foreground">
-                    {isLoading ? 'Loading...' : `${pendingOrders.length} pending • ${preparingOrders.length} preparing • ${readyOrders.length} ready`}
-                  </p>
+      {/* Header - hidden when embedded */}
+      {!embedded && (
+        <header className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => navigate('/roles')}>
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                    <ChefHat className="w-6 h-6 text-warning" />
+                  </div>
+                  <div>
+                    <h1 className="font-bold">Kitchen Display</h1>
+                    <p className="text-xs text-muted-foreground">
+                      {isLoading ? 'Loading...' : `${pendingOrders.length} pending • ${preparingOrders.length} preparing • ${readyOrders.length} ready`}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2" disabled={isLoading}>
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Refresh</span>
-              </Button>
-              <Button variant={isMuted ? 'outline' : 'default'} size="icon" onClick={toggleMute}>
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-              </Button>
-              <Button variant="outline" size="icon" onClick={handleLogout} title="Logout">
-                <LogOut className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2" disabled={isLoading}>
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </Button>
+                <Button variant={isMuted ? 'outline' : 'default'} size="icon" onClick={toggleMute}>
+                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </Button>
+                <Button variant="outline" size="icon" onClick={handleLogout} title="Logout">
+                  <LogOut className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
-      {/* Waiter Calls Alert */}
-      <AnimatePresence>
-        {waiterCallsCount > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-warning/10 border-b border-warning/20 px-4 py-2"
-          >
-            <div className="container mx-auto flex items-center gap-2 text-warning">
-              <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }}>
-                <Bell className="w-4 h-4" />
-              </motion.div>
-              <span className="text-sm font-medium">
-                {waiterCallsCount} waiter call{waiterCallsCount > 1 ? 's' : ''} pending
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Waiter Calls Alert - hidden when embedded */}
+      {!embedded && (
+        <AnimatePresence>
+          {waiterCallsCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-warning/10 border-b border-warning/20 px-4 py-2"
+            >
+              <div className="container mx-auto flex items-center gap-2 text-warning">
+                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }}>
+                  <Bell className="w-4 h-4" />
+                </motion.div>
+                <span className="text-sm font-medium">
+                  {waiterCallsCount} waiter call{waiterCallsCount > 1 ? 's' : ''} pending
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
 
       {/* Main Content - 4 columns */}
       <main className="container mx-auto px-4 py-6">
