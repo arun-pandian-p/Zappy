@@ -39,6 +39,7 @@ const App = () => (
           <Route path="/admin/login" element={<TenantAdminLogin />} />
           <Route path="/tenant-admin/login" element={<TenantAdminLogin />} />
           <Route path="/customer-menu" element={<CustomerMenu />} />
+          <Route path="/order" element={<CustomerMenu />} />
           <Route path="/feedback" element={<FeedbackPage />} />
 
           {/* Staff routes */}
