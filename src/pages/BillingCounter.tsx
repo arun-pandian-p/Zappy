@@ -216,53 +216,55 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/roles')}>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
+      {/* Header - hidden when embedded */}
+      {!embedded && (
+        <header className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => navigate('/roles')}>
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+                    <CreditCard className="w-6 h-6 text-success" />
+                  </div>
+                  <div>
+                    <h1 className="font-bold">{restaurantName} — Billing</h1>
+                    <p className="text-xs text-muted-foreground">
+                      {ordersLoading ? 'Loading...' : `${readyOrders.length} pending · ${completedCount} invoiced today`}
+                    </p>
+                  </div>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
-                  <CreditCard className="w-6 h-6 text-success" />
+                {/* Today's quick stat */}
+                <div className="hidden md:flex items-center gap-1 bg-primary/10 px-3 py-1.5 rounded-lg mr-2">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-semibold text-primary">{currencySymbol}{todayTotal.toFixed(0)}</span>
                 </div>
-                <div>
-                  <h1 className="font-bold">{restaurantName} — Billing</h1>
-                  <p className="text-xs text-muted-foreground">
-                    {ordersLoading ? 'Loading...' : `${readyOrders.length} pending · ${completedCount} invoiced today`}
-                  </p>
-                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => refetchOrders()}
+                  disabled={ordersLoading}
+                >
+                  <RefreshCw className={`w-5 h-5 ${ordersLoading ? 'animate-spin' : ''}`} />
+                </Button>
+                <Button variant="outline" size="icon" onClick={toggleMute}>
+                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </Button>
+                <Button variant="outline" size="icon" onClick={handleLogout} title="Logout">
+                  <LogOut className="w-5 h-5" />
+                </Button>
+                <Button variant="outline" size="icon" onClick={() => setShowShortcuts(!showShortcuts)} title="Keyboard shortcuts (?)">
+                  <Keyboard className="w-5 h-5" />
+                </Button>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Today's quick stat */}
-              <div className="hidden md:flex items-center gap-1 bg-primary/10 px-3 py-1.5 rounded-lg mr-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">{currencySymbol}{todayTotal.toFixed(0)}</span>
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => refetchOrders()}
-                disabled={ordersLoading}
-              >
-                <RefreshCw className={`w-5 h-5 ${ordersLoading ? 'animate-spin' : ''}`} />
-              </Button>
-              <Button variant="outline" size="icon" onClick={toggleMute}>
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-              </Button>
-              <Button variant="outline" size="icon" onClick={handleLogout} title="Logout">
-                <LogOut className="w-5 h-5" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => setShowShortcuts(!showShortcuts)} title="Keyboard shortcuts (?)">
-                <Keyboard className="w-5 h-5" />
-              </Button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
