@@ -40,6 +40,21 @@ const CUISINE_OPTIONS = [
   'Café', 'Bakery', 'Fine Dining', 'QSR', 'Street Food',
 ];
 
+const GlassCard = ({ children, icon: Icon, title, desc }: { children: React.ReactNode; icon: any; title: string; desc: string }) => (
+  <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-8 shadow-2xl">
+    <div className="flex items-center gap-3 mb-6">
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center">
+        <Icon className="w-5 h-5 text-orange-400" />
+      </div>
+      <div>
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <p className="text-sm text-white/50">{desc}</p>
+      </div>
+    </div>
+    {children}
+  </div>
+);
+
 const AdminOnboarding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -335,21 +350,6 @@ const AdminOnboarding = () => {
 
   const stepProgress = ((step) / (STEPS.length - 1)) * 100;
   const lastStep = STEPS.length - 1;
-
-  const GlassCard = ({ children, icon: Icon, title, desc }: { children: React.ReactNode; icon: any; title: string; desc: string }) => (
-    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-8 shadow-2xl">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-orange-400" />
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
-          <p className="text-sm text-white/50">{desc}</p>
-        </div>
-      </div>
-      {children}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
