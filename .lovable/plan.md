@@ -1,93 +1,46 @@
 
 
-# Complete Staff Login Flow — Role-Based Dashboard Access
+# Add Open-in-New-Window Buttons for Kitchen & Billing in Admin Dashboard
 
-## Overview
+## What This Does
 
-Currently, the restaurant admin can already create staff accounts (kitchen, waiter, billing) via the Users tab. However, when staff log in, the dashboards don't properly enforce authentication or use the staff's assigned restaurant. This plan adds proper auth guards and ensures each staff role lands on their correct, restaurant-scoped dashboard.
+When you're on the Admin dashboard and click the Kitchen or Billing tab, you'll see small "Open in new window" and "Refresh" buttons (like in your screenshot) that let you pop out Kitchen or Billing into their own full-screen browser tab. This is useful for running Kitchen Display on a separate screen.
 
-## Current State (What Already Works)
+## Changes
 
-- Unified login at `/login` with role-based redirect (kitchen_staff -> `/kitchen`, waiter_staff -> `/waiter`, billing_staff -> `/billing`)
-- Admin can create staff via Users tab (calls `manage-staff` edge function)
-- `useAuth` hook fetches role and `restaurant_id` from `user_roles` table
-- Staff profiles stored in `staff_profiles` table
+### 1. Update Kitchen & Billing Embedded Tabs in AdminDashboard
 
-## What's Missing
+Add a small toolbar at the top of the Kitchen and Billing tab content with:
+- **Open in new window** button (arrow icon) -- opens `/kitchen?r={restaurantId}` or `/billing?r={restaurantId}` in a new browser tab
+- **Refresh** button (rotate icon) -- re-renders the embedded component
 
-1. Kitchen, Waiter, and Billing dashboards fall back to a demo restaurant ID instead of using the authenticated user's restaurant
-2. No auth guards -- anyone can visit `/kitchen`, `/waiter`, `/billing` without logging in
-3. No "wrong role" protection (e.g., a waiter accessing `/kitchen`)
+This matches the 2nd screenshot you shared (the arrow + refresh icons).
 
-## Implementation Plan
+### 2. Hide Header When Embedded
 
-### 1. Create a reusable Auth Guard component
+Update `KitchenDashboard` and `BillingCounter` to hide their standalone headers (back button, logout, title bar) when `embedded={true}`, since the admin dashboard already provides those.
 
-A new `src/components/auth/RoleGuard.tsx` component that:
-- Shows a loading spinner while auth state resolves
-- Redirects unauthenticated users to `/login`
-- Checks if the user's role matches the allowed roles for that route
-- Shows an "Access Denied" message or redirects if the role doesn't match
-- Passes `restaurantId` down to the wrapped dashboard
+### 3. Ensure Tenant Data Isolation
 
-### 2. Update Kitchen Dashboard (`src/pages/KitchenDashboard.tsx`)
+The system already isolates data per restaurant via `restaurant_id` on all queries and RLS policies. Each staff member's `user_roles` record links them to their specific `restaurant_id`, so:
+- Kitchen staff at Restaurant A only sees Restaurant A's orders
+- Billing staff at Restaurant B only sees Restaurant B's invoices
+- Admin sees only their own restaurant's data
 
-- When not in `embedded` mode, use `useAuth()` to get `restaurantId` from the authenticated user's role
-- Remove the demo restaurant ID fallback for authenticated access
-- Keep the `embedded` and `?r=` query param modes for admin preview
+No database changes are needed -- this is already working.
 
-### 3. Update Waiter Dashboard (`src/pages/WaiterDashboard.tsx`)
+## Technical Details
 
-- Same pattern: prioritize `authRestaurantId` from `useAuth()`
-- Remove demo fallback for standalone access
+### File: `src/pages/AdminDashboard.tsx`
+- Add a floating toolbar with "Open in new tab" and "Refresh" buttons above the embedded Kitchen and Billing components
+- Track a refresh key per embedded component
 
-### 4. Update Billing Counter (`src/pages/BillingCounter.tsx`)
+### File: `src/pages/KitchenDashboard.tsx`
+- When `embedded={true}`, skip rendering the `<header>` and waiter calls alert bar (the parent admin dashboard provides navigation)
 
-- Same pattern: prioritize `authRestaurantId` from `useAuth()`
-- Remove demo fallback for standalone access
+### File: `src/pages/BillingCounter.tsx`
+- When `embedded={true}`, skip rendering the standalone header/back button
 
-### 5. Wrap routes in App.tsx with RoleGuard
-
-```text
-/kitchen  ->  RoleGuard(allowedRoles: [kitchen_staff, restaurant_admin])
-/waiter   ->  RoleGuard(allowedRoles: [waiter_staff, restaurant_admin])
-/billing  ->  RoleGuard(allowedRoles: [billing_staff, restaurant_admin])
-/admin    ->  RoleGuard(allowedRoles: [restaurant_admin])
-/super-admin -> RoleGuard(allowedRoles: [super_admin])
-```
-
-Restaurant admins can access all staff dashboards (they manage them). Super admins bypass all guards.
-
-### 6. Add logout button to staff dashboards
-
-Each staff dashboard (Kitchen, Waiter, Billing) will get a small logout/back button in the header so staff can sign out and return to the login page.
-
-## Complete User Flow
-
-```text
-1. Super Admin creates a restaurant via /super-admin (tenant provisioning)
-2. Restaurant Admin logs in at /login -> redirected to /admin
-3. Admin goes to Users tab -> creates staff accounts:
-   - kitchen@restaurant.com (Kitchen Staff)
-   - waiter@restaurant.com (Waiter Staff)  
-   - billing@restaurant.com (Billing Staff)
-4. Kitchen staff logs in at /login -> auto-redirected to /kitchen
-   - Sees only their restaurant's orders
-5. Waiter staff logs in at /login -> auto-redirected to /waiter
-   - Sees only their restaurant's tables and calls
-6. Billing staff logs in at /login -> auto-redirected to /billing
-   - Sees only their restaurant's billing data
-```
-
-## Files to Create/Modify
-
-| File | Action |
-|------|--------|
-| `src/components/auth/RoleGuard.tsx` | Create -- reusable auth guard |
-| `src/App.tsx` | Modify -- wrap staff/admin routes with RoleGuard |
-| `src/pages/KitchenDashboard.tsx` | Modify -- use auth restaurant, add logout |
-| `src/pages/WaiterDashboard.tsx` | Modify -- use auth restaurant, add logout |
-| `src/pages/BillingCounter.tsx` | Modify -- use auth restaurant, add logout |
-
-No database changes needed. All required tables, roles, and edge functions already exist.
+### No database or edge function changes needed
+All tenant isolation is already enforced by existing RLS policies using `restaurant_id`.
 
