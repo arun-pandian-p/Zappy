@@ -154,15 +154,22 @@ serve(async (req) => {
     if (createUserError) {
       // If user already exists, find them
       if (createUserError.message.includes("already been registered")) {
-        const { data: existingUserData, error: getUserError } =
-          await adminClient.auth.admin.getUserByEmail(admin_email);
-        if (!existingUserData?.user || getUserError) {
+        const { data: listData, error: listError } =
+          await adminClient.auth.admin.listUsers({ perPage: 1 });
+        // Search through all users by email since listUsers doesn't support email filter directly
+        let foundUser = listData?.users?.find((u: any) => u.email === admin_email);
+        if (!foundUser) {
+          // Try fetching more users
+          const { data: allUsers } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+          foundUser = allUsers?.users?.find((u: any) => u.email === admin_email);
+        }
+        if (!foundUser) {
           await adminClient.from("restaurants").delete().eq("id", restaurant.id);
           return new Response(JSON.stringify({ error: "User exists but could not be found" }), {
             status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        userId = existingUserData.user.id;
+        userId = foundUser.id;
         passwordToReturn = "(existing account — password unchanged)";
       } else {
         await adminClient.from("restaurants").delete().eq("id", restaurant.id);
