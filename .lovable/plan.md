@@ -1,52 +1,93 @@
 
-# Fresh Login System - Complete Rebuild
 
-## Problem
-The current login page has an auto-login loop that spams the backend with requests. When the backend has temporary connectivity hiccups ("Failed to fetch"), it retries endlessly, creating a bad experience.
+# Complete Staff Login Flow — Role-Based Dashboard Access
 
-## Solution: Clean, Manual Login System
+## Overview
 
-### What Changes
+Currently, the restaurant admin can already create staff accounts (kitchen, waiter, billing) via the Users tab. However, when staff log in, the dashboards don't properly enforce authentication or use the staff's assigned restaurant. This plan adds proper auth guards and ensures each staff role lands on their correct, restaurant-scoped dashboard.
 
-**1. Rewrite `src/pages/Login.tsx` from scratch**
-- Remove ALL auto-login logic (no hardcoded credentials)
-- Clean email/password form with proper validation
-- Google SSO button using `lovable.auth.signInWithOAuth`
-- "Forgot password?" link
-- Single sign-in attempt per form submit (no retry loops)
-- Clear error messages for network failures vs wrong credentials
-- Loading spinner only during active login attempt
-- Auto-redirect if user is already authenticated (check session once, not in a loop)
+## Current State (What Already Works)
 
-**2. Rewrite `src/hooks/useAuth.ts` - Simplified**
-- Remove the 3-retry loop from `signIn` -- just make one attempt and show the error
-- Keep the `onAuthStateChange` listener and `getSession` initialization
-- Keep role fetching from `user_roles` table
-- Keep `getRouteForRole` for dashboard routing
-- Remove aggressive localStorage clearing on every attempt
+- Unified login at `/login` with role-based redirect (kitchen_staff -> `/kitchen`, waiter_staff -> `/waiter`, billing_staff -> `/billing`)
+- Admin can create staff via Users tab (calls `manage-staff` edge function)
+- `useAuth` hook fetches role and `restaurant_id` from `user_roles` table
+- Staff profiles stored in `staff_profiles` table
 
-**3. Keep existing supporting files unchanged**
-- `src/pages/ForgotPassword.tsx` - already works
-- `src/pages/ResetPassword.tsx` - already works
-- `src/pages/SuperAdminLogin.tsx` - redirects to `/login`
-- `src/pages/TenantAdminLogin.tsx` - redirects to `/login`
-- `src/App.tsx` - routes already correct
+## What's Missing
 
-### Login Flow
-1. User visits `/login`
-2. If already authenticated, redirect to their dashboard immediately
-3. If not, show login form
-4. User enters email + password, clicks "Sign In"
-5. One request to backend -- success redirects, failure shows toast error
-6. Google SSO button available as alternative
+1. Kitchen, Waiter, and Billing dashboards fall back to a demo restaurant ID instead of using the authenticated user's restaurant
+2. No auth guards -- anyone can visit `/kitchen`, `/waiter`, `/billing` without logging in
+3. No "wrong role" protection (e.g., a waiter accessing `/kitchen`)
 
-### Technical Details
-- No hardcoded credentials anywhere
-- No auto-login on page load
-- No retry loops -- single attempt, clear error feedback
-- Session check on mount is a one-time `getSession()` call
-- Default test account: `zappyscan@gmail.com` / `zappy1234` (user types it manually)
+## Implementation Plan
 
-### Database
-- No changes needed -- both super admin accounts already exist and work
-- `user_roles` table has correct role assignments
+### 1. Create a reusable Auth Guard component
+
+A new `src/components/auth/RoleGuard.tsx` component that:
+- Shows a loading spinner while auth state resolves
+- Redirects unauthenticated users to `/login`
+- Checks if the user's role matches the allowed roles for that route
+- Shows an "Access Denied" message or redirects if the role doesn't match
+- Passes `restaurantId` down to the wrapped dashboard
+
+### 2. Update Kitchen Dashboard (`src/pages/KitchenDashboard.tsx`)
+
+- When not in `embedded` mode, use `useAuth()` to get `restaurantId` from the authenticated user's role
+- Remove the demo restaurant ID fallback for authenticated access
+- Keep the `embedded` and `?r=` query param modes for admin preview
+
+### 3. Update Waiter Dashboard (`src/pages/WaiterDashboard.tsx`)
+
+- Same pattern: prioritize `authRestaurantId` from `useAuth()`
+- Remove demo fallback for standalone access
+
+### 4. Update Billing Counter (`src/pages/BillingCounter.tsx`)
+
+- Same pattern: prioritize `authRestaurantId` from `useAuth()`
+- Remove demo fallback for standalone access
+
+### 5. Wrap routes in App.tsx with RoleGuard
+
+```text
+/kitchen  ->  RoleGuard(allowedRoles: [kitchen_staff, restaurant_admin])
+/waiter   ->  RoleGuard(allowedRoles: [waiter_staff, restaurant_admin])
+/billing  ->  RoleGuard(allowedRoles: [billing_staff, restaurant_admin])
+/admin    ->  RoleGuard(allowedRoles: [restaurant_admin])
+/super-admin -> RoleGuard(allowedRoles: [super_admin])
+```
+
+Restaurant admins can access all staff dashboards (they manage them). Super admins bypass all guards.
+
+### 6. Add logout button to staff dashboards
+
+Each staff dashboard (Kitchen, Waiter, Billing) will get a small logout/back button in the header so staff can sign out and return to the login page.
+
+## Complete User Flow
+
+```text
+1. Super Admin creates a restaurant via /super-admin (tenant provisioning)
+2. Restaurant Admin logs in at /login -> redirected to /admin
+3. Admin goes to Users tab -> creates staff accounts:
+   - kitchen@restaurant.com (Kitchen Staff)
+   - waiter@restaurant.com (Waiter Staff)  
+   - billing@restaurant.com (Billing Staff)
+4. Kitchen staff logs in at /login -> auto-redirected to /kitchen
+   - Sees only their restaurant's orders
+5. Waiter staff logs in at /login -> auto-redirected to /waiter
+   - Sees only their restaurant's tables and calls
+6. Billing staff logs in at /login -> auto-redirected to /billing
+   - Sees only their restaurant's billing data
+```
+
+## Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| `src/components/auth/RoleGuard.tsx` | Create -- reusable auth guard |
+| `src/App.tsx` | Modify -- wrap staff/admin routes with RoleGuard |
+| `src/pages/KitchenDashboard.tsx` | Modify -- use auth restaurant, add logout |
+| `src/pages/WaiterDashboard.tsx` | Modify -- use auth restaurant, add logout |
+| `src/pages/BillingCounter.tsx` | Modify -- use auth restaurant, add logout |
+
+No database changes needed. All required tables, roles, and edge functions already exist.
+
