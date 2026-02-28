@@ -1,46 +1,52 @@
 
 
-# Add Open-in-New-Window Buttons for Kitchen & Billing in Admin Dashboard
+# Rebuild ZAPPY Logo — Pixel-Perfect SVG Matching Reference Image
 
-## What This Does
+## What Changes
 
-When you're on the Admin dashboard and click the Kitchen or Billing tab, you'll see small "Open in new window" and "Refresh" buttons (like in your screenshot) that let you pop out Kitchen or Billing into their own full-screen browser tab. This is useful for running Kitchen Display on a separate screen.
+The current SVG logo uses **stroked paths** and both P letters face the same direction. The reference image shows:
+- **Filled (solid) letterforms** instead of strokes
+- **First P is mirrored** (bowl opens LEFT), creating a face effect with the second P
+- Wider, bolder letter shapes with rounded corners
+- The smile is wider and positioned below both P bowls
+- Eyes are inside the inward-facing bowls of both P's
+- Overall heavier, more premium feel
 
-## Changes
+This plan rebuilds the `ZappyLogo.tsx` component with filled SVG paths that exactly match the uploaded reference, then updates the favicon.
 
-### 1. Update Kitchen & Billing Embedded Tabs in AdminDashboard
+## Files to Modify
 
-Add a small toolbar at the top of the Kitchen and Billing tab content with:
-- **Open in new window** button (arrow icon) -- opens `/kitchen?r={restaurantId}` or `/billing?r={restaurantId}` in a new browser tab
-- **Refresh** button (rotate icon) -- re-renders the embedded component
-
-This matches the 2nd screenshot you shared (the arrow + refresh icons).
-
-### 2. Hide Header When Embedded
-
-Update `KitchenDashboard` and `BillingCounter` to hide their standalone headers (back button, logout, title bar) when `embedded={true}`, since the admin dashboard already provides those.
-
-### 3. Ensure Tenant Data Isolation
-
-The system already isolates data per restaurant via `restaurant_id` on all queries and RLS policies. Each staff member's `user_roles` record links them to their specific `restaurant_id`, so:
-- Kitchen staff at Restaurant A only sees Restaurant A's orders
-- Billing staff at Restaurant B only sees Restaurant B's invoices
-- Admin sees only their own restaurant's data
-
-No database changes are needed -- this is already working.
+| File | Change |
+|------|--------|
+| `src/components/branding/ZappyLogo.tsx` | Complete SVG path rebuild with filled shapes, mirrored first P, corrected proportions |
+| `index.html` | Update favicon to use the SVG logo instead of `zappy-logo.jpg` |
+| `public/favicon.svg` | Create new SVG favicon from the logo |
 
 ## Technical Details
 
-### File: `src/pages/AdminDashboard.tsx`
-- Add a floating toolbar with "Open in new tab" and "Refresh" buttons above the embedded Kitchen and Billing components
-- Track a refresh key per embedded component
+### 1. Rebuild ZappyLogo.tsx SVG Paths
 
-### File: `src/pages/KitchenDashboard.tsx`
-- When `embedded={true}`, skip rendering the `<header>` and waiter calls alert bar (the parent admin dashboard provides navigation)
+Replace all stroke-based letter paths with **filled paths**:
 
-### File: `src/pages/BillingCounter.tsx`
-- When `embedded={true}`, skip rendering the standalone header/back button
+- **Z**: Bold filled Z with rounded corners, diagonal slash
+- **A**: Filled A with triangular cutout, rounded top vertex
+- **First P (mirrored)**: Vertical stem on RIGHT side, bowl opens LEFT — this is the critical difference from the current version
+- **Second P (normal)**: Vertical stem on LEFT side, bowl opens RIGHT
+- **Y**: Filled Y with arms splitting from center, vertical stem dropping down
+- **Eyes**: Golden circles positioned inside the inward-facing bowls of each P
+- **Smile**: Wider golden arc below the two P's, spanning about 60% of the logo width
 
-### No database or edge function changes needed
-All tenant isolation is already enforced by existing RLS policies using `restaurant_id`.
+Keep existing props API (`size`, `compact`, `showTagline`, `textColor`, `accentColor`, `animated`) unchanged so no other files need updating.
+
+### 2. Create SVG Favicon
+
+Create `public/favicon.svg` containing a compact version of the logo mark (just the two P's with eyes and smile, or the full wordmark scaled down).
+
+### 3. Update index.html
+
+Change favicon reference from `/zappy-logo.jpg` to `/favicon.svg` with proper type attribute.
+
+## No Other File Changes Needed
+
+All 8 files that import `ZappyLogo` already use the same component API, so they will automatically get the updated logo without any code changes.
 
