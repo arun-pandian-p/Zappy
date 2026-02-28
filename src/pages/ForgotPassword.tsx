@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ZappyLogo } from '@/components/branding/ZappyLogo';
 
 const ForgotPassword = () => {
   const { toast } = useToast();
@@ -48,7 +49,7 @@ const ForgotPassword = () => {
         </Link>
 
         <div className="text-center">
-          <img src="/zappy-logo.jpg" alt="ZAPPY" className="h-12 mx-auto rounded-lg mb-4" />
+          <ZappyLogo size={40} compact className="mb-4" />
           <h2 className="text-2xl font-bold text-slate-800">Reset Password</h2>
           <p className="text-slate-500 mt-1 text-sm">
             {sent ? 'Check your email for a reset link.' : "Enter your email and we'll send you a reset link."}
