@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFeatureGate, type FeatureKey, type LockReason } from "@/hooks/useFeatureGate";
 import { FeatureLockedModal } from "@/components/admin/FeatureLockedModal";
 import type { Database } from "@/integrations/supabase/types";
+import { ZappyLogo } from "@/components/branding/ZappyLogo";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -125,9 +126,7 @@ export function AdminSidebar({
       <Sidebar className="border-r-0 bg-sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
-              <img src="/zappy-logo.jpg" alt="ZAPPY" className="w-6 h-6 rounded" />
-            </div>
+            <ZappyLogo size={32} compact />
             {!collapsed && (
               <motion.div
                 initial={{ opacity: 0, x: -10 }}

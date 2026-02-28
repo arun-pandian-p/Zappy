@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { ZappyLogo } from "@/components/branding/ZappyLogo";
 import {
   LayoutDashboard,
   Building2,
@@ -71,13 +72,7 @@ export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarP
     <Sidebar className="border-r-0 bg-sidebar" collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
-            <img
-              src="/zappy-logo.jpg"
-              alt="ZAPPY"
-              className="w-6 h-6 rounded"
-            />
-          </div>
+          <ZappyLogo size={32} compact />
           {!collapsed && (
             <motion.div
               initial={{ opacity: 0, x: -10 }}
