@@ -12,6 +12,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { usePendingWaiterCalls, useAcknowledgeWaiterCall, useResolveWaiterCall } from '@/hooks/useWaiterCalls';
 import { useRestaurants } from '@/hooks/useRestaurant';
 import { useAuth } from '@/hooks/useAuth';
+import { LogOut } from 'lucide-react';
 
 const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -19,12 +20,17 @@ const WaiterDashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { restaurantId: authRestaurantId } = useAuth();
+  const { restaurantId: authRestaurantId, signOut } = useAuth();
   const { data: restaurants = [] } = useRestaurants();
 
   const urlRestaurantId = searchParams.get('r');
   const autoRestaurantId = restaurants[0]?.id;
   const restaurantId = authRestaurantId || urlRestaurantId || autoRestaurantId || DEMO_RESTAURANT_ID;
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   const { data: tables = [], isLoading: tablesLoading } = useTables(restaurantId);
   const { data: orders = [], isLoading: ordersLoading } = useOrders(restaurantId);
@@ -139,6 +145,9 @@ const WaiterDashboard = () => {
             <div className="flex items-center gap-2">
               <Button variant="outline" size="icon" onClick={() => setIsMuted(!isMuted)}>
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </Button>
+              <Button variant="outline" size="icon" onClick={handleLogout} title="Logout">
+                <LogOut className="w-5 h-5" />
               </Button>
             </div>
           </div>

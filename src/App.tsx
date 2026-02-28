@@ -19,6 +19,7 @@ import AdminOnboarding from "./pages/AdminOnboarding";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import FeedbackPage from "./pages/FeedbackPage";
 import NotFound from "./pages/NotFound";
+import RoleGuard from "./components/auth/RoleGuard";
 
 const queryClient = new QueryClient();
 
@@ -42,15 +43,39 @@ const App = () => (
           <Route path="/order" element={<CustomerMenu />} />
           <Route path="/feedback" element={<FeedbackPage />} />
 
-          {/* Staff routes */}
-          <Route path="/kitchen" element={<KitchenDashboard />} />
-          <Route path="/waiter" element={<WaiterDashboard />} />
-          <Route path="/billing" element={<BillingCounter />} />
+          {/* Staff routes — role-guarded */}
+          <Route path="/kitchen" element={
+            <RoleGuard allowedRoles={['kitchen_staff', 'restaurant_admin']}>
+              <KitchenDashboard />
+            </RoleGuard>
+          } />
+          <Route path="/waiter" element={
+            <RoleGuard allowedRoles={['waiter_staff', 'restaurant_admin']}>
+              <WaiterDashboard />
+            </RoleGuard>
+          } />
+          <Route path="/billing" element={
+            <RoleGuard allowedRoles={['billing_staff', 'restaurant_admin']}>
+              <BillingCounter />
+            </RoleGuard>
+          } />
 
-          {/* Admin routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/onboarding" element={<AdminOnboarding />} />
-          <Route path="/super-admin" element={<SuperAdminDashboard />} />
+          {/* Admin routes — role-guarded */}
+          <Route path="/admin" element={
+            <RoleGuard allowedRoles={['restaurant_admin']}>
+              <AdminDashboard />
+            </RoleGuard>
+          } />
+          <Route path="/admin/onboarding" element={
+            <RoleGuard allowedRoles={['restaurant_admin']}>
+              <AdminOnboarding />
+            </RoleGuard>
+          } />
+          <Route path="/super-admin" element={
+            <RoleGuard allowedRoles={['super_admin']}>
+              <SuperAdminDashboard />
+            </RoleGuard>
+          } />
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />

@@ -29,6 +29,9 @@ import DiscountButtons from '@/components/billing/DiscountButtons';
 import SplitPaymentPanel from '@/components/billing/SplitPaymentPanel';
 import { format } from 'date-fns';
 
+import { useAuth } from '@/hooks/useAuth';
+import { LogOut } from 'lucide-react';
+
 const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
 
 interface BillingCounterProps {
@@ -39,11 +42,17 @@ interface BillingCounterProps {
 const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: BillingCounterProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { restaurantId: authRestaurantId, signOut } = useAuth();
 
   const { data: restaurants = [] } = useRestaurants();
   const urlRestaurantId = searchParams.get('r');
   const autoRestaurantId = restaurants[0]?.id;
-  const restaurantId = propRestaurantId || urlRestaurantId || autoRestaurantId || DEMO_RESTAURANT_ID;
+  const restaurantId = propRestaurantId || authRestaurantId || urlRestaurantId || autoRestaurantId || DEMO_RESTAURANT_ID;
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -243,6 +252,9 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
               </Button>
               <Button variant="outline" size="icon" onClick={toggleMute}>
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </Button>
+              <Button variant="outline" size="icon" onClick={handleLogout} title="Logout">
+                <LogOut className="w-5 h-5" />
               </Button>
               <Button variant="outline" size="icon" onClick={() => setShowShortcuts(!showShortcuts)} title="Keyboard shortcuts (?)">
                 <Keyboard className="w-5 h-5" />
