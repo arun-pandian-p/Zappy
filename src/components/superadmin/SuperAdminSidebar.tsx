@@ -71,7 +71,7 @@ export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarP
     <Sidebar className="border-r-0 bg-sidebar" collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(245,58%,62%)] to-[hsl(280,60%,65%)] flex items-center justify-center shrink-0 shadow-lg shadow-[hsl(245,58%,62%)/0.3]">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
             <img
               src="/zappy-logo.jpg"
               alt="ZAPPY"
@@ -84,8 +84,8 @@ export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarP
               animate={{ opacity: 1, x: 0 }}
               className="flex flex-col"
             >
-              <span className="font-bold text-sidebar-foreground tracking-tight">Super Admin</span>
-              <span className="text-xs text-sidebar-foreground/50 font-medium">Platform Console</span>
+              <span className="font-bold text-sidebar-foreground">Super Admin</span>
+              <span className="text-xs text-sidebar-foreground/60">Platform Console</span>
             </motion.div>
           )}
         </div>
