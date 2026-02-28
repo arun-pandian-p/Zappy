@@ -70,11 +70,17 @@ const SuperAdminDashboard = () => {
   const updateRestaurant = useUpdateRestaurant();
   const deleteRestaurant = useDeleteRestaurant();
 
-  // Real-time subscriptions
+  // Real-time subscriptions — see all tenant changes
   useEffect(() => {
     const channel = supabase
       .channel('super-admin-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'restaurants' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['restaurants'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['restaurants'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices' }, () => {
         queryClient.invalidateQueries({ queryKey: ['restaurants'] });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_profiles' }, () => {
@@ -85,6 +91,9 @@ const SuperAdminDashboard = () => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'system_logs' }, () => {
         queryClient.invalidateQueries({ queryKey: ['system-logs'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['restaurants'] });
       })
       .subscribe();
 
@@ -334,19 +343,19 @@ const SuperAdminDashboard = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-muted/30">
+      <div className="theme-super-admin min-h-screen flex w-full bg-background">
         <SuperAdminSidebar activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setEditingRestaurant(null); setShowCreateHotel(false); }} />
         <SidebarInset className="flex-1">
-          <header className="sticky top-0 z-40 bg-card border-b">
+          <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
             <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-3">
                 <SidebarTrigger />
                 <div>
-                  <h1 className="text-xl font-bold">{currentPage.title}</h1>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-[hsl(245,58%,62%)] to-[hsl(280,60%,65%)] bg-clip-text text-transparent">{currentPage.title}</h1>
                   <p className="text-sm text-muted-foreground">{currentPage.description}</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
+              <Button variant="outline" size="sm" className="border-border hover:bg-secondary" onClick={() => navigate('/admin')}>
                 Back to Admin
               </Button>
             </div>
