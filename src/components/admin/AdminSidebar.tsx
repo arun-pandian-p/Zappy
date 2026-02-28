@@ -125,7 +125,7 @@ export function AdminSidebar({
       <Sidebar className="border-r-0 bg-sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(168,70%,40%)] to-[hsl(35,95%,55%)] flex items-center justify-center shrink-0 shadow-lg shadow-[hsl(168,70%,40%)/0.3]">
               <img src="/zappy-logo.jpg" alt="ZAPPY" className="w-6 h-6 rounded" />
             </div>
             {!collapsed && (
@@ -134,8 +134,8 @@ export function AdminSidebar({
                 animate={{ opacity: 1, x: 0 }}
                 className="flex flex-col"
               >
-                <span className="font-bold text-sidebar-foreground">{restaurantName || "ZAPPY"}</span>
-                <span className="text-xs text-sidebar-foreground/60">Admin Dashboard</span>
+                <span className="font-bold text-sidebar-foreground tracking-tight">{restaurantName || "ZAPPY"}</span>
+                <span className="text-xs text-sidebar-foreground/50 font-medium">Admin Dashboard</span>
               </motion.div>
             )}
           </div>
