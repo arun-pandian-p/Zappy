@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UtensilsCrossed, LogIn, Menu, X } from 'lucide-react';
+import { LogIn, Menu, X } from 'lucide-react';
+import { ZappyLogo } from '@/components/branding/ZappyLogo';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import ScrollProgress from '@/components/landing/ScrollProgress';
@@ -62,11 +63,8 @@ const LandingPage = () => {
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <UtensilsCrossed className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold">QR Dine Pro</span>
+            <div className="flex items-center">
+              <ZappyLogo size={36} compact />
             </div>
 
             <nav className="hidden md:flex items-center gap-8">

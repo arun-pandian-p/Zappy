@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { UtensilsCrossed, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { ZappyLogo } from '@/components/branding/ZappyLogo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -18,10 +19,7 @@ const Footer = ({ cms }: FooterProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <UtensilsCrossed className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold">{companyName}</span>
+              <ZappyLogo size={36} compact />
             </div>
             <p className="text-muted-foreground text-sm mb-6">{tagline}</p>
             <div className="flex gap-3">
