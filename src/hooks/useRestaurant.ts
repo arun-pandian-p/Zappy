@@ -33,7 +33,7 @@ export function useRestaurantBySlug(slug?: string) {
       if (!slug) return null;
       
       const { data, error } = await supabase
-        .from("restaurants")
+        .from("restaurants_public")
         .select("*")
         .eq("slug", slug)
         .single();

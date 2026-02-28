@@ -34,7 +34,7 @@ const FeedbackPage = () => {
       if (!restaurantId) return;
       
       const { data } = await supabase
-        .from('restaurants')
+        .from('restaurants_public')
         .select('name, google_review_url')
         .eq('id', restaurantId)
         .single();

@@ -58,7 +58,7 @@ const CustomerMenu = () => {
   useEffect(() => {
     if (slug && !restaurantIdParam) {
       supabase
-        .from('restaurants')
+        .from('restaurants_public')
         .select('id')
         .eq('slug', slug)
         .eq('is_active', true)
