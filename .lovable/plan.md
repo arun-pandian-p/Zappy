@@ -1,56 +1,45 @@
 
 
-# Replace ZAPPY Logo with Official SVG Across All Locations
+# Fix ZAPPY Logo Size Across All Locations
 
-## What Changes
+## Problem
+The official ZAPPY SVG has a very tall portrait viewBox (8263 x 11680), meaning the actual logo text and mascot occupy only a portion of the canvas. When rendered at small heights like 32-36px, the visible content becomes tiny and hard to read.
 
-You've provided the official ZAPPY logo SVG file (created in CorelDRAW) with the exact brand typography and design. This plan replaces the hand-drawn SVG paths in the current logo component with the actual official SVG file, and updates it everywhere: landing page navbar, footer, login page, and favicon.
-
-## Approach
-
-Since the official SVG contains precise vector paths from CorelDRAW that are far more accurate than hand-drawn approximations, we'll use the actual file directly.
+## Solution
+Increase the logo `size` prop at every usage point to make it properly visible, and update the favicon.
 
 ## Changes
 
-### 1. Copy SVG to Project
-- Copy `user-uploads://zappy.svg` to `src/assets/zappy-logo.svg` (for React imports)
-- Copy `user-uploads://zappy.svg` to `public/favicon.svg` (for favicon)
+### 1. Landing Page Navbar (`src/pages/LandingPage.tsx`)
+- Change `<ZappyLogo size={36} compact />` to `<ZappyLogo size={56} compact />`
 
-### 2. Rebuild ZappyLogo Component
-Update `src/components/branding/ZappyLogo.tsx` to render the official SVG as an image element instead of inline SVG paths. The component will:
-- Import the SVG from `src/assets/zappy-logo.svg`
-- Render it as an `<img>` tag with proper sizing
-- Keep existing props (`size`, `compact`, `className`) for layout control
-- Remove the hand-drawn SVG paths entirely
+### 2. Footer (`src/components/landing/Footer.tsx`)
+- Change `<ZappyLogo size={36} compact />` to `<ZappyLogo size={56} compact />`
 
-### 3. Update Favicon in index.html
-- Point favicon to the new `/favicon.svg`
-- Already using SVG favicon format, just needs the correct file content
+### 3. Login Page (`src/pages/Login.tsx`)
+- Left panel: Change `size={64}` to `size={100}`
+- Mobile fallback: Change `size={40}` to `size={64}`
 
-### 4. No Changes Needed in These Files
-Since all these files already import and use `<ZappyLogo />`, they'll automatically get the updated logo:
-- `src/pages/Login.tsx` (login page)
-- `src/pages/LandingPage.tsx` (navbar)
-- `src/components/landing/Footer.tsx` (footer)
-- `src/components/admin/AdminSidebar.tsx`
-- `src/components/superadmin/SuperAdminSidebar.tsx`
-- `src/pages/ForgotPassword.tsx`
-- `src/pages/ResetPassword.tsx`
+### 4. Forgot Password (`src/pages/ForgotPassword.tsx`)
+- Change `size={40}` to `size={64}`
 
-## Technical Details
+### 5. Reset Password (`src/pages/ResetPassword.tsx`)
+- Change `size={40}` to `size={64}`
 
-### File: `src/components/branding/ZappyLogo.tsx`
-- Import SVG as module: `import zappyLogo from "@/assets/zappy-logo.svg"`
-- Render as `<img src={zappyLogo} alt="ZAPPY" />` with height/width from props
-- Simplified props: `size` controls height, `className` for custom styling
-- The official SVG already contains the correct colors (#2E2755 purple, #FFD80E gold), eyes, smile, and tagline text
+### 6. Admin Sidebar (`src/components/admin/AdminSidebar.tsx`)
+- Change `size={32}` to `size={48}`
 
-### File: `public/favicon.svg`
-- Replace with the official SVG content (cropped to just the main logo mark area for better favicon rendering)
+### 7. Super Admin Sidebar (`src/components/superadmin/SuperAdminSidebar.tsx`)
+- Change `size={32}` to `size={48}`
 
-### File: `index.html`
-- Verify favicon link points to `/favicon.svg` (already does)
+### 8. Favicon (`public/favicon.svg`)
+- Update the favicon SVG to crop the viewBox to just the logo mark area (the face with eyes and smile) so it renders clearly at small favicon sizes (16x16, 32x32)
 
-## Result
-Every location showing the ZAPPY logo will display the exact official brand SVG -- pixel-perfect at any size with no approximation.
+### 9. Footer copyright text
+- Update "QR Dine Pro" to "ZAPPY" in the copyright line if still present
+
+## Technical Notes
+- The `compact` prop applies a 0.8x multiplier to size, so the actual rendered heights will be slightly smaller than the prop values
+- No changes needed to the `ZappyLogo` component itself -- just the size values passed to it
+- All 7 files that use the logo will be updated in parallel
 
