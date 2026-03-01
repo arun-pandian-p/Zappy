@@ -64,7 +64,7 @@ const LandingPage = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <ZappyLogo size={36} compact />
+              <ZappyLogo size={56} compact />
             </div>
 
             <nav className="hidden md:flex items-center gap-8">
