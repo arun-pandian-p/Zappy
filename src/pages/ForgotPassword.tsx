@@ -49,7 +49,7 @@ const ForgotPassword = () => {
         </Link>
 
         <div className="text-center">
-          <ZappyLogo size={40} compact className="mb-4" />
+          <ZappyLogo size={64} compact className="mb-4" />
           <h2 className="text-2xl font-bold text-slate-800">Reset Password</h2>
           <p className="text-slate-500 mt-1 text-sm">
             {sent ? 'Check your email for a reset link.' : "Enter your email and we'll send you a reset link."}

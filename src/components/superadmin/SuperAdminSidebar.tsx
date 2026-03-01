@@ -72,7 +72,7 @@ export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarP
     <Sidebar className="border-r-0 bg-sidebar" collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <ZappyLogo size={32} compact />
+          <ZappyLogo size={48} compact />
           {!collapsed && (
             <motion.div
               initial={{ opacity: 0, x: -10 }}

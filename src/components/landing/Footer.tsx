@@ -19,7 +19,7 @@ const Footer = ({ cms }: FooterProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
             <div className="flex items-center gap-3 mb-4">
-              <ZappyLogo size={36} compact />
+              <ZappyLogo size={56} compact />
             </div>
             <p className="text-muted-foreground text-sm mb-6">{tagline}</p>
             <div className="flex gap-3">
