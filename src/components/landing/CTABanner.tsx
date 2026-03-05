@@ -14,10 +14,9 @@ const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
 
   return (
     <section className="py-16 md:py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-accent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-sky-500" />
       <motion.div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-white/10 blur-xl" animate={{ y: [0, -20, 0], x: [0, 10, 0] }} transition={{ duration: 6, repeat: Infinity }} />
       <motion.div className="absolute bottom-10 right-10 w-40 h-40 rounded-full bg-white/5 blur-2xl" animate={{ y: [0, 15, 0], x: [0, -15, 0] }} transition={{ duration: 8, repeat: Infinity }} />
-      <motion.div className="absolute top-1/2 left-1/3 w-20 h-20 rounded-full bg-white/10 blur-lg" animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 5, repeat: Infinity }} />
 
       <div className="relative z-10 container mx-auto px-4 text-center">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
