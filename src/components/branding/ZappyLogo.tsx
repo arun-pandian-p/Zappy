@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import zappyLogo from "@/assets/zappy-logo.svg";
+const zappyLogo = "/lovable-uploads/8a88a85f-8568-48bd-986d-68ee17e00809.png";
 
 interface ZappyLogoProps {
   className?: string;
