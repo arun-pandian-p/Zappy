@@ -61,7 +61,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black mb-6 leading-[0.95] tracking-tight">
-              <span className="block text-foreground">SMART</span>
+              <span className="block text-foreground">ZAPPY</span>
               <span className="block bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">QR</span>
               <span className="block text-foreground">SYSTEM</span>
             </h1>
