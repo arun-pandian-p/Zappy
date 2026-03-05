@@ -52,14 +52,14 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background bg-grid-dots">
+    <div className="min-h-screen bg-background">
       <ScrollProgress />
 
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b"
+        className="fixed top-0 left-0 right-0 z-50 bg-[#0a3d2a]/90 backdrop-blur-md border-b border-white/10"
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
@@ -72,7 +72,7 @@ const LandingPage = () => {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left"
+                  className="text-sm text-emerald-100/70 hover:text-white transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-emerald-400 after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left"
                 >
                   {link.label}
                 </a>
@@ -80,11 +80,11 @@ const LandingPage = () => {
             </nav>
 
             <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" onClick={() => navigate('/login')}>
+              <Button variant="ghost" className="text-emerald-100/70 hover:text-white hover:bg-white/10" onClick={() => navigate('/login')}>
                 <LogIn className="w-4 h-4 mr-2" />
                 Login
               </Button>
-              <Button onClick={handleGetStarted}>Get Started</Button>
+              <Button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white" onClick={handleGetStarted}>Get Started</Button>
             </div>
 
             <Button
