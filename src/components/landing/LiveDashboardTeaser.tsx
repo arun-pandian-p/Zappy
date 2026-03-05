@@ -25,8 +25,8 @@ const SparklineSVG = () => {
     <svg ref={ref} viewBox="0 0 120 40" className="w-full h-10 mt-2">
       <defs>
         <linearGradient id="spark-grad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="hsl(25, 95%, 53%)" />
-          <stop offset="100%" stopColor="hsl(45, 93%, 47%)" />
+          <stop offset="0%" stopColor="hsl(var(--primary))" />
+          <stop offset="100%" stopColor="hsl(199, 89%, 48%)" />
         </linearGradient>
       </defs>
       <motion.path
@@ -49,32 +49,32 @@ const metrics = [
     label: 'Today Revenue',
     value: 42880,
     prefix: '₹',
-    color: 'text-orange-400',
-    glowColor: 'from-orange-500/20 to-amber-500/10',
+    color: 'text-primary',
+    glowColor: 'from-primary/10 to-sky-500/5',
     visual: 'sparkline' as const,
   },
   {
     icon: ShoppingBag,
     label: 'Orders Today',
     value: 128,
-    color: 'text-sky-400',
-    glowColor: 'from-sky-500/20 to-blue-500/10',
+    color: 'text-sky-500',
+    glowColor: 'from-sky-500/10 to-blue-500/5',
     visual: 'pulse' as const,
   },
   {
     icon: LayoutGrid,
     label: 'Active Tables',
     value: 23,
-    color: 'text-emerald-400',
-    glowColor: 'from-emerald-500/20 to-green-500/10',
+    color: 'text-blue-500',
+    glowColor: 'from-blue-500/10 to-indigo-500/5',
     visual: 'heat' as const,
   },
   {
     icon: Clock,
     label: 'Pending Orders',
     value: 7,
-    color: 'text-rose-400',
-    glowColor: 'from-rose-500/20 to-red-500/10',
+    color: 'text-indigo-500',
+    glowColor: 'from-indigo-500/10 to-blue-500/5',
     visual: 'alert' as const,
   },
 ];
@@ -82,12 +82,10 @@ const metrics = [
 const LiveDashboardTeaser = () => {
   return (
     <section className="py-20 md:py-28 relative overflow-hidden">
-      {/* Warm atmospheric background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-orange-50/30 to-background dark:via-orange-950/10" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full bg-gradient-to-br from-orange-300/15 to-amber-200/10 blur-[100px]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/30 to-white" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full bg-gradient-to-br from-blue-200/15 to-sky-100/10 blur-[100px]" />
 
       <div className="relative z-10 container mx-auto px-4">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -96,21 +94,20 @@ const LiveDashboardTeaser = () => {
         >
           <div className="inline-flex items-center gap-2 mb-4">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
             </span>
-            <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Live Data</span>
+            <span className="text-sm font-medium text-primary">Live Data</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-3">
+          <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">
             Live Restaurant{' '}
-            <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">Insights</span>
+            <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">Insights</span>
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
             Real-time metrics powering 1,500+ restaurants worldwide.
           </p>
         </motion.div>
 
-        {/* Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
           {metrics.map((m, i) => (
             <motion.div
@@ -120,18 +117,16 @@ const LiveDashboardTeaser = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
               whileHover={{ y: -8, transition: { duration: 0.3 } }}
-              className="glass-card p-5 rounded-2xl relative group"
+              className="bg-white border border-border/40 shadow-sm p-5 rounded-2xl relative group hover:shadow-lg transition-shadow"
             >
-              {/* Glow */}
               <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${m.glowColor} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-3">
                   <m.icon className={`w-5 h-5 ${m.color}`} />
                   {m.visual === 'alert' && (
                     <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500" />
                     </span>
                   )}
                   {m.visual === 'pulse' && (
@@ -139,8 +134,8 @@ const LiveDashboardTeaser = () => {
                   )}
                   {m.visual === 'heat' && (
                     <motion.span
-                      className="w-2.5 h-2.5 rounded-full bg-emerald-400"
-                      animate={{ backgroundColor: ['hsl(160,84%,39%)', 'hsl(142,76%,36%)', 'hsl(160,84%,39%)'] }}
+                      className="w-2.5 h-2.5 rounded-full bg-blue-400"
+                      animate={{ opacity: [0.5, 1, 0.5] }}
                       transition={{ duration: 3, repeat: Infinity }}
                     />
                   )}
@@ -155,7 +150,6 @@ const LiveDashboardTeaser = () => {
           ))}
         </div>
 
-        {/* Live updating indicator */}
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -163,7 +157,7 @@ const LiveDashboardTeaser = () => {
           transition={{ delay: 0.6 }}
           className="text-center mt-8 text-xs text-muted-foreground flex items-center justify-center gap-2"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           Live data updating every 30s
         </motion.p>
       </div>
