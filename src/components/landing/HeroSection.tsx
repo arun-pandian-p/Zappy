@@ -66,9 +66,6 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               <span className="block text-foreground">SYSTEM</span>
             </h1>
 
-            <p className="text-xl md:text-2xl font-semibold text-primary mb-3">
-              The Digital Operating System for Modern Restaurants.
-            </p>
 
             <p className="text-sm font-semibold tracking-widest text-muted-foreground uppercase mb-3">
               Scan. Order. Serve.
