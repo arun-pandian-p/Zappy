@@ -86,7 +86,7 @@ const Login = () => {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="flex-1 flex items-center justify-center p-6 relative z-10"
       >
-        <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10 w-full max-w-[420px] space-y-7">
+        <div className="bg-white rounded-2xl shadow-2xl p-7 sm:p-8 w-full max-w-[420px] space-y-5">
           <div className="lg:hidden flex justify-center">
             <ZappyLogo size={64} compact />
           </div>
