@@ -96,7 +96,7 @@ const Login = () => {
             <p className="text-slate-500 mt-1 text-sm">Sign in to your account</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-3.5">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</label>
               <div className="relative">
