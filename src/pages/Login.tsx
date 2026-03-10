@@ -145,7 +145,7 @@ const Login = () => {
 
             <Button
               type="submit"
-              className="w-full h-11 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm transition-colors"
+              className="w-full h-12 rounded-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base transition-all hover:-translate-y-0.5"
               disabled={loading}
             >
               {loading ? (
