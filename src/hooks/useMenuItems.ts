@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
@@ -8,6 +9,32 @@ export type MenuItemInsert = TablesInsert<"menu_items">;
 export type MenuItemUpdate = TablesUpdate<"menu_items">;
 
 export function useMenuItems(restaurantId?: string) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    const channel = supabase
+      .channel(`menu-items-${restaurantId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "menu_items",
+          filter: `restaurant_id=eq.${restaurantId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["menu_items", restaurantId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [restaurantId, queryClient]);
+
   return useQuery({
     queryKey: ["menu_items", restaurantId],
     queryFn: async () => {
@@ -31,6 +58,32 @@ export function useMenuItems(restaurantId?: string) {
 }
 
 export function useCategories(restaurantId?: string) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    const channel = supabase
+      .channel(`categories-${restaurantId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "categories",
+          filter: `restaurant_id=eq.${restaurantId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [restaurantId, queryClient]);
+
   return useQuery({
     queryKey: ["categories", restaurantId],
     queryFn: async () => {
