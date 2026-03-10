@@ -70,7 +70,7 @@ const Login = () => {
         transition={{ duration: 0.5 }}
         className="hidden lg:flex flex-1 flex-col justify-center items-center relative z-10 px-12"
       >
-        <div className="text-center space-y-5 max-w-sm">
+        <div className="text-center space-y-3 max-w-sm">
           <ZappyLogo size={140} showTagline animated textColor="#ffffff" />
           <div className="h-px w-16 bg-slate-600 mx-auto" />
           <p className="text-slate-300 text-base leading-relaxed">
