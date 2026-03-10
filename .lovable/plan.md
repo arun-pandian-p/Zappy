@@ -1,45 +1,25 @@
 
 
-# Fix ZAPPY Logo Size Across All Locations
+## Fix Login Page Logo & Layout
 
-## Problem
-The official ZAPPY SVG has a very tall portrait viewBox (8263 x 11680), meaning the actual logo text and mascot occupy only a portion of the canvas. When rendered at small heights like 32-36px, the visible content becomes tiny and hard to read.
+### Problem
+The logo PNG (`8a88a85f-...png`) has a baked-in white square background that clashes with the dark gradient. Additionally, the spacing between elements is too loose.
 
-## Solution
-Increase the logo `size` prop at every usage point to make it properly visible, and update the favicon.
+### Solution
 
-## Changes
+**File: `src/components/branding/ZappyLogo.tsx`**
+- Add `rounded-2xl` class to the logo `<img>` to soften the square edges
+- Add `drop-shadow-lg` for depth against the dark background  
+- Tighten gap between logo image and text from `gap-3` to `gap-2`
 
-### 1. Landing Page Navbar (`src/pages/LandingPage.tsx`)
-- Change `<ZappyLogo size={36} compact />` to `<ZappyLogo size={56} compact />`
+**File: `src/pages/Login.tsx`**
+- Left panel: reduce `space-y-5` to `space-y-3` for tighter branding grouping
+- Login card: reduce `space-y-7` to `space-y-5` and padding from `p-8 sm:p-10` to `p-7 sm:p-8`
+- Sign In button: increase to `h-12`, `text-base`, `font-semibold`, add hover `translate-y` effect
+- Reduce form `space-y-4` to `space-y-3.5`
 
-### 2. Footer (`src/components/landing/Footer.tsx`)
-- Change `<ZappyLogo size={36} compact />` to `<ZappyLogo size={56} compact />`
-
-### 3. Login Page (`src/pages/Login.tsx`)
-- Left panel: Change `size={64}` to `size={100}`
-- Mobile fallback: Change `size={40}` to `size={64}`
-
-### 4. Forgot Password (`src/pages/ForgotPassword.tsx`)
-- Change `size={40}` to `size={64}`
-
-### 5. Reset Password (`src/pages/ResetPassword.tsx`)
-- Change `size={40}` to `size={64}`
-
-### 6. Admin Sidebar (`src/components/admin/AdminSidebar.tsx`)
-- Change `size={32}` to `size={48}`
-
-### 7. Super Admin Sidebar (`src/components/superadmin/SuperAdminSidebar.tsx`)
-- Change `size={32}` to `size={48}`
-
-### 8. Favicon (`public/favicon.svg`)
-- Update the favicon SVG to crop the viewBox to just the logo mark area (the face with eyes and smile) so it renders clearly at small favicon sizes (16x16, 32x32)
-
-### 9. Footer copyright text
-- Update "QR Dine Pro" to "ZAPPY" in the copyright line if still present
-
-## Technical Notes
-- The `compact` prop applies a 0.8x multiplier to size, so the actual rendered heights will be slightly smaller than the prop values
-- No changes needed to the `ZappyLogo` component itself -- just the size values passed to it
-- All 7 files that use the logo will be updated in parallel
+### Visual Result
+- Logo blends with rounded corners and shadow on dark background
+- Tighter, more professional spacing throughout
+- More prominent CTA button with hover lift effect
 
