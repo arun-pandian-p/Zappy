@@ -70,7 +70,7 @@ const Login = () => {
         transition={{ duration: 0.5 }}
         className="hidden lg:flex flex-1 flex-col justify-center items-center relative z-10 px-12"
       >
-        <div className="text-center space-y-5 max-w-sm">
+        <div className="text-center space-y-3 max-w-sm">
           <ZappyLogo size={140} showTagline animated textColor="#ffffff" />
           <div className="h-px w-16 bg-slate-600 mx-auto" />
           <p className="text-slate-300 text-base leading-relaxed">
@@ -86,7 +86,7 @@ const Login = () => {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="flex-1 flex items-center justify-center p-6 relative z-10"
       >
-        <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10 w-full max-w-[420px] space-y-7">
+        <div className="bg-white rounded-2xl shadow-2xl p-7 sm:p-8 w-full max-w-[420px] space-y-5">
           <div className="lg:hidden flex justify-center">
             <ZappyLogo size={64} compact />
           </div>
@@ -96,7 +96,7 @@ const Login = () => {
             <p className="text-slate-500 mt-1 text-sm">Sign in to your account</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-3.5">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</label>
               <div className="relative">
@@ -145,7 +145,7 @@ const Login = () => {
 
             <Button
               type="submit"
-              className="w-full h-11 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm transition-colors"
+              className="w-full h-12 rounded-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base transition-all hover:-translate-y-0.5"
               disabled={loading}
             >
               {loading ? (

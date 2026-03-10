@@ -31,14 +31,14 @@ export function ZappyLogo({
   return (
     <Wrapper
       {...(wrapperProps as any)}
-      className={cn("inline-flex flex-col items-center gap-3", className)}
+      className={cn("inline-flex flex-col items-center gap-2", className)}
     >
       <img
         src={zappyLogo}
         alt="ZAPPY – Scan, Order, Eat, Repeat"
         height={height}
         style={{ height, width: "auto" }}
-        className="shrink-0"
+        className="shrink-0 rounded-2xl drop-shadow-lg"
       />
       {showTagline && (
         <div className="flex flex-col items-center gap-1">
