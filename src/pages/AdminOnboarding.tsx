@@ -77,6 +77,7 @@ const AdminOnboarding = () => {
     logo_url: '', favicon_url: '', banner_image_url: '', cover_image_url: '',
   });
   const [uploading, setUploading] = useState<string | null>(null);
+  const [cropState, setCropState] = useState<{ field: keyof typeof branding; src: string } | null>(null);
 
   // Step 3 - Theme
   const [themePreset, setThemePreset] = useState('classic');
