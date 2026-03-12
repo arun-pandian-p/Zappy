@@ -563,11 +563,30 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
               <Label>Avatar Image</Label>
               <ImageUpload
                 currentImageUrl={settings.admin_avatar.type === "upload" ? settings.admin_avatar.value : ""}
-                onImageUploaded={(url) => setSettings({ ...settings, admin_avatar: { type: "upload", value: url } })}
+                onImageUploaded={(url) => {
+                  if (url) {
+                    setCropImage(url);
+                  } else {
+                    setSettings({ ...settings, admin_avatar: { type: "upload", value: "" } });
+                  }
+                }}
                 restaurantId={restaurantId}
                 folder="avatars"
               />
             </div>
+
+            <ImageCropDialog
+              open={!!cropImage}
+              imageSrc={cropImage || ""}
+              onClose={() => setCropImage(null)}
+              onCropComplete={(croppedUrl) => {
+                setSettings({ ...settings, admin_avatar: { type: "upload", value: croppedUrl } });
+                setCropImage(null);
+              }}
+              cropShape="round"
+              aspect={1}
+              title="Crop Avatar"
+            />
             <div className="space-y-2">
               <Label>Or pick an emoji</Label>
               <div className="flex gap-2 flex-wrap">
