@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAds, useCreateAd, useUpdateAd, useDeleteAd } from "@/hooks/useAds";
 import { useToast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 interface AdsManagerProps {
   restaurantId?: string;
