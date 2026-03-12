@@ -141,7 +141,7 @@ export const ImageUpload = ({
             <>
               <ImageIcon className="w-8 h-8" />
               <span className="text-sm">Click to upload image</span>
-              <span className="text-xs">Max 5MB</span>
+              {maxSizeMB && <span className="text-xs">Max {maxSizeMB}MB</span>}
             </>
           )}
         </button>
