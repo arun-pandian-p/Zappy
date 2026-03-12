@@ -38,11 +38,11 @@ export const ImageUpload = ({
       return;
     }
 
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size only if maxSizeMB is set
+    if (maxSizeMB && file.size > maxSizeMB * 1024 * 1024) {
       toast({
         title: 'File too large',
-        description: 'Please select an image under 5MB.',
+        description: `Please select an image under ${maxSizeMB}MB.`,
         variant: 'destructive',
       });
       return;
