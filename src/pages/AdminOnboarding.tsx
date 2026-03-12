@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { ImageCropDialog } from '@/components/admin/ImageCropDialog';
 
 const STEPS = [
   { icon: Building2, label: 'Hotel Details', desc: 'Restaurant info' },
