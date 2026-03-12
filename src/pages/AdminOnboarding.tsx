@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { ImageCropDialog } from '@/components/admin/ImageCropDialog';
 
 const STEPS = [
   { icon: Building2, label: 'Hotel Details', desc: 'Restaurant info' },
@@ -76,6 +77,7 @@ const AdminOnboarding = () => {
     logo_url: '', favicon_url: '', banner_image_url: '', cover_image_url: '',
   });
   const [uploading, setUploading] = useState<string | null>(null);
+  const [cropState, setCropState] = useState<{ field: keyof typeof branding; src: string } | null>(null);
 
   // Step 3 - Theme
   const [themePreset, setThemePreset] = useState('classic');
@@ -175,9 +177,15 @@ const AdminOnboarding = () => {
     }
 
     const { data: { publicUrl } } = supabase.storage.from('menu-images').getPublicUrl(path);
-    setBranding(prev => ({ ...prev, [field]: publicUrl }));
     setUploading(null);
-    toast({ title: 'Uploaded', description: `${field.replace(/_/g, ' ')} uploaded successfully.` });
+    
+    // Open crop dialog for logo and favicon
+    if (field === 'logo_url' || field === 'favicon_url') {
+      setCropState({ field, src: publicUrl });
+    } else {
+      setBranding(prev => ({ ...prev, [field]: publicUrl }));
+      toast({ title: 'Uploaded', description: `${field.replace(/_/g, ' ')} uploaded successfully.` });
+    }
   };
 
   const saveStep = async (stepIdx: number) => {
@@ -490,6 +498,27 @@ const AdminOnboarding = () => {
                   <BrandingUploadCard label="Menu Banner" field="banner_image_url" hint="Top of your digital menu" aspectHint="1920×600" />
                   <BrandingUploadCard label="Cover Image" field="cover_image_url" hint="Restaurant showcase" aspectHint="16:9 ratio" />
                 </div>
+                
+                <ImageCropDialog
+                  open={!!cropState}
+                  imageSrc={cropState?.src || ''}
+                  onClose={() => {
+                    if (cropState) {
+                      setBranding(prev => ({ ...prev, [cropState.field]: cropState.src }));
+                    }
+                    setCropState(null);
+                  }}
+                  onCropComplete={(croppedUrl) => {
+                    if (cropState) {
+                      setBranding(prev => ({ ...prev, [cropState.field]: croppedUrl }));
+                      toast({ title: 'Cropped & Saved', description: `${cropState.field.replace(/_/g, ' ')} has been cropped.` });
+                    }
+                    setCropState(null);
+                  }}
+                  cropShape={cropState?.field === 'favicon_url' ? 'rect' : 'round'}
+                  aspect={1}
+                  title={cropState?.field === 'favicon_url' ? 'Crop Favicon' : 'Crop Logo'}
+                />
               </GlassCard>
             )}
 
