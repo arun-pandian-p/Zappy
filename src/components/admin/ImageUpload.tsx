@@ -9,6 +9,7 @@ interface ImageUploadProps {
   onImageUploaded: (url: string) => void;
   restaurantId: string;
   folder?: string;
+  maxSizeMB?: number;
 }
 
 export const ImageUpload = ({ 
