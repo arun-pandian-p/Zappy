@@ -856,16 +856,33 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Ads Tab */}
-              {activeTab === "ads" && (
+              {/* Promotions Tab (Ads + Offers combined) */}
+              {activeTab === "promotions" && (
                 <motion.div
-                  key="ads"
+                  key="promotions"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <AdsManager restaurantId={restaurantId} />
+                  <Tabs defaultValue="ads" className="space-y-6">
+                    <TabsList>
+                      <TabsTrigger value="ads" className="gap-2">
+                        <Megaphone className="w-4 h-4" />
+                        Ads
+                      </TabsTrigger>
+                      <TabsTrigger value="offers" className="gap-2">
+                        <Gift className="w-4 h-4" />
+                        Offers
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="ads">
+                      <AdsManager restaurantId={restaurantId} />
+                    </TabsContent>
+                    <TabsContent value="offers">
+                      <OffersManager restaurantId={restaurantId} />
+                    </TabsContent>
+                  </Tabs>
                 </motion.div>
               )}
 
