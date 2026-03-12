@@ -92,6 +92,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
 
   const [settings, setSettings] = useState<RestaurantSettings>(defaultSettings);
   const [isSaving, setIsSaving] = useState(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (restaurant) {
