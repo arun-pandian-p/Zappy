@@ -16,7 +16,8 @@ export const ImageUpload = ({
   currentImageUrl, 
   onImageUploaded, 
   restaurantId,
-  folder = 'items'
+  folder = 'items',
+  maxSizeMB,
 }: ImageUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
