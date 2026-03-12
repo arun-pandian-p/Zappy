@@ -177,9 +177,15 @@ const AdminOnboarding = () => {
     }
 
     const { data: { publicUrl } } = supabase.storage.from('menu-images').getPublicUrl(path);
-    setBranding(prev => ({ ...prev, [field]: publicUrl }));
     setUploading(null);
-    toast({ title: 'Uploaded', description: `${field.replace(/_/g, ' ')} uploaded successfully.` });
+    
+    // Open crop dialog for logo and favicon
+    if (field === 'logo_url' || field === 'favicon_url') {
+      setCropState({ field, src: publicUrl });
+    } else {
+      setBranding(prev => ({ ...prev, [field]: publicUrl }));
+      toast({ title: 'Uploaded', description: `${field.replace(/_/g, ' ')} uploaded successfully.` });
+    }
   };
 
   const saveStep = async (stepIdx: number) => {
