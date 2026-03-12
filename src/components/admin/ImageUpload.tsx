@@ -9,13 +9,15 @@ interface ImageUploadProps {
   onImageUploaded: (url: string) => void;
   restaurantId: string;
   folder?: string;
+  maxSizeMB?: number;
 }
 
 export const ImageUpload = ({ 
   currentImageUrl, 
   onImageUploaded, 
   restaurantId,
-  folder = 'items'
+  folder = 'items',
+  maxSizeMB,
 }: ImageUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
@@ -36,11 +38,11 @@ export const ImageUpload = ({
       return;
     }
 
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size only if maxSizeMB is set
+    if (maxSizeMB && file.size > maxSizeMB * 1024 * 1024) {
       toast({
         title: 'File too large',
-        description: 'Please select an image under 5MB.',
+        description: `Please select an image under ${maxSizeMB}MB.`,
         variant: 'destructive',
       });
       return;
@@ -139,7 +141,7 @@ export const ImageUpload = ({
             <>
               <ImageIcon className="w-8 h-8" />
               <span className="text-sm">Click to upload image</span>
-              <span className="text-xs">Max 5MB</span>
+              {maxSizeMB && <span className="text-xs">Max {maxSizeMB}MB</span>}
             </>
           )}
         </button>
