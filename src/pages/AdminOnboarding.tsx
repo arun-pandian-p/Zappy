@@ -498,6 +498,27 @@ const AdminOnboarding = () => {
                   <BrandingUploadCard label="Menu Banner" field="banner_image_url" hint="Top of your digital menu" aspectHint="1920×600" />
                   <BrandingUploadCard label="Cover Image" field="cover_image_url" hint="Restaurant showcase" aspectHint="16:9 ratio" />
                 </div>
+                
+                <ImageCropDialog
+                  open={!!cropState}
+                  imageSrc={cropState?.src || ''}
+                  onClose={() => {
+                    if (cropState) {
+                      setBranding(prev => ({ ...prev, [cropState.field]: cropState.src }));
+                    }
+                    setCropState(null);
+                  }}
+                  onCropComplete={(croppedUrl) => {
+                    if (cropState) {
+                      setBranding(prev => ({ ...prev, [cropState.field]: croppedUrl }));
+                      toast({ title: 'Cropped & Saved', description: `${cropState.field.replace(/_/g, ' ')} has been cropped.` });
+                    }
+                    setCropState(null);
+                  }}
+                  cropShape={cropState?.field === 'favicon_url' ? 'rect' : 'round'}
+                  aspect={1}
+                  title={cropState?.field === 'favicon_url' ? 'Crop Favicon' : 'Crop Logo'}
+                />
               </GlassCard>
             )}
 
