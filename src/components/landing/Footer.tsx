@@ -21,7 +21,7 @@ const Footer = ({ cms }: FooterProps) => {
             <div className="flex items-center gap-3 mb-4">
               <ZappyLogo size={56} compact />
             </div>
-            <p className="text-muted-foreground text-sm mb-6">{tagline}</p>
+            <p className="text-[hsl(215,20%,65%)] text-sm mb-6">{tagline}</p>
             <div className="flex gap-3">
               {[Facebook, Twitter, Instagram, Linkedin].map((Icon, index) => (
                 <Button key={index} variant="outline" size="icon" className="rounded-full hover:bg-primary hover:text-primary-foreground transition-colors">
