@@ -14,7 +14,7 @@ const Footer = ({ cms }: FooterProps) => {
   const tagline = cms?.tagline || 'Scan, Order, Eat, Repeat — Smart QR-powered digital ordering for restaurants.';
 
   return (
-    <footer className="bg-card border-t">
+    <footer className="bg-[hsl(222,47%,11%)] text-[hsl(210,40%,98%)] border-t border-[hsl(217,32%,17%)]">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
