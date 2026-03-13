@@ -1,9 +1,8 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ctaBannerBg from '@/assets/cta-banner-bg.jpg';
-
 interface CTABannerProps {
   onGetStarted: () => void;
   cms?: Record<string, any>;
@@ -15,6 +14,9 @@ const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
   const subtitle = cms?.subtitle || 'Join hundreds of restaurants already using ZAPPY QR MANAGEMENT';
   const ctaText = cms?.cta_text || 'Get Started Free';
   const [wordIndex, setWordIndex] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });
+  const bgY = useTransform(scrollYProgress, [0, 1], ['-15%', '15%']);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -24,16 +26,16 @@ const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
   }, []);
 
   return (
-    <section className="py-16 md:py-24 relative overflow-hidden">
-      {/* Background image */}
-      <div className="absolute inset-0">
+    <section ref={sectionRef} className="py-16 md:py-24 relative overflow-hidden">
+      {/* Background image with parallax */}
+      <motion.div className="absolute inset-0" style={{ y: bgY }}>
         <img
           src={ctaBannerBg}
           alt=""
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover scale-125"
           loading="lazy"
         />
-      </div>
+      </motion.div>
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/80 to-sky-500/85" />
       <motion.div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-white/10 blur-xl" animate={{ y: [0, -20, 0], x: [0, 10, 0] }} transition={{ duration: 6, repeat: Infinity }} />

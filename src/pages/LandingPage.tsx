@@ -19,6 +19,7 @@ import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import FAQSection from '@/components/landing/FAQSection';
 import CTABanner from '@/components/landing/CTABanner';
 import Footer from '@/components/landing/Footer';
+import ParallaxSection from '@/components/landing/ParallaxSection';
 import { useLandingCMS } from '@/hooks/useLandingCMS';
 
 const LandingPage = () => {
@@ -133,29 +134,45 @@ const LandingPage = () => {
         <HeroSection onGetStarted={handleGetStarted} onScanDemo={handleScanDemo} cms={cms.hero?.content} />
         }
         <BrandStrip />
-        <LiveDashboardTeaser />
+        <ParallaxSection yOffset={30} fadeIn>
+          <LiveDashboardTeaser />
+        </ParallaxSection>
         {isVisible('features') &&
-        <div id="features">
+        <ParallaxSection yOffset={35} fadeIn>
+          <div id="features">
             <FeaturesSection cms={cms.features?.content} />
           </div>
+        </ParallaxSection>
         }
-        <ProductDemo />
+        <ParallaxSection yOffset={25} fadeIn scaleUp>
+          <ProductDemo />
+        </ParallaxSection>
         {isVisible('how_it_works') &&
-        <div id="how-it-works">
+        <ParallaxSection yOffset={30} fadeIn>
+          <div id="how-it-works">
             <HowItWorks cms={cms.how_it_works?.content} />
           </div>
+        </ParallaxSection>
         }
-        <DashboardCarousel />
+        <ParallaxSection yOffset={20} fadeIn>
+          <DashboardCarousel />
+        </ParallaxSection>
         
-        <IntegrationsCloud />
+        <ParallaxSection yOffset={25} fadeIn>
+          <IntegrationsCloud />
+        </ParallaxSection>
         {isVisible('pricing') &&
-        <div id="pricing">
+        <ParallaxSection yOffset={30} fadeIn>
+          <div id="pricing">
             <PricingSection onSelectPlan={handleSelectPlan} cms={cms.pricing?.content} />
           </div>
+        </ParallaxSection>
         }
-        <div id="faq">
-          <FAQSection />
-        </div>
+        <ParallaxSection yOffset={20} fadeIn>
+          <div id="faq">
+            <FAQSection />
+          </div>
+        </ParallaxSection>
         {isVisible('cta_banner') &&
         <CTABanner onGetStarted={handleGetStarted} cms={cms.cta_banner?.content} />
         }
