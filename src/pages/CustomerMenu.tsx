@@ -51,6 +51,7 @@ const CustomerMenu = () => {
   const slug = searchParams.get('slug') || '';
   const restaurantIdParam = searchParams.get('r') || '';
   const tableId = searchParams.get('table') || '';
+  const isDemoMode = searchParams.get('demo') === 'true';
 
   // Slug-based tenant resolution
   const [resolvedRestaurantId, setResolvedRestaurantId] = useState(restaurantIdParam);
