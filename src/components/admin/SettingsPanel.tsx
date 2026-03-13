@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/select";
 import { useRestaurant, useUpdateRestaurant } from "@/hooks/useRestaurant";
 import { useToast } from "@/hooks/use-toast";
+import { usePrinter } from "@/hooks/usePrinter";
 
 interface SettingsPanelProps {
   restaurantId: string;
