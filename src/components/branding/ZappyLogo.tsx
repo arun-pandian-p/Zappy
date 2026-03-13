@@ -12,6 +12,7 @@ interface ZappyLogoProps {
   textColor?: string;
   accentColor?: string;
   animated?: boolean;
+  variant?: "light" | "dark";
 }
 
 export const ZappyLogo = forwardRef<HTMLDivElement, ZappyLogoProps>(({
@@ -20,8 +21,10 @@ export const ZappyLogo = forwardRef<HTMLDivElement, ZappyLogoProps>(({
   compact = false,
   showTagline = false,
   textColor,
-  animated = false
+  animated = false,
+  variant = "light"
 }, ref) => {
+  const isDark = variant === "dark";
   const height = compact ? size * 0.8 : size;
 
   const Wrapper = animated ? motion.div : "div";
@@ -39,7 +42,11 @@ export const ZappyLogo = forwardRef<HTMLDivElement, ZappyLogoProps>(({
         src={zappyLogo}
         alt="ZAPPY – Scan, Order, Eat, Repeat"
         height={height}
-        style={{ height, width: "auto" }}
+        style={{
+          height,
+          width: "auto",
+          ...(isDark ? { filter: "invert(1) brightness(1.2)", mixBlendMode: "screen" as const } : {}),
+        }}
         className="shrink-0 drop-shadow-lg rounded-none" />
       
       {showTagline &&
