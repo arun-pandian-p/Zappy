@@ -752,22 +752,6 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
               aspect={1}
               title="Crop Avatar"
             />
-            <div className="space-y-2">
-              <Label>Or pick an emoji</Label>
-              <div className="flex gap-2 flex-wrap">
-                {["👨‍🍳", "👩‍🍳", "🧑‍💼", "👤", "🦁", "🐯", "🎩", "⭐", "🍽️", "🔥", "💎", "🌟"].map((emoji) => (
-                  <Button
-                    key={emoji}
-                    variant={settings.admin_avatar.type === "emoji" && settings.admin_avatar.value === emoji ? "default" : "outline"}
-                    size="icon"
-                    className="text-lg h-10 w-10"
-                    onClick={() => setSettings({ ...settings, admin_avatar: { type: "emoji", value: emoji } })}
-                  >
-                    {emoji}
-                  </Button>
-                ))}
-              </div>
-            </div>
           </CardContent>
         </Card>
       </motion.div>
