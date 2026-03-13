@@ -14,6 +14,10 @@ import {
   QrCode,
   UserCircle,
   Lock,
+  MapPin,
+  Phone,
+  Mail,
+  ExternalLink,
 } from "lucide-react";
 import { BrandingAnimationSettings, type BrandingConfig, defaultBrandingConfig } from "@/components/branding/BrandingAnimationSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
