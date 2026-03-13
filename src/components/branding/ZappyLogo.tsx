@@ -45,18 +45,18 @@ export const ZappyLogo = forwardRef<HTMLDivElement, ZappyLogoProps>(({
         style={{
           height,
           width: "auto",
-          ...(isDark ? { filter: "invert(1) brightness(1.2)", mixBlendMode: "screen" as const } : {}),
+          ...(isDark ? { filter: "invert(1) brightness(1.2)", mixBlendMode: "screen" as const } : {})
         }}
         className="shrink-0 drop-shadow-lg rounded-none" />
       
       {showTagline &&
       <div className="flex flex-col items-center gap-1">
-          <span
-          className="text-3xl font-extrabold tracking-wider"
-          style={{ color: textColor || "inherit" }}>
           
-            ZAPPY
-          </span>
+
+
+
+
+        
           <span
           className="text-sm font-medium tracking-wide opacity-70"
           style={{ color: textColor || "inherit" }}>
