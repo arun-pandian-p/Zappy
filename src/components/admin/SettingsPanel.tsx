@@ -104,6 +104,51 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
   const [settings, setSettings] = useState<RestaurantSettings>(defaultSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [cropImage, setCropImage] = useState<string | null>(null);
+  const [testingConnection, setTestingConnection] = useState(false);
+
+  const printer = usePrinter(restaurantId);
+
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    try {
+      if (settings.printer_type === "bluetooth") {
+        const success = await printer.connectBluetooth();
+        toast({
+          title: success ? "Bluetooth Connected" : "Connection Failed",
+          description: success
+            ? `Connected to ${printer.deviceName || "printer"}`
+            : "Could not connect to Bluetooth printer. Make sure it's turned on and nearby.",
+          variant: success ? "default" : "destructive",
+        });
+      } else if (settings.printer_type === "usb") {
+        const success = await printer.connectUSB();
+        toast({
+          title: success ? "USB Connected" : "Connection Failed",
+          description: success
+            ? `Connected to ${printer.deviceName || "printer"}`
+            : "Could not connect to USB printer. Make sure it's plugged in.",
+          variant: success ? "default" : "destructive",
+        });
+      } else if (settings.printer_type === "wifi") {
+        if (!settings.printer_ip) {
+          toast({ title: "IP Required", description: "Enter the printer IP address first.", variant: "destructive" });
+        } else {
+          toast({
+            title: "WiFi Printer Configured",
+            description: `Printer IP set to ${settings.printer_ip}. Print test will be sent on next order.`,
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Connection Error",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setTestingConnection(false);
+    }
+  };
 
   useEffect(() => {
     if (restaurant) {
