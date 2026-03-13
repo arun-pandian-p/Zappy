@@ -115,6 +115,12 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               loop
               muted
               playsInline
+              preload="auto"
+              onEnded={(e) => {
+                const video = e.currentTarget;
+                video.currentTime = 0;
+                video.play().catch(() => {});
+              }}
               className="w-full h-full object-cover"
               src="/videos/brand-identity-2.mp4" />
             
