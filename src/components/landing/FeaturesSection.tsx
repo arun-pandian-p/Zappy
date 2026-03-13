@@ -29,7 +29,7 @@ const FeaturesSection = ({ cms }: FeaturesSectionProps) => {
     : defaultFeatures;
 
   return (
-    <section className="py-16 md:py-24 bg-blue-50/30">
+    <section className="py-16 md:py-24 bg-foreground">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -38,16 +38,16 @@ const FeaturesSection = ({ cms }: FeaturesSectionProps) => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary-foreground">
             {heading.includes('Restaurant') ? (
               <>
                 {heading.split('Restaurant')[0]}
-                <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">Restaurant</span>
+                <span className="bg-gradient-to-r from-primary to-sky-400 bg-clip-text text-transparent">Restaurant</span>
                 {heading.split('Restaurant')[1]}
               </>
             ) : heading}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{subheading}</p>
+          <p className="text-lg text-primary-foreground/60 max-w-2xl mx-auto">{subheading}</p>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -58,13 +58,13 @@ const FeaturesSection = ({ cms }: FeaturesSectionProps) => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="bg-white backdrop-blur-sm border border-border/40 rounded-2xl shadow-sm hover:shadow-lg transition-shadow p-6 text-center"
+              className="bg-primary-foreground/5 backdrop-blur-sm border border-primary-foreground/10 rounded-2xl shadow-sm hover:shadow-lg hover:bg-primary-foreground/10 transition-all p-6 text-center"
             >
-              <div className={`w-14 h-14 rounded-full ${feature.iconBg} flex items-center justify-center mx-auto mb-4`}>
-                <feature.icon className={`w-7 h-7 ${feature.iconColor}`} />
+              <div className={`w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4`}>
+                <feature.icon className="w-7 h-7 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
-              <p className="text-muted-foreground text-sm">{feature.description}</p>
+              <h3 className="text-lg font-semibold mb-2 text-primary-foreground">{feature.title}</h3>
+              <p className="text-primary-foreground/60 text-sm">{feature.description}</p>
             </motion.div>
           ))}
         </div>
