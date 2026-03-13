@@ -41,7 +41,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
               className="mb-6"
             >
-              <img src={zappyHeroLogo} alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain brightness-[2] invert" style={{ mixBlendMode: 'screen' }} />
+              <img src={zappyHeroLogo} alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain" />
             </motion.div>
 
             <motion.p
