@@ -1,7 +1,6 @@
-import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, BarChart3, ChefHat, Receipt } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
+import { BarChart3, ChefHat, Receipt } from 'lucide-react';
 import adminImg from '@/assets/dashboard-admin.png';
 import kitchenImg from '@/assets/dashboard-kitchen.png';
 import billingImg from '@/assets/dashboard-billing.png';
@@ -32,8 +31,14 @@ const screens = [
 
 const DashboardCarousel = () => {
   const [active, setActive] = useState(0);
-  const next = () => setActive((p) => (p + 1) % screens.length);
-  const prev = () => setActive((p) => (p - 1 + screens.length) % screens.length);
+
+  const next = useCallback(() => setActive((p) => (p + 1) % screens.length), []);
+
+  // Auto-advance every 4 seconds
+  useEffect(() => {
+    const interval = setInterval(next, 4000);
+    return () => clearInterval(interval);
+  }, [next]);
 
   return (
     <section className="py-16 md:py-24 bg-white overflow-hidden">
@@ -49,33 +54,35 @@ const DashboardCarousel = () => {
         </motion.div>
 
         <div className="relative max-w-5xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" className="shrink-0 rounded-full" onClick={prev}>
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex-1 overflow-hidden">
-              <motion.div key={active} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.4 }}>
-                <div className="bg-white border rounded-2xl overflow-hidden shadow-xl">
-                  <div className={`bg-gradient-to-r ${screens[active].color} p-4 flex items-center gap-3`}>
-                    {(() => { const Icon = screens[active].icon; return <Icon className="w-5 h-5 text-white" />; })()}
-                    <div>
-                      <h3 className="text-white font-bold text-sm">{screens[active].title}</h3>
-                      <p className="text-white/70 text-xs">{screens[active].description}</p>
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <img src={screens[active].image} alt={screens[active].title} className="w-full h-auto object-cover" />
+          <div className="overflow-hidden rounded-2xl shadow-xl border">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active}
+                initial={{ x: '100%', opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: '-100%', opacity: 0 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+              >
+                <div className={`bg-gradient-to-r ${screens[active].color} p-4 flex items-center gap-3`}>
+                  {(() => { const Icon = screens[active].icon; return <Icon className="w-5 h-5 text-white" />; })()}
+                  <div>
+                    <h3 className="text-white font-bold text-sm">{screens[active].title}</h3>
+                    <p className="text-white/70 text-xs">{screens[active].description}</p>
                   </div>
                 </div>
+                <img src={screens[active].image} alt={screens[active].title} className="w-full h-auto object-cover" />
               </motion.div>
-            </div>
-            <Button variant="outline" size="icon" className="shrink-0 rounded-full" onClick={next}>
-              <ChevronRight className="w-5 h-5" />
-            </Button>
+            </AnimatePresence>
           </div>
+
+          {/* Progress dots */}
           <div className="flex justify-center gap-2 mt-6">
             {screens.map((_, i) => (
-              <button key={i} onClick={() => setActive(i)} className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${i === active ? 'bg-primary w-8' : 'bg-muted-foreground/30'}`} />
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                className={`h-2.5 rounded-full transition-all duration-500 ${i === active ? 'bg-primary w-8' : 'bg-muted-foreground/30 w-2.5'}`}
+              />
             ))}
           </div>
         </div>
