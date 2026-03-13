@@ -11,7 +11,7 @@ interface CTABannerProps {
 const animatedWords = ['Restaurant', 'Café', 'Cloud Kitchen', 'Food Court', 'Bar & Lounge'];
 
 const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
-  const subtitle = cms?.subtitle || 'Join 500+ restaurants already using ZAPPY to serve customers faster and smarter.';
+  const subtitle = cms?.subtitle || 'Join hundreds of restaurants already using ZAPPY QR MANEGEMENT\n\n';
   const ctaText = cms?.cta_text || 'Get Started Free';
   const [wordIndex, setWordIndex] = useState(0);
 
@@ -48,7 +48,7 @@ const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
             </span>
             ?
           </h2>
-          <p className="text-lg text-primary-foreground/70 max-w-2xl mx-auto mb-10">{subtitle}</p>
+          <p className="text-lg text-primary-foreground/70 max-w-2xl mx-auto mb-10 whitespace-pre-wrap">{subtitle}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
               size="lg"
