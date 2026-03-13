@@ -28,7 +28,7 @@ const LandingPage = () => {
 
   // Build a map of section_key -> content for easy access
   const cms = useMemo(() => {
-    const map: Record<string, { content: Record<string, any>; visible: boolean }> = {};
+    const map: Record<string, {content: Record<string, any>;visible: boolean;}> = {};
     sections.forEach((s) => {
       map[s.section_key] = { content: s.content_json as Record<string, any>, visible: s.is_visible };
     });
@@ -45,11 +45,11 @@ const LandingPage = () => {
   };
 
   const navLinks = [
-    { label: 'Features', href: '#features' },
-    { label: 'How It Works', href: '#how-it-works' },
-    { label: 'Pricing', href: '#pricing' },
-    { label: 'FAQ', href: '#faq' },
-  ];
+  { label: 'Features', href: '#features' },
+  { label: 'How It Works', href: '#how-it-works' },
+  { label: 'Pricing', href: '#pricing' },
+  { label: 'FAQ', href: '#faq' }];
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -59,24 +59,24 @@ const LandingPage = () => {
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-border"
-      >
+        className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-border">
+        
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16 border-primary-foreground">
             <div className="flex items-center">
               <ZappyLogo size={56} compact />
             </div>
 
             <nav className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left"
-                >
+              {navLinks.map((link) =>
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left">
+                
                   {link.label}
                 </a>
-              ))}
+              )}
             </nav>
 
             <div className="hidden md:flex items-center gap-4">
@@ -91,84 +91,84 @@ const LandingPage = () => {
               variant="ghost"
               size="icon"
               className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              
               {mobileMenuOpen ? <X className="w-5 h-5 text-foreground" /> : <Menu className="w-5 h-5 text-foreground" />}
             </Button>
           </div>
         </div>
 
         <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t bg-background overflow-hidden"
-            >
+          {mobileMenuOpen &&
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden border-t bg-background overflow-hidden">
+            
               <div className="container mx-auto px-4 py-4 space-y-4">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    className="block text-sm text-muted-foreground hover:text-foreground"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
+                {navLinks.map((link) =>
+              <a
+                key={link.href}
+                href={link.href}
+                className="block text-sm text-muted-foreground hover:text-foreground"
+                onClick={() => setMobileMenuOpen(false)}>
+                
                     {link.label}
                   </a>
-                ))}
+              )}
                 <div className="pt-4 border-t flex flex-col gap-2">
                   <Button variant="outline" onClick={() => navigate('/login')}>Login</Button>
                   <Button onClick={handleGetStarted}>Get Started</Button>
                 </div>
               </div>
             </motion.div>
-          )}
+          }
         </AnimatePresence>
       </motion.header>
 
       {/* Main Content */}
       <main className="pt-16">
-        {isVisible('hero') && (
-          <HeroSection onGetStarted={handleGetStarted} onScanDemo={handleScanDemo} cms={cms.hero?.content} />
-        )}
+        {isVisible('hero') &&
+        <HeroSection onGetStarted={handleGetStarted} onScanDemo={handleScanDemo} cms={cms.hero?.content} />
+        }
         <BrandStrip />
         <LiveDashboardTeaser />
-        {isVisible('features') && (
-          <div id="features">
+        {isVisible('features') &&
+        <div id="features">
             <FeaturesSection cms={cms.features?.content} />
           </div>
-        )}
+        }
         <ProductDemo />
-        {isVisible('how_it_works') && (
-          <div id="how-it-works">
+        {isVisible('how_it_works') &&
+        <div id="how-it-works">
             <HowItWorks cms={cms.how_it_works?.content} />
           </div>
-        )}
+        }
         <DashboardCarousel />
         <LiveDashboardSection />
         <IntegrationsCloud />
-        {isVisible('pricing') && (
-          <div id="pricing">
+        {isVisible('pricing') &&
+        <div id="pricing">
             <PricingSection onSelectPlan={handleSelectPlan} cms={cms.pricing?.content} />
           </div>
-        )}
-        {isVisible('testimonials') && (
-          <div id="testimonials">
+        }
+        {isVisible('testimonials') &&
+        <div id="testimonials">
             <TestimonialsSection cms={cms.testimonials?.content} />
           </div>
-        )}
+        }
         <div id="faq">
           <FAQSection />
         </div>
-        {isVisible('cta_banner') && (
-          <CTABanner onGetStarted={handleGetStarted} cms={cms.cta_banner?.content} />
-        )}
+        {isVisible('cta_banner') &&
+        <CTABanner onGetStarted={handleGetStarted} cms={cms.cta_banner?.content} />
+        }
       </main>
 
       {isVisible('footer') && <Footer cms={cms.footer?.content} />}
-    </div>
-  );
+    </div>);
+
 };
 
 export default LandingPage;
