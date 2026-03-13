@@ -153,11 +153,6 @@ const LandingPage = () => {
             <PricingSection onSelectPlan={handleSelectPlan} cms={cms.pricing?.content} />
           </div>
         }
-        {isVisible('testimonials') &&
-        <div id="testimonials">
-            <TestimonialsSection cms={cms.testimonials?.content} />
-          </div>
-        }
         <div id="faq">
           <FAQSection />
         </div>
