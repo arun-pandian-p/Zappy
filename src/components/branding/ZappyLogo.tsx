@@ -38,16 +38,16 @@ export const ZappyLogo = forwardRef<HTMLDivElement, ZappyLogoProps>(({
       {...wrapperProps as any}
       className={cn("inline-flex flex-col items-center gap-2", className)}>
       
-      <img
-        src={zappyLogo}
-        alt="ZAPPY – Scan, Order, Eat, Repeat"
-        height={height}
-        style={{
-          height,
-          width: "auto",
-          ...(isDark ? { filter: "invert(1)", mixBlendMode: "screen" as const } : {})
-        }}
-        className="shrink-0 drop-shadow-lg rounded-none" />
+      
+
+
+
+
+
+
+
+
+      
       
       {showTagline &&
       <div className="flex flex-col items-center gap-1">
