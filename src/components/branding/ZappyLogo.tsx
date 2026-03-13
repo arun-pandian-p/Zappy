@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { forwardRef } from "react";
 
-const zappyLogo = "/lovable-uploads/bdb8da7f-3df5-43b6-bcae-b0c1ead7f249.png";
+const zappyLogo = "/lovable-uploads/01a16090-f571-48b6-b6a5-c69fbe372418.jpg";
 
 interface ZappyLogoProps {
   className?: string;
