@@ -45,7 +45,7 @@ export const ZappyLogo = forwardRef<HTMLDivElement, ZappyLogoProps>(({
         style={{
           height,
           width: "auto",
-          ...(isDark ? { filter: "invert(1) brightness(1.5) sepia(1) hue-rotate(180deg) saturate(3)", mixBlendMode: "screen" as const } : {})
+          ...(isDark ? { filter: "invert(1)", mixBlendMode: "screen" as const } : {})
         }}
         className="shrink-0 drop-shadow-lg rounded-none" />
       
