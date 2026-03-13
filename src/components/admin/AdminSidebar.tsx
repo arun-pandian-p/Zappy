@@ -26,8 +26,8 @@ import {
   QrCode,
   Lock,
   Package,
-  Camera,
-} from "lucide-react";
+  Camera } from
+"lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -36,8 +36,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
-  useSidebar,
-} from "@/components/ui/sidebar";
+  useSidebar } from
+"@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,31 +47,31 @@ type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
 interface NavItem {
   title: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{className?: string;}>;
   value: string;
 }
 
 const allNavItems: NavItem[] = [
-  { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
-  { title: "Menu", icon: UtensilsCrossed, value: "menu" },
-  { title: "QR Manager", icon: QrCode, value: "qr-manager" },
-  { title: "Orders", icon: ClipboardList, value: "orders" },
-  { title: "Kitchen", icon: ChefHat, value: "kitchen" },
-  { title: "Billing", icon: Receipt, value: "billing" },
-  { title: "Coupons", icon: Ticket, value: "coupons" },
-  { title: "Promotions", icon: Megaphone, value: "promotions" },
-  { title: "Reviews", icon: Star, value: "reviews" },
-  { title: "Users", icon: Users, value: "users" },
-  { title: "Inventory", icon: Package, value: "inventory" },
-  { title: "Exports", icon: FileSpreadsheet, value: "exports" },
-  
-  { title: "Preview Site", icon: Eye, value: "preview" },
-  { title: "Settings", icon: Settings, value: "settings" },
-];
+{ title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
+{ title: "Menu", icon: UtensilsCrossed, value: "menu" },
+{ title: "QR Manager", icon: QrCode, value: "qr-manager" },
+{ title: "Orders", icon: ClipboardList, value: "orders" },
+{ title: "Kitchen", icon: ChefHat, value: "kitchen" },
+{ title: "Billing", icon: Receipt, value: "billing" },
+{ title: "Coupons", icon: Ticket, value: "coupons" },
+{ title: "Promotions", icon: Megaphone, value: "promotions" },
+{ title: "Reviews", icon: Star, value: "reviews" },
+{ title: "Users", icon: Users, value: "users" },
+{ title: "Inventory", icon: Package, value: "inventory" },
+{ title: "Exports", icon: FileSpreadsheet, value: "exports" },
+
+{ title: "Preview Site", icon: Eye, value: "preview" },
+{ title: "Settings", icon: Settings, value: "settings" }];
+
 
 const onboardingNavItems: NavItem[] = [
-  { title: "Settings", icon: Settings, value: "settings" },
-];
+{ title: "Settings", icon: Settings, value: "settings" }];
+
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -90,7 +90,7 @@ export function AdminSidebar({
   restaurantName,
   restaurantLogo,
   subscriptionTier,
-  adsEnabled,
+  adsEnabled
 }: AdminSidebarProps) {
   const navigate = useNavigate();
   const { state } = useSidebar();
@@ -157,22 +157,22 @@ export function AdminSidebar({
       const filePath = `${user.id}/avatar.jpg`;
 
       // Upload to storage (upsert)
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, blob, { upsert: true, contentType: "image/jpeg" });
+      const { error: uploadError } = await supabase.storage.
+      from("avatars").
+      upload(filePath, blob, { upsert: true, contentType: "image/jpeg" });
 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
+      const { data: urlData } = supabase.storage.
+      from("avatars").
+      getPublicUrl(filePath);
 
       const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
       // Update user metadata
       const { error: updateError } = await supabase.auth.updateUser({
-        data: { avatar_url: avatarUrl },
+        data: { avatar_url: avatarUrl }
       });
 
       if (updateError) throw updateError;
@@ -194,16 +194,16 @@ export function AdminSidebar({
         <SidebarHeader className="p-4">
           <div className="flex items-center gap-3">
             <ZappyLogo size={48} compact variant="dark" />
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex flex-col"
-              >
+            {!collapsed &&
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col">
+              
                 <span className="font-bold text-sidebar-foreground">{restaurantName || "ZAPPY"}</span>
                 <span className="text-xs text-sidebar-foreground/60">Admin Dashboard</span>
               </motion.div>
-            )}
+            }
           </div>
         </SidebarHeader>
 
@@ -221,23 +221,23 @@ export function AdminSidebar({
                     tooltip={locked ? `${item.title} (Locked)` : item.title}
                     className={cn(
                       "w-full justify-start gap-3 rounded-xl transition-all duration-200",
-                      isActive
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                        : locked
-                          ? "text-sidebar-foreground/40 hover:bg-sidebar-accent/50"
-                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                    )}
-                  >
+                      isActive ?
+                      "bg-primary text-primary-foreground hover:bg-primary/90" :
+                      locked ?
+                      "text-sidebar-foreground/40 hover:bg-sidebar-accent/50" :
+                      "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                    )}>
+                    
                     <item.icon className="w-5 h-5 shrink-0" />
-                    {!collapsed && (
-                      <span className="font-medium flex-1">{item.title}</span>
-                    )}
-                    {!collapsed && locked && (
-                      <Lock className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                    )}
+                    {!collapsed
+
+                    }
+                    {!collapsed && locked &&
+                    <Lock className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                    }
                   </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
+                </SidebarMenuItem>);
+
             })}
           </SidebarMenu>
         </SidebarContent>
@@ -250,14 +250,14 @@ export function AdminSidebar({
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={handleFileChange}
-            />
+              onChange={handleFileChange} />
+            
             <button
               onClick={handleAvatarClick}
               className="relative group shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               title="Change profile photo"
-              disabled={uploading}
-            >
+              disabled={uploading}>
+              
               <Avatar className={cn("w-9 h-9", uploading && "opacity-50")}>
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-primary/20 text-primary text-sm">
@@ -269,14 +269,14 @@ export function AdminSidebar({
               </div>
             </button>
 
-            {!collapsed && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col overflow-hidden">
+            {!collapsed &&
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col overflow-hidden">
                 <Badge variant="secondary" className="w-fit text-xs mb-0.5">{displayName}</Badge>
                 <span className="text-xs text-sidebar-foreground/60 truncate">
                   {user?.email || "admin@restaurant.com"}
                 </span>
               </motion.div>
-            )}
+            }
           </div>
 
           <Button
@@ -285,8 +285,8 @@ export function AdminSidebar({
             className={cn(
               "w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10",
               collapsed && "justify-center px-2"
-            )}
-          >
+            )}>
+            
             <LogOut className="w-5 h-5 shrink-0" />
             {!collapsed && <span>Logout</span>}
           </Button>
@@ -298,20 +298,20 @@ export function AdminSidebar({
         onOpenChange={setLockModalOpen}
         featureName={lockModalFeature}
         lockReason={lockModalReason}
-        onGoToSettings={() => onTabChange("settings")}
-      />
+        onGoToSettings={() => onTabChange("settings")} />
+      
 
-      {cropImageSrc && (
-        <ImageCropDialog
-          open={!!cropImageSrc}
-          imageSrc={cropImageSrc}
-          onClose={() => setCropImageSrc(null)}
-          onCropComplete={handleCropComplete}
-          cropShape="round"
-          aspect={1}
-          title="Crop Profile Photo"
-        />
-      )}
-    </>
-  );
+      {cropImageSrc &&
+      <ImageCropDialog
+        open={!!cropImageSrc}
+        imageSrc={cropImageSrc}
+        onClose={() => setCropImageSrc(null)}
+        onCropComplete={handleCropComplete}
+        cropShape="round"
+        aspect={1}
+        title="Crop Profile Photo" />
+
+      }
+    </>);
+
 }
