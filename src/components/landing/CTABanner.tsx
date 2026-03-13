@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
+import ctaBannerBg from '@/assets/cta-banner-bg.jpg';
 
 interface CTABannerProps {
   onGetStarted: () => void;
@@ -11,7 +12,7 @@ interface CTABannerProps {
 const animatedWords = ['Restaurant', 'Café', 'Cloud Kitchen', 'Food Court', 'Bar & Lounge'];
 
 const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
-  const subtitle = cms?.subtitle || 'Join hundreds of restaurants already using ZAPPY QR MANEGEMENT\n\n';
+  const subtitle = cms?.subtitle || 'Join hundreds of restaurants already using ZAPPY QR MANAGEMENT';
   const ctaText = cms?.cta_text || 'Get Started Free';
   const [wordIndex, setWordIndex] = useState(0);
 
@@ -24,7 +25,17 @@ const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
 
   return (
     <section className="py-16 md:py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-sky-500" />
+      {/* Background image */}
+      <div className="absolute inset-0">
+        <img
+          src={ctaBannerBg}
+          alt=""
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/80 to-sky-500/85" />
       <motion.div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-white/10 blur-xl" animate={{ y: [0, -20, 0], x: [0, 10, 0] }} transition={{ duration: 6, repeat: Infinity }} />
       <motion.div className="absolute bottom-10 right-10 w-40 h-40 rounded-full bg-white/5 blur-2xl" animate={{ y: [0, 15, 0], x: [0, -15, 0] }} transition={{ duration: 8, repeat: Infinity }} />
 
@@ -48,7 +59,7 @@ const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
             </span>
             ?
           </h2>
-          <p className="text-lg text-primary-foreground/70 max-w-2xl mx-auto mb-10 whitespace-pre-wrap">{subtitle}</p>
+          <p className="text-lg text-primary-foreground/80 max-w-2xl mx-auto mb-10">{subtitle}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
               size="lg"
