@@ -39,7 +39,7 @@ export function AdminHeader({
     <header className="sticky top-0 z-40 bg-card border-b">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="md:hidden" />
+          <SidebarTrigger />
           {animEnabled && branding?.mascot && branding.mascot !== "none" && (
             <MascotIcon mascot={branding.mascot} size={36} primaryColor={primaryColor} customImageUrl={branding?.mascot_image_url} />
           )}
