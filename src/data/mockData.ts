@@ -266,7 +266,7 @@ export const mockWaiterCalls: WaiterCall[] = [
 export const categories = ['All', 'Starters', 'Burgers', 'Pizza', 'Main Course', 'Sides', 'Desserts', 'Beverages'];
 
 export const systemSettings = {
-  restaurant_name: 'QR Restaurant',
+  restaurant_name: 'ZAPPY',
   currency_symbol: '₹',
   tax_rate: 5,
   service_charge: 10,
