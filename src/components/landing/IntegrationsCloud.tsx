@@ -14,7 +14,7 @@ const techs = [
 
 
 const IntegrationsCloud = () => {
-  return;
+  return null;
 
 
 
