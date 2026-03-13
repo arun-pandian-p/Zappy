@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSound, SOUNDS } from '@/hooks/useSound';
 import { useOrders, useKitchenOrderActions, type OrderWithItems } from '@/hooks/useOrders';
 import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
-import { useRestaurants } from '@/hooks/useRestaurant';
+import { useRestaurant } from '@/hooks/useRestaurant';
 import { usePrinter } from '@/hooks/usePrinter';
 import { CancelOrderDialog } from '@/components/admin/CancelOrderDialog';
 import { useAuth } from '@/hooks/useAuth';
