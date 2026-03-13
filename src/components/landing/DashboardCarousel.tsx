@@ -1,17 +1,18 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, BarChart3, ChefHat } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BarChart3, ChefHat, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import superAdminImg from '@/assets/dashboard-super-admin.png';
+import adminImg from '@/assets/dashboard-admin.png';
 import kitchenImg from '@/assets/dashboard-kitchen.png';
+import billingImg from '@/assets/dashboard-billing.png';
 
 const screens = [
   {
-    title: 'Super Admin Dashboard',
-    description: 'Platform overview — tenants, plans, revenue at a glance',
+    title: 'Admin Dashboard',
+    description: 'Full restaurant management — revenue, orders & analytics',
     icon: BarChart3,
     color: 'from-primary to-sky-500',
-    image: superAdminImg,
+    image: adminImg,
   },
   {
     title: 'Kitchen Display',
@@ -19,6 +20,13 @@ const screens = [
     icon: ChefHat,
     color: 'from-blue-500 to-indigo-500',
     image: kitchenImg,
+  },
+  {
+    title: 'Billing Counter',
+    description: 'Invoice generation, payments & order settlement',
+    icon: Receipt,
+    color: 'from-emerald-500 to-teal-500',
+    image: billingImg,
   },
 ];
 
