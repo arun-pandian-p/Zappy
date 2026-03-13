@@ -14,6 +14,10 @@ import {
   QrCode,
   UserCircle,
   Lock,
+  MapPin,
+  Phone,
+  Mail,
+  ExternalLink,
 } from "lucide-react";
 import { BrandingAnimationSettings, type BrandingConfig, defaultBrandingConfig } from "@/components/branding/BrandingAnimationSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -201,34 +205,62 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
             </CardTitle>
             <CardDescription>Basic details about your restaurant</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div className="space-y-2">
-              <Label>Restaurant Name</Label>
+              <Label className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-muted-foreground" />
+                Restaurant Name
+              </Label>
               <Input
                 value={settings.name}
                 onChange={(e) => setSettings({ ...settings, name: e.target.value })}
                 placeholder="Restaurant name"
               />
             </div>
+
             <div className="space-y-2">
-              <Label>Address</Label>
+              <Label className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                Address
+              </Label>
               <Textarea
                 value={settings.address}
                 onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                 placeholder="Full address"
               />
+              {settings.address && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline mt-1"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  View on Google Maps
+                </a>
+              )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            <Separator />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Phone</Label>
+                <Label className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                  Mobile Number
+                </Label>
                 <Input
                   value={settings.phone}
                   onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
                   placeholder="+91 9999999999"
+                  type="tel"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Email</Label>
+                <Label className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  Email
+                </Label>
                 <Input
                   type="email"
                   value={settings.email}
