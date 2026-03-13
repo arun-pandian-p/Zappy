@@ -14,9 +14,7 @@ const techs = [
 
 
 const IntegrationsCloud = () => {
-  return (
-    <section className="py-24 bg-foreground overflow-hidden">
-      
+  return;
 
 
 
@@ -82,8 +80,10 @@ const IntegrationsCloud = () => {
 
 
 
-      
-    </section>);
+
+
+
+
 
 };
 
