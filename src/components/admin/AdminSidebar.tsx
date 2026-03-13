@@ -174,21 +174,6 @@ export function AdminSidebar({
         </SidebarContent>
 
         <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border">
-          <div className="flex items-center gap-3 mb-2">
-            <Avatar className="w-8 h-8 shrink-0 rounded-lg">
-              <AvatarImage src={restaurantLogo || undefined} className="rounded-lg" />
-              <AvatarFallback className="bg-primary/20 text-primary rounded-lg text-xs">
-                {(restaurantName || "R").charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            {!collapsed && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="overflow-hidden">
-                <span className="font-semibold text-sm text-sidebar-foreground truncate block">
-                  {restaurantName || "Restaurant"}
-                </span>
-              </motion.div>
-            )}
-          </div>
 
           <div className="flex items-center gap-3 mb-3">
             <Avatar className="w-9 h-9 shrink-0">
