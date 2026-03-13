@@ -146,7 +146,7 @@ const LandingPage = () => {
           </div>
         }
         <DashboardCarousel />
-        <LiveDashboardSection />
+        
         <IntegrationsCloud />
         {isVisible('pricing') &&
         <div id="pricing">
