@@ -41,7 +41,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
               className="mb-6">
               
-              <img alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain" src="/lovable-uploads/b345c162-27bd-4f8f-bb79-d28a0b3f6d1b.png" />
+              <img alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain" src="/lovable-uploads/53e47e43-08ad-46f9-a01e-426fd946553a.png" />
             </motion.div>
 
             <motion.p
@@ -109,16 +109,16 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
             className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 aspect-video"
-            style={{ scale: videoScale, opacity: videoOpacity }}
-          >
+            style={{ scale: videoScale, opacity: videoOpacity }}>
+            
             <video
               autoPlay
               loop
               muted
               playsInline
               className="w-full h-full object-cover"
-              src="/videos/brand-identity-2.mp4"
-            />
+              src="/videos/brand-identity-2.mp4" />
+            
           </motion.div>
 
 
