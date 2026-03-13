@@ -45,7 +45,7 @@ import { LandingCMS } from '@/components/superadmin/LandingCMS';
 import { PlatformBrandingPanel } from '@/components/superadmin/PlatformBrandingPanel';
 import { SuperAdminProfileEditor } from '@/components/superadmin/SuperAdminProfileEditor';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import UserManagement from '@/components/admin/UserManagement';
+import AdminAccountsTable from '@/components/superadmin/AdminAccountsTable';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Tables } from '@/integrations/supabase/types';
@@ -285,7 +285,7 @@ const SuperAdminDashboard = () => {
         return <SuperAdminProfileEditor />;
 
       case 'users':
-        return <UserManagement />;
+        return <AdminAccountsTable />;
 
       case 'plans':
         return <SubscriptionPlansManager />;
@@ -318,7 +318,7 @@ const SuperAdminDashboard = () => {
     restaurants: { title: 'Tenants / Hotels', description: 'Manage all tenants' },
     leaderboard: { title: 'Leaderboard', description: 'Top revenue-generating restaurants' },
     analytics: { title: 'Analytics', description: 'Revenue and performance trends' },
-    users: { title: 'User Management', description: 'Manage all staff across restaurants' },
+    users: { title: 'Restaurant Admins', description: 'View restaurant admin accounts' },
     plans: { title: 'Subscription Plans', description: 'Manage platform subscription tiers' },
     ads: { title: 'Platform Ads', description: 'Manage promotional advertisements' },
     'landing-cms': { title: 'Landing Page CMS', description: 'Edit landing page content' },

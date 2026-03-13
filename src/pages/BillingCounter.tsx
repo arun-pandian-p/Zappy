@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useOrders, useUpdateOrderPayment, type OrderWithItems } from '@/hooks/useOrders';
-import { useRestaurant, useRestaurants } from '@/hooks/useRestaurant';
+import { useRestaurant } from '@/hooks/useRestaurant';
 import { useCreateInvoice, useTodayInvoices, useInvoiceStats, generateInvoiceNumber, type Invoice } from '@/hooks/useInvoices';
 import { useTables } from '@/hooks/useTables';
 import DiscountButtons from '@/components/billing/DiscountButtons';
@@ -31,8 +31,6 @@ import { format } from 'date-fns';
 
 import { useAuth } from '@/hooks/useAuth';
 import { LogOut } from 'lucide-react';
-
-const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
 
 interface BillingCounterProps {
   embedded?: boolean;
@@ -44,10 +42,8 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   const [searchParams] = useSearchParams();
   const { restaurantId: authRestaurantId, signOut } = useAuth();
 
-  const { data: restaurants = [] } = useRestaurants();
   const urlRestaurantId = searchParams.get('r');
-  const autoRestaurantId = restaurants[0]?.id;
-  const restaurantId = propRestaurantId || authRestaurantId || urlRestaurantId || autoRestaurantId || DEMO_RESTAURANT_ID;
+  const restaurantId = propRestaurantId || authRestaurantId || urlRestaurantId || undefined;
 
   const handleLogout = async () => {
     await signOut();
