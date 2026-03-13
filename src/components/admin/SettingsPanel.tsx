@@ -80,6 +80,7 @@ const defaultSettings: RestaurantSettings = {
   ads_enabled: true,
   google_review_url: "",
   printer_type: "none",
+  printer_ip: "",
   auto_print_kitchen: false,
   auto_print_billing: true,
   review_enabled: true,
