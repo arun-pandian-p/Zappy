@@ -321,6 +321,16 @@ const CustomerMenu = () => {
     const serviceCharge = subtotal * (serviceChargeRate / 100);
     const total = subtotal + taxAmount + serviceCharge;
 
+    if (isDemoMode) {
+      toast({
+        title: '🎉 Demo Order Placed!',
+        description: 'This is a demo — your order was not sent to the kitchen.',
+      });
+      clearCart();
+      setCurrentView('menu');
+      return;
+    }
+
     try {
       await createOrder.mutateAsync({
         order: {
