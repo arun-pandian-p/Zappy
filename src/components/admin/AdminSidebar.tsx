@@ -124,7 +124,7 @@ export function AdminSidebar({
       <Sidebar className="border-r-0 bg-sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
           <div className="flex items-center gap-3">
-            <ZappyLogo size={48} compact />
+            <ZappyLogo size={48} compact variant="dark" />
             {!collapsed && (
               <motion.div
                 initial={{ opacity: 0, x: -10 }}

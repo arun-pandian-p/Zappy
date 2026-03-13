@@ -42,7 +42,11 @@ export const ZappyLogo = forwardRef<HTMLDivElement, ZappyLogoProps>(({
         src={zappyLogo}
         alt="ZAPPY – Scan, Order, Eat, Repeat"
         height={height}
-        style={{ height, width: "auto" }}
+        style={{
+          height,
+          width: "auto",
+          ...(isDark ? { filter: "invert(1) brightness(1.2)", mixBlendMode: "screen" as const } : {}),
+        }}
         className="shrink-0 drop-shadow-lg rounded-none" />
       
       {showTagline &&
