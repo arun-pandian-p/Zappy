@@ -285,7 +285,7 @@ const SuperAdminDashboard = () => {
         return <SuperAdminProfileEditor />;
 
       case 'users':
-        return <UserManagement />;
+        return <AdminAccountsTable />;
 
       case 'plans':
         return <SubscriptionPlansManager />;
