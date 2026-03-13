@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRef } from 'react';
-import zappyHeroLogo from '@/assets/zappy-hero-logo.png';
+import zappyHeroLogo from '@/assets/zappy-hero-logo-light.png';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -41,7 +41,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
               className="mb-6"
             >
-              <img src={zappyHeroLogo} alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain invert" style={{ mixBlendMode: 'screen' }} />
+              <img src={zappyHeroLogo} alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain" />
             </motion.div>
 
             <motion.p
