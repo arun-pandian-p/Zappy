@@ -11,10 +11,10 @@ interface HeroSectionProps {
 }
 
 const stats = [
-  { value: '10K+', label: 'Orders Processed' },
-  { value: '500+', label: 'Restaurants' },
-  { value: '99.9%', label: 'Uptime' },
-];
+{ value: '10K+', label: 'Orders Processed' },
+{ value: '500+', label: 'Restaurants' },
+{ value: '99.9%', label: 'Uptime' }];
+
 
 const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
   const subtitle = cms?.subtitle || 'Transform your restaurant operations with intelligent digital ordering, real-time kitchen sync, and powerful analytics.';
@@ -39,17 +39,17 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
-              className="mb-6"
-            >
-              <img src={zappyHeroLogo} alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain" />
+              className="mb-6">
+              
+              <img alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain" src="/lovable-uploads/b345c162-27bd-4f8f-bb79-d28a0b3f6d1b.png" />
             </motion.div>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.6 }}
-              className="text-lg md:text-xl text-primary-foreground/60 max-w-md mb-8 leading-relaxed"
-            >
+              className="text-lg md:text-xl text-primary-foreground/60 max-w-md mb-8 leading-relaxed">
+              
               {subtitle}
             </motion.p>
 
@@ -57,13 +57,13 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.6 }}
-              className="flex flex-col sm:flex-row items-center lg:items-start gap-4"
-            >
+              className="flex flex-col sm:flex-row items-center lg:items-start gap-4">
+              
               <Button
                 size="lg"
                 className="w-full sm:w-auto px-10 py-7 text-lg rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_40px_hsl(var(--primary)/0.4)] group font-bold"
-                onClick={onGetStarted}
-              >
+                onClick={onGetStarted}>
+                
                 <Zap className="w-5 h-5 mr-2" />
                 {ctaText}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -72,8 +72,8 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
                 size="lg"
                 variant="outline"
                 className="w-full sm:w-auto px-10 py-7 text-lg rounded-full border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground backdrop-blur-md font-semibold shadow-[0_0_20px_rgba(255,255,255,0.1)]"
-                onClick={onScanDemo}
-              >
+                onClick={onScanDemo}>
+                
                 View Live Demo
               </Button>
             </motion.div>
@@ -83,22 +83,22 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2, duration: 0.7 }}
-              className="mt-12"
-            >
+              className="mt-12">
+              
               <div className="flex items-center gap-8 md:gap-12">
-                {stats.map((stat, i) => (
-                  <div key={stat.label} className="text-center lg:text-left">
+                {stats.map((stat, i) =>
+                <div key={stat.label} className="text-center lg:text-left">
                     <motion.p
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 1.4 + i * 0.15, duration: 0.5, type: 'spring' }}
-                      className="text-2xl md:text-3xl font-black text-primary-foreground"
-                    >
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1.4 + i * 0.15, duration: 0.5, type: 'spring' }}
+                    className="text-2xl md:text-3xl font-black text-primary-foreground">
+                    
                       {stat.value}
                     </motion.p>
                     <p className="text-xs md:text-sm text-primary-foreground/40 mt-1">{stat.label}</p>
                   </div>
-                ))}
+                )}
               </div>
             </motion.div>
           </div>
@@ -109,16 +109,16 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4, duration: 0.8 }}
             className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 aspect-video"
-            style={{ scale: videoScale, opacity: videoOpacity }}
-          >
+            style={{ scale: videoScale, opacity: videoOpacity }}>
+            
             <video
               autoPlay
               muted
               loop
               playsInline
               className="w-full h-full object-cover"
-              poster="/og-image.png"
-            >
+              poster="/og-image.png">
+              
               <source src="/videos/brand-identity.mp4" type="video/mp4" />
             </video>
             <div className="absolute inset-0 rounded-2xl ring-1 ring-primary-foreground/10" />
@@ -131,17 +131,17 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 1 }}
-        className="relative z-10 pb-8 flex justify-center"
-      >
+        className="relative z-10 pb-8 flex justify-center">
+        
         <motion.div
           animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        >
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>
+          
           <ChevronDown className="w-6 h-6 text-primary-foreground/30" />
         </motion.div>
       </motion.div>
-    </section>
-  );
+    </section>);
+
 };
 
 export default HeroSection;
