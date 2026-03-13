@@ -122,17 +122,6 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
           </motion.div>
 
 
-
-
-
-
-
-
-
-
-
-
-          
         </div>
       </div>
 
