@@ -393,19 +393,38 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
       >
         <Card className="border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Printer className="w-5 h-5" />
-              Printer Settings
-            </CardTitle>
-            <CardDescription>Configure thermal printer connection</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Printer className="w-5 h-5" />
+                  Printer Settings
+                </CardTitle>
+                <CardDescription>Connect your thermal POS printer via Bluetooth, USB, or WiFi</CardDescription>
+              </div>
+              {settings.printer_type !== "none" && (
+                <div className="flex items-center gap-2">
+                  {printer.isConnected ? (
+                    <Badge variant="outline" className="gap-1.5 border-emerald-300 text-emerald-700 bg-emerald-50">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Connected{printer.deviceName ? ` — ${printer.deviceName}` : ""}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="gap-1.5 border-destructive/30 text-destructive bg-destructive/5">
+                      <XCircle className="w-3.5 h-3.5" />
+                      Disconnected
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div className="space-y-2">
               <Label>Connection Type</Label>
               <Select
                 value={settings.printer_type}
                 onValueChange={(v) =>
-                  setSettings({ ...settings, printer_type: v as "none" | "bluetooth" | "usb" })
+                  setSettings({ ...settings, printer_type: v as "none" | "bluetooth" | "usb" | "wifi" })
                 }
               >
                 <SelectTrigger>
@@ -417,19 +436,79 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                   </SelectItem>
                   <SelectItem value="bluetooth">
                     <span className="flex items-center gap-2">
-                      <Bluetooth className="w-4 h-4 text-blue-500" />
+                      <Bluetooth className="w-4 h-4 text-primary" />
                       Bluetooth
                     </span>
                   </SelectItem>
                   <SelectItem value="usb">
                     <span className="flex items-center gap-2">
-                      <Usb className="w-4 h-4 text-green-500" />
+                      <Usb className="w-4 h-4 text-primary" />
                       USB
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="wifi">
+                    <span className="flex items-center gap-2">
+                      <Wifi className="w-4 h-4 text-primary" />
+                      WiFi / Network
                     </span>
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* WiFi IP Address field */}
+            {settings.printer_type === "wifi" && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Wifi className="w-4 h-4 text-muted-foreground" />
+                  Printer IP Address
+                </Label>
+                <Input
+                  value={settings.printer_ip}
+                  onChange={(e) => setSettings({ ...settings, printer_ip: e.target.value })}
+                  placeholder="192.168.1.100"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter the local network IP address of your thermal printer (e.g. 192.168.1.100)
+                </p>
+              </div>
+            )}
+
+            {/* Test Connection Button */}
+            {settings.printer_type !== "none" && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTestConnection}
+                  disabled={testingConnection || printer.isConnecting}
+                  className="gap-2"
+                >
+                  {testingConnection || printer.isConnecting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                  Test Connection
+                </Button>
+                {printer.isConnected && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => printer.disconnect()}
+                    className="gap-2 text-destructive hover:text-destructive"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Disconnect
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {printer.error && (
+              <p className="text-sm text-destructive">{printer.error}</p>
+            )}
+
             <Separator />
             <div className="flex items-center justify-between">
               <div>
