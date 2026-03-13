@@ -40,8 +40,11 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
 
   return (
     <section ref={sectionRef} className="relative min-h-screen flex flex-col overflow-hidden bg-foreground">
-      {/* Accent glow orbs */}
-      <div className="absolute top-1/3 left-0 w-[400px] h-[400px] rounded-full bg-primary/15 blur-[120px] z-[1]" />
+      {/* Accent glow orbs with parallax */}
+      <motion.div
+        className="absolute top-1/3 left-0 w-[400px] h-[400px] rounded-full bg-primary/15 blur-[120px] z-[1]"
+        style={{ y: useTransform(scrollYProgress, [0, 1], [0, -80]) }}
+      />
 
       {/* Content */}
       <div className="relative z-10 flex-1 flex items-center container mx-auto px-4 pt-24 pb-16">
