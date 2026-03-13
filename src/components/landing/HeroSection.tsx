@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Sparkles, Zap, ChevronDown } from 'lucide-react';
+import { ArrowRight, Zap, ChevronDown, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRef } from 'react';
 
@@ -16,8 +16,8 @@ const stats = [
 ];
 
 const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
-  const subtitle = cms?.subtitle || 'The all-in-one QR ordering platform that transforms how restaurants operate — from scan to serve.';
-  const ctaText = cms?.cta_text || 'Get Started Free';
+  const subtitle = cms?.subtitle || 'Transform your restaurant operations with intelligent digital ordering, real-time kitchen sync, and powerful analytics.';
+  const ctaText = cms?.cta_text || 'Start Free Trial';
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
   const videoScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
@@ -25,60 +25,45 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
 
   return (
     <section ref={sectionRef} className="relative min-h-screen flex flex-col overflow-hidden bg-foreground">
-      {/* Dark overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-foreground/90 via-foreground/60 to-foreground z-[1]" />
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-foreground/80 via-foreground/50 to-foreground z-[1]" />
 
       {/* Video Background */}
       <motion.div className="absolute inset-0 z-0" style={{ scale: videoScale, opacity: videoOpacity }}>
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="w-full h-full object-cover"
-          poster="/og-image.png"
-        >
+        <video autoPlay muted loop playsInline className="w-full h-full object-cover" poster="/og-image.png">
           <source src="/videos/brand-identity.mp4" type="video/mp4" />
         </video>
       </motion.div>
 
-      {/* Accent glow orbs */}
-      <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/15 blur-[120px] z-[1]" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-accent/10 blur-[100px] z-[1]" />
-
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col justify-center container mx-auto px-4 pt-24 pb-16">
-        <div className="max-w-3xl mx-auto text-center">
+        <div className="max-w-3xl mx-auto text-center flex flex-col items-center">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/5 backdrop-blur-sm mb-8"
           >
             <Sparkles className="w-4 h-4 text-accent" />
             <span className="text-sm font-medium text-primary-foreground/90">Next-Gen Restaurant Tech</span>
           </motion.div>
 
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.7 }}
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[0.9] tracking-tighter mb-6"
-          >
-            <span className="block text-primary-foreground">Scan.</span>
-            <span className="block bg-gradient-to-r from-primary via-info to-accent bg-clip-text text-transparent">
-              Order.
-            </span>
-            <span className="block text-primary-foreground">Repeat.</span>
-          </motion.h1>
+          {/* Big centered ZAPPY logo */}
+          <motion.img
+            src="/images/zappy-hero-logo.jpeg"
+            alt="ZAPPY – Scan, Order, Eat, Repeat"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.7, type: 'spring' }}
+            className="w-[320px] sm:w-[400px] md:w-[480px] lg:w-[540px] h-auto rounded-3xl drop-shadow-2xl mb-10"
+          />
 
           {/* Subtitle */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
             className="text-lg md:text-xl text-primary-foreground/60 max-w-xl mx-auto mb-10 leading-relaxed"
           >
             {subtitle}
@@ -88,7 +73,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
+            transition={{ delay: 0.9, duration: 0.6 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button
@@ -143,10 +128,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
         transition={{ delay: 2, duration: 1 }}
         className="relative z-10 pb-8 flex justify-center"
       >
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        >
+        <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>
           <ChevronDown className="w-6 h-6 text-primary-foreground/30" />
         </motion.div>
       </motion.div>
