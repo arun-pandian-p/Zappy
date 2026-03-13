@@ -1,8 +1,8 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Sparkles, Zap, ChevronDown } from 'lucide-react';
+import { ArrowRight, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 import { useRef } from 'react';
+import zappyHeroLogo from '@/assets/zappy-hero-logo.png';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
