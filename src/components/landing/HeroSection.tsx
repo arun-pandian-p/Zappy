@@ -104,23 +104,23 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
           </div>
 
           {/* Right: Branded Card */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 aspect-video bg-gradient-to-br from-primary via-primary/80 to-accent flex flex-col items-center justify-center"
-            style={{ scale: videoScale, opacity: videoOpacity }}>
-            
-            <img
-              src={zappyHeroLogo}
-              alt="ZAPPY"
-              className="h-24 sm:h-32 md:h-40 w-auto object-contain drop-shadow-2xl"
-            />
-            <p className="mt-4 text-lg sm:text-xl md:text-2xl font-bold text-primary-foreground tracking-wider">
-              Scan. Order. Eat. Repeat.
-            </p>
-            
-          </motion.div>
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          
         </div>
       </div>
 
