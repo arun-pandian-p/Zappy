@@ -94,7 +94,7 @@ export function AdminSidebar({
   adsEnabled,
 }: AdminSidebarProps) {
   const navigate = useNavigate();
-  const { state } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const { signOut, user } = useAuth();
   const navItems = onboardingCompleted ? allNavItems : onboardingNavItems;
