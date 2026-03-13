@@ -448,7 +448,7 @@ const AdminDashboard = () => {
     { value: "kitchen", label: "Kitchen", icon: ChefHat },
     { value: "billing", label: "Billing", icon: Receipt },
     { value: "coupons", label: "Coupons", icon: Ticket },
-    { value: "ads", label: "Ads", icon: Megaphone },
+    
     { value: "reviews", label: "Reviews", icon: Star },
     { value: "users", label: "Users", icon: Users },
     { value: "inventory", label: "Inventory", icon: Package },
