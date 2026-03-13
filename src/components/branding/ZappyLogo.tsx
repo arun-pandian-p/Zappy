@@ -38,30 +38,25 @@ export const ZappyLogo = forwardRef<HTMLDivElement, ZappyLogoProps>(({
       {...wrapperProps as any}
       className={cn("inline-flex flex-col items-center gap-2", className)}>
       
-      
+      <img
+        src={zappyLogo}
+        alt="ZAPPY"
+        style={{ height: `${height}px`, width: 'auto' }}
+        className={cn(
+          "object-contain",
+          isDark && "invert mix-blend-screen"
+        )}
+      />
 
-
-
-
-
-
-
-
-
-
-
-      
-
-      {showTagline &&
-      <div className="flex flex-col items-center gap-1">
+      {showTagline && (
+        <div className="flex flex-col items-center gap-1">
           <span
-          className="text-sm font-medium tracking-wide opacity-70"
-          style={{ color: textColor || "inherit" }}>
-          
+            className="text-sm font-medium tracking-wide opacity-70"
+            style={{ color: textColor || "inherit" }}>
             Scan, Order, Eat, Repeat
           </span>
         </div>
-      }
+      )}
     </Wrapper>);
 
 });
