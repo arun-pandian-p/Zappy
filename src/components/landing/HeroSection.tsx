@@ -27,7 +27,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
   return (
     <section ref={sectionRef} className="relative min-h-screen flex flex-col overflow-hidden bg-foreground">
       {/* Heavy overlay to hide video watermark text */}
-      <div className="absolute inset-0 bg-gradient-to-b from-foreground/95 via-foreground/85 to-foreground z-[1]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-foreground/98 via-foreground/92 to-foreground z-[1]" />
 
       {/* Video Background */}
       <motion.div className="absolute inset-0 z-0" style={{ scale: videoScale, opacity: videoOpacity }}>
