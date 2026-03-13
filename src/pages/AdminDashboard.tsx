@@ -29,7 +29,6 @@ import {
   Smartphone,
   Tablet,
   Monitor,
-  Globe,
   QrCode,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -75,7 +74,7 @@ import { RevenueTrends } from "@/components/analytics/RevenueTrends";
 import KitchenDashboard from "@/pages/KitchenDashboard";
 import BillingCounter from "@/pages/BillingCounter";
 import { OffersManager } from "@/components/admin/OffersManager";
-import { MarketResearch } from "@/components/admin/MarketResearch";
+
 import { CustomerBehaviorPanel } from "@/components/analytics/CustomerBehaviorPanel";
 import { QRCodeManager } from "@/components/admin/QRCodeManager";
 import { QRScanAnalytics } from "@/components/analytics/QRScanAnalytics";
@@ -456,7 +455,7 @@ const AdminDashboard = () => {
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
     { value: "offers", label: "Offers", icon: Gift },
     { value: "qr-manager", label: "QR Manager", icon: QrCode },
-    { value: "research", label: "Research", icon: Globe },
+    
     { value: "preview", label: "Preview Site", icon: Eye },
     { value: "settings", label: "Settings", icon: Settings },
   ];
@@ -959,18 +958,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Market Research Tab */}
-              {activeTab === "research" && (
-                <motion.div
-                  key="research"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <MarketResearch />
-                </motion.div>
-              )}
 
               {/* Settings Tab */}
               {activeTab === "settings" && (
