@@ -56,7 +56,7 @@ const Footer = ({ cms }: FooterProps) => {
               <Input type="email" placeholder="Enter your email" className="flex-1" />
               <Button>Subscribe</Button>
             </div>
-            <div className="mt-6 space-y-2 text-sm text-muted-foreground">
+            <div className="mt-6 space-y-2 text-sm text-[hsl(215,20%,65%)]">
               <div className="flex items-center gap-2"><Mail className="w-4 h-4" /><span>zappyscan@gmail.com</span></div>
               <div className="flex items-center gap-2"><Phone className="w-4 h-4" /><span>+91 99940 93784</span></div>
             </div>
