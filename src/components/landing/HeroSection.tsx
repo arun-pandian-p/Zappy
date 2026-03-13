@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Sparkles, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ZappyLogo } from '@/components/branding/ZappyLogo';
+
 import { useRef } from 'react';
 
 interface HeroSectionProps {
@@ -50,29 +50,25 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col justify-center container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-3xl mx-auto text-center">
-          {/* ZAPPY Logo */}
-          <motion.div
+          {/* ZAPPY Text */}
+          <motion.h1
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
-            className="flex justify-center mb-8"
+            className="text-7xl sm:text-8xl md:text-9xl lg:text-[10rem] font-black tracking-tighter leading-none mb-4 bg-gradient-to-r from-primary via-info to-accent bg-clip-text text-transparent"
           >
-            <ZappyLogo size={120} variant="dark" compact />
-          </motion.div>
-
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.7 }}
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[0.9] tracking-tighter mb-6"
-          >
-            <span className="block text-primary-foreground">Scan.</span>
-            <span className="block bg-gradient-to-r from-primary via-info to-accent bg-clip-text text-transparent">
-              Order.
-            </span>
-            <span className="block text-primary-foreground">Repeat.</span>
+            ZAPPY
           </motion.h1>
+
+          {/* Tagline */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="text-lg sm:text-xl md:text-2xl font-semibold text-primary-foreground/70 tracking-widest uppercase mb-6"
+          >
+            Scan · Order · Repeat
+          </motion.p>
 
           {/* Subtitle */}
           <motion.p
