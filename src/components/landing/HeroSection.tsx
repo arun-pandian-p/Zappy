@@ -103,24 +103,25 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             </motion.div>
           </div>
 
-          {/* Right: Branded Card */}
-          
+          {/* Right: Video */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+            className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 aspect-video"
+            style={{ scale: videoScale, opacity: videoOpacity }}
+          >
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+              src="/videos/brand-identity-2.mp4"
+            />
+          </motion.div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-          
         </div>
       </div>
 
