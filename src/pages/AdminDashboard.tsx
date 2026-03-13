@@ -456,7 +456,7 @@ const AdminDashboard = () => {
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
     { value: "offers", label: "Offers", icon: Gift },
     { value: "qr-manager", label: "QR Manager", icon: QrCode },
-    { value: "research", label: "Research", icon: Globe },
+    
     { value: "preview", label: "Preview Site", icon: Eye },
     { value: "settings", label: "Settings", icon: Settings },
   ];
