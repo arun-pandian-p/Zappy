@@ -59,15 +59,6 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             <img src={zappyHeroLogo} alt="ZAPPY" className="h-24 sm:h-32 md:h-40 lg:h-52 w-auto object-contain" />
           </motion.div>
 
-          {/* Tagline */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="text-lg sm:text-xl md:text-2xl font-semibold text-primary-foreground/70 tracking-widest uppercase mb-6"
-          >
-            Scan · Order · Repeat
-          </motion.p>
 
           {/* Subtitle */}
           <motion.p
