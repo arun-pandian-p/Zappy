@@ -17,22 +17,6 @@ const IntegrationsCloud = () => {
   return (
     <section className="py-24 bg-foreground overflow-hidden">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary-foreground">
-            Built with{' '}
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Modern Tech
-            </span>
-          </h2>
-          <p className="text-lg text-primary-foreground/50 max-w-2xl mx-auto">
-            Enterprise-grade technology stack for reliability and speed.
-          </p>
-        </motion.div>
 
         {/* Central visual with floating badges */}
         <div className="relative max-w-4xl mx-auto flex items-center justify-center min-h-[400px] md:min-h-[500px]">
