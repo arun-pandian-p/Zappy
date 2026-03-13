@@ -60,8 +60,7 @@ const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
             </Button>
             <Button
               size="lg"
-              variant="outline"
-              className="w-full sm:w-auto border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 px-8 py-6 text-lg rounded-xl font-bold"
+              className="w-full sm:w-auto bg-white/20 backdrop-blur-sm border-2 border-white text-white hover:bg-white hover:text-primary px-8 py-6 text-lg rounded-xl font-bold shadow-lg transition-colors"
             >
               <Headphones className="mr-2 w-5 h-5" />
               Contact Sales
