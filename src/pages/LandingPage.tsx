@@ -19,6 +19,7 @@ import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import FAQSection from '@/components/landing/FAQSection';
 import CTABanner from '@/components/landing/CTABanner';
 import Footer from '@/components/landing/Footer';
+import ParallaxSection from '@/components/landing/ParallaxSection';
 import { useLandingCMS } from '@/hooks/useLandingCMS';
 
 const LandingPage = () => {
