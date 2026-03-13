@@ -12,6 +12,7 @@ interface ZappyLogoProps {
   textColor?: string;
   accentColor?: string;
   animated?: boolean;
+  variant?: "light" | "dark";
 }
 
 export const ZappyLogo = forwardRef<HTMLDivElement, ZappyLogoProps>(({
