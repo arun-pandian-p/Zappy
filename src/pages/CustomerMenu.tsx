@@ -51,6 +51,7 @@ const CustomerMenu = () => {
   const slug = searchParams.get('slug') || '';
   const restaurantIdParam = searchParams.get('r') || '';
   const tableId = searchParams.get('table') || '';
+  const isDemoMode = searchParams.get('demo') === 'true';
 
   // Slug-based tenant resolution
   const [resolvedRestaurantId, setResolvedRestaurantId] = useState(restaurantIdParam);
@@ -319,6 +320,16 @@ const CustomerMenu = () => {
     const taxAmount = subtotal * (taxRate / 100);
     const serviceCharge = subtotal * (serviceChargeRate / 100);
     const total = subtotal + taxAmount + serviceCharge;
+
+    if (isDemoMode) {
+      toast({
+        title: '🎉 Demo Order Placed!',
+        description: 'This is a demo — your order was not sent to the kitchen.',
+      });
+      clearCart();
+      setCurrentView('menu');
+      return;
+    }
 
     try {
       await createOrder.mutateAsync({

@@ -38,7 +38,7 @@ const LandingPage = () => {
   const isVisible = (key: string) => cms[key]?.visible !== false;
 
   const handleGetStarted = () => navigate('/login');
-  const handleScanDemo = () => navigate('/order?slug=arun&table=T1');
+  const handleScanDemo = () => navigate('/order?slug=arun&table=T1&demo=true');
   const handleSelectPlan = (plan: string) => {
     console.log('Selected plan:', plan);
     navigate('/login');
