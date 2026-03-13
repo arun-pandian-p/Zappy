@@ -45,7 +45,7 @@ import { LandingCMS } from '@/components/superadmin/LandingCMS';
 import { PlatformBrandingPanel } from '@/components/superadmin/PlatformBrandingPanel';
 import { SuperAdminProfileEditor } from '@/components/superadmin/SuperAdminProfileEditor';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import UserManagement from '@/components/admin/UserManagement';
+import AdminAccountsTable from '@/components/superadmin/AdminAccountsTable';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Tables } from '@/integrations/supabase/types';
