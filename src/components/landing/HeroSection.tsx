@@ -119,7 +119,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             <p className="mt-4 text-lg sm:text-xl md:text-2xl font-bold text-primary-foreground tracking-wider">
               Scan. Order. Eat. Repeat.
             </p>
-            <div className="absolute inset-0 rounded-2xl ring-1 ring-primary-foreground/10" />
+            
           </motion.div>
         </div>
       </div>
