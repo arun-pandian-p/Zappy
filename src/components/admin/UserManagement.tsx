@@ -279,7 +279,9 @@ const UserManagement = ({ restaurantIdOverride }: UserManagementProps = {}) => {
   }, [staffMembers, searchQuery]);
 
   const handleCreateUser = () => {
-    if (!newUser.email || !newUser.password) {
+    const trimmedEmail = newUser.email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!trimmedEmail || !newUser.password) {
       toast({
         title: 'Missing Fields',
         description: 'Email and password are required',
@@ -287,7 +289,23 @@ const UserManagement = ({ restaurantIdOverride }: UserManagementProps = {}) => {
       });
       return;
     }
-    createStaffMutation.mutate(newUser);
+    if (!emailRegex.test(trimmedEmail)) {
+      toast({
+        title: 'Invalid Email',
+        description: 'Please enter a valid email address',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (newUser.password.length < 6) {
+      toast({
+        title: 'Weak Password',
+        description: 'Password must be at least 6 characters',
+        variant: 'destructive',
+      });
+      return;
+    }
+    createStaffMutation.mutate({ ...newUser, email: trimmedEmail });
   };
 
   if (!effectiveRestaurantId && !isSuperAdmin) {
