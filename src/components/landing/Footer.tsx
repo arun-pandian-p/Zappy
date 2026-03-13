@@ -64,8 +64,8 @@ const Footer = ({ cms }: FooterProps) => {
         </div>
       </div>
 
-      <div className="border-t">
-        <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+      <div className="border-t border-[hsl(217,32%,17%)]">
+        <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[hsl(215,20%,65%)]">
           <p>© {currentYear} {companyName}. All rights reserved.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
