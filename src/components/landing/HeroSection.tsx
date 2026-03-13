@@ -40,6 +40,19 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
 
   return (
     <section ref={sectionRef} className="relative min-h-screen flex flex-col overflow-hidden bg-foreground">
+      {/* Subtle tech grid background */}
+      <div className="absolute inset-0 z-0 opacity-[0.04]" style={{
+        backgroundImage: `linear-gradient(hsl(var(--primary-foreground) / 0.5) 1px, transparent 1px),
+                          linear-gradient(90deg, hsl(var(--primary-foreground) / 0.5) 1px, transparent 1px)`,
+        backgroundSize: '60px 60px',
+      }} />
+      {/* Animated grid dot accents */}
+      <div className="absolute inset-0 z-0 opacity-[0.06]" style={{
+        backgroundImage: `radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)`,
+        backgroundSize: '60px 60px',
+        backgroundPosition: '30px 30px',
+      }} />
+
       {/* Accent glow orbs with parallax */}
       <motion.div
         className="absolute top-1/3 left-0 w-[400px] h-[400px] rounded-full bg-primary/15 blur-[120px] z-[1]"
