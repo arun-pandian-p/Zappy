@@ -13,7 +13,7 @@ const brands = [
 
 
 const BrandStrip = () => {
-  return;
+  return null;
 
 
 
