@@ -1,8 +1,8 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Sparkles, Zap, ChevronDown } from 'lucide-react';
+import { ArrowRight, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 import { useRef } from 'react';
+import zappyHeroLogo from '@/assets/zappy-hero-logo.png';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -50,18 +50,14 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col justify-center container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-3xl mx-auto text-center">
-          {/* ZAPPY Text */}
-          <motion.h1
+          <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
-            className="text-7xl sm:text-8xl md:text-9xl lg:text-[10rem] font-black tracking-[0.15em] leading-none mb-4"
-            style={{ fontFamily: "'Audiowide', sans-serif" }}
+            className="flex justify-center mb-4"
           >
-            <span className="bg-gradient-to-r from-primary via-info to-accent bg-clip-text text-transparent">Ɀᕔ</span>
-            <span className="relative" style={{ color: '#1a1a6e', WebkitTextStroke: '2px #facc15' }}>ᖘᖘ</span>
-            <span className="bg-gradient-to-r from-primary via-info to-accent bg-clip-text text-transparent">Ꭽ</span>
-          </motion.h1>
+            <img src={zappyHeroLogo} alt="ZAPPY" className="h-24 sm:h-32 md:h-40 lg:h-52 w-auto object-contain" />
+          </motion.div>
 
           {/* Tagline */}
           <motion.p
