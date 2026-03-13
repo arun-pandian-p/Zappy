@@ -125,6 +125,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             style={{ scale: videoScale, opacity: videoOpacity }}>
             
             <video
+              ref={videoRef}
               autoPlay
               loop
               muted
