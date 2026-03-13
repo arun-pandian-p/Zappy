@@ -42,7 +42,7 @@ interface PricingSectionProps {
 
 const PricingSection = ({ onSelectPlan, cms }: PricingSectionProps) => {
   const [yearly, setYearly] = useState(false);
-  const heading = cms?.heading || ' Pricing ';
+  const heading = cms?.heading || 'Pricing';
   const subheading = cms?.subheading || 'Choose the plan that fits your restaurant. No hidden fees, cancel anytime.';
 
   return (
