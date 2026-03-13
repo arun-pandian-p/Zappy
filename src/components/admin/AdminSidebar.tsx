@@ -53,6 +53,7 @@ interface NavItem {
 
 const allNavItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
+  { title: "Preview Site", icon: Eye, value: "preview" },
   { title: "Menu", icon: UtensilsCrossed, value: "menu" },
   { title: "QR Manager", icon: QrCode, value: "qr-manager" },
   { title: "Orders", icon: ClipboardList, value: "orders" },
@@ -64,8 +65,6 @@ const allNavItems: NavItem[] = [
   { title: "Users", icon: Users, value: "users" },
   { title: "Inventory", icon: Package, value: "inventory" },
   { title: "Exports", icon: FileSpreadsheet, value: "exports" },
-  
-  { title: "Preview Site", icon: Eye, value: "preview" },
   { title: "Settings", icon: Settings, value: "settings" },
 ];
 
