@@ -55,7 +55,8 @@ interface RestaurantSettings {
   service_charge_rate: number;
   ads_enabled: boolean;
   google_review_url: string;
-  printer_type: "none" | "bluetooth" | "usb";
+  printer_type: "none" | "bluetooth" | "usb" | "wifi";
+  printer_ip: string;
   auto_print_kitchen: boolean;
   auto_print_billing: boolean;
   review_enabled: boolean;
