@@ -59,7 +59,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             style={{ fontFamily: "'Audiowide', sans-serif" }}
           >
             <span className="bg-gradient-to-r from-primary via-info to-accent bg-clip-text text-transparent">Ɀᕔ</span>
-            <span className="text-yellow-400">ᖘᖘ</span>
+            <span className="relative" style={{ color: '#1a1a6e', WebkitTextStroke: '2px #facc15' }}>ᖘᖘ</span>
             <span className="bg-gradient-to-r from-primary via-info to-accent bg-clip-text text-transparent">Ꭽ</span>
           </motion.h1>
 
