@@ -60,8 +60,14 @@ const LiveDashboardSection = () => {
           </p>
         </motion.div>
 
-        {/* Horizontal scroll on mobile, grid on desktop */}
-        <div className="flex lg:grid lg:grid-cols-4 gap-6 overflow-x-auto snap-x snap-mandatory pb-4 lg:pb-0 scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
+        {/* Auto-scrolling marquee left-to-right */}
+        <div className="overflow-hidden -mx-4 px-4 lg:mx-0 lg:px-0">
+        <motion.div
+          className="flex gap-6 w-max"
+          animate={{ x: ['0%', '-50%'] }}
+          transition={{ x: { duration: 20, repeat: Infinity, ease: 'linear' } }}
+        >
+          {[...features, ...features].map((feature, i) => (
           {features.map((feature, i) => (
             <motion.div
               key={feature.title}
