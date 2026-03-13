@@ -55,9 +55,10 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
-            className="text-7xl sm:text-8xl md:text-9xl lg:text-[10rem] font-black tracking-tighter leading-none mb-4 bg-gradient-to-r from-primary via-info to-accent bg-clip-text text-transparent"
+            className="text-7xl sm:text-8xl md:text-9xl lg:text-[10rem] font-black tracking-[0.15em] leading-none mb-4 bg-gradient-to-r from-primary via-info to-accent bg-clip-text text-transparent"
+            style={{ fontFamily: "'Audiowide', sans-serif" }}
           >
-            ZAPPY
+            ⱿᕔᖘᖘᎽ
           </motion.h1>
 
           {/* Tagline */}
