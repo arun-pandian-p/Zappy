@@ -35,14 +35,14 @@ const Footer = ({ cms }: FooterProps) => {
             <h3 className="font-semibold mb-4 text-[hsl(210,40%,98%)]">Product</h3>
             <ul className="space-y-3 text-sm text-[hsl(215,20%,65%)]">
               {['Features', 'Pricing', 'Integrations', 'Changelog', 'API'].map((link) => (
-                <li key={link}><a href="#" className="hover:text-foreground transition-colors">{link}</a></li>
+                <li key={link}><a href="#" className="hover:text-[hsl(210,40%,98%)] transition-colors">{link}</a></li>
               ))}
             </ul>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
-            <h3 className="font-semibold mb-4">Company</h3>
-            <ul className="space-y-3 text-sm text-muted-foreground">
+            <h3 className="font-semibold mb-4 text-[hsl(210,40%,98%)]">Company</h3>
+            <ul className="space-y-3 text-sm text-[hsl(215,20%,65%)]">
               {['About Us', 'Careers', 'Blog', 'Press', 'Partners'].map((link) => (
                 <li key={link}><a href="#" className="hover:text-foreground transition-colors">{link}</a></li>
               ))}
