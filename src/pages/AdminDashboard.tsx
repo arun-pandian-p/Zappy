@@ -314,7 +314,7 @@ const AdminDashboard = () => {
 
   // Restaurant settings with defaults
   const currencySymbol = restaurant?.currency || "₹";
-  const restaurantName = restaurant?.name || "QR Dine Pro";
+  const restaurantName = restaurant?.name || "ZAPPY";
 
   // Mutations
   const createMenuItem = useCreateMenuItem();
