@@ -24,7 +24,7 @@ const Footer = ({ cms }: FooterProps) => {
             <p className="text-[hsl(215,20%,65%)] text-sm mb-6">{tagline}</p>
             <div className="flex gap-3">
               {[Facebook, Twitter, Instagram, Linkedin].map((Icon, index) => (
-                <Button key={index} variant="outline" size="icon" className="rounded-full border-[hsl(217,32%,17%)] text-[hsl(210,40%,98%)] hover:bg-primary hover:text-primary-foreground transition-colors">
+                <Button key={index} variant="outline" size="icon" className="rounded-full border-[hsl(217,32%,17%)] bg-primary text-primary-foreground hover:bg-primary/80 transition-colors">
                   <Icon className="w-4 h-4" />
                 </Button>
               ))}
