@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useOrders, useUpdateOrderPayment, type OrderWithItems } from '@/hooks/useOrders';
-import { useRestaurant, useRestaurants } from '@/hooks/useRestaurant';
+import { useRestaurant } from '@/hooks/useRestaurant';
 import { useCreateInvoice, useTodayInvoices, useInvoiceStats, generateInvoiceNumber, type Invoice } from '@/hooks/useInvoices';
 import { useTables } from '@/hooks/useTables';
 import DiscountButtons from '@/components/billing/DiscountButtons';
