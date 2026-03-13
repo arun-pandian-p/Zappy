@@ -75,7 +75,7 @@ import { RevenueTrends } from "@/components/analytics/RevenueTrends";
 import KitchenDashboard from "@/pages/KitchenDashboard";
 import BillingCounter from "@/pages/BillingCounter";
 import { OffersManager } from "@/components/admin/OffersManager";
-import { MarketResearch } from "@/components/admin/MarketResearch";
+
 import { CustomerBehaviorPanel } from "@/components/analytics/CustomerBehaviorPanel";
 import { QRCodeManager } from "@/components/admin/QRCodeManager";
 import { QRScanAnalytics } from "@/components/analytics/QRScanAnalytics";
