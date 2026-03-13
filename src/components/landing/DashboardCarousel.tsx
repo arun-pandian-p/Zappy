@@ -54,14 +54,37 @@ const DashboardCarousel = () => {
         </motion.div>
 
         <div className="relative max-w-5xl mx-auto">
-          <div className="overflow-hidden rounded-2xl shadow-xl border">
+          <div className="overflow-hidden rounded-2xl shadow-xl border relative">
+            {/* Reserve height with all images preloaded but hidden */}
+            {screens.map((screen, i) => (
+              <div
+                key={screen.title}
+                className={`${i === 0 ? 'relative' : 'absolute inset-0'}`}
+                style={{ visibility: i === 0 && active !== 0 ? 'hidden' : undefined }}
+              >
+                {i === 0 && (
+                  <>
+                    <div className={`bg-gradient-to-r ${screens[0].color} p-4 flex items-center gap-3`}>
+                      {(() => { const Icon = screens[0].icon; return <Icon className="w-5 h-5 text-white" />; })()}
+                      <div>
+                        <h3 className="text-white font-bold text-sm">{screens[0].title}</h3>
+                        <p className="text-white/70 text-xs">{screens[0].description}</p>
+                      </div>
+                    </div>
+                    <img src={screens[0].image} alt={screens[0].title} className="w-full h-auto object-cover" style={{ visibility: active === 0 ? 'visible' : 'hidden' }} />
+                  </>
+                )}
+              </div>
+            ))}
+            {/* Animated overlay */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}
-                initial={{ x: '100%', opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: '-100%', opacity: 0 }}
-                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4, ease: 'easeInOut' }}
+                className="absolute inset-0"
               >
                 <div className={`bg-gradient-to-r ${screens[active].color} p-4 flex items-center gap-3`}>
                   {(() => { const Icon = screens[active].icon; return <Icon className="w-5 h-5 text-white" />; })()}
