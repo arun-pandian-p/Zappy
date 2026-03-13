@@ -15,8 +15,6 @@ import { CancelOrderDialog } from '@/components/admin/CancelOrderDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { LogOut } from 'lucide-react';
 
-const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
-
 interface KitchenDashboardProps {
   embedded?: boolean;
   restaurantId?: string;
@@ -27,11 +25,8 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   const [searchParams] = useSearchParams();
   const { restaurantId: authRestaurantId, signOut } = useAuth();
   
-  // Auto-detect restaurant: auth > prop > URL > auto > demo
-  const { data: restaurants = [], isLoading: restaurantsLoading } = useRestaurants();
   const urlRestaurantId = searchParams.get('r');
-  const autoRestaurantId = restaurants[0]?.id;
-  const restaurantId = propRestaurantId || authRestaurantId || urlRestaurantId || autoRestaurantId || DEMO_RESTAURANT_ID;
+  const restaurantId = propRestaurantId || authRestaurantId || urlRestaurantId || undefined;
 
   const handleLogout = async () => {
     await signOut();

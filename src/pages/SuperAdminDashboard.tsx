@@ -318,7 +318,7 @@ const SuperAdminDashboard = () => {
     restaurants: { title: 'Tenants / Hotels', description: 'Manage all tenants' },
     leaderboard: { title: 'Leaderboard', description: 'Top revenue-generating restaurants' },
     analytics: { title: 'Analytics', description: 'Revenue and performance trends' },
-    users: { title: 'User Management', description: 'Manage all staff across restaurants' },
+    users: { title: 'Restaurant Admins', description: 'View restaurant admin accounts' },
     plans: { title: 'Subscription Plans', description: 'Manage platform subscription tiers' },
     ads: { title: 'Platform Ads', description: 'Manage promotional advertisements' },
     'landing-cms': { title: 'Landing Page CMS', description: 'Edit landing page content' },
