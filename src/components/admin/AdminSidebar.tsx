@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useFeatureGate, type FeatureKey, type LockReason } from "@/hooks/useFeatureGate";
 import { FeatureLockedModal } from "@/components/admin/FeatureLockedModal";
+import { ImageCropDialog } from "@/components/admin/ImageCropDialog";
 import type { Database } from "@/integrations/supabase/types";
 import { ZappyLogo } from "@/components/branding/ZappyLogo";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -17,13 +20,13 @@ import {
   Megaphone,
   Star,
   Users,
-  Gift,
   Eye,
   FileSpreadsheet,
   Ticket,
   QrCode,
   Lock,
   Package,
+  Camera,
 } from "lucide-react";
 import {
   Sidebar,
@@ -102,6 +105,11 @@ export function AdminSidebar({
   const [lockModalFeature, setLockModalFeature] = useState("");
   const [lockModalReason, setLockModalReason] = useState<LockReason>(null);
 
+  // Avatar upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
   const handleNavClick = (item: NavItem) => {
     const featureKey = item.value as FeatureKey;
     const reason = isLocked(featureKey);
@@ -118,6 +126,67 @@ export function AdminSidebar({
     await signOut();
     navigate("/login");
   };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setCropImageSrc(reader.result as string);
+    reader.readAsDataURL(file);
+    // Reset so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const handleCropComplete = async (croppedDataUrl: string) => {
+    setCropImageSrc(null);
+    if (!user) return;
+
+    setUploading(true);
+    try {
+      // Convert data URL to blob
+      const res = await fetch(croppedDataUrl);
+      const blob = await res.blob();
+      const filePath = `${user.id}/avatar.jpg`;
+
+      // Upload to storage (upsert)
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, blob, { upsert: true, contentType: "image/jpeg" });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      // Update user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { avatar_url: avatarUrl },
+      });
+
+      if (updateError) throw updateError;
+
+      toast.success("Profile photo updated!");
+    } catch (err: any) {
+      console.error("Avatar upload error:", err);
+      toast.error("Failed to update profile photo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const avatarUrl = user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`;
 
   return (
     <>
@@ -174,14 +243,32 @@ export function AdminSidebar({
         </SidebarContent>
 
         <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border">
-
           <div className="flex items-center gap-3 mb-3">
-            <Avatar className="w-9 h-9 shrink-0">
-              <AvatarImage src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`} />
-              <AvatarFallback className="bg-primary/20 text-primary text-sm">
-                {displayName.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            {/* Clickable avatar with camera overlay */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <button
+              onClick={handleAvatarClick}
+              className="relative group shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              title="Change profile photo"
+              disabled={uploading}
+            >
+              <Avatar className={cn("w-9 h-9", uploading && "opacity-50")}>
+                <AvatarImage src={avatarUrl} />
+                <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                  {displayName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 group-hover:bg-black/50 transition-colors">
+                <Camera className="w-3.5 h-3.5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </button>
+
             {!collapsed && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col overflow-hidden">
                 <Badge variant="secondary" className="w-fit text-xs mb-0.5">{displayName}</Badge>
@@ -213,6 +300,18 @@ export function AdminSidebar({
         lockReason={lockModalReason}
         onGoToSettings={() => onTabChange("settings")}
       />
+
+      {cropImageSrc && (
+        <ImageCropDialog
+          open={!!cropImageSrc}
+          imageSrc={cropImageSrc}
+          onClose={() => setCropImageSrc(null)}
+          onCropComplete={handleCropComplete}
+          cropShape="round"
+          aspect={1}
+          title="Crop Profile Photo"
+        />
+      )}
     </>
   );
 }
