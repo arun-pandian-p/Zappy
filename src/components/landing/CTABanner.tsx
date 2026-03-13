@@ -1,9 +1,8 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ctaBannerBg from '@/assets/cta-banner-bg.jpg';
-
 interface CTABannerProps {
   onGetStarted: () => void;
   cms?: Record<string, any>;
