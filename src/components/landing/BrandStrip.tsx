@@ -13,18 +13,7 @@ const brands = [
 
 
 const BrandStrip = () => {
-  return (
-    <section className="py-12 border-b bg-background overflow-hidden">
-      <motion.p
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        className="text-center text-sm text-muted-foreground mb-8 tracking-widest uppercase">
-        
-        Trusted by 500+ restaurants worldwide
-      </motion.p>
-      <div className="relative group">
-        
+  return;
 
 
 
@@ -34,9 +23,20 @@ const BrandStrip = () => {
 
 
 
-        
-      </div>
-    </section>);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 };
 
