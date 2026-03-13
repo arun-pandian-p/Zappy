@@ -255,9 +255,8 @@ export function AdminSidebar({
           </SidebarMenu>
         </SidebarContent>
 
-        <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border">
-          <div className="flex items-center gap-3 mb-3">
-            {/* Clickable avatar with camera overlay */}
+        <SidebarFooter className={cn("mt-auto border-t border-sidebar-border", collapsed ? "p-2" : "p-4")}>
+          <div className={cn("flex items-center", collapsed ? "flex-col gap-2" : "gap-3 mb-3")}>
             <input
               ref={fileInputRef}
               type="file"
@@ -271,7 +270,7 @@ export function AdminSidebar({
               title="Change profile photo"
               disabled={uploading}
             >
-              <Avatar className={cn("w-9 h-9", uploading && "opacity-50")}>
+              <Avatar className={cn(collapsed ? "w-8 h-8" : "w-9 h-9", uploading && "opacity-50")}>
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-primary/20 text-primary text-sm">
                   {displayName.charAt(0).toUpperCase()}
@@ -297,8 +296,9 @@ export function AdminSidebar({
             onClick={handleLogout}
             className={cn(
               "w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10",
-              collapsed && "justify-center px-2"
+              collapsed && "justify-center px-0"
             )}
+            size={collapsed ? "icon" : "default"}
           >
             <LogOut className="w-5 h-5 shrink-0" />
             {!collapsed && <span>Logout</span>}
