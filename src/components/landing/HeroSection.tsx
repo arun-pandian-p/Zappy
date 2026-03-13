@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Sparkles, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ZappyLogo } from '@/components/branding/ZappyLogo';
 import { useRef } from 'react';
 
 interface HeroSectionProps {
@@ -16,7 +17,7 @@ const stats = [
 ];
 
 const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
-  const subtitle = cms?.subtitle || 'The all-in-one QR ordering platform that transforms how restaurants operate — from scan to serve.';
+  const subtitle = cms?.subtitle || 'Transform your restaurant operations with intelligent digital ordering, real-time kitchen sync, and powerful analytics.';
   const ctaText = cms?.cta_text || 'Get Started Free';
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
@@ -25,8 +26,8 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
 
   return (
     <section ref={sectionRef} className="relative min-h-screen flex flex-col overflow-hidden bg-foreground">
-      {/* Dark overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-foreground/90 via-foreground/60 to-foreground z-[1]" />
+      {/* Heavy overlay to hide video watermark text */}
+      <div className="absolute inset-0 bg-gradient-to-b from-foreground/95 via-foreground/85 to-foreground z-[1]" />
 
       {/* Video Background */}
       <motion.div className="absolute inset-0 z-0" style={{ scale: videoScale, opacity: videoOpacity }}>
@@ -49,15 +50,14 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col justify-center container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-3xl mx-auto text-center">
-          {/* Badge */}
+          {/* ZAPPY Logo */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm mb-8"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
+            className="flex justify-center mb-8"
           >
-            <Sparkles className="w-4 h-4 text-accent" />
-            <span className="text-sm font-medium text-primary-foreground/90">Next-Gen Restaurant Tech</span>
+            <ZappyLogo size={120} variant="dark" compact />
           </motion.div>
 
           {/* Headline */}
