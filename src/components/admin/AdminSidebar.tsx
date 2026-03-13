@@ -27,6 +27,8 @@ import {
   Lock,
   Package,
   Camera,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import {
   Sidebar,
