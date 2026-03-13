@@ -61,34 +61,30 @@ const LiveDashboardSection = () => {
         </motion.div>
 
         {/* Auto-scrolling marquee left-to-right */}
-        <div className="overflow-hidden -mx-4 px-4 lg:mx-0 lg:px-0">
-        <motion.div
-          className="flex gap-6 w-max"
-          animate={{ x: ['0%', '-50%'] }}
-          transition={{ x: { duration: 20, repeat: Infinity, ease: 'linear' } }}
-        >
-          {[...features, ...features].map((feature, i) => (
-          {features.map((feature, i) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              whileHover={{ y: -6, boxShadow: '0 20px 40px -12px rgba(0,0,0,0.1)' }}
-              className="min-w-[260px] snap-center bg-white border border-border/40 rounded-2xl p-6 text-center transition-shadow shrink-0 lg:shrink lg:min-w-0 cursor-pointer"
-            >
+        <div className="overflow-hidden">
+          <motion.div
+            className="flex gap-6 w-max"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ x: { duration: 20, repeat: Infinity, ease: 'linear' } }}
+          >
+            {[...features, ...features].map((feature, i) => (
               <motion.div
-                className={`w-14 h-14 rounded-full ${feature.iconBg} flex items-center justify-center mx-auto mb-4`}
-                animate={feature.animation}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1 }}
+                key={`${feature.title}-${i}`}
+                whileHover={{ y: -6, boxShadow: '0 20px 40px -12px rgba(0,0,0,0.1)' }}
+                className="min-w-[260px] bg-white border border-border/40 rounded-2xl p-6 text-center shrink-0 cursor-pointer"
               >
-                <feature.icon className={`w-7 h-7 ${feature.iconColor}`} />
+                <motion.div
+                  className={`w-14 h-14 rounded-full ${feature.iconBg} flex items-center justify-center mx-auto mb-4`}
+                  animate={feature.animation}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1 }}
+                >
+                  <feature.icon className={`w-7 h-7 ${feature.iconColor}`} />
+                </motion.div>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm">{feature.description}</p>
               </motion.div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
-              <p className="text-muted-foreground text-sm">{feature.description}</p>
-            </motion.div>
-          ))}
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>
