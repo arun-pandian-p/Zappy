@@ -18,6 +18,10 @@ import {
   Phone,
   Mail,
   ExternalLink,
+  Wifi,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
 } from "lucide-react";
 import { BrandingAnimationSettings, type BrandingConfig, defaultBrandingConfig } from "@/components/branding/BrandingAnimationSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
