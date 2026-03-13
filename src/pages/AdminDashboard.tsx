@@ -472,8 +472,6 @@ const AdminDashboard = () => {
             restaurantName={restaurantName}
             primaryColor={restaurant?.primary_color || undefined}
             branding={(restaurant?.settings as any)?.branding}
-            adminAvatar={(restaurant?.settings as any)?.admin_avatar}
-            adminDisplayName={(restaurant?.settings as any)?.admin_display_name}
           />
 
           {/* Tab Navigation */}
