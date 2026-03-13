@@ -103,7 +103,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             <Button
               size="lg"
               variant="outline"
-              className="w-full sm:w-auto px-10 py-7 text-lg rounded-full border-primary-foreground/20 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground backdrop-blur-sm"
+              className="w-full sm:w-auto px-10 py-7 text-lg rounded-full border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground backdrop-blur-md font-semibold shadow-[0_0_20px_rgba(255,255,255,0.1)]"
               onClick={onScanDemo}
             >
               View Live Demo
