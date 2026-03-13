@@ -8,6 +8,7 @@ const features = [
     description: 'Your fast mobile menu with ease and spending.',
     iconBg: 'bg-blue-100',
     iconColor: 'text-blue-500',
+    animation: { rotate: [0, -10, 10, -10, 0] },
   },
   {
     icon: RefreshCw,
@@ -15,6 +16,7 @@ const features = [
     description: 'Fast sync of your orders.',
     iconBg: 'bg-sky-100',
     iconColor: 'text-sky-500',
+    animation: { rotate: [0, 360] },
   },
   {
     icon: Printer,
@@ -22,6 +24,7 @@ const features = [
     description: 'Add items to cart, and customize receipts.',
     iconBg: 'bg-indigo-100',
     iconColor: 'text-indigo-500',
+    animation: { y: [0, -4, 0] },
   },
   {
     icon: UtensilsCrossed,
@@ -29,6 +32,7 @@ const features = [
     description: 'Kitchen prepares, serves & manages orders.',
     iconBg: 'bg-primary/10',
     iconColor: 'text-primary',
+    animation: { scale: [1, 1.15, 1] },
   },
 ];
 
@@ -56,7 +60,8 @@ const LiveDashboardSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Horizontal scroll on mobile, grid on desktop */}
+        <div className="flex lg:grid lg:grid-cols-4 gap-6 overflow-x-auto snap-x snap-mandatory pb-4 lg:pb-0 scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
           {features.map((feature, i) => (
             <motion.div
               key={feature.title}
@@ -64,11 +69,16 @@ const LiveDashboardSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="bg-white border border-border/40 rounded-2xl p-6 text-center hover:shadow-lg transition-shadow"
+              whileHover={{ y: -6, boxShadow: '0 20px 40px -12px rgba(0,0,0,0.1)' }}
+              className="min-w-[260px] snap-center bg-white border border-border/40 rounded-2xl p-6 text-center transition-shadow shrink-0 lg:shrink lg:min-w-0 cursor-pointer"
             >
-              <div className={`w-14 h-14 rounded-full ${feature.iconBg} flex items-center justify-center mx-auto mb-4`}>
+              <motion.div
+                className={`w-14 h-14 rounded-full ${feature.iconBg} flex items-center justify-center mx-auto mb-4`}
+                animate={feature.animation}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1 }}
+              >
                 <feature.icon className={`w-7 h-7 ${feature.iconColor}`} />
-              </div>
+              </motion.div>
               <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
               <p className="text-muted-foreground text-sm">{feature.description}</p>
             </motion.div>
