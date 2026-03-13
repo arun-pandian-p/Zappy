@@ -156,6 +156,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           google_review_url: settings.google_review_url,
           printer_settings: {
             type: settings.printer_type,
+            ip: settings.printer_ip,
             auto_print_kitchen: settings.auto_print_kitchen,
             auto_print_billing: settings.auto_print_billing,
           },
