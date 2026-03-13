@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import zappyHeroLogo from '@/assets/zappy-hero-logo-light.png';
 
 interface HeroSectionProps {
@@ -20,9 +20,23 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
   const subtitle = cms?.subtitle || 'Transform your restaurant operations with intelligent digital ordering, real-time kitchen sync, and powerful analytics.';
   const ctaText = cms?.cta_text || 'Get Started Free';
   const sectionRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
   const videoScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
   const videoOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.3]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.play().catch(() => {});
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        video.play().catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
 
   return (
     <section ref={sectionRef} className="relative min-h-screen flex flex-col overflow-hidden bg-foreground">
@@ -111,6 +125,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             style={{ scale: videoScale, opacity: videoOpacity }}>
             
             <video
+              ref={videoRef}
               autoPlay
               loop
               muted
