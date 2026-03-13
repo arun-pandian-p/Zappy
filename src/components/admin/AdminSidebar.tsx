@@ -193,18 +193,30 @@ export function AdminSidebar({
     <>
       <Sidebar className="border-r-0 bg-sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
-          <div className="flex items-center gap-3">
-            <ZappyLogo size={48} compact variant="dark" />
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex flex-col"
-              >
-                <span className="font-bold text-sidebar-foreground">{restaurantName || "ZAPPY"}</span>
-                <span className="text-xs text-sidebar-foreground/60">Admin Dashboard</span>
-              </motion.div>
-            )}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ZappyLogo size={48} compact variant="dark" />
+              {!collapsed && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex flex-col"
+                >
+                  <span className="font-bold text-sidebar-foreground">{restaurantName || "ZAPPY"}</span>
+                  <span className="text-xs text-sidebar-foreground/60">Admin Dashboard</span>
+                </motion.div>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                const { toggleSidebar } = useSidebarContext;
+              }}
+              className="h-8 w-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
+            >
+              {collapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+            </Button>
           </div>
         </SidebarHeader>
 
