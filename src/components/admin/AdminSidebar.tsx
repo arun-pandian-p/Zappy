@@ -21,7 +21,6 @@ import {
   Eye,
   FileSpreadsheet,
   Ticket,
-  Globe,
   QrCode,
   Lock,
   Package,
