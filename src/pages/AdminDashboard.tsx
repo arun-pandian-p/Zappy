@@ -959,18 +959,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Market Research Tab */}
-              {activeTab === "research" && (
-                <motion.div
-                  key="research"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <MarketResearch />
-                </motion.div>
-              )}
 
               {/* Settings Tab */}
               {activeTab === "settings" && (

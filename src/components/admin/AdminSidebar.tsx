@@ -62,7 +62,7 @@ const allNavItems: NavItem[] = [
   { title: "Users", icon: Users, value: "users" },
   { title: "Inventory", icon: Package, value: "inventory" },
   { title: "Exports", icon: FileSpreadsheet, value: "exports" },
-  { title: "Research", icon: Globe, value: "research" },
+  
   { title: "Preview Site", icon: Eye, value: "preview" },
   { title: "Settings", icon: Settings, value: "settings" },
 ];
