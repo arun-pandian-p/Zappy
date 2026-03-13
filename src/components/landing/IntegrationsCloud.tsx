@@ -1,20 +1,21 @@
 import { motion } from 'framer-motion';
 import { Smartphone, Wifi, Printer, CreditCard, Bell, Globe, Shield, Zap } from 'lucide-react';
+import techStackImg from '@/assets/tech-stack-visual.png';
 
 const techs = [
-  { name: 'Mobile First', icon: Smartphone },
-  { name: 'Real-time Sync', icon: Wifi },
-  { name: 'Thermal Print', icon: Printer },
-  { name: 'Payments', icon: CreditCard },
-  { name: 'Notifications', icon: Bell },
-  { name: 'Multi-Tenant', icon: Globe },
-  { name: 'Secure Auth', icon: Shield },
-  { name: 'Fast & Light', icon: Zap },
+  { name: 'Mobile First', icon: Smartphone, x: '-60%', y: '-40%' },
+  { name: 'Real-time Sync', icon: Wifi, x: '-85%', y: '10%' },
+  { name: 'Thermal Print', icon: Printer, x: '-70%', y: '60%' },
+  { name: 'Payments', icon: CreditCard, x: '60%', y: '-40%' },
+  { name: 'Notifications', icon: Bell, x: '85%', y: '10%' },
+  { name: 'Multi-Tenant', icon: Globe, x: '70%', y: '60%' },
+  { name: 'Secure Auth', icon: Shield, x: '-30%', y: '80%' },
+  { name: 'Fast & Light', icon: Zap, x: '30%', y: '80%' },
 ];
 
 const IntegrationsCloud = () => {
   return (
-    <section className="py-24 bg-muted/30">
+    <section className="py-24 bg-foreground overflow-hidden">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -22,36 +23,80 @@ const IntegrationsCloud = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary-foreground">
             Built with{' '}
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Modern Tech
             </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-primary-foreground/50 max-w-2xl mx-auto">
             Enterprise-grade technology stack for reliability and speed.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+        {/* Central visual with floating badges */}
+        <div className="relative max-w-4xl mx-auto flex items-center justify-center min-h-[400px] md:min-h-[500px]">
+          {/* Glow orbs */}
+          <div className="absolute w-[300px] h-[300px] rounded-full bg-primary/20 blur-[120px] z-0" />
+          <div className="absolute w-[200px] h-[200px] rounded-full bg-accent/15 blur-[80px] translate-x-20 translate-y-10 z-0" />
+
+          {/* Central image */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, type: 'spring' }}
+            className="relative z-10 w-full max-w-2xl"
+          >
+            <img
+              src={techStackImg}
+              alt="Technology ecosystem"
+              className="w-full h-auto rounded-2xl"
+            />
+          </motion.div>
+
+          {/* Floating tech badges */}
           {techs.map((tech, i) => (
             <motion.div
               key={tech.name}
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.08, type: 'spring', stiffness: 150 }}
-              whileHover={{ scale: 1.1, y: -5 }}
-              className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-card border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer group"
+              transition={{ delay: 0.3 + i * 0.1, type: 'spring', stiffness: 200 }}
+              animate={{ y: [0, -8, 0] }}
+              // @ts-ignore
+              style={{ position: 'absolute', left: '50%', top: '50%', x: tech.x, y: tech.y }}
+              className="z-20 hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-card/90 backdrop-blur-md border border-border/50 shadow-lg shadow-primary/5 cursor-pointer group"
+              whileHover={{ scale: 1.15 }}
             >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <tech.icon className="w-6 h-6 text-primary" />
-              </div>
-              <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                {tech.name}
-              </span>
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: i * 0.4 }}
+              >
+                <tech.icon className="w-4 h-4 text-primary" />
+              </motion.div>
+              <span className="text-xs font-medium text-foreground whitespace-nowrap">{tech.name}</span>
             </motion.div>
           ))}
+        </div>
+
+        {/* Mobile: horizontal scroll badges */}
+        <div className="md:hidden mt-8 overflow-hidden">
+          <motion.div
+            className="flex gap-3 w-max"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ x: { duration: 15, repeat: Infinity, ease: 'linear' } }}
+          >
+            {[...techs, ...techs].map((tech, i) => (
+              <div
+                key={`${tech.name}-${i}`}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/90 border border-border/50 shrink-0"
+              >
+                <tech.icon className="w-4 h-4 text-primary" />
+                <span className="text-xs font-medium text-foreground whitespace-nowrap">{tech.name}</span>
+              </div>
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>
