@@ -11,7 +11,6 @@ import { useTables } from '@/hooks/useTables';
 import { useOrders } from '@/hooks/useOrders';
 import { usePendingWaiterCalls, useAcknowledgeWaiterCall, useResolveWaiterCall } from '@/hooks/useWaiterCalls';
 import { useAuth } from '@/hooks/useAuth';
-import { useAuth } from '@/hooks/useAuth';
 import { LogOut } from 'lucide-react';
 
 const WaiterDashboard = () => {
