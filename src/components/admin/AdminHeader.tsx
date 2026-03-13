@@ -16,29 +16,24 @@ interface BrandingConfig {
   glow_color_sync?: boolean;
 }
 
-interface AdminAvatarConfig {
-  type?: "upload" | "emoji" | "mascot";
-  value?: string;
-}
-
 interface AdminHeaderProps {
   restaurantName?: string;
   primaryColor?: string;
   branding?: BrandingConfig;
-  adminAvatar?: AdminAvatarConfig;
-  adminDisplayName?: string;
 }
 
 export function AdminHeader({
   restaurantName = "Restaurant Name",
   primaryColor,
   branding,
-  adminAvatar,
-  adminDisplayName,
 }: AdminHeaderProps) {
   const { user } = useAuth();
   const animEnabled = branding?.animation_enabled ?? false;
   const emailPrefix = user?.email?.split('@')[0] || "";
+
+  // Sync avatar & name with sidebar (both use auth user_metadata)
+  const displayName = user?.user_metadata?.full_name || emailPrefix || "Admin";
+  const avatarUrl = user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`;
 
   return (
     <header className="sticky top-0 z-40 bg-card border-b">
@@ -87,13 +82,9 @@ export function AdminHeader({
             </Badge>
           )}
           <Avatar className="w-9 h-9 ml-2">
-            {adminAvatar?.type === "emoji" && adminAvatar.value ? (
-              <AvatarFallback className="text-lg bg-primary/10">{adminAvatar.value}</AvatarFallback>
-            ) : (
-              <AvatarImage src={adminAvatar?.type === "upload" && adminAvatar.value ? adminAvatar.value : "https://api.dicebear.com/7.x/avataaars/svg?seed=admin"} />
-            )}
+            <AvatarImage src={avatarUrl} />
             <AvatarFallback className="bg-primary/20 text-primary text-sm">
-              {adminDisplayName ? adminDisplayName.charAt(0).toUpperCase() : "AD"}
+              {displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </div>
