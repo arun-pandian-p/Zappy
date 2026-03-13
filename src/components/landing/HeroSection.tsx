@@ -57,7 +57,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
             className="flex justify-center mb-8"
           >
-            <ZappyLogo size={120} isDark compact />
+            <ZappyLogo size={120} variant="dark" compact />
           </motion.div>
 
           {/* Headline */}
