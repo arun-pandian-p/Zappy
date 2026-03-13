@@ -71,7 +71,14 @@ const Login = () => {
         className="hidden lg:flex flex-1 flex-col justify-center items-center relative z-10 px-12">
         
         <div className="text-center space-y-3 max-w-sm">
-          <ZappyLogo size={140} showTagline animated textColor="#ffffff" variant="dark" />
+          <motion.img
+            src="/lovable-uploads/zappy-logo-white.png"
+            alt="ZAPPY - Scan, Order, Eat, Repeat"
+            className="h-[140px] w-auto object-contain mx-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          />
           <div className="h-px w-16 bg-slate-600 mx-auto" />
           <p className="text-slate-300 text-base leading-relaxed">
             One login for every role — Super Admin, Restaurant Admin, Kitchen, Waiter & Billing staff.
