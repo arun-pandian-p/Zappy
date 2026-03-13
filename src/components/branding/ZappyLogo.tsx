@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { forwardRef } from "react";
 
 const zappyLogo = "/lovable-uploads/01a16090-f571-48b6-b6a5-c69fbe372418.jpg";
 
@@ -13,14 +14,14 @@ interface ZappyLogoProps {
   animated?: boolean;
 }
 
-export function ZappyLogo({
+export const ZappyLogo = forwardRef<HTMLDivElement, ZappyLogoProps>(({
   className,
   size = 48,
   compact = false,
   showTagline = false,
   textColor,
   animated = false
-}: ZappyLogoProps) {
+}, ref) => {
   const height = compact ? size * 0.8 : size;
 
   const Wrapper = animated ? motion.div : "div";
@@ -30,6 +31,7 @@ export function ZappyLogo({
 
   return (
     <Wrapper
+      ref={ref}
       {...wrapperProps as any}
       className={cn("inline-flex flex-col items-center gap-2", className)}>
       
@@ -57,5 +59,6 @@ export function ZappyLogo({
         </div>
       }
     </Wrapper>);
+});
 
-}
+ZappyLogo.displayName = "ZappyLogo";
