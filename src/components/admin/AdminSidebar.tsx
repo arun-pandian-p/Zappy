@@ -210,9 +210,7 @@ export function AdminSidebar({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {
-                const { toggleSidebar } = useSidebarContext;
-              }}
+              onClick={toggleSidebar}
               className="h-8 w-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
             >
               {collapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
