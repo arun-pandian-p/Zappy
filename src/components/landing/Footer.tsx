@@ -53,7 +53,7 @@ const Footer = ({ cms }: FooterProps) => {
             <h3 className="font-semibold mb-4 text-[hsl(210,40%,98%)]">Stay Updated</h3>
             <p className="text-sm text-[hsl(215,20%,65%)] mb-4">Get the latest updates and news directly in your inbox.</p>
             <div className="flex gap-2">
-              <Input type="email" placeholder="Enter your email" className="flex-1" />
+              <Input type="email" placeholder="Enter your email" className="flex-1 bg-[hsl(217,32%,17%)] border-[hsl(217,32%,25%)] text-[hsl(210,40%,98%)] placeholder:text-[hsl(215,20%,50%)]" />
               <Button>Subscribe</Button>
             </div>
             <div className="mt-6 space-y-2 text-sm text-[hsl(215,20%,65%)]">
