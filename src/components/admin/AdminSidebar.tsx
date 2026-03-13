@@ -193,9 +193,9 @@ export function AdminSidebar({
     <>
       <Sidebar className="border-r-0 bg-sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
+          <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between")}>
             <div className="flex items-center gap-3">
-              <ZappyLogo size={48} compact variant="dark" />
+              <ZappyLogo size={collapsed ? 36 : 48} compact variant="dark" />
               {!collapsed && (
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
@@ -207,14 +207,16 @@ export function AdminSidebar({
                 </motion.div>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleSidebar}
-              className="h-8 w-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
-            >
-              {collapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
-            </Button>
+            {!collapsed && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                className="h-8 w-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
+              >
+                <PanelLeftClose className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </SidebarHeader>
 
