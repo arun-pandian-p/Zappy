@@ -48,7 +48,7 @@ const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
             </span>
             ?
           </h2>
-          <p className="text-lg text-primary-foreground/70 max-w-2xl mx-auto mb-10">{subtitle}</p>
+          <p className="text-lg text-primary-foreground/70 max-w-2xl mx-auto mb-10 whitespace-pre-wrap">{subtitle}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
               size="lg"
