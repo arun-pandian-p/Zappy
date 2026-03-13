@@ -47,13 +47,17 @@ const HowItWorks = ({ cms }: HowItWorksProps) => {
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="bg-gradient-to-br from-blue-100/60 via-sky-50/40 to-blue-50/60 border border-border/40 rounded-2xl shadow-sm p-6 flex items-center justify-center min-h-[280px]">
-            <div className="text-center">
-              <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="w-24 h-24 rounded-2xl bg-white shadow-lg flex items-center justify-center mx-auto mb-4">
-                <QrCode className="w-12 h-12 text-primary" />
-              </motion.div>
-              <p className="text-sm font-medium text-muted-foreground">Scan & Order Instantly</p>
-            </div>
+          <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="border border-border/40 rounded-2xl shadow-sm overflow-hidden min-h-[280px]">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+              poster="/og-image.png"
+            >
+              <source src="/videos/brand-identity.mp4" type="video/mp4" />
+            </video>
           </motion.div>
         </div>
       </div>
