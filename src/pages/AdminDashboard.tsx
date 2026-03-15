@@ -504,7 +504,7 @@ const AdminDashboard = () => {
     { value: "users", label: "Users", icon: Users },
     { value: "inventory", label: "Inventory", icon: Package },
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
-    { value: "offers", label: "Offers", icon: Gift },
+    { value: "promotions", label: "Promotions", icon: Megaphone },
     { value: "qr-manager", label: "QR Manager", icon: QrCode },
     
     { value: "preview", label: "Preview Site", icon: Eye },
