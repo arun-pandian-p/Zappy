@@ -14,7 +14,7 @@ function cacheBustUrl(url: string | null | undefined): string | undefined {
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List } from 'lucide-react';
+import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List, MessageSquare } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCartStore } from '@/stores/cartStore';
 import { Button } from '@/components/ui/button';
@@ -117,6 +117,7 @@ const CustomerMenu = () => {
   const [lastAddedItem, setLastAddedItem] = useState('');
   const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('grid');
   const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
+  const [reviewImmediate, setReviewImmediate] = useState(false);
   const prevOrderStatusesRef = useRef<Record<string, string>>({});
 
   // Fetch restaurant data
@@ -317,12 +318,18 @@ const CustomerMenu = () => {
   // ===== Trigger review prompt when an order reaches "served" =====
   useEffect(() => {
     const prev = prevOrderStatusesRef.current;
+    const isFirstLoad = Object.keys(prev).length === 0;
+
     for (const order of customerOrders) {
-      const prevStatus = prev[order.id];
-      if (prevStatus && prevStatus !== 'served' && order.status === 'served') {
-        // Order just transitioned to served
-        setReviewOrderId(order.id);
-        break;
+      if (order.status === 'served') {
+        const prevStatus = prev[order.id];
+        const alreadyReviewed = localStorage.getItem(`zappy_review_shown_${order.id}`);
+        
+        // Trigger on real-time transition OR on first load for unreviewed served orders
+        if (!alreadyReviewed && (isFirstLoad || (prevStatus && prevStatus !== 'served'))) {
+          setReviewOrderId(order.id);
+          break;
+        }
       }
     }
     // Update previous statuses
@@ -873,6 +880,17 @@ const CustomerMenu = () => {
                   {currencySymbol}{Number(order.total_amount || 0).toFixed(2)}
                 </span>
               </div>
+              {order.status === 'served' && (
+                <Button
+                  size="sm"
+                  className="w-full mt-3 gap-2"
+                  variant="outline"
+                  onClick={() => { setReviewImmediate(true); setReviewOrderId(order.id); }}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Rate Your Experience ⭐
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))
@@ -994,7 +1012,7 @@ const CustomerMenu = () => {
           orderId={reviewOrderId}
           tableId={resolvedTableId}
           googleReviewUrl={restaurant?.google_review_url}
-          delayMs={5000}
+          delayMs={reviewImmediate ? 0 : 5000}
         />
       )}
     </div>
