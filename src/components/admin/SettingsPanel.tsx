@@ -201,6 +201,10 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         },
         admin_avatar: (extraSettings.admin_avatar as any) || { type: "upload", value: "" },
         admin_display_name: (extraSettings.admin_display_name as string) || "",
+        theme_preset: (restaurant.theme_config as any)?.preset || "classic",
+        primary_color: restaurant.primary_color || "#F97316",
+        secondary_color: restaurant.secondary_color || "#FDE68A",
+        font_family: restaurant.font_family || "Inter",
       });
     }
   }, [restaurant]);
