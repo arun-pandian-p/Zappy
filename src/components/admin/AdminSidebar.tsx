@@ -82,6 +82,7 @@ interface AdminSidebarProps {
   restaurantLogo?: string | null;
   subscriptionTier?: SubscriptionTier | null;
   adsEnabled?: boolean | null;
+  featureToggles?: FeatureToggles | null;
 }
 
 export function AdminSidebar({
