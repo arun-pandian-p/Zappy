@@ -160,10 +160,6 @@ const AdminOnboarding = () => {
 
   const handleUpload = async (field: keyof typeof branding, file: File) => {
     if (!restaurantId) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: 'File too large', description: 'Max 2MB allowed.', variant: 'destructive' });
-      return;
-    }
 
     setUploading(field);
     const ext = file.name.split('.').pop();
@@ -491,7 +487,7 @@ const AdminOnboarding = () => {
             )}
 
             {step === 1 && (
-              <GlassCard icon={Upload} title="Branding Assets" desc="Upload your restaurant's visual identity. Max 2MB per file.">
+              <GlassCard icon={Upload} title="Branding Assets" desc="Upload your restaurant's visual identity.">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <BrandingUploadCard label="Restaurant Logo" field="logo_url" hint="PNG or SVG, square" aspectHint="512×512 recommended" />
                   <BrandingUploadCard label="Favicon" field="favicon_url" hint="Small icon for browser tab" aspectHint="64×64" />
