@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 /** Append cache-busting param to storage URLs */
 function cacheBustUrl(url: string | null | undefined): string | undefined {
@@ -46,6 +46,7 @@ import { HeaderBannerAd } from '@/components/menu/HeaderBannerAd';
 import { CategoryDividerAd } from '@/components/menu/CategoryDividerAd';
 import { FooterPromoAd } from '@/components/menu/FooterPromoAd';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
+import { SOUNDS } from '@/hooks/useSound';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
@@ -57,20 +58,27 @@ const CustomerMenu = () => {
   const tableId = searchParams.get('table') || '';
   const isDemoMode = searchParams.get('demo') === 'true';
 
-  // Slug-based tenant resolution
+  // Slug-based tenant resolution — also fetch basic branding for splash
   const [resolvedRestaurantId, setResolvedRestaurantId] = useState(restaurantIdParam);
+  const [splashBranding, setSplashBranding] = useState<{
+    name: string; logo_url: string | null; primary_color: string | null;
+  } | null>(null);
   
   useEffect(() => {
-    if (slug && !restaurantIdParam) {
-      supabase
-        .from('restaurants_public')
-        .select('id')
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .single()
-        .then(({ data }) => {
-          if (data) setResolvedRestaurantId(data.id);
-        });
+    const idToUse = restaurantIdParam || undefined;
+    const query = slug && !restaurantIdParam
+      ? supabase.from('restaurants_public').select('id, name, logo_url, primary_color').eq('slug', slug).eq('is_active', true).single()
+      : idToUse
+      ? supabase.from('restaurants_public').select('id, name, logo_url, primary_color').eq('id', idToUse).single()
+      : null;
+
+    if (query) {
+      query.then(({ data }) => {
+        if (data) {
+          if (!restaurantIdParam) setResolvedRestaurantId(data.id);
+          setSplashBranding({ name: data.name, logo_url: data.logo_url, primary_color: data.primary_color });
+        }
+      });
     }
   }, [slug, restaurantIdParam]);
 
@@ -261,6 +269,46 @@ const CustomerMenu = () => {
     );
   }, [customerOrders]);
 
+  // ===== Order status sound notifications =====
+  const prevOrderStatusRef = useRef<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const currentStatus = activeOrder?.status || null;
+    const prevStatus = prevOrderStatusRef.current;
+
+    if (prevStatus && currentStatus && prevStatus !== currentStatus) {
+      // Play sound on meaningful status transitions
+      const soundStatuses = ['accepted', 'preparing', 'ready', 'served', 'completed'];
+      if (soundStatuses.includes(currentStatus)) {
+        try {
+          if (audioRef.current) {
+            audioRef.current.pause();
+          }
+          const sound = currentStatus === 'ready' ? SOUNDS.ORDER_READY : SOUNDS.NEW_ORDER;
+          audioRef.current = new Audio(sound);
+          audioRef.current.volume = 0.6;
+          audioRef.current.play().catch(() => {});
+        } catch {}
+
+        // Also show a toast notification
+        const statusLabels: Record<string, string> = {
+          accepted: '✅ Order Accepted',
+          preparing: '👨‍🍳 Preparing Your Food',
+          ready: '🔔 Your Order is Ready!',
+          served: '🍽️ Order Served',
+          completed: '✨ Order Complete',
+        };
+        toast({
+          title: statusLabels[currentStatus] || 'Order Updated',
+          description: `Your order status changed to ${currentStatus}.`,
+        });
+      }
+    }
+
+    prevOrderStatusRef.current = currentStatus;
+  }, [activeOrder?.status, toast]);
+
   // Calculate estimated prep time
   const estimatedPrepTime = useMemo(() => {
     if (!activeOrder) return 15;
@@ -273,7 +321,7 @@ const CustomerMenu = () => {
   const taxRate = Number(restaurant?.tax_rate) || 5;
   const serviceChargeRate = Number(restaurant?.service_charge_rate) || 0;
   const brandingConfig = ((restaurant?.settings as any)?.branding) || {};
-  const primaryColor = restaurant?.primary_color || undefined;
+  const primaryColor = restaurant?.primary_color || splashBranding?.primary_color || undefined;
 
   // Menu display settings from restaurant
   const menuDisplaySettings = useMemo(() => {
@@ -820,16 +868,21 @@ const CustomerMenu = () => {
     </div>
   );
 
+  // Use splash branding (fast) or restaurant data (complete) for the splash screen
+  const splashName = restaurant?.name || splashBranding?.name || 'Restaurant';
+  const splashLogo = cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url);
+  const splashColor = primaryColor || splashBranding?.primary_color || undefined;
+
   return (
     <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     {/* Splash Screen Overlay */}
     <QRSplashScreen
-      restaurantName={restaurant?.name || 'Restaurant'}
-      logoUrl={cacheBustUrl(restaurant?.logo_url)}
+      restaurantName={splashName}
+      logoUrl={splashLogo}
       animation={brandingConfig.letter_animation}
       speed={brandingConfig.animation_speed}
       mascot={brandingConfig.mascot}
-      primaryColor={primaryColor}
+      primaryColor={splashColor}
       isLoading={!!isDataLoading}
     />
     <div className="min-h-screen bg-background pb-24">
