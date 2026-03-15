@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Bell, ShoppingCart } from "lucide-react";
-import { motion, useScroll, AnimatePresence } from "framer-motion";
+import { motion, useScroll } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AnimatedHotelName, type LetterAnimation, type AnimationSpeed } from "@/components/branding/AnimatedHotelName";
@@ -52,24 +52,21 @@ export function CustomerTopBar({
   return (
     <div className="sticky top-0 z-50">
       {/* Banner Image — collapses on scroll */}
-      <AnimatePresence>
-        {bannerImageUrl && !isScrolled && (
-          <motion.div
-            initial={{ height: 120, opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="relative w-full overflow-hidden"
-          >
-            <img
-              src={bannerImageUrl}
-              alt={`${restaurantName} banner`}
-              className="w-full h-[120px] object-cover"
-            />
-            {/* Gradient overlay for readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Banner Image — smoothly collapses on scroll */}
+      {bannerImageUrl && (
+        <motion.div
+          animate={{ height: isScrolled ? 0 : 120, opacity: isScrolled ? 0 : 1 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="relative w-full overflow-hidden"
+        >
+          <img
+            src={bannerImageUrl}
+            alt={`${restaurantName} banner`}
+            className="w-full h-[120px] object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+        </motion.div>
+      )}
 
       {/* Top Bar */}
       <motion.header
