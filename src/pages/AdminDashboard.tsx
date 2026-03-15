@@ -516,6 +516,7 @@ const AdminDashboard = () => {
   const customerPreviewUrl = `/order?r=${restaurantId}`;
 
   return (
+    <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full bg-muted/30">
         <AdminSidebar activeTab={activeTab} onTabChange={handleTabChange} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} restaurantName={(restaurant as any)?.name} restaurantLogo={(restaurant as any)?.logo_url} subscriptionTier={restaurant?.subscription_tier} adsEnabled={restaurant?.ads_enabled} featureToggles={(restaurant as any)?.feature_toggles} />
