@@ -301,7 +301,8 @@ const AdminDashboard = () => {
   const { data: restaurant } = useRestaurant(restaurantId);
   const { canAccess, isLocked } = useFeatureGate(
     restaurant?.subscription_tier,
-    restaurant?.ads_enabled
+    restaurant?.ads_enabled,
+    (restaurant as any)?.feature_toggles
   );
 
   // Feature lock modal state
