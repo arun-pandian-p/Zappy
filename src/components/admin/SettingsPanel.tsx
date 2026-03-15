@@ -357,7 +357,133 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         </Card>
       </motion.div>
 
-      {/* Billing & Tax */}
+      {/* Theme & Appearance */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="w-5 h-5" />
+              Theme & Appearance
+            </CardTitle>
+            <CardDescription>Colors and fonts applied across admin, kitchen, waiter, billing, and customer menu.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {/* Preset grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {THEME_PRESETS.map((preset) => {
+                const isSelected = settings.theme_preset === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => {
+                      setSettings(prev => ({
+                        ...prev,
+                        theme_preset: preset.id,
+                        ...(preset.id !== 'custom' ? {
+                          primary_color: preset.primary,
+                          secondary_color: preset.secondary,
+                          font_family: preset.font,
+                        } : {}),
+                      }));
+                    }}
+                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                      isSelected ? 'border-primary bg-primary/5 shadow-md' : 'border-border hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    {isSelected && (
+                      <div className="absolute top-2 right-2">
+                        <CheckCircle2 className="w-5 h-5 text-primary" />
+                      </div>
+                    )}
+                    <span className="text-2xl">{preset.emoji}</span>
+                    <div className="flex gap-1.5 mt-2">
+                      <div className="w-6 h-6 rounded-full border" style={{ backgroundColor: preset.primary }} />
+                      <div className="w-6 h-6 rounded-full border" style={{ backgroundColor: preset.secondary }} />
+                    </div>
+                    <p className="font-semibold text-sm mt-2">{preset.name}</p>
+                    <p className="text-xs text-muted-foreground">{preset.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom color pickers (always visible for fine-tuning) */}
+            {settings.theme_preset === 'custom' && (
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <Label>Primary Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={settings.primary_color}
+                      onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
+                      className="h-10 w-16 p-1"
+                    />
+                    <Input
+                      value={settings.primary_color}
+                      onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Secondary Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={settings.secondary_color}
+                      onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })}
+                      className="h-10 w-16 p-1"
+                    />
+                    <Input
+                      value={settings.secondary_color}
+                      onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label>Font Family</Label>
+                  <Select
+                    value={settings.font_family}
+                    onValueChange={(v) => setSettings({ ...settings, font_family: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Inter">Inter</SelectItem>
+                      <SelectItem value="Playfair Display">Playfair Display</SelectItem>
+                      <SelectItem value="Poppins">Poppins</SelectItem>
+                      <SelectItem value="Roboto">Roboto</SelectItem>
+                      <SelectItem value="Montserrat">Montserrat</SelectItem>
+                      <SelectItem value="Lora">Lora</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Live preview swatch */}
+            <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+              <div className="w-10 h-10 rounded-lg" style={{ backgroundColor: settings.primary_color }} />
+              <div className="w-10 h-10 rounded-lg" style={{ backgroundColor: settings.secondary_color }} />
+              <div className="flex-1">
+                <p className="text-sm font-medium" style={{ fontFamily: settings.font_family }}>
+                  {settings.font_family} · {settings.theme_preset}
+                </p>
+                <p className="text-xs text-muted-foreground">Preview of selected theme</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
