@@ -102,8 +102,12 @@ export type Database = {
       }
       ads: {
         Row: {
+          advertiser_name: string | null
+          budget: number | null
+          campaign_type: string | null
           clicks: number | null
           created_at: string | null
+          cta_text: string | null
           description: string | null
           ends_at: string | null
           id: string
@@ -111,15 +115,23 @@ export type Database = {
           impressions: number | null
           is_active: boolean | null
           link_url: string | null
+          placement_type: string | null
+          priority: number | null
+          revenue_model: string | null
           starts_at: string | null
           target_categories: string[] | null
           target_locations: string[] | null
+          target_restaurants: string[] | null
           title: string
           updated_at: string | null
         }
         Insert: {
+          advertiser_name?: string | null
+          budget?: number | null
+          campaign_type?: string | null
           clicks?: number | null
           created_at?: string | null
+          cta_text?: string | null
           description?: string | null
           ends_at?: string | null
           id?: string
@@ -127,15 +139,23 @@ export type Database = {
           impressions?: number | null
           is_active?: boolean | null
           link_url?: string | null
+          placement_type?: string | null
+          priority?: number | null
+          revenue_model?: string | null
           starts_at?: string | null
           target_categories?: string[] | null
           target_locations?: string[] | null
+          target_restaurants?: string[] | null
           title: string
           updated_at?: string | null
         }
         Update: {
+          advertiser_name?: string | null
+          budget?: number | null
+          campaign_type?: string | null
           clicks?: number | null
           created_at?: string | null
+          cta_text?: string | null
           description?: string | null
           ends_at?: string | null
           id?: string
@@ -143,9 +163,13 @@ export type Database = {
           impressions?: number | null
           is_active?: boolean | null
           link_url?: string | null
+          placement_type?: string | null
+          priority?: number | null
+          revenue_model?: string | null
           starts_at?: string | null
           target_categories?: string[] | null
           target_locations?: string[] | null
+          target_restaurants?: string[] | null
           title?: string
           updated_at?: string | null
         }
