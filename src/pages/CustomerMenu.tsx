@@ -896,6 +896,11 @@ const CustomerMenu = () => {
         />
       )}
 
+      {/* Footer Promo Ad */}
+      {restaurant?.ads_enabled !== false && footerAd && currentView === 'menu' && (
+        <FooterPromoAd ad={footerAd} />
+      )}
+
       {/* Bottom Navigation */}
       <BottomNav
         currentView={currentView}
