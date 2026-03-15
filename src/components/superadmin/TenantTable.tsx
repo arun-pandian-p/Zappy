@@ -36,6 +36,7 @@ interface TenantTableProps {
   restaurants: Restaurant[];
   onToggleActive: (id: string, currentValue: boolean) => void;
   onChangeTier: (id: string, tier: SubscriptionTier) => void;
+  onToggleAds?: (id: string, currentValue: boolean) => void;
   onViewDetails?: (id: string) => void;
   onDelete?: (id: string) => void;
   isLoading?: boolean;
