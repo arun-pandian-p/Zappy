@@ -885,7 +885,7 @@ const CustomerMenu = () => {
                   size="sm"
                   className="w-full mt-3 gap-2"
                   variant="outline"
-                  onClick={() => setReviewOrderId(order.id)}
+                  onClick={() => { setReviewImmediate(true); setReviewOrderId(order.id); }}
                 >
                   <MessageSquare className="w-4 h-4" />
                   Rate Your Experience ⭐
