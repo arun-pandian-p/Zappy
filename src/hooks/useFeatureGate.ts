@@ -60,7 +60,7 @@ export function useFeatureGate(
 
     if (TIER_RANK[currentTier] < TIER_RANK[requiredTier]) return false;
 
-    if ((feature === "ads" || feature === "offers") && !adsToggle) return false;
+    if ((feature === "ads" || feature === "offers" || feature === "promotions") && !adsToggle) return false;
 
     return true;
   };
