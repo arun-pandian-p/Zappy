@@ -120,6 +120,15 @@ const SuperAdminDashboard = () => {
     }
   };
 
+  const handleToggleAds = async (id: string, currentValue: boolean) => {
+    try {
+      await updateRestaurant.mutateAsync({ id, updates: { ads_enabled: !currentValue } });
+      toast({ title: 'Ads Updated', description: `Restaurant is now ${!currentValue ? 'showing ads' : 'ad-free'}.` });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to update ads.', variant: 'destructive' });
+    }
+  };
+
   const handleViewDetails = (id: string) => {
     const restaurant = restaurants.find(r => r.id === id);
     if (restaurant) setEditingRestaurant(restaurant);
