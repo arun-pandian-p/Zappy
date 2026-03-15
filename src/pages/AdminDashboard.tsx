@@ -504,7 +504,7 @@ const AdminDashboard = () => {
     { value: "users", label: "Users", icon: Users },
     { value: "inventory", label: "Inventory", icon: Package },
     { value: "exports", label: "Exports", icon: FileSpreadsheet },
-    { value: "offers", label: "Offers", icon: Gift },
+    { value: "promotions", label: "Promotions", icon: Megaphone },
     { value: "qr-manager", label: "QR Manager", icon: QrCode },
     
     { value: "preview", label: "Preview Site", icon: Eye },
@@ -905,9 +905,9 @@ const AdminDashboard = () => {
               )}
 
               {/* Promotions Tab (Ads + Offers combined) */}
-              {activeTab === "offers" && (
+              {activeTab === "promotions" && (
                 <motion.div
-                  key="offers"
+                  key="promotions"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
