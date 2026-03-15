@@ -519,6 +519,7 @@ const AdminOnboarding = () => {
                   cropShape={cropState?.field === 'favicon_url' ? 'rect' : 'round'}
                   aspect={1}
                   title={cropState?.field === 'favicon_url' ? 'Crop Favicon' : 'Crop Logo'}
+                  uploadPath={restaurantId ? { restaurantId, folder: 'tenants' } : undefined}
                 />
               </GlassCard>
             )}

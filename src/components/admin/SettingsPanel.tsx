@@ -526,6 +526,9 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                 restaurantId={restaurantId}
                 folder="branding"
                 maxSizeMB={10}
+                enableCrop
+                cropShape="round"
+                cropAspect={1}
               />
             </div>
 
@@ -541,6 +544,9 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                 restaurantId={restaurantId}
                 folder="branding"
                 maxSizeMB={10}
+                enableCrop
+                cropShape="rect"
+                cropAspect={3}
               />
             </div>
 
@@ -556,6 +562,9 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                 restaurantId={restaurantId}
                 folder="branding"
                 maxSizeMB={10}
+                enableCrop
+                cropShape="rect"
+                cropAspect={1}
               />
             </div>
 
