@@ -399,7 +399,7 @@ const CustomerMenu = () => {
     }
 
     try {
-      await createOrder.mutateAsync({
+      const orderData = await createOrder.mutateAsync({
         order: {
           restaurant_id: restaurantId,
           table_id: resolvedTableId,
@@ -422,6 +422,7 @@ const CustomerMenu = () => {
         description: 'Your order has been sent to the kitchen.',
       });
 
+      setLastPlacedOrderId(orderData.id);
       clearCart();
       setCurrentView('orders');
     } catch (err) {
