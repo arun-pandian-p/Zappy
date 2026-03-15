@@ -426,20 +426,7 @@ const CustomerMenu = () => {
     });
   };
 
-  // Loading state
-  if (restaurantLoading || menuLoading || (dynamicTableId && tableLoading)) {
-    return (
-      <QRSplashScreen
-        restaurantName={restaurant?.name || 'Restaurant'}
-        logoUrl={cacheBustUrl(restaurant?.logo_url)}
-        animation={brandingConfig.letter_animation}
-        speed={brandingConfig.animation_speed}
-        mascot={brandingConfig.mascot}
-        primaryColor={primaryColor}
-        isLoading={true}
-      />
-    );
-  }
+  const isDataLoading = restaurantLoading || menuLoading || (dynamicTableId && tableLoading);
 
   // Error state
   if (!restaurantId) {
