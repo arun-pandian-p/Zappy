@@ -952,8 +952,8 @@ const CustomerMenu = () => {
       )}
 
       {/* Footer Promo Ad */}
-      {restaurant?.ads_enabled !== false && footerAd && currentView === 'menu' && (
-        <FooterPromoAd ad={footerAd} />
+      {restaurant?.ads_enabled !== false && footerAd && currentView === 'menu' && !footerAdDismissed && (
+        <FooterPromoAd ad={footerAd} onDismiss={() => setFooterAdDismissed(true)} />
       )}
 
       {/* Bottom Navigation */}

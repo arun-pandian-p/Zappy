@@ -44,10 +44,20 @@ export function CategoryDividerAd({ ad, onDismiss }: CategoryDividerAdProps) {
           <p className="font-semibold text-sm">{ad.title}</p>
           {ad.description && <p className="text-xs text-muted-foreground line-clamp-1">{ad.description}</p>}
         </div>
-        {(ad as any).cta_text && (
+        {ad.cta_text && (
           <span className="px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full whitespace-nowrap">
-            {(ad as any).cta_text}
+            {ad.cta_text}
           </span>
+        )}
+        {onDismiss && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 hover:bg-accent/50 rounded-full flex-shrink-0"
+            onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+          >
+            <X className="w-3 h-3" />
+          </Button>
         )}
       </div>
     </motion.div>
