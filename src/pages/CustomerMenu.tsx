@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 /** Append cache-busting param to storage URLs */
 function cacheBustUrl(url: string | null | undefined): string | undefined {
@@ -46,6 +46,7 @@ import { HeaderBannerAd } from '@/components/menu/HeaderBannerAd';
 import { CategoryDividerAd } from '@/components/menu/CategoryDividerAd';
 import { FooterPromoAd } from '@/components/menu/FooterPromoAd';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
+import { SOUNDS } from '@/hooks/useSound';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
