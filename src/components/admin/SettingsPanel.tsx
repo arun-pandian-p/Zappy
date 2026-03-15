@@ -107,6 +107,10 @@ const defaultSettings: RestaurantSettings = {
   branding: defaultBrandingConfig,
   admin_avatar: { type: "upload" as const, value: "" },
   admin_display_name: "",
+  theme_preset: "classic",
+  primary_color: "#F97316",
+  secondary_color: "#FDE68A",
+  font_family: "Inter",
 };
 
 export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
