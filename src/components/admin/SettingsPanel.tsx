@@ -258,6 +258,10 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           primary_color: settings.primary_color,
           secondary_color: settings.secondary_color,
           font_family: settings.font_family,
+          logo_url: settings.logo_url || null,
+          banner_image_url: settings.banner_image_url || null,
+          favicon_url: settings.favicon_url || null,
+          menu_title: settings.menu_title || null,
           theme_config: {
             preset: settings.theme_preset,
             custom_primary: settings.theme_preset === 'custom' ? settings.primary_color : null,
