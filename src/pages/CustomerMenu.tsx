@@ -132,6 +132,15 @@ const CustomerMenu = () => {
   // Fetch active ad
   const { data: activeAd } = useRandomActiveAd();
 
+  // Placement-based ads
+  const { data: headerAds = [] } = useAdsByPlacement('header_banner', restaurantId);
+  const { data: dividerAds = [] } = useAdsByPlacement('category_divider', restaurantId);
+  const { data: footerAds = [] } = useAdsByPlacement('footer_banner', restaurantId);
+  const [headerAdDismissed, setHeaderAdDismissed] = useState(false);
+  const headerAd = headerAds[0] || null;
+  const dividerAd = dividerAds[0] || null;
+  const footerAd = footerAds[0] || null;
+
   // Mutations
   const createOrder = useCreateOrder();
   const createWaiterCall = useCreateWaiterCall();
