@@ -6,7 +6,7 @@ export type FeatureKey =
   | "dashboard" | "menu" | "orders" | "kitchen" | "billing" | "qr-manager"
   | "reviews" | "users" | "preview" | "settings"
   | "coupons" | "ads" | "offers" | "exports" | "research"
-  | "promotions" | "branding" | "multi-outlet";
+  | "promotions" | "branding" | "multi-outlet" | "inventory";
 
 const FEATURE_TIERS: Record<FeatureKey, SubscriptionTier> = {
   dashboard: "free",
@@ -25,6 +25,7 @@ const FEATURE_TIERS: Record<FeatureKey, SubscriptionTier> = {
   exports: "pro",
   research: "pro",
   promotions: "pro",
+  inventory: "pro",
   branding: "enterprise",
   "multi-outlet": "enterprise",
 };
@@ -59,7 +60,7 @@ export function useFeatureGate(
 
     if (TIER_RANK[currentTier] < TIER_RANK[requiredTier]) return false;
 
-    if ((feature === "ads" || feature === "offers") && !adsToggle) return false;
+    if ((feature === "ads" || feature === "offers" || feature === "promotions") && !adsToggle) return false;
 
     return true;
   };
@@ -76,7 +77,7 @@ export function useFeatureGate(
       };
     }
 
-    if ((feature === "ads" || feature === "offers") && !adsToggle) {
+    if ((feature === "ads" || feature === "offers" || feature === "promotions") && !adsToggle) {
       return { type: "ads_toggle" };
     }
 
