@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Upload, X, Loader2, ImageIcon } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Upload, X, Loader2, ImageIcon, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,41 +21,26 @@ export const ImageUpload = ({
 }: ImageUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingFileRef = useRef<File | null>(null);
   const { toast } = useToast();
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  // Sync preview when parent prop changes
+  useEffect(() => {
+    setPreviewUrl(currentImageUrl || null);
+  }, [currentImageUrl]);
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: 'Invalid file type',
-        description: 'Please select an image file.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Validate file size only if maxSizeMB is set
-    if (maxSizeMB && file.size > maxSizeMB * 1024 * 1024) {
-      toast({
-        title: 'File too large',
-        description: `Please select an image under ${maxSizeMB}MB.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
+  const uploadFile = async (file: File) => {
     setIsUploading(true);
+    setUploadError(null);
 
     try {
-      // Create unique file name
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${restaurantId}/${folder}/${Date.now()}.${fileExt}`;
 
-      // Upload to Supabase Storage
+      console.log('[ImageUpload] Uploading to menu-images:', fileName, 'size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+
       const { data, error } = await supabase.storage
         .from('menu-images')
         .upload(fileName, file, {
@@ -63,26 +48,33 @@ export const ImageUpload = ({
           upsert: true,
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[ImageUpload] Storage error:', error);
+        throw error;
+      }
 
-      // Get public URL
       const { data: urlData } = supabase.storage
         .from('menu-images')
         .getPublicUrl(data.path);
 
       const publicUrl = urlData.publicUrl;
+      console.log('[ImageUpload] Upload success:', publicUrl);
       setPreviewUrl(publicUrl);
       onImageUploaded(publicUrl);
+      pendingFileRef.current = null;
 
       toast({
         title: 'Image uploaded',
         description: 'Image has been uploaded successfully.',
       });
     } catch (error: any) {
-      console.error('Upload error:', error);
+      console.error('[ImageUpload] Upload error:', error);
+      const msg = error?.message || error?.statusText || 'Network error. Please try again.';
+      setUploadError(msg);
+      pendingFileRef.current = file;
       toast({
         title: 'Upload failed',
-        description: error.message || 'Failed to upload image. Please try again.',
+        description: msg,
         variant: 'destructive',
       });
     } finally {
@@ -93,8 +85,41 @@ export const ImageUpload = ({
     }
   };
 
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please select an image file (JPG, PNG, WEBP).',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (maxSizeMB && file.size > maxSizeMB * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: `Please select an image under ${maxSizeMB}MB.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    await uploadFile(file);
+  };
+
+  const handleRetry = async () => {
+    if (pendingFileRef.current) {
+      await uploadFile(pendingFileRef.current);
+    }
+  };
+
   const handleRemoveImage = () => {
     setPreviewUrl(null);
+    setUploadError(null);
+    pendingFileRef.current = null;
     onImageUploaded('');
   };
 
@@ -104,7 +129,7 @@ export const ImageUpload = ({
         type="file"
         ref={fileInputRef}
         onChange={handleFileSelect}
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp,image/gif"
         className="hidden"
       />
 
@@ -112,8 +137,9 @@ export const ImageUpload = ({
         <div className="relative w-full h-32 rounded-lg overflow-hidden border bg-muted">
           <img
             src={previewUrl}
-            alt="Preview"
+            alt=""
             className="w-full h-full object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
           />
           <Button
             type="button"
@@ -147,7 +173,20 @@ export const ImageUpload = ({
         </button>
       )}
 
-      {!previewUrl && !isUploading && (
+      {/* Error with retry */}
+      {uploadError && !isUploading && (
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-destructive flex-1">Upload failed: {uploadError}</p>
+          {pendingFileRef.current && (
+            <Button type="button" variant="outline" size="sm" onClick={handleRetry} className="gap-1.5 text-xs">
+              <RefreshCw className="w-3 h-3" />
+              Retry
+            </Button>
+          )}
+        </div>
+      )}
+
+      {!previewUrl && !isUploading && !uploadError && (
         <Button
           type="button"
           variant="outline"
