@@ -987,11 +987,11 @@ const CustomerMenu = () => {
         orderCount={customerOrders.filter(o => o.status !== 'completed').length}
       />
 
-      {/* Post-Order Review Prompt */}
-      {lastPlacedOrderId && restaurantId && (
+      {/* Post-Order Review Prompt — triggers when order is served */}
+      {reviewOrderId && restaurantId && (
         <PostOrderReviewPrompt
           restaurantId={restaurantId}
-          orderId={lastPlacedOrderId}
+          orderId={reviewOrderId}
           tableId={resolvedTableId}
           googleReviewUrl={restaurant?.google_review_url}
           delayMs={5000}
