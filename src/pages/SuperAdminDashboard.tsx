@@ -306,7 +306,7 @@ const SuperAdminDashboard = () => {
         return <PlatformAdsManager />;
 
       case 'promotions':
-        return <PlatformAdsManager />;
+        return <PromotionsOverview />;
 
       case 'settings':
         return (
