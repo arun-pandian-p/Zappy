@@ -20,6 +20,7 @@ interface AdminHeaderProps {
   restaurantName?: string;
   primaryColor?: string;
   branding?: BrandingConfig;
+  logoUrl?: string | null;
 }
 
 export function AdminHeader({
