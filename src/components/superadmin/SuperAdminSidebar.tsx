@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { useSuperAdminProfile } from "@/hooks/useSuperAdminProfile";
 import { ZappyLogo } from "@/components/branding/ZappyLogo";
 import {
   LayoutDashboard,
@@ -13,8 +14,6 @@ import {
   Megaphone,
   ScrollText,
   Trophy,
-  FileText,
-  Palette,
   UserCircle,
 } from "lucide-react";
 import {
@@ -45,8 +44,6 @@ const navItems: NavItem[] = [
   { title: "Subscription Plans", icon: CreditCard, value: "plans" },
   { title: "Platform Ads", icon: Megaphone, value: "ads" },
   { title: "Promotions", icon: Trophy, value: "promotions" },
-  
-  
   { title: "Analytics", icon: BarChart3, value: "analytics" },
   { title: "Settings", icon: Settings, value: "settings" },
   { title: "System Logs", icon: ScrollText, value: "logs" },
@@ -63,11 +60,21 @@ export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarP
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { signOut, user } = useAuth();
+  const { profile } = useSuperAdminProfile();
 
   const handleLogout = async () => {
     await signOut();
     navigate("/super-admin/login");
   };
+
+  // Resolve avatar: stored URL > emoji > fallback
+  const avatarUrl = profile?.avatar_url?.startsWith('emoji:')
+    ? null
+    : profile?.avatar_url || null;
+  const avatarEmoji = profile?.avatar_url?.startsWith('emoji:')
+    ? profile.avatar_url.replace('emoji:', '')
+    : null;
+  const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Super Admin';
 
   return (
     <Sidebar className="border-r-0 bg-sidebar" collapsible="icon">
@@ -113,10 +120,15 @@ export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarP
       </SidebarContent>
 
       <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border">
-        <div className="flex items-center gap-3 mb-3">
+        <div
+          className="flex items-center gap-3 mb-3 cursor-pointer rounded-lg p-1 hover:bg-sidebar-accent/50 transition-colors"
+          onClick={() => onTabChange('profile')}
+        >
           <Avatar className="w-10 h-10 shrink-0">
-            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=superadmin" />
-            <AvatarFallback className="bg-primary/20 text-primary">SA</AvatarFallback>
+            {avatarUrl && <AvatarImage src={avatarUrl} className="object-cover" />}
+            <AvatarFallback className="bg-primary/20 text-primary">
+              {avatarEmoji || displayName.charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <motion.div
@@ -125,7 +137,7 @@ export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarP
               className="flex flex-col overflow-hidden"
             >
               <span className="font-medium text-sm text-sidebar-foreground truncate">
-                Super Admin
+                {displayName}
               </span>
               <span className="text-xs text-sidebar-foreground/60 truncate">
                 {user?.email || "admin@platform.com"}
