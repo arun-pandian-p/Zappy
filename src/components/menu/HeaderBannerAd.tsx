@@ -34,6 +34,7 @@ export function HeaderBannerAd({ ad, onDismiss }: HeaderBannerAdProps) {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className="relative rounded-xl overflow-hidden mb-4 cursor-pointer"
+      style={{ minHeight: '112px' }}
       onClick={handleClick}
     >
       {ad.image_url ? (
