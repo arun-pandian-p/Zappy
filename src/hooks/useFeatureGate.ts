@@ -25,6 +25,7 @@ const FEATURE_TIERS: Record<FeatureKey, SubscriptionTier> = {
   exports: "pro",
   research: "pro",
   promotions: "pro",
+  inventory: "pro",
   branding: "enterprise",
   "multi-outlet": "enterprise",
 };
