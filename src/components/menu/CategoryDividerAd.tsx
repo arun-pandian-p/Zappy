@@ -16,7 +16,7 @@ interface CategoryDividerAdProps {
   onDismiss?: () => void;
 }
 
-export function CategoryDividerAd({ ad }: CategoryDividerAdProps) {
+export function CategoryDividerAd({ ad, onDismiss }: CategoryDividerAdProps) {
   const trackImpression = useTrackAdImpression();
   const trackClick = useTrackAdClick();
 
