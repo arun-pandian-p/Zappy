@@ -55,7 +55,7 @@ export function CustomerTopBar({
     <div className="sticky top-0 z-50">
       {/* Banner Image — collapses on scroll */}
       {/* Banner Image — smoothly collapses on scroll */}
-      {bannerImageUrl && (
+      {bannerImageUrl && !bannerFailed && (
         <motion.div
           animate={{ height: isScrolled ? 0 : 120, opacity: isScrolled ? 0 : 1 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -63,8 +63,9 @@ export function CustomerTopBar({
         >
           <img
             src={bannerImageUrl}
-            alt={`${restaurantName} banner`}
+            alt=""
             className="w-full h-[120px] object-cover"
+            onError={() => setBannerFailed(true)}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
         </motion.div>
