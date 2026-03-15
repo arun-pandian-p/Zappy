@@ -312,6 +312,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   ];
 
   return (
+    <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <div className="min-h-screen bg-background">
       {/* Header - hidden when embedded */}
       {!embedded && (
