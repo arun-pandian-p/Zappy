@@ -47,7 +47,17 @@ export const PostOrderReviewPrompt = ({
   // Anti-spam: check localStorage
   const storageKey = `${STORAGE_KEY_PREFIX}${orderId}`;
 
+  // Reset state when orderId changes (new order placed)
   useEffect(() => {
+    setRating(0);
+    setComment('');
+    setStep('rating');
+    setIsOpen(false);
+    setSubmitting(false);
+  }, [orderId]);
+
+  useEffect(() => {
+    if (step === 'done') return;
     const alreadyShown = localStorage.getItem(storageKey);
     if (alreadyShown) return;
 
@@ -58,7 +68,7 @@ export const PostOrderReviewPrompt = ({
     }, delayMs);
 
     return () => clearTimeout(timer);
-  }, [orderId, restaurantId, delayMs, storageKey]);
+  }, [orderId, restaurantId, delayMs, storageKey, step]);
 
   const handleSubmitRating = useCallback(async () => {
     if (rating === 0) return;
