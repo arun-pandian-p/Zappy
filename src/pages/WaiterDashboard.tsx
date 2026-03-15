@@ -11,6 +11,8 @@ import { useTables } from '@/hooks/useTables';
 import { useOrders } from '@/hooks/useOrders';
 import { usePendingWaiterCalls, useAcknowledgeWaiterCall, useResolveWaiterCall } from '@/hooks/useWaiterCalls';
 import { useAuth } from '@/hooks/useAuth';
+import { useRestaurant } from '@/hooks/useRestaurant';
+import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { LogOut } from 'lucide-react';
 
 const WaiterDashboard = () => {
@@ -21,6 +23,7 @@ const WaiterDashboard = () => {
 
   const urlRestaurantId = searchParams.get('r');
   const restaurantId = authRestaurantId || urlRestaurantId || undefined;
+  const { data: restaurant } = useRestaurant(restaurantId);
 
   const handleLogout = async () => {
     await signOut();
@@ -116,6 +119,7 @@ const WaiterDashboard = () => {
   const isLoading = tablesLoading || ordersLoading || callsLoading;
 
   return (
+    <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b">
@@ -308,6 +312,7 @@ const WaiterDashboard = () => {
         </div>
       </main>
     </div>
+    </TenantThemeProvider>
   );
 };
 

@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useSound, SOUNDS } from '@/hooks/useSound';
 import { useOrders, useKitchenOrderActions, type OrderWithItems } from '@/hooks/useOrders';
 import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
+import { useRestaurant } from '@/hooks/useRestaurant';
+import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 
 import { usePrinter } from '@/hooks/usePrinter';
 import { CancelOrderDialog } from '@/components/admin/CancelOrderDialog';
@@ -27,6 +29,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   
   const urlRestaurantId = searchParams.get('r');
   const restaurantId = propRestaurantId || authRestaurantId || urlRestaurantId || undefined;
+  const { data: restaurant } = useRestaurant(restaurantId);
 
   const handleLogout = async () => {
     await signOut();
@@ -309,6 +312,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   ];
 
   return (
+    <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <div className="min-h-screen bg-background">
       {/* Header - hidden when embedded */}
       {!embedded && (
@@ -427,6 +431,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
         />
       )}
     </div>
+    </TenantThemeProvider>
   );
 };
 

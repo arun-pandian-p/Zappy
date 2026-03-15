@@ -30,6 +30,7 @@ import SplitPaymentPanel from '@/components/billing/SplitPaymentPanel';
 import { format } from 'date-fns';
 
 import { useAuth } from '@/hooks/useAuth';
+import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { LogOut } from 'lucide-react';
 
 interface BillingCounterProps {
@@ -211,6 +212,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   }
 
   return (
+    <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <div className="min-h-screen bg-background">
       {/* Header - hidden when embedded */}
       {!embedded && (
@@ -917,6 +919,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
         </DialogContent>
       </Dialog>
     </div>
+    </TenantThemeProvider>
   );
 };
 
