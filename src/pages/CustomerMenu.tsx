@@ -880,7 +880,7 @@ const CustomerMenu = () => {
                   {currencySymbol}{Number(order.total_amount || 0).toFixed(2)}
                 </span>
               </div>
-              {order.status === 'served' && !localStorage.getItem(`zappy_review_shown_${order.id}`) && (
+              {order.status === 'served' && (
                 <Button
                   size="sm"
                   className="w-full mt-3 gap-2"
