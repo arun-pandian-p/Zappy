@@ -1012,7 +1012,7 @@ const CustomerMenu = () => {
           orderId={reviewOrderId}
           tableId={resolvedTableId}
           googleReviewUrl={restaurant?.google_review_url}
-          delayMs={5000}
+          delayMs={reviewImmediate ? 0 : 5000}
         />
       )}
     </div>
