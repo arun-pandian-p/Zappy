@@ -423,7 +423,6 @@ const CustomerMenu = () => {
         description: 'Your order has been sent to the kitchen.',
       });
 
-      setLastPlacedOrderId(orderData.id);
       clearCart();
       setCurrentView('orders');
     } catch (err) {
