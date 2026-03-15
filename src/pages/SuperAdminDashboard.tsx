@@ -304,6 +304,9 @@ const SuperAdminDashboard = () => {
       case 'ads':
         return <PlatformAdsManager />;
 
+      case 'promotions':
+        return <PlatformAdsManager />;
+
       case 'settings':
         return (
           <Tabs defaultValue="tax" className="space-y-4">
