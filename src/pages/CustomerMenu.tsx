@@ -45,6 +45,7 @@ import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
 import { HeaderBannerAd } from '@/components/menu/HeaderBannerAd';
 import { CategoryDividerAd } from '@/components/menu/CategoryDividerAd';
 import { FooterPromoAd } from '@/components/menu/FooterPromoAd';
+import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
