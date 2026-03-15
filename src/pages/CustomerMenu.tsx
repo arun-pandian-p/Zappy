@@ -42,6 +42,9 @@ import { FoodCard } from '@/components/menu/FoodCard';
 import { OrderStatusPipeline } from '@/components/menu/OrderStatusPipeline';
 import { OffersSlider } from '@/components/menu/OffersSlider';
 import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
+import { HeaderBannerAd } from '@/components/menu/HeaderBannerAd';
+import { CategoryDividerAd } from '@/components/menu/CategoryDividerAd';
+import { FooterPromoAd } from '@/components/menu/FooterPromoAd';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
