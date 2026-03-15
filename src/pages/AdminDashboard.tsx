@@ -905,9 +905,9 @@ const AdminDashboard = () => {
               )}
 
               {/* Promotions Tab (Ads + Offers combined) */}
-              {activeTab === "offers" && (
+              {activeTab === "promotions" && (
                 <motion.div
-                  key="offers"
+                  key="promotions"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}

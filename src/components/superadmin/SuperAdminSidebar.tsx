@@ -44,6 +44,7 @@ const navItems: NavItem[] = [
   { title: "User Management", icon: Users, value: "users" },
   { title: "Subscription Plans", icon: CreditCard, value: "plans" },
   { title: "Platform Ads", icon: Megaphone, value: "ads" },
+  { title: "Promotions", icon: Megaphone, value: "promotions" },
   
   { title: "Platform Branding", icon: Palette, value: "branding" },
   { title: "Analytics", icon: BarChart3, value: "analytics" },
