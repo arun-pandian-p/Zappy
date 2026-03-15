@@ -919,6 +919,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
         </DialogContent>
       </Dialog>
     </div>
+    </TenantThemeProvider>
   );
 };
 
