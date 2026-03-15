@@ -312,6 +312,7 @@ const WaiterDashboard = () => {
         </div>
       </main>
     </div>
+    </TenantThemeProvider>
   );
 };
 
