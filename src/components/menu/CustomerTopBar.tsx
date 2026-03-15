@@ -43,6 +43,8 @@ export function CustomerTopBar({
   const animEnabled = branding?.animation_enabled ?? false;
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [bannerFailed, setBannerFailed] = useState(false);
 
   useEffect(() => {
     const unsubscribe = scrollY.on("change", (v) => setIsScrolled(v > 30));
@@ -53,7 +55,7 @@ export function CustomerTopBar({
     <div className="sticky top-0 z-50">
       {/* Banner Image — collapses on scroll */}
       {/* Banner Image — smoothly collapses on scroll */}
-      {bannerImageUrl && (
+      {bannerImageUrl && !bannerFailed && (
         <motion.div
           animate={{ height: isScrolled ? 0 : 120, opacity: isScrolled ? 0 : 1 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -61,8 +63,9 @@ export function CustomerTopBar({
         >
           <img
             src={bannerImageUrl}
-            alt={`${restaurantName} banner`}
+            alt=""
             className="w-full h-[120px] object-cover"
+            onError={() => setBannerFailed(true)}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
         </motion.div>
@@ -85,13 +88,14 @@ export function CustomerTopBar({
               {animEnabled && branding?.mascot && branding.mascot !== "none" && (
                 <MascotIcon mascot={branding.mascot} size={isScrolled ? 28 : 34} primaryColor={primaryColor} customImageUrl={branding?.mascot_image_url} />
               )}
-              {logoUrl ? (
+              {logoUrl && !logoFailed ? (
                 <img
                   src={logoUrl}
-                  alt={restaurantName}
+                  alt=""
                   className={`rounded-full object-cover border-2 border-primary/20 shadow-sm transition-all ${
                     isScrolled ? "w-8 h-8" : "w-10 h-10"
                   }`}
+                  onError={() => setLogoFailed(true)}
                 />
               ) : (
                 <div
