@@ -314,7 +314,25 @@ const CustomerMenu = () => {
     prevOrderStatusRef.current = currentStatus;
   }, [activeOrder?.status, toast]);
 
-  // Calculate estimated prep time
+  // ===== Trigger review prompt when an order reaches "served" =====
+  useEffect(() => {
+    const prev = prevOrderStatusesRef.current;
+    for (const order of customerOrders) {
+      const prevStatus = prev[order.id];
+      if (prevStatus && prevStatus !== 'served' && order.status === 'served') {
+        // Order just transitioned to served
+        setReviewOrderId(order.id);
+        break;
+      }
+    }
+    // Update previous statuses
+    const next: Record<string, string> = {};
+    for (const order of customerOrders) {
+      if (order.status) next[order.id] = order.status;
+    }
+    prevOrderStatusesRef.current = next;
+  }, [customerOrders]);
+
   const estimatedPrepTime = useMemo(() => {
     if (!activeOrder) return 15;
     const prepTimes = activeOrder.order_items?.map(() => 15) || [15];
