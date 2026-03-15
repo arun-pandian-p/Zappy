@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, X, Loader2, ImageIcon, RefreshCw } from 'lucide-react';
+import { Upload, X, Loader2, ImageIcon, RefreshCw, Crop } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ImageCropDialog } from '@/components/admin/ImageCropDialog';
 
 interface ImageUploadProps {
   currentImageUrl?: string | null;
@@ -10,6 +11,12 @@ interface ImageUploadProps {
   restaurantId: string;
   folder?: string;
   maxSizeMB?: number;
+  /** Enable crop dialog after selecting an image */
+  enableCrop?: boolean;
+  /** Crop shape: 'round' for logos, 'rect' for banners */
+  cropShape?: 'round' | 'rect';
+  /** Aspect ratio for crop (e.g. 1 for square, 3 for banner) */
+  cropAspect?: number;
 }
 
 export const ImageUpload = ({ 
@@ -18,15 +25,18 @@ export const ImageUpload = ({
   restaurantId,
   folder = 'items',
   maxSizeMB,
+  enableCrop = false,
+  cropShape = 'rect',
+  cropAspect = 1,
 }: ImageUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingFileRef = useRef<File | null>(null);
   const { toast } = useToast();
 
-  // Sync preview when parent prop changes
   useEffect(() => {
     setPreviewUrl(currentImageUrl || null);
   }, [currentImageUrl]);
@@ -39,8 +49,6 @@ export const ImageUpload = ({
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${restaurantId}/${folder}/${Date.now()}.${fileExt}`;
 
-      console.log('[ImageUpload] Uploading to menu-images:', fileName, 'size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
-
       const { data, error } = await supabase.storage
         .from('menu-images')
         .upload(fileName, file, {
@@ -48,40 +56,32 @@ export const ImageUpload = ({
           upsert: true,
         });
 
-      if (error) {
-        console.error('[ImageUpload] Storage error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       const { data: urlData } = supabase.storage
         .from('menu-images')
         .getPublicUrl(data.path);
 
       const publicUrl = urlData.publicUrl;
-      console.log('[ImageUpload] Upload success:', publicUrl);
-      setPreviewUrl(publicUrl);
-      onImageUploaded(publicUrl);
       pendingFileRef.current = null;
 
-      toast({
-        title: 'Image uploaded',
-        description: 'Image has been uploaded successfully.',
-      });
+      if (enableCrop) {
+        // Open crop dialog with the uploaded image
+        setCropSrc(publicUrl);
+      } else {
+        setPreviewUrl(publicUrl);
+        onImageUploaded(publicUrl);
+        toast({ title: 'Image uploaded', description: 'Image has been uploaded successfully.' });
+      }
     } catch (error: any) {
       console.error('[ImageUpload] Upload error:', error);
-      const msg = error?.message || error?.statusText || 'Network error. Please try again.';
+      const msg = error?.message || 'Network error. Please try again.';
       setUploadError(msg);
       pendingFileRef.current = file;
-      toast({
-        title: 'Upload failed',
-        description: msg,
-        variant: 'destructive',
-      });
+      toast({ title: 'Upload failed', description: msg, variant: 'destructive' });
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -90,20 +90,12 @@ export const ImageUpload = ({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast({
-        title: 'Invalid file type',
-        description: 'Please select an image file (JPG, PNG, WEBP).',
-        variant: 'destructive',
-      });
+      toast({ title: 'Invalid file type', description: 'Please select an image file (JPG, PNG, WEBP).', variant: 'destructive' });
       return;
     }
 
     if (maxSizeMB && file.size > maxSizeMB * 1024 * 1024) {
-      toast({
-        title: 'File too large',
-        description: `Please select an image under ${maxSizeMB}MB.`,
-        variant: 'destructive',
-      });
+      toast({ title: 'File too large', description: `Please select an image under ${maxSizeMB}MB.`, variant: 'destructive' });
       return;
     }
 
@@ -111,9 +103,7 @@ export const ImageUpload = ({
   };
 
   const handleRetry = async () => {
-    if (pendingFileRef.current) {
-      await uploadFile(pendingFileRef.current);
-    }
+    if (pendingFileRef.current) await uploadFile(pendingFileRef.current);
   };
 
   const handleRemoveImage = () => {
@@ -121,6 +111,22 @@ export const ImageUpload = ({
     setUploadError(null);
     pendingFileRef.current = null;
     onImageUploaded('');
+  };
+
+  const handleCropComplete = (croppedUrl: string) => {
+    setPreviewUrl(croppedUrl);
+    onImageUploaded(croppedUrl);
+    setCropSrc(null);
+    toast({ title: 'Image cropped & saved' });
+  };
+
+  const handleCropClose = () => {
+    // If user cancels crop, use the original uploaded image
+    if (cropSrc) {
+      setPreviewUrl(cropSrc);
+      onImageUploaded(cropSrc);
+    }
+    setCropSrc(null);
   };
 
   return (
@@ -141,15 +147,29 @@ export const ImageUpload = ({
             className="w-full h-full object-cover"
             onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
           />
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute top-2 right-2 h-6 w-6"
-            onClick={handleRemoveImage}
-          >
-            <X className="w-3 h-3" />
-          </Button>
+          <div className="absolute top-2 right-2 flex gap-1">
+            {enableCrop && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setCropSrc(previewUrl)}
+                title="Crop image"
+              >
+                <Crop className="w-3 h-3" />
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="h-6 w-6"
+              onClick={handleRemoveImage}
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
         </div>
       ) : (
         <button
@@ -173,7 +193,6 @@ export const ImageUpload = ({
         </button>
       )}
 
-      {/* Error with retry */}
       {uploadError && !isUploading && (
         <div className="flex items-center gap-2">
           <p className="text-xs text-destructive flex-1">Upload failed: {uploadError}</p>
@@ -197,6 +216,20 @@ export const ImageUpload = ({
           <Upload className="w-4 h-4 mr-2" />
           Choose Image
         </Button>
+      )}
+
+      {/* Crop Dialog */}
+      {enableCrop && (
+        <ImageCropDialog
+          open={!!cropSrc}
+          imageSrc={cropSrc || ''}
+          onClose={handleCropClose}
+          onCropComplete={handleCropComplete}
+          cropShape={cropShape}
+          aspect={cropAspect}
+          title="Crop Image"
+          uploadPath={{ restaurantId, folder }}
+        />
       )}
     </div>
   );
