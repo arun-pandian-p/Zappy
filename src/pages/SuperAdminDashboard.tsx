@@ -336,7 +336,7 @@ const SuperAdminDashboard = () => {
     users: { title: 'Restaurant Admins', description: 'View restaurant admin accounts' },
     plans: { title: 'Subscription Plans', description: 'Manage platform subscription tiers' },
     ads: { title: 'Platform Ads', description: 'Manage promotional advertisements' },
-    promotions: { title: 'Promotions', description: 'Manage platform promotions and offers' },
+    promotions: { title: 'Promotions', description: 'View restaurant-wise promotion & ad status' },
     'landing-cms': { title: 'Landing Page CMS', description: 'Edit landing page content' },
     branding: { title: 'Platform Branding', description: 'White-label appearance controls' },
     settings: { title: 'Settings', description: 'Platform configuration' },
