@@ -8,7 +8,30 @@ export type FeatureKey =
   | "coupons" | "ads" | "offers" | "exports" | "research"
   | "promotions" | "branding" | "multi-outlet" | "inventory";
 
-const FEATURE_TIERS: Record<FeatureKey, SubscriptionTier> = {
+/** Human-readable labels for sidebar display */
+export const FEATURE_LABELS: Record<FeatureKey, string> = {
+  dashboard: "Dashboard",
+  menu: "Menu",
+  orders: "Orders",
+  kitchen: "Kitchen",
+  billing: "Billing",
+  "qr-manager": "QR Manager",
+  reviews: "Reviews",
+  users: "Users",
+  preview: "Preview Site",
+  settings: "Settings",
+  coupons: "Coupons",
+  ads: "Ads",
+  offers: "Offers",
+  exports: "Exports",
+  research: "Research",
+  promotions: "Promotions",
+  inventory: "Inventory",
+  branding: "Branding",
+  "multi-outlet": "Multi-Outlet",
+};
+
+export const FEATURE_TIERS: Record<FeatureKey, SubscriptionTier> = {
   dashboard: "free",
   menu: "free",
   orders: "free",
@@ -30,6 +53,12 @@ const FEATURE_TIERS: Record<FeatureKey, SubscriptionTier> = {
   "multi-outlet": "enterprise",
 };
 
+/** Features that the Super Admin can toggle per restaurant */
+export const TOGGLEABLE_FEATURES: FeatureKey[] = [
+  "coupons", "promotions", "inventory", "exports",
+  "branding", "multi-outlet",
+];
+
 const TIER_RANK: Record<SubscriptionTier, number> = {
   free: 0,
   pro: 1,
@@ -42,21 +71,29 @@ const TIER_LABELS: Record<SubscriptionTier, string> = {
   enterprise: "Business",
 };
 
+export type FeatureToggles = Record<string, boolean>;
+
 export type LockReason =
   | { type: "plan"; requiredTier: SubscriptionTier; requiredLabel: string }
   | { type: "ads_toggle" }
+  | { type: "disabled_by_admin" }
   | null;
 
 export function useFeatureGate(
   subscriptionTier: SubscriptionTier | null | undefined,
-  adsEnabled: boolean | null | undefined
+  adsEnabled: boolean | null | undefined,
+  featureToggles?: FeatureToggles | null
 ) {
   const currentTier: SubscriptionTier = subscriptionTier || "free";
   const adsToggle = adsEnabled ?? true;
+  const toggles = featureToggles || {};
 
   const canAccess = (feature: FeatureKey): boolean => {
     const requiredTier = FEATURE_TIERS[feature];
     if (!requiredTier) return true;
+
+    // Check super-admin toggle first
+    if (toggles[feature] === false) return false;
 
     if (TIER_RANK[currentTier] < TIER_RANK[requiredTier]) return false;
 
@@ -68,6 +105,11 @@ export function useFeatureGate(
   const isLocked = (feature: FeatureKey): LockReason => {
     const requiredTier = FEATURE_TIERS[feature];
     if (!requiredTier) return null;
+
+    // Check super-admin toggle first
+    if (toggles[feature] === false) {
+      return { type: "disabled_by_admin" };
+    }
 
     if (TIER_RANK[currentTier] < TIER_RANK[requiredTier]) {
       return {
