@@ -88,13 +88,14 @@ export function CustomerTopBar({
               {animEnabled && branding?.mascot && branding.mascot !== "none" && (
                 <MascotIcon mascot={branding.mascot} size={isScrolled ? 28 : 34} primaryColor={primaryColor} customImageUrl={branding?.mascot_image_url} />
               )}
-              {logoUrl ? (
+              {logoUrl && !logoFailed ? (
                 <img
                   src={logoUrl}
-                  alt={restaurantName}
+                  alt=""
                   className={`rounded-full object-cover border-2 border-primary/20 shadow-sm transition-all ${
                     isScrolled ? "w-8 h-8" : "w-10 h-10"
                   }`}
+                  onError={() => setLogoFailed(true)}
                 />
               ) : (
                 <div
