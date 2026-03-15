@@ -47,6 +47,7 @@ import { CategoryDividerAd } from '@/components/menu/CategoryDividerAd';
 import { FooterPromoAd } from '@/components/menu/FooterPromoAd';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { SOUNDS } from '@/hooks/useSound';
+import { PostOrderReviewPrompt } from '@/components/order/PostOrderReviewPrompt';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
@@ -115,6 +116,7 @@ const CustomerMenu = () => {
   const [showAddedToast, setShowAddedToast] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState('');
   const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('grid');
+  const [lastPlacedOrderId, setLastPlacedOrderId] = useState<string | null>(null);
 
   // Fetch restaurant data
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId);
@@ -397,7 +399,7 @@ const CustomerMenu = () => {
     }
 
     try {
-      await createOrder.mutateAsync({
+      const orderData = await createOrder.mutateAsync({
         order: {
           restaurant_id: restaurantId,
           table_id: resolvedTableId,
@@ -420,6 +422,7 @@ const CustomerMenu = () => {
         description: 'Your order has been sent to the kitchen.',
       });
 
+      setLastPlacedOrderId(orderData.id);
       clearCart();
       setCurrentView('orders');
     } catch (err) {
@@ -965,6 +968,17 @@ const CustomerMenu = () => {
         cartCount={getTotalItems()}
         orderCount={customerOrders.filter(o => o.status !== 'completed').length}
       />
+
+      {/* Post-Order Review Prompt */}
+      {lastPlacedOrderId && restaurantId && (
+        <PostOrderReviewPrompt
+          restaurantId={restaurantId}
+          orderId={lastPlacedOrderId}
+          tableId={resolvedTableId}
+          googleReviewUrl={restaurant?.google_review_url}
+          delayMs={5000}
+        />
+      )}
     </div>
     </TenantThemeProvider>
   );
