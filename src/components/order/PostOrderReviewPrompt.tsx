@@ -58,8 +58,12 @@ export const PostOrderReviewPrompt = ({
 
   useEffect(() => {
     if (step === 'done') return;
-    const alreadyShown = localStorage.getItem(storageKey);
-    if (alreadyShown) return;
+    
+    // For immediate triggers (delayMs === 0), skip localStorage check
+    if (delayMs > 0) {
+      const alreadyShown = localStorage.getItem(storageKey);
+      if (alreadyShown) return;
+    }
 
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, 'true');
