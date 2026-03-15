@@ -43,6 +43,7 @@ const App = () => (
           <Route path="/customer-menu" element={<CustomerMenu />} />
           <Route path="/order" element={<CustomerMenu />} />
           <Route path="/feedback" element={<FeedbackPage />} />
+          <Route path="/guide" element={<UserGuide />} />
 
           {/* Staff routes — role-guarded */}
           <Route path="/kitchen" element={
