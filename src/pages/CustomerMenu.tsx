@@ -879,6 +879,17 @@ const CustomerMenu = () => {
                   {currencySymbol}{Number(order.total_amount || 0).toFixed(2)}
                 </span>
               </div>
+              {order.status === 'served' && !localStorage.getItem(`zappy_review_shown_${order.id}`) && (
+                <Button
+                  size="sm"
+                  className="w-full mt-3 gap-2"
+                  variant="outline"
+                  onClick={() => setReviewOrderId(order.id)}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Rate Your Experience ⭐
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))
