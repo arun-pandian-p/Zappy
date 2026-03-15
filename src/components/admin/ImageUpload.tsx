@@ -60,7 +60,7 @@ export const ImageUpload = ({
         .from('menu-images')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false,
+          upsert: true,
         });
 
       if (error) throw error;
