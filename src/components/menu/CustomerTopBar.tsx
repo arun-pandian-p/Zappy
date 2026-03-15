@@ -43,6 +43,8 @@ export function CustomerTopBar({
   const animEnabled = branding?.animation_enabled ?? false;
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [bannerFailed, setBannerFailed] = useState(false);
 
   useEffect(() => {
     const unsubscribe = scrollY.on("change", (v) => setIsScrolled(v > 30));
