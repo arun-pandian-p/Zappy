@@ -235,9 +235,9 @@ export function TenantTable({
               ))}
               {filteredRestaurants.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    No restaurants found
-                  </TableCell>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      No restaurants found
+                    </TableCell>
                 </TableRow>
               )}
             </TableBody>
