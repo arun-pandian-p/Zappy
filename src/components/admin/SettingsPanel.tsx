@@ -51,6 +51,14 @@ interface SettingsPanelProps {
   restaurantId: string;
 }
 
+const THEME_PRESETS = [
+  { id: 'classic', name: 'Classic', primary: '#F97316', secondary: '#FDE68A', font: 'Inter', desc: 'Warm & inviting with orange accents', emoji: '🍽️' },
+  { id: 'dark', name: 'Dark', primary: '#A78BFA', secondary: '#6366F1', font: 'Inter', desc: 'Modern dark theme with violet tones', emoji: '🌙' },
+  { id: 'premium', name: 'Premium', primary: '#D4A574', secondary: '#1A1A2E', font: 'Playfair Display', desc: 'Luxurious gold & dark palette', emoji: '✨' },
+  { id: 'minimal', name: 'Minimal', primary: '#374151', secondary: '#E5E7EB', font: 'Inter', desc: 'Clean white with subtle accents', emoji: '◻️' },
+  { id: 'custom', name: 'Custom', primary: '#3B82F6', secondary: '#10B981', font: 'Inter', desc: 'Choose your own colors & fonts', emoji: '🎨' },
+];
+
 interface RestaurantSettings {
   name: string;
   address: string;
@@ -71,6 +79,10 @@ interface RestaurantSettings {
   branding: BrandingConfig;
   admin_avatar: { type: "upload" | "emoji" | "mascot"; value: string };
   admin_display_name: string;
+  theme_preset: string;
+  primary_color: string;
+  secondary_color: string;
+  font_family: string;
 }
 
 const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
