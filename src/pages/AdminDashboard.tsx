@@ -855,15 +855,17 @@ const AdminDashboard = () => {
               )}
 
               {/* Promotions Tab (Ads + Offers combined) */}
-              {activeTab === "promotions" && (
+              {activeTab === "offers" && (
                 <motion.div
-                  key="promotions"
+                  key="offers"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="space-y-6"
                 >
                   <OffersManager restaurantId={restaurantId} />
+                  <PlatformAdsReadOnly restaurantId={restaurantId} />
                 </motion.div>
               )}
 
