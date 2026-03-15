@@ -47,6 +47,7 @@ import { CategoryDividerAd } from '@/components/menu/CategoryDividerAd';
 import { FooterPromoAd } from '@/components/menu/FooterPromoAd';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { SOUNDS } from '@/hooks/useSound';
+import { PostOrderReviewPrompt } from '@/components/order/PostOrderReviewPrompt';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
