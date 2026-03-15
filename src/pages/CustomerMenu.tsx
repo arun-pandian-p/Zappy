@@ -418,7 +418,7 @@ const CustomerMenu = () => {
     }
 
     try {
-      const orderData = await createOrder.mutateAsync({
+      await createOrder.mutateAsync({
         order: {
           restaurant_id: restaurantId,
           table_id: resolvedTableId,
