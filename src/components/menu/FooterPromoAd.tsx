@@ -14,7 +14,7 @@ interface FooterPromoAdProps {
   onDismiss?: () => void;
 }
 
-export function FooterPromoAd({ ad }: FooterPromoAdProps) {
+export function FooterPromoAd({ ad, onDismiss }: FooterPromoAdProps) {
   const trackImpression = useTrackAdImpression();
   const trackClick = useTrackAdClick();
 
