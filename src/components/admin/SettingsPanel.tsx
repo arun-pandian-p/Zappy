@@ -214,6 +214,10 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         primary_color: restaurant.primary_color || "#F97316",
         secondary_color: restaurant.secondary_color || "#FDE68A",
         font_family: restaurant.font_family || "Inter",
+        logo_url: restaurant.logo_url || "",
+        banner_image_url: restaurant.banner_image_url || "",
+        favicon_url: restaurant.favicon_url || "",
+        menu_title: restaurant.menu_title || "",
       });
     }
   }, [restaurant]);
