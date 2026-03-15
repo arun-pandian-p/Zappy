@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
-import { useFeatureGate, type FeatureKey, type LockReason } from "@/hooks/useFeatureGate";
+import { useFeatureGate, type FeatureKey, type LockReason, type FeatureToggles } from "@/hooks/useFeatureGate";
 import { FeatureLockedModal } from "@/components/admin/FeatureLockedModal";
 import { ImageCropDialog } from "@/components/admin/ImageCropDialog";
 import type { Database } from "@/integrations/supabase/types";
