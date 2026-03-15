@@ -116,6 +116,10 @@ const defaultSettings: RestaurantSettings = {
   primary_color: "#F97316",
   secondary_color: "#FDE68A",
   font_family: "Inter",
+  logo_url: "",
+  banner_image_url: "",
+  favicon_url: "",
+  menu_title: "",
 };
 
 export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
