@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
+import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import { useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
 
 interface FooterPromoAdProps {
