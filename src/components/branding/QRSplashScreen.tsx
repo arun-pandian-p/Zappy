@@ -24,6 +24,7 @@ export function QRSplashScreen({
 }: QRSplashScreenProps) {
   const [show, setShow] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   // Auto-dismiss after 3s max or when loading finishes
   useEffect(() => {
