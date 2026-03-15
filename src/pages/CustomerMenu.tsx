@@ -146,6 +146,8 @@ const CustomerMenu = () => {
   const { data: dividerAds = [] } = useAdsByPlacement('category_divider', restaurantId);
   const { data: footerAds = [] } = useAdsByPlacement('footer_banner', restaurantId);
   const [headerAdDismissed, setHeaderAdDismissed] = useState(false);
+  const [dividerAdDismissed, setDividerAdDismissed] = useState(false);
+  const [footerAdDismissed, setFooterAdDismissed] = useState(false);
   const headerAd = headerAds[0] || null;
   const dividerAd = dividerAds[0] || null;
   const footerAd = footerAds[0] || null;
