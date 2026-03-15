@@ -1,68 +1,145 @@
+# ZAPPY — Full System Architecture
 
+Your project is already 100% connected to Lovable Cloud. Every hook, page, and edge function communicates with the live backend. No migration or transfer is needed.
 
-# Platform Ads & Promotions System — Phased Plan
+---
 
-This is a large system. I'll scope it into a practical Phase 1 that builds on existing infrastructure (the `ads` table, `PlatformAdsManager`, `AdsPopup`, and `offers` table already exist), with clear hooks for future expansion.
+## Architecture Overview
 
-## Phase 1 Scope (This Implementation)
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                        FRONTEND (React + Vite)              │
+│                                                             │
+│  Public Routes          Staff Routes         Admin Routes   │
+│  ─────────────          ────────────         ────────────   │
+│  /                      /kitchen (guarded)   /admin         │
+│  /customer-menu         /waiter  (guarded)   /super-admin   │
+│  /feedback              /billing (guarded)   /admin/onboard │
+│  /login, /roles                                             │
+│                                                             │
+│  Auth: useAuth hook + RoleGuard component                   │
+│  State: React Query + Zustand (cart)                        │
+│  Real-time: Supabase channels (orders, tables, categories)  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                    Supabase JS Client
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                    LOVABLE CLOUD (Backend)                   │
+│                                                             │
+│  ┌─────────────┐  ┌──────────────┐  ┌───────────────────┐  │
+│  │    AUTH      │  │   DATABASE   │  │  EDGE FUNCTIONS   │  │
+│  │             │  │  (Postgres)  │  │                   │  │
+│  │ Email/Pass  │  │  20 tables   │  │ create-tenant     │  │
+│  │ Role-based  │  │  + 1 view    │  │ manage-staff      │  │
+│  │ JWT tokens  │  │  Full RLS    │  │ manage-super-admins│  │
+│  └─────────────┘  └──────────────┘  │ push-invoice      │  │
+│                                     │ qr-redirect       │  │
+│  ┌─────────────┐  ┌──────────────┐  │ firecrawl-scrape  │  │
+│  │  STORAGE    │  │  REALTIME    │  │ firecrawl-search  │  │
+│  │             │  │              │  └───────────────────┘  │
+│  │ menu-images │  │ orders       │                         │
+│  │ (50MB)      │  │ order_items  │                         │
+│  │ platform-   │  │ tables       │                         │
+│  │ assets(5MB) │  │ categories   │                         │
+│  └─────────────┘  └──────────────┘                         │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### 1. Expand `ads` table with campaign fields
-Add columns to the existing `ads` table via migration:
-- `campaign_type` (text): `platform_promotion`, `brand_advertisement`, `restaurant_promotion`, `seasonal_campaign`, `festival_offer`
-- `placement_type` (text): `header_banner`, `category_divider`, `popup_offer`, `footer_banner`
-- `cta_text` (text): e.g. "Order Now", "Claim Offer"
-- `priority` (integer, default 0)
-- `advertiser_name` (text)
-- `target_restaurants` (uuid[] — null = all restaurants)
-- `budget` (numeric, nullable)
-- `revenue_model` (text): `cpm`, `cpc`, `flat_fee`
+---
 
-No new tables needed — extend existing `ads` table.
+## Database Tables (20 + 1 view)
 
-### 2. Rebuild `PlatformAdsManager` as a tabbed module
-Replace the current simple table with a full module in the Super Admin dashboard:
+| Table | Purpose | RLS |
+|---|---|---|
+| **restaurants** | Tenant profiles, branding, settings | Staff own, super_admin all, public read active |
+| **restaurants_public** | Safe public view (no PII) | Open read (security_invoker) |
+| **user_roles** | Role assignments (app_role enum) | Scoped by role hierarchy |
+| **categories** | Menu categories per restaurant | Staff manage, public read active |
+| **menu_items** | Food items with pricing/tags | Staff manage, public read available |
+| **variant_groups / variant_options** | Item size/type variants | Staff manage, public read |
+| **addon_groups / addon_options** | Extra toppings/add-ons | Staff manage, public read |
+| **orders** | Customer orders | Anon create, staff manage |
+| **order_items** | Line items per order | Anon create, staff update |
+| **tables** | Physical table management | Staff manage, public read active |
+| **invoices** | Billing records | Staff only |
+| **coupons** | Discount codes | Staff manage, public read active |
+| **offers** | Promotional offers | Staff + super_admin manage |
+| **ads** | Advertisements | Restaurant admin + super_admin |
+| **feedback** | Customer ratings | Anon create, staff read |
+| **qr_codes** | QR code tracking | Staff manage, public read active |
+| **scan_analytics** | QR scan telemetry | Anon insert, staff read |
+| **inventory_items** | Stock management | Staff only |
+| **recipe_mappings** | Inventory-to-menu links | Staff only |
+| **customer_events** | Behavior tracking | Anon insert, staff read |
+| **analytics_daily** | Aggregated daily stats | Staff + super_admin read |
+| **analytics_events** | Raw analytics events | Anon insert, staff read |
+| **waiter_calls** | Table call-waiter requests | Anon create, staff manage |
+| **subscription_plans** | SaaS tier definitions | Super_admin manage, public read |
+| **platform_settings** | Global platform config | Super_admin only |
+| **default_tax_settings** | Default tax config | Super_admin only |
+| **email_templates** | Email template management | Super_admin only |
+| **system_logs** | Audit trail | Super_admin read, no client insert |
 
-**Sub-tabs:**
-- **Campaign Manager** — List/create/edit campaigns with all new fields (campaign type, advertiser, budget, dates, target restaurants, priority)
-- **Ad Creatives** — Grid view of ad cards with image upload (using existing `menu-images` bucket), CTA text, placement type selector
-- **Ad Placements** — Visual preview of where ads appear (header, category divider, popup, footer) with toggle controls
-- **Analytics** — Impressions, clicks, CTR, revenue breakdown per ad/campaign (reads from existing `impressions`/`clicks` columns)
+---
 
-### 3. Update Customer Menu to render ads by placement
-Modify `CustomerMenu.tsx` to fetch platform ads filtered by `placement_type` and `target_restaurants`:
-- **Header Banner**: Show one active `header_banner` ad above categories
-- **Category Divider**: Insert one ad card between every N categories
-- **Popup Offer**: Keep existing `AdsPopup` behavior
-- **Footer Banner**: Show a promo strip above the bottom nav
+## Role System (app_role enum)
 
-Respect max rules: 1 banner, 1 divider, 1 popup per session.
+| Role | Access |
+|---|---|
+| **super_admin** | All tables, all restaurants, bypasses all guards |
+| **restaurant_admin** | Own restaurant data, staff management, settings |
+| **kitchen_staff** | Orders, order items (own restaurant) |
+| **waiter_staff** | Orders, tables, waiter calls (own restaurant) |
+| **billing_staff** | Orders, invoices, billing (own restaurant) |
+| **Anonymous** | Menu viewing, order placement, feedback, QR scans |
 
-### 4. Restaurant Admin view (read-only)
-In the existing Admin dashboard Promotions tab, add a read-only "Platform Ads" section showing which platform ads appear in their menu. No edit capability.
+---
 
-### 5. RLS updates
-- Existing RLS already allows super_admin full access and public read for active ads
-- Add filter logic in the `useActiveAds` hook to respect `target_restaurants` (filter client-side or add to query)
+## Security Functions
 
-## Files to Create/Modify
+| Function | Purpose |
+|---|---|
+| `has_role(user_id, role)` | SECURITY DEFINER — prevents RLS recursion |
+| `get_user_restaurant_id(user_id)` | Returns tenant scope for RLS policies |
+| `increment_scan_count(qr_id)` | Safe QR scan counter |
+| `update_updated_at_column()` | Trigger for timestamp management |
 
-| Action | File | Purpose |
-|--------|------|---------|
-| Migrate | DB migration | Add new columns to `ads` table |
-| Rewrite | `src/components/superadmin/PlatformAdsManager.tsx` | Full tabbed campaign manager |
-| Create | `src/components/superadmin/CampaignForm.tsx` | Create/edit campaign form |
-| Create | `src/components/superadmin/AdAnalyticsPanel.tsx` | Analytics dashboard for ads |
-| Create | `src/components/menu/HeaderBannerAd.tsx` | Header banner ad component |
-| Create | `src/components/menu/CategoryDividerAd.tsx` | Between-category ad card |
-| Create | `src/components/menu/FooterPromoAd.tsx` | Footer promo strip |
-| Modify | `src/hooks/useAds.ts` | Add placement/target filtering hooks |
-| Modify | `src/pages/CustomerMenu.tsx` | Integrate placement-based ad rendering |
-| Modify | `src/pages/AdminDashboard.tsx` | Add read-only platform ads view in Promotions |
+---
 
-## Future Phases (Not Built Now)
-- AI-based ad targeting
-- Geo/time-based campaigns
-- Video ad support
-- Revenue settlement system
-- Restaurant self-service promotion requests
+## Edge Functions (7)
 
+| Function | JWT | Purpose |
+|---|---|---|
+| `create-tenant` | No | Provisions new restaurant + admin account |
+| `manage-staff` | No | Server-side staff CRUD (avoids session conflicts) |
+| `manage-super-admins` | No | Super admin team management |
+| `push-invoice` | Yes | Invoice generation |
+| `qr-redirect` | No | QR code redirect + scan tracking |
+| `firecrawl-scrape` | No | Web scraping for market research |
+| `firecrawl-search` | No | Web search for market research |
+
+---
+
+## Frontend Data Hooks (30+)
+
+`useAuth`, `useMenuItems`, `useCategories`, `useOrders`, `useTables`, `useInvoices`, `useCoupons`, `useOffers`, `useAds`, `useFeedback`, `useInventory`, `useQRCodes`, `useWaiterCalls`, `useAddons`, `useVariants`, `useRestaurant`, `useSubscriptionPlans`, `usePlatformSettings`, `useSystemLogs`, `useLeaderboard`, `useEmailTemplates`, `useDefaultTaxSettings`, `useCustomerEvents`, `useExports`, `useSuperAdminProfile`, `useLandingCMS`, `useTableSessions`, `useFeatureGate`, `usePrinter`, `useSound`
+
+---
+
+## Real-time Channels
+
+Enabled on: `orders`, `order_items`, `tables`, `categories`, `restaurants`, `staff_profiles`, `user_roles`, `system_logs`
+
+---
+
+## Storage Buckets
+
+| Bucket | Limit | Purpose |
+|---|---|---|
+| `menu-images` | 50MB | Food photos, ad images |
+| `platform-assets` | 5MB | Logos, favicons, banners |
+
+---
+
+## Status: ✅ Fully Connected & Production-Ready

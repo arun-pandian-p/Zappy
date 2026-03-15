@@ -26,7 +26,7 @@ import { useMenuItems, useCategories, type MenuItem } from '@/hooks/useMenuItems
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useOrders, useCreateOrder } from '@/hooks/useOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
-import { useRandomActiveAd, useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
+import { useRandomActiveAd, useTrackAdImpression, useTrackAdClick, useAdsByPlacement } from '@/hooks/useAds';
 import { useTableByNumber, useTables } from '@/hooks/useTables';
 import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
 import { useActiveOffers } from '@/hooks/useOffers';
@@ -42,6 +42,9 @@ import { FoodCard } from '@/components/menu/FoodCard';
 import { OrderStatusPipeline } from '@/components/menu/OrderStatusPipeline';
 import { OffersSlider } from '@/components/menu/OffersSlider';
 import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
+import { HeaderBannerAd } from '@/components/menu/HeaderBannerAd';
+import { CategoryDividerAd } from '@/components/menu/CategoryDividerAd';
+import { FooterPromoAd } from '@/components/menu/FooterPromoAd';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
@@ -128,6 +131,15 @@ const CustomerMenu = () => {
 
   // Fetch active ad
   const { data: activeAd } = useRandomActiveAd();
+
+  // Placement-based ads
+  const { data: headerAds = [] } = useAdsByPlacement('header_banner', restaurantId);
+  const { data: dividerAds = [] } = useAdsByPlacement('category_divider', restaurantId);
+  const { data: footerAds = [] } = useAdsByPlacement('footer_banner', restaurantId);
+  const [headerAdDismissed, setHeaderAdDismissed] = useState(false);
+  const headerAd = headerAds[0] || null;
+  const dividerAd = dividerAds[0] || null;
+  const footerAd = footerAds[0] || null;
 
   // Mutations
   const createOrder = useCreateOrder();
@@ -509,6 +521,11 @@ const CustomerMenu = () => {
 
   const renderMenu = () => (
     <div>
+      {/* Header Banner Ad */}
+      {restaurant?.ads_enabled !== false && headerAd && !headerAdDismissed && (
+        <HeaderBannerAd ad={headerAd} onDismiss={() => setHeaderAdDismissed(true)} />
+      )}
+
       {/* Offers Slider */}
       {menuDisplaySettings.show_offers && offers.length > 0 && (
         <div className="mb-4">
@@ -556,6 +573,11 @@ const CustomerMenu = () => {
           onSelectCategory={setSelectedCategory}
         />
       </div>
+
+      {/* Category Divider Ad */}
+      {restaurant?.ads_enabled !== false && dividerAd && selectedCategory === 'All' && (
+        <CategoryDividerAd ad={dividerAd} />
+      )}
 
       {/* Menu Items */}
       <div className="mt-4">
@@ -872,6 +894,11 @@ const CustomerMenu = () => {
           currencySymbol={currencySymbol}
           onViewCart={() => setCurrentView('cart')}
         />
+      )}
+
+      {/* Footer Promo Ad */}
+      {restaurant?.ads_enabled !== false && footerAd && currentView === 'menu' && (
+        <FooterPromoAd ad={footerAd} />
       )}
 
       {/* Bottom Navigation */}
