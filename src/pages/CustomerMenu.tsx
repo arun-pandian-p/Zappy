@@ -911,6 +911,7 @@ const CustomerMenu = () => {
         orderCount={customerOrders.filter(o => o.status !== 'completed').length}
       />
     </div>
+    </TenantThemeProvider>
   );
 };
 
