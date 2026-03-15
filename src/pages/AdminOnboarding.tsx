@@ -487,7 +487,7 @@ const AdminOnboarding = () => {
             )}
 
             {step === 1 && (
-              <GlassCard icon={Upload} title="Branding Assets" <GlassCard icon={Upload} title="Branding Assets" desc="Upload your restaurant's visual identity.">>
+              <GlassCard icon={Upload} title="Branding Assets" desc="Upload your restaurant's visual identity.">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <BrandingUploadCard label="Restaurant Logo" field="logo_url" hint="PNG or SVG, square" aspectHint="512×512 recommended" />
                   <BrandingUploadCard label="Favicon" field="favicon_url" hint="Small icon for browser tab" aspectHint="64×64" />
