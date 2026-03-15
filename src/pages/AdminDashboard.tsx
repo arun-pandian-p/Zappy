@@ -92,6 +92,7 @@ import {
 import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
 import { InventoryManager } from "@/components/admin/InventoryManager";
 import { Package } from "lucide-react";
+import { TenantThemeProvider } from "@/components/admin/TenantThemeProvider";
 import { useTables } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
 import { useInvoiceStats } from "@/hooks/useInvoices";
