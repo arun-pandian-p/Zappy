@@ -277,6 +277,7 @@ const SuperAdminDashboard = () => {
               restaurants={restaurants}
               onToggleActive={handleToggleActive}
               onChangeTier={handleChangeTier}
+              onToggleAds={handleToggleAds}
               onViewDetails={handleViewDetails}
             />
           </div>
