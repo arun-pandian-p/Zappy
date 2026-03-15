@@ -23,6 +23,7 @@ const WaiterDashboard = () => {
 
   const urlRestaurantId = searchParams.get('r');
   const restaurantId = authRestaurantId || urlRestaurantId || undefined;
+  const { data: restaurant } = useRestaurant(restaurantId);
 
   const handleLogout = async () => {
     await signOut();
