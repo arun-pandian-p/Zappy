@@ -84,6 +84,10 @@ interface RestaurantSettings {
   primary_color: string;
   secondary_color: string;
   font_family: string;
+  logo_url: string;
+  banner_image_url: string;
+  favicon_url: string;
+  menu_title: string;
 }
 
 const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
