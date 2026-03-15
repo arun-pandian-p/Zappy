@@ -119,6 +119,7 @@ const WaiterDashboard = () => {
   const isLoading = tablesLoading || ordersLoading || callsLoading;
 
   return (
+    <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b">
