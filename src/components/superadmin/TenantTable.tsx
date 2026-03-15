@@ -135,6 +135,7 @@ export function TenantTable({
                 <TableHead className="font-semibold">Restaurant</TableHead>
                 <TableHead className="font-semibold">Slug</TableHead>
                 <TableHead className="font-semibold">Plan</TableHead>
+                <TableHead className="font-semibold">Ads</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold">Created</TableHead>
                 <TableHead className="font-semibold text-right">Actions</TableHead>
