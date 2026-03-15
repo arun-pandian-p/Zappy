@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
-import { useFeatureGate, type FeatureKey, type LockReason } from "@/hooks/useFeatureGate";
+import { useFeatureGate, type FeatureKey, type LockReason, type FeatureToggles } from "@/hooks/useFeatureGate";
 import { FeatureLockedModal } from "@/components/admin/FeatureLockedModal";
 import { ImageCropDialog } from "@/components/admin/ImageCropDialog";
 import type { Database } from "@/integrations/supabase/types";
@@ -82,6 +82,7 @@ interface AdminSidebarProps {
   restaurantLogo?: string | null;
   subscriptionTier?: SubscriptionTier | null;
   adsEnabled?: boolean | null;
+  featureToggles?: FeatureToggles | null;
 }
 
 export function AdminSidebar({
@@ -92,6 +93,7 @@ export function AdminSidebar({
   restaurantLogo,
   subscriptionTier,
   adsEnabled,
+  featureToggles,
 }: AdminSidebarProps) {
   const navigate = useNavigate();
   const { state, toggleSidebar } = useSidebar();
@@ -100,7 +102,7 @@ export function AdminSidebar({
   const navItems = onboardingCompleted ? allNavItems : onboardingNavItems;
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Admin";
 
-  const { canAccess, isLocked } = useFeatureGate(subscriptionTier, adsEnabled);
+  const { canAccess, isLocked } = useFeatureGate(subscriptionTier, adsEnabled, featureToggles);
 
   const [lockModalOpen, setLockModalOpen] = useState(false);
   const [lockModalFeature, setLockModalFeature] = useState("");

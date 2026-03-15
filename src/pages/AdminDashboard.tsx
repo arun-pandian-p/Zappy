@@ -301,7 +301,8 @@ const AdminDashboard = () => {
   const { data: restaurant } = useRestaurant(restaurantId);
   const { canAccess, isLocked } = useFeatureGate(
     restaurant?.subscription_tier,
-    restaurant?.ads_enabled
+    restaurant?.ads_enabled,
+    (restaurant as any)?.feature_toggles
   );
 
   // Feature lock modal state
@@ -516,7 +517,7 @@ const AdminDashboard = () => {
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full bg-muted/30">
-        <AdminSidebar activeTab={activeTab} onTabChange={handleTabChange} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} restaurantName={(restaurant as any)?.name} restaurantLogo={(restaurant as any)?.logo_url} subscriptionTier={restaurant?.subscription_tier} adsEnabled={restaurant?.ads_enabled} />
+        <AdminSidebar activeTab={activeTab} onTabChange={handleTabChange} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} restaurantName={(restaurant as any)?.name} restaurantLogo={(restaurant as any)?.logo_url} subscriptionTier={restaurant?.subscription_tier} adsEnabled={restaurant?.ads_enabled} featureToggles={(restaurant as any)?.feature_toggles} />
 
         <SidebarInset className="flex-1">
           <AdminHeader

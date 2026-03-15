@@ -6,14 +6,36 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Megaphone, Loader2, Building2 } from 'lucide-react';
+import {
+  Search, Megaphone, Loader2, Building2, ChevronDown, ChevronUp,
+  LayoutDashboard, UtensilsCrossed, ClipboardList, ChefHat, Receipt,
+  Star, Users, Eye, Settings, Ticket, FileSpreadsheet, Package, QrCode, Palette, Building,
+} from 'lucide-react';
+import {
+  TOGGLEABLE_FEATURES,
+  FEATURE_LABELS,
+  FEATURE_TIERS,
+  type FeatureKey,
+  type FeatureToggles,
+} from '@/hooks/useFeatureGate';
+
+const FEATURE_ICONS: Partial<Record<FeatureKey, React.ComponentType<{ className?: string }>>> = {
+  coupons: Ticket,
+  promotions: Megaphone,
+  inventory: Package,
+  exports: FileSpreadsheet,
+  branding: Palette,
+  "multi-outlet": Building,
+};
 
 const PromotionsOverview = () => {
   const { toast } = useToast();
   const { data: restaurants = [], isLoading } = useRestaurants();
   const updateRestaurant = useUpdateRestaurant();
   const [search, setSearch] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data: offerCounts = {} } = useQuery({
     queryKey: ['offers-count-by-restaurant'],
@@ -47,6 +69,23 @@ const PromotionsOverview = () => {
     }
   };
 
+  const handleToggleFeature = async (restaurantId: string, feature: FeatureKey, currentToggles: FeatureToggles) => {
+    const currentValue = currentToggles[feature] !== false; // default true
+    const newToggles = { ...currentToggles, [feature]: !currentValue };
+    try {
+      await updateRestaurant.mutateAsync({
+        id: restaurantId,
+        updates: { feature_toggles: newToggles } as any,
+      });
+      toast({
+        title: 'Feature Updated',
+        description: `${FEATURE_LABELS[feature]} ${!currentValue ? 'enabled' : 'disabled'}.`,
+      });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to update feature toggle.', variant: 'destructive' });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -76,10 +115,16 @@ const PromotionsOverview = () => {
         {filtered.map((r) => {
           const activeOffers = offerCounts[r.id] || 0;
           const hasPromos = activeOffers > 0;
+          const isExpanded = expandedId === r.id;
+          const featureToggles: FeatureToggles = (r as any).feature_toggles || {};
+
+          // Count how many toggleable features are disabled
+          const disabledCount = TOGGLEABLE_FEATURES.filter(f => featureToggles[f] === false).length;
 
           return (
             <Card key={r.id} className="overflow-hidden border">
               <CardContent className="p-4 space-y-3">
+                {/* Restaurant header */}
                 <div className="flex items-start gap-3">
                   {r.logo_url ? (
                     <img src={r.logo_url} alt={r.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
@@ -92,11 +137,15 @@ const PromotionsOverview = () => {
                     <h3 className="font-semibold text-sm truncate">{r.name}</h3>
                     <p className="text-xs text-muted-foreground truncate">{r.slug}</p>
                   </div>
-                  <Badge variant={r.subscription_tier === 'enterprise' ? 'default' : r.subscription_tier === 'pro' ? 'secondary' : 'outline'} className="text-[10px] shrink-0">
+                  <Badge
+                    variant={r.subscription_tier === 'enterprise' ? 'default' : r.subscription_tier === 'pro' ? 'secondary' : 'outline'}
+                    className="text-[10px] shrink-0"
+                  >
                     {r.subscription_tier || 'free'}
                   </Badge>
                 </div>
 
+                {/* Ads toggle */}
                 <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-2">
                     <Megaphone className="w-4 h-4 text-muted-foreground" />
@@ -114,6 +163,7 @@ const PromotionsOverview = () => {
                   </div>
                 </div>
 
+                {/* Active Offers */}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Active Offers</span>
                   <div className="flex items-center gap-2">
@@ -121,6 +171,55 @@ const PromotionsOverview = () => {
                     <span className="font-semibold">{activeOffers}</span>
                   </div>
                 </div>
+
+                {/* Feature toggles expand/collapse */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-between text-xs"
+                  onClick={() => setExpandedId(isExpanded ? null : r.id)}
+                >
+                  <span className="flex items-center gap-1.5">
+                    Feature Controls
+                    {disabledCount > 0 && (
+                      <Badge variant="destructive" className="text-[9px] h-4 px-1.5">
+                        {disabledCount} off
+                      </Badge>
+                    )}
+                  </span>
+                  {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </Button>
+
+                {isExpanded && (
+                  <div className="space-y-1.5 pt-1 border-t">
+                    {TOGGLEABLE_FEATURES.map((feature) => {
+                      const Icon = FEATURE_ICONS[feature] || Settings;
+                      const isEnabled = featureToggles[feature] !== false;
+                      const tier = FEATURE_TIERS[feature];
+
+                      return (
+                        <div
+                          key={feature}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-xs font-medium">{FEATURE_LABELS[feature]}</span>
+                            <Badge variant="outline" className="text-[9px] h-4 px-1">
+                              {tier}
+                            </Badge>
+                          </div>
+                          <Switch
+                            checked={isEnabled}
+                            onCheckedChange={() => handleToggleFeature(r.id, feature, featureToggles)}
+                            disabled={updateRestaurant.isPending}
+                            className="scale-75"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {!r.is_active && (
                   <Badge variant="destructive" className="text-[10px] w-full justify-center">

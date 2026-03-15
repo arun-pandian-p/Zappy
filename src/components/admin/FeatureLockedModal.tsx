@@ -1,4 +1,4 @@
-import { Lock, ArrowUpCircle, Settings, Sparkles } from "lucide-react";
+import { Lock, ArrowUpCircle, Settings, Sparkles, ShieldAlert } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,7 @@ export function FeatureLockedModal({
 
   const isPlanLock = lockReason.type === "plan";
   const isAdsToggle = lockReason.type === "ads_toggle";
+  const isDisabledByAdmin = lockReason.type === "disabled_by_admin";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -37,6 +38,8 @@ export function FeatureLockedModal({
           <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
             {isPlanLock ? (
               <Sparkles className="w-8 h-8 text-primary" />
+            ) : isDisabledByAdmin ? (
+              <ShieldAlert className="w-8 h-8 text-destructive" />
             ) : (
               <Lock className="w-8 h-8 text-primary" />
             )}
@@ -44,12 +47,16 @@ export function FeatureLockedModal({
           <DialogTitle className="text-xl">
             {isPlanLock
               ? `Unlock ${featureName}`
-              : `Enable ${featureName}`}
+              : isDisabledByAdmin
+                ? `${featureName} Disabled`
+                : `Enable ${featureName}`}
           </DialogTitle>
           <DialogDescription className="text-base">
             {isPlanLock
               ? `${featureName} requires the ${lockReason.requiredLabel} plan or higher. Upgrade your subscription to access this feature.`
-              : `${featureName} is available on your plan but needs to be enabled in your restaurant settings.`}
+              : isDisabledByAdmin
+                ? `${featureName} has been disabled by the platform administrator. Please contact support to enable this feature.`
+                : `${featureName} is available on your plan but needs to be enabled in your restaurant settings.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -83,7 +90,7 @@ export function FeatureLockedModal({
             className="w-full"
             onClick={() => onOpenChange(false)}
           >
-            Maybe Later
+            {isDisabledByAdmin ? "Close" : "Maybe Later"}
           </Button>
         </DialogFooter>
       </DialogContent>
