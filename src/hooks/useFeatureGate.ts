@@ -6,7 +6,7 @@ export type FeatureKey =
   | "dashboard" | "menu" | "orders" | "kitchen" | "billing" | "qr-manager"
   | "reviews" | "users" | "preview" | "settings"
   | "coupons" | "ads" | "offers" | "exports" | "research"
-  | "promotions" | "branding" | "multi-outlet";
+  | "promotions" | "branding" | "multi-outlet" | "inventory";
 
 const FEATURE_TIERS: Record<FeatureKey, SubscriptionTier> = {
   dashboard: "free",
