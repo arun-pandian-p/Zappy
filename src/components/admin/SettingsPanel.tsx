@@ -23,6 +23,7 @@ import {
   XCircle,
   RefreshCw,
   Palette,
+  Image as ImageLucide,
 } from "lucide-react";
 import { BrandingAnimationSettings, type BrandingConfig, defaultBrandingConfig } from "@/components/branding/BrandingAnimationSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -83,6 +84,10 @@ interface RestaurantSettings {
   primary_color: string;
   secondary_color: string;
   font_family: string;
+  logo_url: string;
+  banner_image_url: string;
+  favicon_url: string;
+  menu_title: string;
 }
 
 const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
@@ -111,6 +116,10 @@ const defaultSettings: RestaurantSettings = {
   primary_color: "#F97316",
   secondary_color: "#FDE68A",
   font_family: "Inter",
+  logo_url: "",
+  banner_image_url: "",
+  favicon_url: "",
+  menu_title: "",
 };
 
 export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
@@ -205,6 +214,10 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         primary_color: restaurant.primary_color || "#F97316",
         secondary_color: restaurant.secondary_color || "#FDE68A",
         font_family: restaurant.font_family || "Inter",
+        logo_url: restaurant.logo_url || "",
+        banner_image_url: restaurant.banner_image_url || "",
+        favicon_url: restaurant.favicon_url || "",
+        menu_title: restaurant.menu_title || "",
       });
     }
   }, [restaurant]);
@@ -245,6 +258,10 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           primary_color: settings.primary_color,
           secondary_color: settings.secondary_color,
           font_family: settings.font_family,
+          logo_url: settings.logo_url || null,
+          banner_image_url: settings.banner_image_url || null,
+          favicon_url: settings.favicon_url || null,
+          menu_title: settings.menu_title || null,
           theme_config: {
             preset: settings.theme_preset,
             custom_primary: settings.theme_preset === 'custom' ? settings.primary_color : null,
@@ -478,6 +495,105 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                   {settings.font_family} · {settings.theme_preset}
                 </p>
                 <p className="text-xs text-muted-foreground">Preview of selected theme</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Customer Menu Branding */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.07 }}
+      >
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ImageLucide className="w-5 h-5" />
+              Customer Menu Branding
+            </CardTitle>
+            <CardDescription>Upload logo, banner & favicon shown on the customer-facing menu</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {/* Logo */}
+            <div className="space-y-2">
+              <Label>Restaurant Logo</Label>
+              <p className="text-xs text-muted-foreground">Displayed in the top bar and splash screen. Square image recommended.</p>
+              <ImageUpload
+                currentImageUrl={settings.logo_url || null}
+                onImageUploaded={(url) => setSettings({ ...settings, logo_url: url })}
+                restaurantId={restaurantId}
+                folder="branding"
+                maxSizeMB={2}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Banner */}
+            <div className="space-y-2">
+              <Label>Banner Image</Label>
+              <p className="text-xs text-muted-foreground">Hero banner at the top of the customer menu. 1200×400 recommended.</p>
+              <ImageUpload
+                currentImageUrl={settings.banner_image_url || null}
+                onImageUploaded={(url) => setSettings({ ...settings, banner_image_url: url })}
+                restaurantId={restaurantId}
+                folder="branding"
+                maxSizeMB={5}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Favicon */}
+            <div className="space-y-2">
+              <Label>Favicon</Label>
+              <p className="text-xs text-muted-foreground">Small icon shown in browser tabs. 32×32 or 64×64 PNG recommended.</p>
+              <ImageUpload
+                currentImageUrl={settings.favicon_url || null}
+                onImageUploaded={(url) => setSettings({ ...settings, favicon_url: url })}
+                restaurantId={restaurantId}
+                folder="branding"
+                maxSizeMB={1}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Menu Title */}
+            <div className="space-y-2">
+              <Label>Menu Title</Label>
+              <Input
+                value={settings.menu_title}
+                onChange={(e) => setSettings({ ...settings, menu_title: e.target.value })}
+                placeholder="e.g. Our Menu, Today's Specials"
+              />
+              <p className="text-xs text-muted-foreground">Custom heading displayed above menu categories. Leave empty for default.</p>
+            </div>
+
+            {/* Live preview */}
+            <div className="rounded-lg border overflow-hidden bg-muted/30">
+              <p className="text-xs text-muted-foreground px-3 pt-2 pb-1">Preview</p>
+              <div className="relative">
+                {settings.banner_image_url ? (
+                  <img src={settings.banner_image_url} alt="" className="w-full h-20 object-cover" />
+                ) : (
+                  <div className="w-full h-20 bg-muted flex items-center justify-center text-muted-foreground text-xs">No banner</div>
+                )}
+              </div>
+              <div className="flex items-center gap-3 px-3 py-2">
+                {settings.logo_url ? (
+                  <img src={settings.logo_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-primary/20" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                    {settings.name?.charAt(0) || 'R'}
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-bold">{settings.name || 'Restaurant'}</p>
+                  <p className="text-[10px] text-muted-foreground">Table T1</p>
+                </div>
               </div>
             </div>
           </CardContent>
