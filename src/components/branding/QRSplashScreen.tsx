@@ -26,6 +26,9 @@ export function QRSplashScreen({
   const [progress, setProgress] = useState(0);
   const [logoFailed, setLogoFailed] = useState(false);
 
+  // Reset logo fallback when URL changes
+  useEffect(() => { setLogoFailed(false); }, [logoUrl]);
+
   // Auto-dismiss after 3s max or when loading finishes
   useEffect(() => {
     const timer = setInterval(() => {

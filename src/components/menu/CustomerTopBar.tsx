@@ -46,6 +46,10 @@ export function CustomerTopBar({
   const [logoFailed, setLogoFailed] = useState(false);
   const [bannerFailed, setBannerFailed] = useState(false);
 
+  // Reset fallback states when URLs change (tenant switch)
+  useEffect(() => { setLogoFailed(false); }, [logoUrl]);
+  useEffect(() => { setBannerFailed(false); }, [bannerImageUrl]);
+
   useEffect(() => {
     const unsubscribe = scrollY.on("change", (v) => setIsScrolled(v > 30));
     return () => unsubscribe();
