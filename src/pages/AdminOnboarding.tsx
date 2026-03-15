@@ -160,10 +160,6 @@ const AdminOnboarding = () => {
 
   const handleUpload = async (field: keyof typeof branding, file: File) => {
     if (!restaurantId) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: 'File too large', description: 'Max 2MB allowed.', variant: 'destructive' });
-      return;
-    }
 
     setUploading(field);
     const ext = file.name.split('.').pop();
