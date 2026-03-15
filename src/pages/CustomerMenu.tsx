@@ -968,6 +968,17 @@ const CustomerMenu = () => {
         cartCount={getTotalItems()}
         orderCount={customerOrders.filter(o => o.status !== 'completed').length}
       />
+
+      {/* Post-Order Review Prompt */}
+      {lastPlacedOrderId && restaurantId && (
+        <PostOrderReviewPrompt
+          restaurantId={restaurantId}
+          orderId={lastPlacedOrderId}
+          tableId={resolvedTableId}
+          googleReviewUrl={restaurant?.google_review_url}
+          delayMs={5000}
+        />
+      )}
     </div>
     </TenantThemeProvider>
   );
