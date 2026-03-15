@@ -117,6 +117,7 @@ const CustomerMenu = () => {
   const [lastAddedItem, setLastAddedItem] = useState('');
   const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('grid');
   const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
+  const [reviewImmediate, setReviewImmediate] = useState(false);
   const prevOrderStatusesRef = useRef<Record<string, string>>({});
 
   // Fetch restaurant data
