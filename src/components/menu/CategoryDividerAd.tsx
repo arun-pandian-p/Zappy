@@ -13,6 +13,7 @@ interface CategoryDividerAdProps {
     link_url?: string | null;
     cta_text?: string | null;
   };
+  onDismiss?: () => void;
 }
 
 export function CategoryDividerAd({ ad }: CategoryDividerAdProps) {
