@@ -36,6 +36,7 @@ interface TenantTableProps {
   restaurants: Restaurant[];
   onToggleActive: (id: string, currentValue: boolean) => void;
   onChangeTier: (id: string, tier: SubscriptionTier) => void;
+  onToggleAds?: (id: string, currentValue: boolean) => void;
   onViewDetails?: (id: string) => void;
   onDelete?: (id: string) => void;
   isLoading?: boolean;
@@ -45,6 +46,7 @@ export function TenantTable({
   restaurants, 
   onToggleActive, 
   onChangeTier,
+  onToggleAds,
   onViewDetails,
   onDelete,
   isLoading 
@@ -133,6 +135,7 @@ export function TenantTable({
                 <TableHead className="font-semibold">Restaurant</TableHead>
                 <TableHead className="font-semibold">Slug</TableHead>
                 <TableHead className="font-semibold">Plan</TableHead>
+                <TableHead className="font-semibold">Ads</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold">Created</TableHead>
                 <TableHead className="font-semibold text-right">Actions</TableHead>
@@ -168,6 +171,19 @@ export function TenantTable({
                         <SelectItem value="enterprise">Enterprise</SelectItem>
                       </SelectContent>
                     </Select>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {onToggleAds && (
+                        <Switch
+                          checked={restaurant.ads_enabled ?? true}
+                          onCheckedChange={() => onToggleAds(restaurant.id, restaurant.ads_enabled ?? true)}
+                        />
+                      )}
+                      <Badge variant="outline" className={`text-xs ${restaurant.ads_enabled !== false ? 'border-primary/50 text-primary' : 'border-muted-foreground/30 text-muted-foreground'}`}>
+                        {restaurant.ads_enabled !== false ? 'With Ads' : 'Ad-Free'}
+                      </Badge>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -219,9 +235,9 @@ export function TenantTable({
               ))}
               {filteredRestaurants.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    No restaurants found
-                  </TableCell>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      No restaurants found
+                    </TableCell>
                 </TableRow>
               )}
             </TableBody>
