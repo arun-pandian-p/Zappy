@@ -212,6 +212,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   }
 
   return (
+    <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <div className="min-h-screen bg-background">
       {/* Header - hidden when embedded */}
       {!embedded && (
