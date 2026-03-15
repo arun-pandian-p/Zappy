@@ -431,6 +431,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
         />
       )}
     </div>
+    </TenantThemeProvider>
   );
 };
 
