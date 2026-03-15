@@ -77,7 +77,7 @@ export function useFeatureGate(
       };
     }
 
-    if ((feature === "ads" || feature === "offers") && !adsToggle) {
+    if ((feature === "ads" || feature === "offers" || feature === "promotions") && !adsToggle) {
       return { type: "ads_toggle" };
     }
 
