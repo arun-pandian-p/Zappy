@@ -93,6 +93,7 @@ export function AdminSidebar({
   restaurantLogo,
   subscriptionTier,
   adsEnabled,
+  featureToggles,
 }: AdminSidebarProps) {
   const navigate = useNavigate();
   const { state, toggleSidebar } = useSidebar();
