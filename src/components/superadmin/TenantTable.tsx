@@ -46,6 +46,7 @@ export function TenantTable({
   restaurants, 
   onToggleActive, 
   onChangeTier,
+  onToggleAds,
   onViewDetails,
   onDelete,
   isLoading 
