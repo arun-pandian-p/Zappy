@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Progress } from "@/components/ui/progress";
 import { AnimatedHotelName, type LetterAnimation, type AnimationSpeed } from "./AnimatedHotelName";
 import { MascotIcon, type MascotType } from "./MascotIcon";
 
@@ -49,12 +48,14 @@ export function QRSplashScreen({
     return () => clearTimeout(t);
   }, []);
 
+  const displayName = restaurantName || 'Restaurant';
+  const progressBarColor = primaryColor || undefined;
+
   return (
     <AnimatePresence>
       {show && (
         <motion.div
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 p-8"
-          style={{ backgroundColor: 'hsl(var(--background))' }}
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 p-8 bg-background"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
@@ -62,7 +63,7 @@ export function QRSplashScreen({
           {logoUrl ? (
             <motion.img
               src={logoUrl}
-              alt={restaurantName}
+              alt={displayName}
               className="w-24 h-24 rounded-2xl object-cover shadow-lg border-2 border-primary/20"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -76,13 +77,13 @@ export function QRSplashScreen({
               transition={{ duration: 0.4 }}
             >
               <span className="text-4xl font-bold text-primary">
-                {restaurantName.charAt(0)}
+                {displayName.charAt(0)}
               </span>
             </motion.div>
           )}
 
           <AnimatedHotelName
-            name={restaurantName}
+            name={displayName}
             animation={animation}
             speed={speed}
             primaryColor={primaryColor}
@@ -91,11 +92,20 @@ export function QRSplashScreen({
 
           <MascotIcon mascot={mascot} size={56} primaryColor={primaryColor} />
 
-          <div className="w-48">
-            <Progress value={progress} className="h-1.5" />
+          {/* Custom progress bar with primary color support */}
+          <div className="w-48 h-1.5 rounded-full bg-secondary overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-primary"
+              style={progressBarColor ? { backgroundColor: progressBarColor } : undefined}
+              initial={{ width: '0%' }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.1 }}
+            />
           </div>
 
-          <p className="text-xs text-muted-foreground">Loading {restaurantName !== 'Restaurant' ? restaurantName : 'menu'}…</p>
+          <p className="text-xs text-muted-foreground">
+            Loading {displayName !== 'Restaurant' ? displayName : 'menu'}…
+          </p>
         </motion.div>
       )}
     </AnimatePresence>

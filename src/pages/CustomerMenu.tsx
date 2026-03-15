@@ -858,6 +858,7 @@ const CustomerMenu = () => {
       <CustomerTopBar
         restaurantName={restaurant?.name || 'Restaurant'}
         logoUrl={cacheBustUrl(restaurant?.logo_url)}
+        bannerImageUrl={cacheBustUrl(restaurant?.banner_image_url || restaurant?.cover_image_url)}
         tableNumber={tableNumber || 'Select Table'}
         cartCount={getTotalItems()}
         onCallWaiter={handleCallWaiter}
