@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -76,6 +76,7 @@ const AdminOnboarding = () => {
   const [branding, setBranding] = useState({
     logo_url: '', favicon_url: '', banner_image_url: '', cover_image_url: '',
   });
+  const brandingInitialized = useRef(false);
   const [uploading, setUploading] = useState<string | null>(null);
   const [cropState, setCropState] = useState<{ field: keyof typeof branding; src: string } | null>(null);
 
@@ -109,12 +110,16 @@ const AdminOnboarding = () => {
         email: restaurant.email || '',
         cuisine_type: (restaurant.settings as any)?.cuisine_type || '',
       });
-      setBranding({
-        logo_url: restaurant.logo_url || '',
-        favicon_url: restaurant.favicon_url || '',
-        banner_image_url: restaurant.banner_image_url || '',
-        cover_image_url: restaurant.cover_image_url || '',
-      });
+      // Only populate branding from DB on first load to avoid overwriting user uploads
+      if (!brandingInitialized.current) {
+        brandingInitialized.current = true;
+        setBranding({
+          logo_url: restaurant.logo_url || '',
+          favicon_url: restaurant.favicon_url || '',
+          banner_image_url: restaurant.banner_image_url || '',
+          cover_image_url: restaurant.cover_image_url || '',
+        });
+      }
       setConfig({
         tax_rate: Number(restaurant.tax_rate) || 5,
         service_charge_rate: Number(restaurant.service_charge_rate) || 0,
