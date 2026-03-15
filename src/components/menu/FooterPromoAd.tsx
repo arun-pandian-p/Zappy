@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
+import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import { useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
 
 interface FooterPromoAdProps {
@@ -11,9 +13,10 @@ interface FooterPromoAdProps {
     link_url?: string | null;
     cta_text?: string | null;
   };
+  onDismiss?: () => void;
 }
 
-export function FooterPromoAd({ ad }: FooterPromoAdProps) {
+export function FooterPromoAd({ ad, onDismiss }: FooterPromoAdProps) {
   const trackImpression = useTrackAdImpression();
   const trackClick = useTrackAdClick();
 
@@ -43,10 +46,20 @@ export function FooterPromoAd({ ad }: FooterPromoAdProps) {
           <p className="font-semibold text-sm truncate">{ad.title}</p>
           {ad.description && <p className="text-xs opacity-80 truncate">{ad.description}</p>}
         </div>
-        {(ad as any).cta_text && (
+        {ad.cta_text && (
           <span className="px-3 py-1.5 bg-background text-foreground text-xs font-bold rounded-full whitespace-nowrap">
-            {(ad as any).cta_text}
+            {ad.cta_text}
           </span>
+        )}
+        {onDismiss && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 bg-black/30 hover:bg-black/50 text-white rounded-full flex-shrink-0"
+            onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+          >
+            <X className="w-3 h-3" />
+          </Button>
         )}
       </div>
     </motion.div>

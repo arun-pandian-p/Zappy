@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
+import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import { useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
 
 interface CategoryDividerAdProps {
@@ -11,9 +13,10 @@ interface CategoryDividerAdProps {
     link_url?: string | null;
     cta_text?: string | null;
   };
+  onDismiss?: () => void;
 }
 
-export function CategoryDividerAd({ ad }: CategoryDividerAdProps) {
+export function CategoryDividerAd({ ad, onDismiss }: CategoryDividerAdProps) {
   const trackImpression = useTrackAdImpression();
   const trackClick = useTrackAdClick();
 
@@ -41,10 +44,20 @@ export function CategoryDividerAd({ ad }: CategoryDividerAdProps) {
           <p className="font-semibold text-sm">{ad.title}</p>
           {ad.description && <p className="text-xs text-muted-foreground line-clamp-1">{ad.description}</p>}
         </div>
-        {(ad as any).cta_text && (
+        {ad.cta_text && (
           <span className="px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full whitespace-nowrap">
-            {(ad as any).cta_text}
+            {ad.cta_text}
           </span>
+        )}
+        {onDismiss && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 hover:bg-accent/50 rounded-full flex-shrink-0"
+            onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+          >
+            <X className="w-3 h-3" />
+          </Button>
         )}
       </div>
     </motion.div>

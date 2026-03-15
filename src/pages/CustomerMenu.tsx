@@ -146,6 +146,8 @@ const CustomerMenu = () => {
   const { data: dividerAds = [] } = useAdsByPlacement('category_divider', restaurantId);
   const { data: footerAds = [] } = useAdsByPlacement('footer_banner', restaurantId);
   const [headerAdDismissed, setHeaderAdDismissed] = useState(false);
+  const [dividerAdDismissed, setDividerAdDismissed] = useState(false);
+  const [footerAdDismissed, setFooterAdDismissed] = useState(false);
   const headerAd = headerAds[0] || null;
   const dividerAd = dividerAds[0] || null;
   const footerAd = footerAds[0] || null;
@@ -611,8 +613,8 @@ const CustomerMenu = () => {
       </div>
 
       {/* Category Divider Ad */}
-      {restaurant?.ads_enabled !== false && dividerAd && selectedCategory === 'All' && (
-        <CategoryDividerAd ad={dividerAd} />
+      {restaurant?.ads_enabled !== false && dividerAd && selectedCategory === 'All' && !dividerAdDismissed && (
+        <CategoryDividerAd ad={dividerAd} onDismiss={() => setDividerAdDismissed(true)} />
       )}
 
       {/* Menu Items */}
@@ -950,8 +952,8 @@ const CustomerMenu = () => {
       )}
 
       {/* Footer Promo Ad */}
-      {restaurant?.ads_enabled !== false && footerAd && currentView === 'menu' && (
-        <FooterPromoAd ad={footerAd} />
+      {restaurant?.ads_enabled !== false && footerAd && currentView === 'menu' && !footerAdDismissed && (
+        <FooterPromoAd ad={footerAd} onDismiss={() => setFooterAdDismissed(true)} />
       )}
 
       {/* Bottom Navigation */}
