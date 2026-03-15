@@ -613,8 +613,8 @@ const CustomerMenu = () => {
       </div>
 
       {/* Category Divider Ad */}
-      {restaurant?.ads_enabled !== false && dividerAd && selectedCategory === 'All' && (
-        <CategoryDividerAd ad={dividerAd} />
+      {restaurant?.ads_enabled !== false && dividerAd && selectedCategory === 'All' && !dividerAdDismissed && (
+        <CategoryDividerAd ad={dividerAd} onDismiss={() => setDividerAdDismissed(true)} />
       )}
 
       {/* Menu Items */}
