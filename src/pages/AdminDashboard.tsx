@@ -1021,6 +1021,7 @@ const AdminDashboard = () => {
         </SidebarInset>
       </div>
     </SidebarProvider>
+    </TenantThemeProvider>
   );
 };
 

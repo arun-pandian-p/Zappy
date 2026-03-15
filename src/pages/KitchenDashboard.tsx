@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useSound, SOUNDS } from '@/hooks/useSound';
 import { useOrders, useKitchenOrderActions, type OrderWithItems } from '@/hooks/useOrders';
 import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
+import { useRestaurant } from '@/hooks/useRestaurant';
+import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 
 import { usePrinter } from '@/hooks/usePrinter';
 import { CancelOrderDialog } from '@/components/admin/CancelOrderDialog';
