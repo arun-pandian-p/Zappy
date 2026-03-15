@@ -834,6 +834,7 @@ const CustomerMenu = () => {
   );
 
   return (
+    <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <div className="min-h-screen bg-background pb-24">
       {/* Table Picker Dialog */}
       <TablePickerDialog
