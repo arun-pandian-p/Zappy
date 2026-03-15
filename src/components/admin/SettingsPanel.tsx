@@ -525,7 +525,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                 onImageUploaded={(url) => setSettings({ ...settings, logo_url: url })}
                 restaurantId={restaurantId}
                 folder="branding"
-                maxSizeMB={2}
+                maxSizeMB={10}
               />
             </div>
 
