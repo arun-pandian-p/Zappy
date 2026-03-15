@@ -174,6 +174,19 @@ export function TenantTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
+                      {onToggleAds && (
+                        <Switch
+                          checked={restaurant.ads_enabled ?? true}
+                          onCheckedChange={() => onToggleAds(restaurant.id, restaurant.ads_enabled ?? true)}
+                        />
+                      )}
+                      <Badge variant="outline" className={`text-xs ${restaurant.ads_enabled !== false ? 'border-primary/50 text-primary' : 'border-muted-foreground/30 text-muted-foreground'}`}>
+                        {restaurant.ads_enabled !== false ? 'With Ads' : 'Ad-Free'}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
                       <Switch
                         checked={restaurant.is_active ?? false}
                         onCheckedChange={() => onToggleActive(restaurant.id, restaurant.is_active ?? false)}
