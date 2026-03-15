@@ -11,6 +11,7 @@ interface FooterPromoAdProps {
     link_url?: string | null;
     cta_text?: string | null;
   };
+  onDismiss?: () => void;
 }
 
 export function FooterPromoAd({ ad }: FooterPromoAdProps) {
