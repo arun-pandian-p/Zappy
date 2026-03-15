@@ -317,12 +317,18 @@ const CustomerMenu = () => {
   // ===== Trigger review prompt when an order reaches "served" =====
   useEffect(() => {
     const prev = prevOrderStatusesRef.current;
+    const isFirstLoad = Object.keys(prev).length === 0;
+
     for (const order of customerOrders) {
-      const prevStatus = prev[order.id];
-      if (prevStatus && prevStatus !== 'served' && order.status === 'served') {
-        // Order just transitioned to served
-        setReviewOrderId(order.id);
-        break;
+      if (order.status === 'served') {
+        const prevStatus = prev[order.id];
+        const alreadyReviewed = localStorage.getItem(`zappy_review_shown_${order.id}`);
+        
+        // Trigger on real-time transition OR on first load for unreviewed served orders
+        if (!alreadyReviewed && (isFirstLoad || (prevStatus && prevStatus !== 'served'))) {
+          setReviewOrderId(order.id);
+          break;
+        }
       }
     }
     // Update previous statuses
