@@ -43,10 +43,11 @@ export function FoodCard({
     >
       <Card className="overflow-hidden card-hover border-0 shadow-md">
         {/* Image Section with Badges */}
-        <div className="relative aspect-[3/2] overflow-hidden">
+        <div className="relative aspect-[3/2] overflow-hidden bg-muted">
           <img
             src={imageUrl || "/placeholder.svg"}
             alt={name}
+            loading="lazy"
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           />
           

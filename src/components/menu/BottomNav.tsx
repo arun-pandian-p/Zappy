@@ -31,7 +31,7 @@ export function BottomNav({
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t shadow-lg pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t shadow-lg pb-safe" style={{ minHeight: '64px' }}>
       <div className="container mx-auto px-4">
         <div className="flex justify-around items-center py-2">
           {navItems.map(({ view, icon: Icon, label }) => {
