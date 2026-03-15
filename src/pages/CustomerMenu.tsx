@@ -58,20 +58,27 @@ const CustomerMenu = () => {
   const tableId = searchParams.get('table') || '';
   const isDemoMode = searchParams.get('demo') === 'true';
 
-  // Slug-based tenant resolution
+  // Slug-based tenant resolution — also fetch basic branding for splash
   const [resolvedRestaurantId, setResolvedRestaurantId] = useState(restaurantIdParam);
+  const [splashBranding, setSplashBranding] = useState<{
+    name: string; logo_url: string | null; primary_color: string | null;
+  } | null>(null);
   
   useEffect(() => {
-    if (slug && !restaurantIdParam) {
-      supabase
-        .from('restaurants_public')
-        .select('id')
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .single()
-        .then(({ data }) => {
-          if (data) setResolvedRestaurantId(data.id);
-        });
+    const idToUse = restaurantIdParam || undefined;
+    const query = slug && !restaurantIdParam
+      ? supabase.from('restaurants_public').select('id, name, logo_url, primary_color').eq('slug', slug).eq('is_active', true).single()
+      : idToUse
+      ? supabase.from('restaurants_public').select('id, name, logo_url, primary_color').eq('id', idToUse).single()
+      : null;
+
+    if (query) {
+      query.then(({ data }) => {
+        if (data) {
+          if (!restaurantIdParam) setResolvedRestaurantId(data.id);
+          setSplashBranding({ name: data.name, logo_url: data.logo_url, primary_color: data.primary_color });
+        }
+      });
     }
   }, [slug, restaurantIdParam]);
 
