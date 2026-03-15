@@ -544,6 +544,9 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                 restaurantId={restaurantId}
                 folder="branding"
                 maxSizeMB={10}
+                enableCrop
+                cropShape="rect"
+                cropAspect={3}
               />
             </div>
 
