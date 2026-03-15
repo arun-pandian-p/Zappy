@@ -868,16 +868,21 @@ const CustomerMenu = () => {
     </div>
   );
 
+  // Use splash branding (fast) or restaurant data (complete) for the splash screen
+  const splashName = restaurant?.name || splashBranding?.name || 'Restaurant';
+  const splashLogo = cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url);
+  const splashColor = primaryColor || splashBranding?.primary_color || undefined;
+
   return (
     <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     {/* Splash Screen Overlay */}
     <QRSplashScreen
-      restaurantName={restaurant?.name || 'Restaurant'}
-      logoUrl={cacheBustUrl(restaurant?.logo_url)}
+      restaurantName={splashName}
+      logoUrl={splashLogo}
       animation={brandingConfig.letter_animation}
       speed={brandingConfig.animation_speed}
       mascot={brandingConfig.mascot}
-      primaryColor={primaryColor}
+      primaryColor={splashColor}
       isLoading={!!isDataLoading}
     />
     <div className="min-h-screen bg-background pb-24">
