@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
+  Palette,
 } from "lucide-react";
 import { BrandingAnimationSettings, type BrandingConfig, defaultBrandingConfig } from "@/components/branding/BrandingAnimationSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
