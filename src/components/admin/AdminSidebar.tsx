@@ -197,7 +197,18 @@ export function AdminSidebar({
         <SidebarHeader className="p-4">
           <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between")}>
             <div className="flex items-center gap-3">
-              <ZappyLogo size={collapsed ? 36 : 48} compact variant="dark" />
+              {restaurantLogo ? (
+                <img
+                  src={restaurantLogo}
+                  alt={restaurantName || "Restaurant"}
+                  className={cn(
+                    "rounded-xl object-cover border-2 border-sidebar-foreground/10 shadow-sm",
+                    collapsed ? "w-9 h-9" : "w-11 h-11"
+                  )}
+                />
+              ) : (
+                <ZappyLogo size={collapsed ? 36 : 48} compact variant="dark" />
+              )}
               {!collapsed && (
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}

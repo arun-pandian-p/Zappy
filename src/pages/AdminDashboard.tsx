@@ -526,6 +526,7 @@ const AdminDashboard = () => {
             restaurantName={restaurantName}
             primaryColor={restaurant?.primary_color || undefined}
             branding={(restaurant?.settings as any)?.branding}
+            logoUrl={restaurant?.logo_url}
           />
 
           {/* Tab Navigation */}
