@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Save, Loader2, User, Upload, X, ImageIcon, Plus, Trash2, Users, Mail } from 'lucide-react';
+import { Save, Loader2, User, Upload, X, ImageIcon, Plus, Trash2, Users, Mail, Camera } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,6 +64,24 @@ function useTeamMembers() {
   return { members: query.data || [], isLoading: query.isLoading, addMember, removeMember };
 }
 
+async function uploadAvatarToStorage(file: File, userId: string): Promise<string> {
+  const ext = file.name.split('.').pop() || 'jpg';
+  const filePath = `${userId}/avatar.${ext}`;
+
+  const { error } = await supabase.storage
+    .from('avatars')
+    .upload(filePath, file, { upsert: true });
+
+  if (error) throw error;
+
+  const { data: urlData } = supabase.storage
+    .from('avatars')
+    .getPublicUrl(filePath);
+
+  // Add cache-bust to force refresh
+  return `${urlData.publicUrl}?t=${Date.now()}`;
+}
+
 export function SuperAdminProfileEditor() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -77,11 +95,13 @@ export function SuperAdminProfileEditor() {
     theme_preference: 'system',
   });
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [newEmail, setNewEmail] = useState('');
   const [isAddingMember, setIsAddingMember] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile) {
@@ -103,20 +123,30 @@ export function SuperAdminProfileEditor() {
       toast({ title: 'File too large', description: 'Maximum file size is 5MB.', variant: 'destructive' });
       return;
     }
+    // Show preview immediately
     const reader = new FileReader();
     reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      setPreviewUrl(dataUrl);
-      setForm((prev) => ({ ...prev, avatar_url: dataUrl }));
+      setPreviewUrl(e.target?.result as string);
       setSelectedEmoji(null);
     };
     reader.readAsDataURL(file);
+    setPendingFile(file);
   }, [toast]);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }, []);
-  const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }, []);
+  // WhatsApp-style: click avatar to upload
+  const handleAvatarClick = () => {
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileSelect(file);
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); }, []);
+  const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); }, []);
   const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault(); e.stopPropagation(); setIsDragging(false);
+    e.preventDefault(); e.stopPropagation();
     const file = e.dataTransfer.files?.[0];
     if (file) handleFileSelect(file);
   }, [handleFileSelect]);
@@ -129,16 +159,41 @@ export function SuperAdminProfileEditor() {
   const clearAvatar = () => {
     setPreviewUrl(null);
     setSelectedEmoji(null);
+    setPendingFile(null);
     setForm((prev) => ({ ...prev, avatar_url: '' }));
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
   };
 
-  const handleSave = () => {
-    const avatarUrl = selectedEmoji ? `emoji:${selectedEmoji}` : form.avatar_url;
+  const handleSave = async () => {
+    if (!user?.id) return;
+
+    let avatarUrl = form.avatar_url;
+
+    // Upload file to storage if pending
+    if (pendingFile) {
+      setIsUploading(true);
+      try {
+        avatarUrl = await uploadAvatarToStorage(pendingFile, user.id);
+      } catch (err: any) {
+        toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    } else if (selectedEmoji) {
+      avatarUrl = `emoji:${selectedEmoji}`;
+    }
+
     upsertProfile.mutate(
       { ...form, avatar_url: avatarUrl },
       {
-        onSuccess: () => { toast({ title: 'Profile Updated', description: 'Your profile has been saved.' }); setSelectedEmoji(null); setPreviewUrl(null); },
+        onSuccess: () => {
+          toast({ title: 'Profile Updated', description: 'Your profile has been saved.' });
+          setSelectedEmoji(null);
+          setPreviewUrl(null);
+          setPendingFile(null);
+        },
         onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
       }
     );
@@ -185,61 +240,67 @@ export function SuperAdminProfileEditor() {
         <p className="text-sm text-muted-foreground">Customize your identity on the platform.</p>
       </div>
 
-      {/* Avatar Card */}
+      {/* Avatar Card — WhatsApp Style */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Avatar</CardTitle>
-          <CardDescription>Drag & drop an image, upload, or pick an emoji</CardDescription>
+          <CardTitle className="text-base">Profile Photo</CardTitle>
+          <CardDescription>Click your photo to change it, just like WhatsApp</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-start gap-6">
-            <div className="relative group">
-              <Avatar className="w-24 h-24">
-                {displayAvatar ? <AvatarImage src={displayAvatar} /> : null}
+            {/* WhatsApp-style clickable avatar */}
+            <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
+              <Avatar className="w-28 h-28 ring-4 ring-primary/10 transition-all group-hover:ring-primary/30">
+                {displayAvatar ? <AvatarImage src={displayAvatar} className="object-cover" /> : null}
                 <AvatarFallback className="bg-primary/10 text-primary text-3xl">
                   {displayEmoji || (form.display_name?.charAt(0) || 'SA')}
                 </AvatarFallback>
               </Avatar>
-              {(displayAvatar || displayEmoji) && (
-                <button onClick={clearAvatar} className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <X className="w-3 h-3" />
-                </button>
+              {/* Camera overlay on hover */}
+              <div className="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+                <Camera className="w-6 h-6 text-white mb-1" />
+                <span className="text-[10px] text-white font-medium uppercase tracking-wide">Change</span>
+              </div>
+              {isUploading && (
+                <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                </div>
               )}
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarInputChange}
+                className="hidden"
+              />
             </div>
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`flex-1 border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                isDragging ? 'border-primary bg-primary/5 scale-[1.02]' : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50'
-              }`}
-            >
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileInputChange} className="hidden" />
-              <div className="flex flex-col items-center gap-2">
-                {isDragging ? (
-                  <>
-                    <ImageIcon className="w-8 h-8 text-primary animate-bounce" />
-                    <p className="text-sm font-medium text-primary">Drop image here</p>
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-8 h-8 text-muted-foreground" />
-                    <p className="text-sm font-medium">Drag & drop or click to upload</p>
-                    <p className="text-xs text-muted-foreground">PNG, JPG, WEBP up to 5MB</p>
-                  </>
-                )}
+
+            <div className="flex-1 space-y-3">
+              <div>
+                <p className="text-sm font-medium">{form.display_name || 'Super Admin'}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+              </div>
+              {(displayAvatar || displayEmoji) && (
+                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); clearAvatar(); }}>
+                  <X className="w-3 h-3 mr-1" /> Remove Photo
+                </Button>
+              )}
+
+              {/* Drag & drop zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50"
+              >
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileInputChange} className="hidden" />
+                <div className="flex items-center gap-2 justify-center">
+                  <Upload className="w-4 h-4 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">Or drag & drop here</p>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Or enter an image URL</Label>
-            <Input
-              value={form.avatar_url?.startsWith('emoji:') || form.avatar_url?.startsWith('data:') ? '' : form.avatar_url}
-              onChange={(e) => { setForm({ ...form, avatar_url: e.target.value }); setSelectedEmoji(null); setPreviewUrl(null); }}
-              placeholder="https://..."
-            />
           </div>
 
           <div>
@@ -248,7 +309,7 @@ export function SuperAdminProfileEditor() {
               {EMOJI_AVATARS.map((emoji) => (
                 <button
                   key={emoji}
-                  onClick={() => { setSelectedEmoji(emoji); setPreviewUrl(null); }}
+                  onClick={() => { setSelectedEmoji(emoji); setPreviewUrl(null); setPendingFile(null); }}
                   className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center border-2 transition-all ${
                     selectedEmoji === emoji ? 'border-primary bg-primary/10' : 'border-muted hover:border-primary/50'
                   }`}
@@ -286,8 +347,8 @@ export function SuperAdminProfileEditor() {
         </CardContent>
       </Card>
 
-      <Button onClick={handleSave} disabled={upsertProfile.isPending}>
-        {upsertProfile.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+      <Button onClick={handleSave} disabled={upsertProfile.isPending || isUploading}>
+        {(upsertProfile.isPending || isUploading) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
         Save Profile
       </Button>
 
@@ -301,7 +362,6 @@ export function SuperAdminProfileEditor() {
           <CardDescription>Add or remove Super Admin team members by email address.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Add member */}
           <div className="flex gap-2">
             <div className="flex-1 relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -319,7 +379,6 @@ export function SuperAdminProfileEditor() {
             </Button>
           </div>
 
-          {/* Team members list */}
           {teamLoading ? (
             <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin" /></div>
           ) : members.length === 0 ? (
