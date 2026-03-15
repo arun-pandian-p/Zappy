@@ -822,6 +822,16 @@ const CustomerMenu = () => {
 
   return (
     <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
+    {/* Splash Screen Overlay */}
+    <QRSplashScreen
+      restaurantName={restaurant?.name || 'Restaurant'}
+      logoUrl={cacheBustUrl(restaurant?.logo_url)}
+      animation={brandingConfig.letter_animation}
+      speed={brandingConfig.animation_speed}
+      mascot={brandingConfig.mascot}
+      primaryColor={primaryColor}
+      isLoading={!!isDataLoading}
+    />
     <div className="min-h-screen bg-background pb-24">
       {/* Table Picker Dialog */}
       <TablePickerDialog
