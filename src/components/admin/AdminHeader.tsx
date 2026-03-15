@@ -27,6 +27,7 @@ export function AdminHeader({
   restaurantName = "Restaurant Name",
   primaryColor,
   branding,
+  logoUrl,
 }: AdminHeaderProps) {
   const { user } = useAuth();
   const animEnabled = branding?.animation_enabled ?? false;
