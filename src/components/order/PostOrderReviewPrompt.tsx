@@ -18,12 +18,12 @@ interface PostOrderReviewPromptProps {
 
 const STORAGE_KEY_PREFIX = 'zappy_review_shown_';
 
-const trackEvent = async (restaurantId: string, eventType: string, data?: Record<string, unknown>) => {
+const trackEvent = async (restaurantId: string, eventType: string, data?: Record<string, string | number | boolean>) => {
   try {
     await supabase.from('analytics_events').insert([{
       restaurant_id: restaurantId,
       event_type: eventType,
-      event_data: data || {},
+      event_data: (data || {}) as Record<string, string | number | boolean>,
     }]);
   } catch {
     // silent fail for analytics
