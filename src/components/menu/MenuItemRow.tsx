@@ -42,10 +42,11 @@ export function MenuItemRow({
       className="flex items-center gap-3 p-3 rounded-xl bg-card border shadow-sm"
     >
       {/* Thumbnail */}
-      <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+      <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
         <img
           src={imageUrl || "/placeholder.svg"}
           alt={name}
+          loading="lazy"
           className="w-full h-full object-cover"
         />
       </div>

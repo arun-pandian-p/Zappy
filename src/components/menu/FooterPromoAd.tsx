@@ -33,7 +33,7 @@ export function FooterPromoAd({ ad, onDismiss }: FooterPromoAdProps) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="fixed bottom-[72px] left-0 right-0 z-30 px-4 pb-2 pointer-events-none"
+      className="fixed bottom-[72px] left-0 right-0 z-30 px-4 pb-2 pointer-events-none" style={{ minHeight: '56px' }}
     >
       <div
         className="pointer-events-auto bg-primary text-primary-foreground rounded-xl p-3 flex items-center gap-3 shadow-lg cursor-pointer"

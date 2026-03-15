@@ -34,6 +34,7 @@ export function HeaderBannerAd({ ad, onDismiss }: HeaderBannerAdProps) {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className="relative rounded-xl overflow-hidden mb-4 cursor-pointer"
+      style={{ minHeight: '112px' }}
       onClick={handleClick}
     >
       {ad.image_url ? (
@@ -42,9 +43,9 @@ export function HeaderBannerAd({ ad, onDismiss }: HeaderBannerAdProps) {
           <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent rounded-xl" />
           <div className="absolute bottom-3 left-3 right-10">
             <p className="text-white font-semibold text-sm truncate">{ad.title}</p>
-            {(ad as any).cta_text && (
+            {ad.cta_text && (
               <span className="inline-block mt-1 px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
-                {(ad as any).cta_text}
+                {ad.cta_text}
               </span>
             )}
           </div>

@@ -319,7 +319,9 @@ const CustomerMenu = () => {
   }, [activeOrder]);
 
   // Restaurant settings
-  const currencySymbol = restaurant?.currency || '₹';
+  const currencyRaw = restaurant?.currency || 'INR';
+  const currencySymbolMap: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', AED: 'د.إ', SAR: '﷼' };
+  const currencySymbol = currencySymbolMap[currencyRaw] || currencyRaw;
   const taxRate = Number(restaurant?.tax_rate) || 5;
   const serviceChargeRate = Number(restaurant?.service_charge_rate) || 0;
   const brandingConfig = ((restaurant?.settings as any)?.branding) || {};
