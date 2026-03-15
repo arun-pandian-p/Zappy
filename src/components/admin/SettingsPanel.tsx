@@ -242,6 +242,15 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
             admin_avatar: settings.admin_avatar,
             admin_display_name: settings.admin_display_name,
           } as any,
+          primary_color: settings.primary_color,
+          secondary_color: settings.secondary_color,
+          font_family: settings.font_family,
+          theme_config: {
+            preset: settings.theme_preset,
+            custom_primary: settings.theme_preset === 'custom' ? settings.primary_color : null,
+            custom_secondary: settings.theme_preset === 'custom' ? settings.secondary_color : null,
+            custom_font: settings.theme_preset === 'custom' ? settings.font_family : null,
+          },
         },
       });
 
