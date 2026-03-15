@@ -29,6 +29,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   
   const urlRestaurantId = searchParams.get('r');
   const restaurantId = propRestaurantId || authRestaurantId || urlRestaurantId || undefined;
+  const { data: restaurant } = useRestaurant(restaurantId);
 
   const handleLogout = async () => {
     await signOut();
