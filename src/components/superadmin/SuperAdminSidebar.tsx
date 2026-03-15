@@ -46,7 +46,7 @@ const navItems: NavItem[] = [
   { title: "Platform Ads", icon: Megaphone, value: "ads" },
   { title: "Promotions", icon: Trophy, value: "promotions" },
   
-  { title: "Platform Branding", icon: Palette, value: "branding" },
+  
   { title: "Analytics", icon: BarChart3, value: "analytics" },
   { title: "Settings", icon: Settings, value: "settings" },
   { title: "System Logs", icon: ScrollText, value: "logs" },
