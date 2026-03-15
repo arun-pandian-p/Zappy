@@ -102,7 +102,7 @@ export function AdminSidebar({
   const navItems = onboardingCompleted ? allNavItems : onboardingNavItems;
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Admin";
 
-  const { canAccess, isLocked } = useFeatureGate(subscriptionTier, adsEnabled);
+  const { canAccess, isLocked } = useFeatureGate(subscriptionTier, adsEnabled, featureToggles);
 
   const [lockModalOpen, setLockModalOpen] = useState(false);
   const [lockModalFeature, setLockModalFeature] = useState("");
