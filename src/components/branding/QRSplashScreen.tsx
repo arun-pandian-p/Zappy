@@ -53,20 +53,32 @@ export function QRSplashScreen({
     <AnimatePresence>
       {show && (
         <motion.div
-          className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center gap-6 p-8"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 p-8"
+          style={{ backgroundColor: 'hsl(var(--background))' }}
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
         >
-          {logoUrl && (
+          {logoUrl ? (
             <motion.img
               src={logoUrl}
               alt={restaurantName}
-              className="w-20 h-20 rounded-2xl object-cover shadow-lg"
+              className="w-24 h-24 rounded-2xl object-cover shadow-lg border-2 border-primary/20"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.4 }}
             />
+          ) : (
+            <motion.div
+              className="w-24 h-24 rounded-2xl bg-primary/10 flex items-center justify-center shadow-lg border-2 border-primary/20"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <span className="text-4xl font-bold text-primary">
+                {restaurantName.charAt(0)}
+              </span>
+            </motion.div>
           )}
 
           <AnimatedHotelName

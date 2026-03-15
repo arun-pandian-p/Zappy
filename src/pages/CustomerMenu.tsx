@@ -45,6 +45,7 @@ import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
 import { HeaderBannerAd } from '@/components/menu/HeaderBannerAd';
 import { CategoryDividerAd } from '@/components/menu/CategoryDividerAd';
 import { FooterPromoAd } from '@/components/menu/FooterPromoAd';
+import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
@@ -833,6 +834,7 @@ const CustomerMenu = () => {
   );
 
   return (
+    <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <div className="min-h-screen bg-background pb-24">
       {/* Table Picker Dialog */}
       <TablePickerDialog
@@ -909,6 +911,7 @@ const CustomerMenu = () => {
         orderCount={customerOrders.filter(o => o.status !== 'completed').length}
       />
     </div>
+    </TenantThemeProvider>
   );
 };
 
