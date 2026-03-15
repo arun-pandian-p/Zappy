@@ -269,6 +269,46 @@ const CustomerMenu = () => {
     );
   }, [customerOrders]);
 
+  // ===== Order status sound notifications =====
+  const prevOrderStatusRef = useRef<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const currentStatus = activeOrder?.status || null;
+    const prevStatus = prevOrderStatusRef.current;
+
+    if (prevStatus && currentStatus && prevStatus !== currentStatus) {
+      // Play sound on meaningful status transitions
+      const soundStatuses = ['accepted', 'preparing', 'ready', 'served', 'completed'];
+      if (soundStatuses.includes(currentStatus)) {
+        try {
+          if (audioRef.current) {
+            audioRef.current.pause();
+          }
+          const sound = currentStatus === 'ready' ? SOUNDS.ORDER_READY : SOUNDS.NEW_ORDER;
+          audioRef.current = new Audio(sound);
+          audioRef.current.volume = 0.6;
+          audioRef.current.play().catch(() => {});
+        } catch {}
+
+        // Also show a toast notification
+        const statusLabels: Record<string, string> = {
+          accepted: '✅ Order Accepted',
+          preparing: '👨‍🍳 Preparing Your Food',
+          ready: '🔔 Your Order is Ready!',
+          served: '🍽️ Order Served',
+          completed: '✨ Order Complete',
+        };
+        toast({
+          title: statusLabels[currentStatus] || 'Order Updated',
+          description: `Your order status changed to ${currentStatus}.`,
+        });
+      }
+    }
+
+    prevOrderStatusRef.current = currentStatus;
+  }, [activeOrder?.status, toast]);
+
   // Calculate estimated prep time
   const estimatedPrepTime = useMemo(() => {
     if (!activeOrder) return 15;
@@ -281,7 +321,7 @@ const CustomerMenu = () => {
   const taxRate = Number(restaurant?.tax_rate) || 5;
   const serviceChargeRate = Number(restaurant?.service_charge_rate) || 0;
   const brandingConfig = ((restaurant?.settings as any)?.branding) || {};
-  const primaryColor = restaurant?.primary_color || undefined;
+  const primaryColor = restaurant?.primary_color || splashBranding?.primary_color || undefined;
 
   // Menu display settings from restaurant
   const menuDisplaySettings = useMemo(() => {
