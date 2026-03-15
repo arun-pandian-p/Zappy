@@ -521,6 +521,11 @@ const CustomerMenu = () => {
 
   const renderMenu = () => (
     <div>
+      {/* Header Banner Ad */}
+      {restaurant?.ads_enabled !== false && headerAd && !headerAdDismissed && (
+        <HeaderBannerAd ad={headerAd} onDismiss={() => setHeaderAdDismissed(true)} />
+      )}
+
       {/* Offers Slider */}
       {menuDisplaySettings.show_offers && offers.length > 0 && (
         <div className="mb-4">
