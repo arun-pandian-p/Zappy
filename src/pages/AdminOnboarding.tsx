@@ -76,6 +76,7 @@ const AdminOnboarding = () => {
   const [branding, setBranding] = useState({
     logo_url: '', favicon_url: '', banner_image_url: '', cover_image_url: '',
   });
+  const brandingInitialized = useRef(false);
   const [uploading, setUploading] = useState<string | null>(null);
   const [cropState, setCropState] = useState<{ field: keyof typeof branding; src: string } | null>(null);
 
