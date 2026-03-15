@@ -39,7 +39,6 @@ export function useActiveAds(categories?: string[], locations?: string[]) {
 
       if (error) throw error;
 
-      // Filter by categories and locations if provided
       let filteredAds = data as Ad[];
       
       if (categories && categories.length > 0) {
@@ -59,6 +58,42 @@ export function useActiveAds(categories?: string[], locations?: string[]) {
       return filteredAds;
     },
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Fetch active ads filtered by placement type and optionally by target restaurant */
+export function useAdsByPlacement(placementType: string, restaurantId?: string) {
+  return useQuery({
+    queryKey: ["ads", "placement", placementType, restaurantId],
+    queryFn: async () => {
+      const now = new Date().toISOString();
+
+      const { data, error } = await supabase
+        .from("ads")
+        .select("*")
+        .eq("is_active", true)
+        .or(`starts_at.is.null,starts_at.lte.${now}`)
+        .or(`ends_at.is.null,ends_at.gte.${now}`)
+        .order("priority", { ascending: false });
+
+      if (error) throw error;
+
+      // Filter by placement_type and target_restaurants client-side
+      // (since these are new columns not yet in generated types)
+      let filtered = (data as any[]).filter(ad => (ad.placement_type || 'popup_offer') === placementType);
+
+      if (restaurantId) {
+        filtered = filtered.filter(ad => {
+          const targets = ad.target_restaurants as string[] | null;
+          if (!targets || targets.length === 0) return true; // null = all restaurants
+          return targets.includes(restaurantId);
+        });
+      }
+
+      return filtered as Ad[];
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!placementType,
   });
 }
 
