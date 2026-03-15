@@ -56,11 +56,12 @@ export const ImageUpload = ({
       const fileName = `${restaurantId}/${folder}/${Date.now()}.${fileExt}`;
 
       // Upload to Supabase Storage
+      const bucket = folder === 'branding' ? 'platform-assets' : 'menu-images';
       const { data, error } = await supabase.storage
-        .from('menu-images')
+        .from(bucket)
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false,
+          upsert: true,
         });
 
       if (error) throw error;
