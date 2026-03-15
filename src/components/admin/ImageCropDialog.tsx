@@ -3,7 +3,8 @@ import Cropper, { Area } from 'react-easy-crop';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { ZoomIn, ZoomOut, RotateCw, Check, X } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCw, Check, X, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ImageCropDialogProps {
   open: boolean;
@@ -13,6 +14,8 @@ interface ImageCropDialogProps {
   cropShape?: 'round' | 'rect';
   aspect?: number;
   title?: string;
+  /** If provided, uploads cropped image to storage and returns URL instead of base64 */
+  uploadPath?: { restaurantId: string; folder: string };
 }
 
 function createImage(url: string): Promise<HTMLImageElement> {
@@ -25,7 +28,7 @@ function createImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
-async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<string> {
+async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -46,7 +49,12 @@ async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<string>
     pixelCrop.height,
   );
 
-  return canvas.toDataURL('image/jpeg', 0.9);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Failed to create blob'));
+    }, 'image/jpeg', 0.9);
+  });
 }
 
 export function ImageCropDialog({
@@ -57,11 +65,13 @@ export function ImageCropDialog({
   cropShape = 'round',
   aspect = 1,
   title = 'Crop Image',
+  uploadPath,
 }: ImageCropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const onCropCompleteInternal = useCallback((_: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels);
@@ -69,11 +79,36 @@ export function ImageCropDialog({
 
   const handleConfirm = async () => {
     if (!croppedAreaPixels) return;
+    setSaving(true);
     try {
-      const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
-      onCropComplete(croppedImage);
+      const blob = await getCroppedBlob(imageSrc, croppedAreaPixels);
+
+      if (uploadPath) {
+        // Upload cropped image to storage — returns a proper URL
+        const fileName = `${uploadPath.restaurantId}/${uploadPath.folder}/cropped_${Date.now()}.jpg`;
+        const { data, error } = await supabase.storage
+          .from('menu-images')
+          .upload(fileName, blob, { cacheControl: '3600', upsert: true, contentType: 'image/jpeg' });
+
+        if (error) throw error;
+
+        const { data: urlData } = supabase.storage
+          .from('menu-images')
+          .getPublicUrl(data.path);
+
+        onCropComplete(urlData.publicUrl);
+      } else {
+        // Fallback: return data URL (legacy behavior)
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          onCropComplete(reader.result as string);
+        };
+        reader.readAsDataURL(blob);
+      }
     } catch (e) {
       console.error('Crop error:', e);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -126,12 +161,16 @@ export function ImageCropDialog({
         </div>
 
         <DialogFooter className="px-6 pb-6 gap-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
             <X className="w-4 h-4 mr-1" />
             Cancel
           </Button>
-          <Button onClick={handleConfirm}>
-            <Check className="w-4 h-4 mr-1" />
+          <Button onClick={handleConfirm} disabled={saving}>
+            {saving ? (
+              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            ) : (
+              <Check className="w-4 h-4 mr-1" />
+            )}
             Apply
           </Button>
         </DialogFooter>
