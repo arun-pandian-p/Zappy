@@ -116,7 +116,8 @@ const CustomerMenu = () => {
   const [showAddedToast, setShowAddedToast] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState('');
   const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('grid');
-  const [lastPlacedOrderId, setLastPlacedOrderId] = useState<string | null>(null);
+  const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
+  const prevOrderStatusesRef = useRef<Record<string, string>>({});
 
   // Fetch restaurant data
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId);
@@ -313,7 +314,25 @@ const CustomerMenu = () => {
     prevOrderStatusRef.current = currentStatus;
   }, [activeOrder?.status, toast]);
 
-  // Calculate estimated prep time
+  // ===== Trigger review prompt when an order reaches "served" =====
+  useEffect(() => {
+    const prev = prevOrderStatusesRef.current;
+    for (const order of customerOrders) {
+      const prevStatus = prev[order.id];
+      if (prevStatus && prevStatus !== 'served' && order.status === 'served') {
+        // Order just transitioned to served
+        setReviewOrderId(order.id);
+        break;
+      }
+    }
+    // Update previous statuses
+    const next: Record<string, string> = {};
+    for (const order of customerOrders) {
+      if (order.status) next[order.id] = order.status;
+    }
+    prevOrderStatusesRef.current = next;
+  }, [customerOrders]);
+
   const estimatedPrepTime = useMemo(() => {
     if (!activeOrder) return 15;
     const prepTimes = activeOrder.order_items?.map(() => 15) || [15];
@@ -399,7 +418,7 @@ const CustomerMenu = () => {
     }
 
     try {
-      const orderData = await createOrder.mutateAsync({
+      await createOrder.mutateAsync({
         order: {
           restaurant_id: restaurantId,
           table_id: resolvedTableId,
@@ -422,7 +441,6 @@ const CustomerMenu = () => {
         description: 'Your order has been sent to the kitchen.',
       });
 
-      setLastPlacedOrderId(orderData.id);
       clearCart();
       setCurrentView('orders');
     } catch (err) {
@@ -969,11 +987,11 @@ const CustomerMenu = () => {
         orderCount={customerOrders.filter(o => o.status !== 'completed').length}
       />
 
-      {/* Post-Order Review Prompt */}
-      {lastPlacedOrderId && restaurantId && (
+      {/* Post-Order Review Prompt — triggers when order is served */}
+      {reviewOrderId && restaurantId && (
         <PostOrderReviewPrompt
           restaurantId={restaurantId}
-          orderId={lastPlacedOrderId}
+          orderId={reviewOrderId}
           tableId={resolvedTableId}
           googleReviewUrl={restaurant?.google_review_url}
           delayMs={5000}
