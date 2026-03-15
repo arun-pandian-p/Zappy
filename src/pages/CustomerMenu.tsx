@@ -574,6 +574,11 @@ const CustomerMenu = () => {
         />
       </div>
 
+      {/* Category Divider Ad */}
+      {restaurant?.ads_enabled !== false && dividerAd && selectedCategory === 'All' && (
+        <CategoryDividerAd ad={dividerAd} />
+      )}
+
       {/* Menu Items */}
       <div className="mt-4">
       {menuViewMode === 'list' ? (
