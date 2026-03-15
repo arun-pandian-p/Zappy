@@ -555,7 +555,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                 onImageUploaded={(url) => setSettings({ ...settings, favicon_url: url })}
                 restaurantId={restaurantId}
                 folder="branding"
-                maxSizeMB={1}
+                maxSizeMB={10}
               />
             </div>
 
