@@ -110,12 +110,16 @@ const AdminOnboarding = () => {
         email: restaurant.email || '',
         cuisine_type: (restaurant.settings as any)?.cuisine_type || '',
       });
-      setBranding({
-        logo_url: restaurant.logo_url || '',
-        favicon_url: restaurant.favicon_url || '',
-        banner_image_url: restaurant.banner_image_url || '',
-        cover_image_url: restaurant.cover_image_url || '',
-      });
+      // Only populate branding from DB on first load to avoid overwriting user uploads
+      if (!brandingInitialized.current) {
+        brandingInitialized.current = true;
+        setBranding({
+          logo_url: restaurant.logo_url || '',
+          favicon_url: restaurant.favicon_url || '',
+          banner_image_url: restaurant.banner_image_url || '',
+          cover_image_url: restaurant.cover_image_url || '',
+        });
+      }
       setConfig({
         tax_rate: Number(restaurant.tax_rate) || 5,
         service_charge_rate: Number(restaurant.service_charge_rate) || 0,
