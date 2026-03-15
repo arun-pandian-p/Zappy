@@ -1344,6 +1344,7 @@ export type Database = {
           description: string | null
           email: string | null
           favicon_url: string | null
+          feature_toggles: Json | null
           font_family: string | null
           google_review_url: string | null
           id: string
@@ -1378,6 +1379,7 @@ export type Database = {
           description?: string | null
           email?: string | null
           favicon_url?: string | null
+          feature_toggles?: Json | null
           font_family?: string | null
           google_review_url?: string | null
           id?: string
@@ -1412,6 +1414,7 @@ export type Database = {
           description?: string | null
           email?: string | null
           favicon_url?: string | null
+          feature_toggles?: Json | null
           font_family?: string | null
           google_review_url?: string | null
           id?: string
