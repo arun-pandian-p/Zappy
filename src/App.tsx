@@ -46,7 +46,6 @@ const App = () => (
           <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/guide" element={<UserGuide />} />
           <Route path="/request-quote" element={<RequestQuote />} />
-          <Route path="/guide" element={<UserGuide />} />
 
           {/* Staff routes — role-guarded */}
           <Route path="/kitchen" element={
