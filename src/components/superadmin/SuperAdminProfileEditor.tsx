@@ -304,7 +304,7 @@ export function SuperAdminProfileEditor() {
           </div>
 
           <div>
-            <Label className="text-xs text-muted-foreground mb-2 block">Or pick an emoji avatar</Label>
+            
             
 
 
