@@ -868,6 +868,27 @@ export type Database = {
           },
         ]
       }
+      newsletter_subscribers: {
+        Row: {
+          email: string
+          id: string
+          is_active: boolean
+          subscribed_at: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          is_active?: boolean
+          subscribed_at?: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          is_active?: boolean
+          subscribed_at?: string
+        }
+        Relationships: []
+      }
       offers: {
         Row: {
           created_at: string
@@ -1293,6 +1314,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      quote_requests: {
+        Row: {
+          city: string | null
+          created_at: string
+          current_system: string | null
+          email: string
+          features_needed: string[] | null
+          id: string
+          message: string | null
+          name: string
+          num_tables: number | null
+          phone: string | null
+          restaurant_name: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          current_system?: string | null
+          email: string
+          features_needed?: string[] | null
+          id?: string
+          message?: string | null
+          name: string
+          num_tables?: number | null
+          phone?: string | null
+          restaurant_name?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          current_system?: string | null
+          email?: string
+          features_needed?: string[] | null
+          id?: string
+          message?: string | null
+          name?: string
+          num_tables?: number | null
+          phone?: string | null
+          restaurant_name?: string | null
+        }
+        Relationships: []
       }
       recipe_mappings: {
         Row: {
