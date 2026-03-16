@@ -9,3 +9,6 @@ verify_jwt = false
 
 [functions.qr-redirect]
 verify_jwt = false
+
+[functions.notify-quote]
+verify_jwt = false
