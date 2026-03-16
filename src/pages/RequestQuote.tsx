@@ -87,7 +87,7 @@ const RequestQuote = () => {
     const { error } = await supabase.from('newsletter_subscribers').insert({ email: newsletterEmail });
     setNewsletterLoading(false);
     if (error?.code === '23505') {
-      toast({ title: 'You're already subscribed!', description: 'We'll keep you updated.' });
+      toast({ title: "You're already subscribed!", description: "We'll keep you updated." });
       setNewsletterDone(true);
     } else if (error) {
       toast({ title: 'Error subscribing', description: error.message, variant: 'destructive' });
