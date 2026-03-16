@@ -93,7 +93,7 @@ const RequestQuote = () => {
       toast({ title: 'Error subscribing', description: error.message, variant: 'destructive' });
     } else {
       setNewsletterDone(true);
-      toast({ title: 'Subscribed!', description: 'You'll receive our latest updates & offers.' });
+      toast({ title: 'Subscribed!', description: "You'll receive our latest updates & offers." });
     }
   };
 
