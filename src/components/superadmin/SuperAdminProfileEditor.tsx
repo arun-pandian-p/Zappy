@@ -370,21 +370,39 @@ export function SuperAdminProfileEditor() {
           <CardDescription>Add or remove Super Admin team members by email address.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                placeholder="Enter email address to add..."
-                className="pl-9"
-                onKeyDown={(e) => e.key === 'Enter' && handleAddTeamMember()} />
-              
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="Enter email address to add..."
+                  className="pl-9"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTeamMember()} />
+              </div>
+              <div className="flex-1 relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Set password (optional)"
+                  className="pl-9 pr-9"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTeamMember()} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <Button onClick={handleAddTeamMember} disabled={isAddingMember || !newEmail}>
+                {isAddingMember ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+                Add
+              </Button>
             </div>
-            <Button onClick={handleAddTeamMember} disabled={isAddingMember || !newEmail}>
-              {isAddingMember ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
-              Add
-            </Button>
+            <p className="text-xs text-muted-foreground">If no password is set, a random one will be generated.</p>
           </div>
 
           {teamLoading ?
