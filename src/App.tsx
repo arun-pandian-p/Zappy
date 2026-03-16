@@ -20,6 +20,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import FeedbackPage from "./pages/FeedbackPage";
 import NotFound from "./pages/NotFound";
 import UserGuide from "./pages/UserGuide";
+import RequestQuote from "./pages/RequestQuote";
 import RoleGuard from "./components/auth/RoleGuard";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/order" element={<CustomerMenu />} />
           <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/guide" element={<UserGuide />} />
+          <Route path="/request-quote" element={<RequestQuote />} />
 
           {/* Staff routes — role-guarded */}
           <Route path="/kitchen" element={

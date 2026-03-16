@@ -74,6 +74,7 @@ const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
             <Button
               size="lg"
               className="w-full sm:w-auto bg-white/20 backdrop-blur-sm border-2 border-white text-white hover:bg-white hover:text-primary px-8 py-6 text-lg rounded-xl font-bold shadow-lg transition-colors"
+              onClick={() => window.location.href = '/request-quote'}
             >
               <Headphones className="mr-2 w-5 h-5" />
               Contact Sales
