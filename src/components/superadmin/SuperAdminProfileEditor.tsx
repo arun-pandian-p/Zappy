@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Eye, EyeOff, Lock } from 'lucide-react';
 import { Save, Loader2, User, Upload, X, ImageIcon, Plus, Trash2, Users, Mail, Camera } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,9 +39,9 @@ function useTeamMembers() {
   });
 
   const addMember = useMutation({
-    mutationFn: async ({ email, name }: {email: string;name?: string;}) => {
+    mutationFn: async ({ email, name, password }: {email: string;name?: string;password?: string;}) => {
       const { data, error } = await supabase.functions.invoke('manage-super-admins', {
-        body: { action: 'add', email, name }
+        body: { action: 'add', email, name, password }
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -99,6 +100,8 @@ export function SuperAdminProfileEditor() {
   const [isUploading, setIsUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -204,11 +207,16 @@ export function SuperAdminProfileEditor() {
       toast({ title: 'Invalid Email', description: 'Please enter a valid email address.', variant: 'destructive' });
       return;
     }
+    if (newPassword && newPassword.length < 6) {
+      toast({ title: 'Weak Password', description: 'Password must be at least 6 characters.', variant: 'destructive' });
+      return;
+    }
     setIsAddingMember(true);
     try {
-      await addMember.mutateAsync({ email: newEmail });
+      await addMember.mutateAsync({ email: newEmail, password: newPassword || undefined });
       toast({ title: 'Team Member Added', description: `${newEmail} has been granted Super Admin access.` });
       setNewEmail('');
+      setNewPassword('');
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
     } finally {
@@ -362,21 +370,39 @@ export function SuperAdminProfileEditor() {
           <CardDescription>Add or remove Super Admin team members by email address.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                placeholder="Enter email address to add..."
-                className="pl-9"
-                onKeyDown={(e) => e.key === 'Enter' && handleAddTeamMember()} />
-              
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="Enter email address to add..."
+                  className="pl-9"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTeamMember()} />
+              </div>
+              <div className="flex-1 relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Set password (optional)"
+                  className="pl-9 pr-9"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTeamMember()} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <Button onClick={handleAddTeamMember} disabled={isAddingMember || !newEmail}>
+                {isAddingMember ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+                Add
+              </Button>
             </div>
-            <Button onClick={handleAddTeamMember} disabled={isAddingMember || !newEmail}>
-              {isAddingMember ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
-              Add
-            </Button>
+            <p className="text-xs text-muted-foreground">If no password is set, a random one will be generated.</p>
           </div>
 
           {teamLoading ?

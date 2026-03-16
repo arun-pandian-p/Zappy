@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -76,7 +76,7 @@ serve(async (req) => {
 
     // ADD a new super admin team member
     if (action === "add") {
-      const { email, name } = body;
+      const { email, name, password: customPassword } = body;
       if (!email) {
         return new Response(JSON.stringify({ error: "Email is required" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -106,12 +106,15 @@ serve(async (req) => {
 
         userId = existing.id;
       } else {
-        // Create new user with random password
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
-        let password = "";
-        const array = new Uint8Array(16);
-        crypto.getRandomValues(array);
-        for (let i = 0; i < 16; i++) password += chars[array[i] % chars.length];
+        // Use custom password or generate random one
+        let password = customPassword;
+        if (!password) {
+          const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+          password = "";
+          const array = new Uint8Array(16);
+          crypto.getRandomValues(array);
+          for (let i = 0; i < 16; i++) password += chars[array[i] % chars.length];
+        }
 
         const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
           email,
