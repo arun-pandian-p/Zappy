@@ -29,36 +29,36 @@ function useTeamMembers() {
     queryKey: ['super-admin-team'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('manage-super-admins', {
-        body: { action: 'list' },
+        body: { action: 'list' }
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return (data?.members || []) as TeamMember[];
-    },
+    }
   });
 
   const addMember = useMutation({
-    mutationFn: async ({ email, name }: { email: string; name?: string }) => {
+    mutationFn: async ({ email, name }: {email: string;name?: string;}) => {
       const { data, error } = await supabase.functions.invoke('manage-super-admins', {
-        body: { action: 'add', email, name },
+        body: { action: 'add', email, name }
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['super-admin-team'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['super-admin-team'] })
   });
 
   const removeMember = useMutation({
     mutationFn: async (user_id: string) => {
       const { data, error } = await supabase.functions.invoke('manage-super-admins', {
-        body: { action: 'remove', user_id },
+        body: { action: 'remove', user_id }
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['super-admin-team'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['super-admin-team'] })
   });
 
   return { members: query.data || [], isLoading: query.isLoading, addMember, removeMember };
@@ -68,15 +68,15 @@ async function uploadAvatarToStorage(file: File, userId: string): Promise<string
   const ext = file.name.split('.').pop() || 'jpg';
   const filePath = `${userId}/avatar.${ext}`;
 
-  const { error } = await supabase.storage
-    .from('avatars')
-    .upload(filePath, file, { upsert: true });
+  const { error } = await supabase.storage.
+  from('avatars').
+  upload(filePath, file, { upsert: true });
 
   if (error) throw error;
 
-  const { data: urlData } = supabase.storage
-    .from('avatars')
-    .getPublicUrl(filePath);
+  const { data: urlData } = supabase.storage.
+  from('avatars').
+  getPublicUrl(filePath);
 
   // Add cache-bust to force refresh
   return `${urlData.publicUrl}?t=${Date.now()}`;
@@ -92,7 +92,7 @@ export function SuperAdminProfileEditor() {
     display_name: '',
     avatar_url: '',
     phone: '',
-    theme_preference: 'system',
+    theme_preference: 'system'
   });
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -109,7 +109,7 @@ export function SuperAdminProfileEditor() {
         display_name: profile.display_name || '',
         avatar_url: profile.avatar_url || '',
         phone: profile.phone || '',
-        theme_preference: profile.theme_preference || 'system',
+        theme_preference: profile.theme_preference || 'system'
       });
     }
   }, [profile]);
@@ -143,10 +143,10 @@ export function SuperAdminProfileEditor() {
     if (file) handleFileSelect(file);
   };
 
-  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); }, []);
-  const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); }, []);
+  const handleDragOver = useCallback((e: React.DragEvent) => {e.preventDefault();e.stopPropagation();}, []);
+  const handleDragLeave = useCallback((e: React.DragEvent) => {e.preventDefault();e.stopPropagation();}, []);
   const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault(); e.stopPropagation();
+    e.preventDefault();e.stopPropagation();
     const file = e.dataTransfer.files?.[0];
     if (file) handleFileSelect(file);
   }, [handleFileSelect]);
@@ -194,7 +194,7 @@ export function SuperAdminProfileEditor() {
           setPreviewUrl(null);
           setPendingFile(null);
         },
-        onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+        onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' })
       }
     );
   };
@@ -253,7 +253,7 @@ export function SuperAdminProfileEditor() {
               <Avatar className="w-28 h-28 ring-4 ring-primary/10 transition-all group-hover:ring-primary/30">
                 {displayAvatar ? <AvatarImage src={displayAvatar} className="object-cover" /> : null}
                 <AvatarFallback className="bg-primary/10 text-primary text-3xl">
-                  {displayEmoji || (form.display_name?.charAt(0) || 'SA')}
+                  {displayEmoji || form.display_name?.charAt(0) || 'SA'}
                 </AvatarFallback>
               </Avatar>
               {/* Camera overlay on hover */}
@@ -261,18 +261,18 @@ export function SuperAdminProfileEditor() {
                 <Camera className="w-6 h-6 text-white mb-1" />
                 <span className="text-[10px] text-white font-medium uppercase tracking-wide">Change</span>
               </div>
-              {isUploading && (
-                <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+              {isUploading &&
+              <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
                   <Loader2 className="w-8 h-8 text-white animate-spin" />
                 </div>
-              )}
+              }
               <input
                 ref={avatarInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleAvatarInputChange}
-                className="hidden"
-              />
+                className="hidden" />
+              
             </div>
 
             <div className="flex-1 space-y-3">
@@ -280,11 +280,11 @@ export function SuperAdminProfileEditor() {
                 <p className="text-sm font-medium">{form.display_name || 'Super Admin'}</p>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
-              {(displayAvatar || displayEmoji) && (
-                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); clearAvatar(); }}>
+              {(displayAvatar || displayEmoji) &&
+              <Button variant="outline" size="sm" onClick={(e) => {e.stopPropagation();clearAvatar();}}>
                   <X className="w-3 h-3 mr-1" /> Remove Photo
                 </Button>
-              )}
+              }
 
               {/* Drag & drop zone */}
               <div
@@ -292,8 +292,8 @@ export function SuperAdminProfileEditor() {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50"
-              >
+                className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50">
+                
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileInputChange} className="hidden" />
                 <div className="flex items-center gap-2 justify-center">
                   <Upload className="w-4 h-4 text-muted-foreground" />
@@ -305,19 +305,19 @@ export function SuperAdminProfileEditor() {
 
           <div>
             <Label className="text-xs text-muted-foreground mb-2 block">Or pick an emoji avatar</Label>
-            <div className="flex gap-2 flex-wrap">
-              {EMOJI_AVATARS.map((emoji) => (
-                <button
-                  key={emoji}
-                  onClick={() => { setSelectedEmoji(emoji); setPreviewUrl(null); setPendingFile(null); }}
-                  className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center border-2 transition-all ${
-                    selectedEmoji === emoji ? 'border-primary bg-primary/10' : 'border-muted hover:border-primary/50'
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
+            
+
+
+
+
+
+
+
+
+
+
+
+            
           </div>
         </CardContent>
       </Card>
@@ -348,7 +348,7 @@ export function SuperAdminProfileEditor() {
       </Card>
 
       <Button onClick={handleSave} disabled={upsertProfile.isPending || isUploading}>
-        {(upsertProfile.isPending || isUploading) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+        {upsertProfile.isPending || isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
         Save Profile
       </Button>
 
@@ -370,8 +370,8 @@ export function SuperAdminProfileEditor() {
                 onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="Enter email address to add..."
                 className="pl-9"
-                onKeyDown={(e) => e.key === 'Enter' && handleAddTeamMember()}
-              />
+                onKeyDown={(e) => e.key === 'Enter' && handleAddTeamMember()} />
+              
             </div>
             <Button onClick={handleAddTeamMember} disabled={isAddingMember || !newEmail}>
               {isAddingMember ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
@@ -379,14 +379,14 @@ export function SuperAdminProfileEditor() {
             </Button>
           </div>
 
-          {teamLoading ? (
-            <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin" /></div>
-          ) : members.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">No team members found.</p>
-          ) : (
-            <div className="space-y-2">
-              {members.map((member) => (
-                <div key={member.user_id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+          {teamLoading ?
+          <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin" /></div> :
+          members.length === 0 ?
+          <p className="text-sm text-muted-foreground text-center py-4">No team members found.</p> :
+
+          <div className="space-y-2">
+              {members.map((member) =>
+            <div key={member.user_id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-9 h-9">
                       <AvatarFallback className="bg-primary/10 text-primary text-sm">
@@ -399,26 +399,26 @@ export function SuperAdminProfileEditor() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {member.user_id === user?.id ? (
-                      <Badge variant="secondary" className="text-xs">You</Badge>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleRemoveMember(member.user_id, member.email)}
-                        disabled={removeMember.isPending}
-                      >
+                    {member.user_id === user?.id ?
+                <Badge variant="secondary" className="text-xs">You</Badge> :
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => handleRemoveMember(member.user_id, member.email)}
+                  disabled={removeMember.isPending}>
+                  
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                    )}
+                }
                   </div>
                 </div>
-              ))}
+            )}
             </div>
-          )}
+          }
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }
