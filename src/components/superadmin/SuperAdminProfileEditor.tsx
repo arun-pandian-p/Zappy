@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Eye, EyeOff, Lock } from 'lucide-react';
 import { Save, Loader2, User, Upload, X, ImageIcon, Plus, Trash2, Users, Mail, Camera } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
