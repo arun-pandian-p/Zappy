@@ -207,11 +207,16 @@ export function SuperAdminProfileEditor() {
       toast({ title: 'Invalid Email', description: 'Please enter a valid email address.', variant: 'destructive' });
       return;
     }
+    if (newPassword && newPassword.length < 6) {
+      toast({ title: 'Weak Password', description: 'Password must be at least 6 characters.', variant: 'destructive' });
+      return;
+    }
     setIsAddingMember(true);
     try {
-      await addMember.mutateAsync({ email: newEmail });
+      await addMember.mutateAsync({ email: newEmail, password: newPassword || undefined });
       toast({ title: 'Team Member Added', description: `${newEmail} has been granted Super Admin access.` });
       setNewEmail('');
+      setNewPassword('');
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
     } finally {
