@@ -77,6 +77,20 @@ const RequestQuote = () => {
       toast({ title: 'Something went wrong', description: error.message, variant: 'destructive' });
     } else {
       setSubmitted(true);
+      // Send WhatsApp + Email notification (fire and forget)
+      supabase.functions.invoke('notify-quote', {
+        body: {
+          name: form.name,
+          email: form.email,
+          phone: form.phone || null,
+          restaurant_name: form.restaurant_name || null,
+          city: form.city || null,
+          num_tables: form.num_tables ? parseInt(form.num_tables) : null,
+          current_system: form.current_system || null,
+          features_needed: form.features_needed.length ? form.features_needed : null,
+          message: form.message || null,
+        },
+      }).catch((err) => console.error('Notification error:', err));
     }
   };
 
