@@ -41,7 +41,7 @@ function useTeamMembers() {
   const addMember = useMutation({
     mutationFn: async ({ email, name, password }: {email: string;name?: string;password?: string;}) => {
       const { data, error } = await supabase.functions.invoke('manage-super-admins', {
-        body: { action: 'add', email, name }
+        body: { action: 'add', email, name, password }
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
