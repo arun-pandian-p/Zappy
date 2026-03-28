@@ -102,6 +102,18 @@ import { useFeatureGate, type FeatureKey, type LockReason } from "@/hooks/useFea
 import { FeatureLockedModal } from "@/components/admin/FeatureLockedModal";
 import { Lock } from "lucide-react";
 
+/** Append cache-busting param to storage URLs */
+function cacheBustUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    u.searchParams.set('v', String(Math.floor(Date.now() / 60000)));
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 // Demo restaurant ID - fallback if no restaurant in DB
 const DEMO_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -519,14 +531,14 @@ const AdminDashboard = () => {
     <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full bg-muted/30">
-        <AdminSidebar activeTab={activeTab} onTabChange={handleTabChange} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} restaurantName={(restaurant as any)?.name} restaurantLogo={(restaurant as any)?.logo_url} subscriptionTier={restaurant?.subscription_tier} adsEnabled={restaurant?.ads_enabled} featureToggles={(restaurant as any)?.feature_toggles} />
+        <AdminSidebar activeTab={activeTab} onTabChange={handleTabChange} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} restaurantName={(restaurant as any)?.name} restaurantLogo={cacheBustUrl((restaurant as any)?.logo_url)} subscriptionTier={restaurant?.subscription_tier} adsEnabled={restaurant?.ads_enabled} featureToggles={(restaurant as any)?.feature_toggles} />
 
         <SidebarInset className="flex-1">
           <AdminHeader
             restaurantName={restaurantName}
             primaryColor={restaurant?.primary_color || undefined}
             branding={(restaurant?.settings as any)?.branding}
-            logoUrl={restaurant?.logo_url}
+            logoUrl={cacheBustUrl(restaurant?.logo_url)}
           />
 
           {/* Tab Navigation */}
