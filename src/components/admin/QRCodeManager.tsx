@@ -282,6 +282,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
         <TableCell className="text-sm text-muted-foreground">{format(new Date(qr.created_at), "MMM d, yyyy")}</TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" onClick={() => window.open(`${PUBLISHED_URL}${qr.target_url}`, '_blank')} title="Open customer menu"><ExternalLink className="w-4 h-4" /></Button>
             <Button variant="ghost" size="icon" onClick={() => handleCopyUrl(qr)} title="Copy URL"><Copy className="w-4 h-4" /></Button>
             <Button variant="ghost" size="icon" onClick={() => handleDownload(qr)} title="Download PNG"><Download className="w-4 h-4" /></Button>
             {!(meta.is_base_qr) && (
@@ -443,7 +444,10 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
                 <p className="text-sm text-muted-foreground">
                   Target: {baseQR.target_url}
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => window.open(`${PUBLISHED_URL}${baseQR.target_url}`, '_blank')}>
+                    <ExternalLink className="w-4 h-4 mr-1" /> Open
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => handleDownload(baseQR)}>
                     <Download className="w-4 h-4 mr-1" /> Download PNG
                   </Button>
@@ -497,24 +501,35 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
 
           {/* Tables Grid */}
           {tables.length > 0 ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-              {tables.map((table) => (
-                <div
-                  key={table.id}
-                  className="relative group p-3 rounded-lg border-2 border-border hover:border-primary/50 transition-all text-center"
-                >
-                  <span className="font-bold text-sm block">{table.table_number}</span>
-                  <span className="text-xs text-muted-foreground">{table.capacity} seats</span>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleDeleteTable(table)}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {tables.map((table) => {
+                const menuUrl = `${PUBLISHED_URL}/order?r=${restaurantId}&table=${table.table_number}`;
+                return (
+                  <div
+                    key={table.id}
+                    className="relative group p-3 rounded-lg border-2 border-border hover:border-primary/50 transition-all text-center space-y-2"
                   >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
+                    <span className="font-bold text-sm block">{table.table_number}</span>
+                    <span className="text-xs text-muted-foreground block">{table.capacity} seats</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs h-7"
+                      onClick={() => window.open(menuUrl, '_blank')}
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" /> Open
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleDeleteTable(table)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className="text-center text-muted-foreground py-4 text-sm">
