@@ -11,7 +11,7 @@ function cacheBustUrl(url: string | null | undefined): string | undefined {
     return url;
   }
 }
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatePresence } from 'framer-motion';
 import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List, MessageSquare } from 'lucide-react';
@@ -121,7 +121,25 @@ const CustomerMenu = () => {
   const prevOrderStatusesRef = useRef<Record<string, string>>({});
 
   // Fetch restaurant data
-  const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId);
+  // Fetch restaurant - try authenticated first, fall back to public view for anon users
+  const { data: restaurantAuth } = useRestaurant(restaurantId);
+  const { data: restaurantPub, isLoading: restaurantLoading } = useQuery({
+    queryKey: ['restaurant_public_by_id', restaurantId],
+    queryFn: async () => {
+      if (!restaurantId) return null;
+      const { data, error } = await supabase
+        .from('restaurants_public')
+        .select('*')
+        .eq('id', restaurantId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!restaurantId,
+    staleTime: 5 * 60 * 1000,
+  });
+  // Merge: use auth data when available (has tax_rate, settings etc), else public view
+  const restaurant = restaurantAuth || restaurantPub as any;
 
   // Fetch offers
   const { data: offers = [] } = useActiveOffers(restaurantId);
@@ -347,10 +365,15 @@ const CustomerMenu = () => {
     setMenuViewMode(menuDisplaySettings.view_mode);
   }, [menuDisplaySettings.view_mode]);
 
-  // Get item quantity in cart
+  // Get item quantity in cart (sum across all customization variants of same item)
   const getItemQuantity = useCallback((itemId: string) => {
+    return cartItems.filter(i => i.id === itemId).reduce((sum, i) => sum + i.quantity, 0);
+  }, [cartItems]);
+
+  // Get the cartKey for a simple (no-variants) item
+  const getItemCartKey = useCallback((itemId: string) => {
     const cartItem = cartItems.find(i => i.id === itemId);
-    return cartItem?.quantity || 0;
+    return cartItem?.cartKey || `${itemId}____`;
   }, [cartItems]);
 
   const handleAddToCart = useCallback((item: MenuItem & { category?: { name: string } | null }) => {
@@ -642,8 +665,8 @@ const CustomerMenu = () => {
                 currencySymbol={currencySymbol}
                 quantity={getItemQuantity(item.id)}
                 onAdd={() => handleAddToCart(item)}
-                onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
-                onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
+                onIncrement={() => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) + 1)}
+                onDecrement={() => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) - 1)}
               />
             ))}
           </AnimatePresence>
@@ -664,8 +687,8 @@ const CustomerMenu = () => {
                 currencySymbol={currencySymbol}
                 quantity={getItemQuantity(item.id)}
                 onAdd={() => handleAddToCart(item)}
-                onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
-                onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
+                onIncrement={() => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) + 1)}
+                onDecrement={() => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) - 1)}
               />
             ))}
           </AnimatePresence>
@@ -698,7 +721,7 @@ const CustomerMenu = () => {
       ) : (
         <>
           {cartItems.map((item) => (
-            <Card key={item.id}>
+            <Card key={item.cartKey}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   {item.image_url && (
@@ -719,7 +742,7 @@ const CustomerMenu = () => {
                       variant="outline"
                       size="icon"
                       className="h-7 w-7"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.cartKey, item.quantity - 1)}
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </Button>
@@ -728,7 +751,7 @@ const CustomerMenu = () => {
                       variant="outline"
                       size="icon"
                       className="h-7 w-7"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.cartKey, item.quantity + 1)}
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </Button>
@@ -736,7 +759,7 @@ const CustomerMenu = () => {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive"
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item.cartKey)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
