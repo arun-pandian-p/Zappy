@@ -665,8 +665,8 @@ const CustomerMenu = () => {
                 currencySymbol={currencySymbol}
                 quantity={getItemQuantity(item.id)}
                 onAdd={() => handleAddToCart(item)}
-                onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
-                onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
+                onIncrement={() => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) + 1)}
+                onDecrement={() => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) - 1)}
               />
             ))}
           </AnimatePresence>
@@ -687,8 +687,8 @@ const CustomerMenu = () => {
                 currencySymbol={currencySymbol}
                 quantity={getItemQuantity(item.id)}
                 onAdd={() => handleAddToCart(item)}
-                onIncrement={() => updateQuantity(item.id, getItemQuantity(item.id) + 1)}
-                onDecrement={() => updateQuantity(item.id, getItemQuantity(item.id) - 1)}
+                onIncrement={() => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) + 1)}
+                onDecrement={() => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) - 1)}
               />
             ))}
           </AnimatePresence>
