@@ -121,8 +121,9 @@ const CustomerMenu = () => {
   const prevOrderStatusesRef = useRef<Record<string, string>>({});
 
   // Fetch restaurant data
-  // Fetch restaurant data from public view (works for anon users)
-  const { data: restaurant, isLoading: restaurantLoading } = useQuery({
+  // Fetch restaurant - try authenticated first, fall back to public view for anon users
+  const { data: restaurantAuth } = useRestaurant(restaurantId);
+  const { data: restaurantPub, isLoading: restaurantLoading } = useQuery({
     queryKey: ['restaurant_public_by_id', restaurantId],
     queryFn: async () => {
       if (!restaurantId) return null;
@@ -137,6 +138,8 @@ const CustomerMenu = () => {
     enabled: !!restaurantId,
     staleTime: 5 * 60 * 1000,
   });
+  // Merge: use auth data when available (has tax_rate, settings etc), else public view
+  const restaurant = restaurantAuth || restaurantPub as any;
 
   // Fetch offers
   const { data: offers = [] } = useActiveOffers(restaurantId);
