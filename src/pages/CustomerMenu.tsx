@@ -365,10 +365,15 @@ const CustomerMenu = () => {
     setMenuViewMode(menuDisplaySettings.view_mode);
   }, [menuDisplaySettings.view_mode]);
 
-  // Get item quantity in cart
+  // Get item quantity in cart (sum across all customization variants of same item)
   const getItemQuantity = useCallback((itemId: string) => {
+    return cartItems.filter(i => i.id === itemId).reduce((sum, i) => sum + i.quantity, 0);
+  }, [cartItems]);
+
+  // Get the cartKey for a simple (no-variants) item
+  const getItemCartKey = useCallback((itemId: string) => {
     const cartItem = cartItems.find(i => i.id === itemId);
-    return cartItem?.quantity || 0;
+    return cartItem?.cartKey || `${itemId}____`;
   }, [cartItems]);
 
   const handleAddToCart = useCallback((item: MenuItem & { category?: { name: string } | null }) => {
