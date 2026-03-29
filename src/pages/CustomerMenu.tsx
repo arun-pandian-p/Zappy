@@ -11,7 +11,7 @@ function cacheBustUrl(url: string | null | undefined): string | undefined {
     return url;
   }
 }
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatePresence } from 'framer-motion';
 import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List, MessageSquare } from 'lucide-react';
@@ -121,9 +121,8 @@ const CustomerMenu = () => {
   const prevOrderStatusesRef = useRef<Record<string, string>>({});
 
   // Fetch restaurant data
-  const { data: restaurant, isLoading: restaurantLoading } = useRestaurantBySlug(undefined);
-  // For customer menu: fetch from the public view using the resolved ID
-  const { data: restaurantPublic, isLoading: restaurantPublicLoading } = useQuery({
+  // Fetch restaurant data from public view (works for anon users)
+  const { data: restaurant, isLoading: restaurantLoading } = useQuery({
     queryKey: ['restaurant_public_by_id', restaurantId],
     queryFn: async () => {
       if (!restaurantId) return null;
