@@ -26,7 +26,7 @@ import { useMenuItems, useCategories, type MenuItem } from '@/hooks/useMenuItems
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useOrders, useCreateOrder } from '@/hooks/useOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
-import { useRandomActiveAd, useTrackAdImpression, useTrackAdClick, useAdsByPlacement } from '@/hooks/useAds';
+
 import { useTableByNumber, useTables } from '@/hooks/useTables';
 import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
 import { useActiveOffers } from '@/hooks/useOffers';
