@@ -312,7 +312,19 @@ const CustomerMenu = () => {
   const currencySymbol = currencySymbolMap[currencyRaw] || currencyRaw;
   const taxRate = Number(restaurant?.tax_rate) || 5;
   const serviceChargeRate = Number(restaurant?.service_charge_rate) || 0;
-  const brandingConfig = ((restaurant?.settings as any)?.branding) || {};
+  const brandingConfig = useMemo(() => {
+    const fromSettings = ((restaurant?.settings as any)?.branding) || {};
+    const fromTheme = ((restaurant?.theme_config as any)?.branding) || {};
+
+    return {
+      animation_enabled: fromSettings.animation_enabled ?? fromTheme.animation_enabled ?? true,
+      letter_animation: fromSettings.letter_animation ?? fromTheme.letter_animation ?? 'wave',
+      mascot: fromSettings.mascot ?? fromTheme.mascot ?? 'none',
+      mascot_image_url: fromSettings.mascot_image_url ?? fromTheme.mascot_image_url,
+      animation_speed: fromSettings.animation_speed ?? fromTheme.animation_speed ?? 'normal',
+      glow_color_sync: fromSettings.glow_color_sync ?? fromTheme.glow_color_sync ?? true,
+    };
+  }, [restaurant]);
   const primaryColor = restaurant?.primary_color || splashBranding?.primary_color || undefined;
 
   // Menu display settings from restaurant
@@ -885,8 +897,8 @@ const CustomerMenu = () => {
 
       {/* Branded Top Bar */}
       <CustomerTopBar
-        restaurantName={restaurant?.name || 'Restaurant'}
-        logoUrl={cacheBustUrl(restaurant?.logo_url)}
+        restaurantName={restaurant?.name || splashBranding?.name || 'Restaurant'}
+        logoUrl={cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url)}
         bannerImageUrl={cacheBustUrl(restaurant?.banner_image_url || restaurant?.cover_image_url)}
         tableNumber={tableNumber || 'Select Table'}
         cartCount={getTotalItems()}
