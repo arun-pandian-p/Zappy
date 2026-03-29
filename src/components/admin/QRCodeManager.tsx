@@ -444,7 +444,10 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
                 <p className="text-sm text-muted-foreground">
                   Target: {baseQR.target_url}
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => window.open(`${PUBLISHED_URL}${baseQR.target_url}`, '_blank')}>
+                    <ExternalLink className="w-4 h-4 mr-1" /> Open
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => handleDownload(baseQR)}>
                     <Download className="w-4 h-4 mr-1" /> Download PNG
                   </Button>
