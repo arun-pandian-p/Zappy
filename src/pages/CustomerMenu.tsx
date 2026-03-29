@@ -449,10 +449,11 @@ const CustomerMenu = () => {
 
       clearCart();
       setCurrentView('orders');
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Order placement failed:', err?.message || err);
       toast({
         title: 'Order Failed',
-        description: 'Failed to place order. Please try again.',
+        description: err?.message || 'Failed to place order. Please try again.',
         variant: 'destructive',
       });
     }
