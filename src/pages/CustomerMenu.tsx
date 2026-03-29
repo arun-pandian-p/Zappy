@@ -26,12 +26,12 @@ import { useMenuItems, useCategories, type MenuItem } from '@/hooks/useMenuItems
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useOrders, useCreateOrder } from '@/hooks/useOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
-import { useRandomActiveAd, useTrackAdImpression, useTrackAdClick, useAdsByPlacement } from '@/hooks/useAds';
+
 import { useTableByNumber, useTables } from '@/hooks/useTables';
 import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
 import { useActiveOffers } from '@/hooks/useOffers';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
-import { AdsPopup } from '@/components/menu/AdsPopup';
+
 import { BottomNav } from '@/components/menu/BottomNav';
 import { AddedToCartToast } from '@/components/menu/AddedToCartToast';
 import { CategorySlider } from '@/components/menu/CategorySlider';
@@ -42,9 +42,6 @@ import { FoodCard } from '@/components/menu/FoodCard';
 import { OrderStatusPipeline } from '@/components/menu/OrderStatusPipeline';
 import { OffersSlider } from '@/components/menu/OffersSlider';
 import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
-import { HeaderBannerAd } from '@/components/menu/HeaderBannerAd';
-import { CategoryDividerAd } from '@/components/menu/CategoryDividerAd';
-import { FooterPromoAd } from '@/components/menu/FooterPromoAd';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { SOUNDS } from '@/hooks/useSound';
 import { PostOrderReviewPrompt } from '@/components/order/PostOrderReviewPrompt';
@@ -111,8 +108,6 @@ const CustomerMenu = () => {
   const [currentView, setCurrentView] = useState<ViewType>('menu');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAdPopup, setShowAdPopup] = useState(false);
-  const [adShown, setAdShown] = useState(false);
   const [showAddedToast, setShowAddedToast] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState('');
   const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('grid');
@@ -160,25 +155,10 @@ const CustomerMenu = () => {
   // Fetch customer orders
   const { data: allOrders = [] } = useOrders(restaurantId);
 
-  // Fetch active ad
-  const { data: activeAd } = useRandomActiveAd();
-
-  // Placement-based ads
-  const { data: headerAds = [] } = useAdsByPlacement('header_banner', restaurantId);
-  const { data: dividerAds = [] } = useAdsByPlacement('category_divider', restaurantId);
-  const { data: footerAds = [] } = useAdsByPlacement('footer_banner', restaurantId);
-  const [headerAdDismissed, setHeaderAdDismissed] = useState(false);
-  const [dividerAdDismissed, setDividerAdDismissed] = useState(false);
-  const [footerAdDismissed, setFooterAdDismissed] = useState(false);
-  const headerAd = headerAds[0] || null;
-  const dividerAd = dividerAds[0] || null;
-  const footerAd = footerAds[0] || null;
 
   // Mutations
   const createOrder = useCreateOrder();
   const createWaiterCall = useCreateWaiterCall();
-  const trackImpression = useTrackAdImpression();
-  const trackClick = useTrackAdClick();
 
   // Cart store
   const { 
@@ -244,20 +224,6 @@ const CustomerMenu = () => {
     return () => { supabase.removeChannel(channel); };
   }, [restaurantId, queryClient]);
 
-  // Show ad popup on first load
-  useEffect(() => {
-    if (activeAd && !adShown && restaurant?.ads_enabled !== false) {
-      const adSeenKey = `ad_seen_${activeAd.id}`;
-      const lastSeen = sessionStorage.getItem(adSeenKey);
-      
-      if (!lastSeen) {
-        setTimeout(() => setShowAdPopup(true), 500);
-        setAdShown(true);
-        trackImpression.mutate(activeAd.id);
-        sessionStorage.setItem(adSeenKey, Date.now().toString());
-      }
-    }
-  }, [activeAd, adShown, restaurant, trackImpression]);
 
   // Filter orders for this table
   const customerOrders = useMemo(() => 
@@ -489,22 +455,6 @@ const CustomerMenu = () => {
     }
   };
 
-  const handleAdClick = () => {
-    if (activeAd) {
-      trackClick.mutate(activeAd.id);
-      if (activeAd.link_url) {
-        window.open(activeAd.link_url, '_blank');
-      }
-    }
-    setShowAdPopup(false);
-  };
-
-  const handleApplyCoupon = (code: string) => {
-    toast({
-      title: 'Coupon Applied!',
-      description: `Code "${code}" has been applied to your cart.`,
-    });
-  };
 
   const isDataLoading = restaurantLoading || menuLoading || (dynamicTableId && tableLoading);
 
@@ -589,10 +539,6 @@ const CustomerMenu = () => {
 
   const renderMenu = () => (
     <div>
-      {/* Header Banner Ad */}
-      {restaurant?.ads_enabled !== false && headerAd && !headerAdDismissed && (
-        <HeaderBannerAd ad={headerAd} onDismiss={() => setHeaderAdDismissed(true)} />
-      )}
 
       {/* Offers Slider */}
       {menuDisplaySettings.show_offers && offers.length > 0 && (
@@ -642,10 +588,6 @@ const CustomerMenu = () => {
         />
       </div>
 
-      {/* Category Divider Ad */}
-      {restaurant?.ads_enabled !== false && dividerAd && selectedCategory === 'All' && !dividerAdDismissed && (
-        <CategoryDividerAd ad={dividerAd} onDismiss={() => setDividerAdDismissed(true)} />
-      )}
 
       {/* Menu Items */}
       <div className="mt-4">
@@ -937,15 +879,6 @@ const CustomerMenu = () => {
         onSelectTable={handleTableSelect}
       />
 
-      {/* Ads Popup */}
-      <AdsPopup
-        ad={activeAd || null}
-        open={showAdPopup}
-        onOpenChange={setShowAdPopup}
-        onApplyCoupon={handleApplyCoupon}
-        onSkip={() => setShowAdPopup(false)}
-        onClickThrough={handleAdClick}
-      />
 
       {/* Added to Cart Toast */}
       <AddedToCartToast show={showAddedToast} itemName={lastAddedItem} />
@@ -992,10 +925,6 @@ const CustomerMenu = () => {
         />
       )}
 
-      {/* Footer Promo Ad */}
-      {restaurant?.ads_enabled !== false && footerAd && currentView === 'menu' && !footerAdDismissed && (
-        <FooterPromoAd ad={footerAd} onDismiss={() => setFooterAdDismissed(true)} />
-      )}
 
       {/* Bottom Navigation */}
       <BottomNav

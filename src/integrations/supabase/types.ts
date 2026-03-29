@@ -2212,6 +2212,10 @@ export type Database = {
         Returns: boolean
       }
       increment_scan_count: { Args: { qr_code_id: string }; Returns: undefined }
+      is_restaurant_active: {
+        Args: { _restaurant_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
