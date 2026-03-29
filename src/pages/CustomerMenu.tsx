@@ -121,7 +121,23 @@ const CustomerMenu = () => {
   const prevOrderStatusesRef = useRef<Record<string, string>>({});
 
   // Fetch restaurant data
-  const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId);
+  const { data: restaurant, isLoading: restaurantLoading } = useRestaurantBySlug(undefined);
+  // For customer menu: fetch from the public view using the resolved ID
+  const { data: restaurantPublic, isLoading: restaurantPublicLoading } = useQuery({
+    queryKey: ['restaurant_public_by_id', restaurantId],
+    queryFn: async () => {
+      if (!restaurantId) return null;
+      const { data, error } = await supabase
+        .from('restaurants_public')
+        .select('*')
+        .eq('id', restaurantId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!restaurantId,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Fetch offers
   const { data: offers = [] } = useActiveOffers(restaurantId);
