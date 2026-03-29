@@ -543,6 +543,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "feedback_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "feedback_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
@@ -732,6 +739,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders_public"
             referencedColumns: ["id"]
           },
           {
@@ -1014,6 +1028,13 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       orders: {
@@ -1240,6 +1261,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printer_queue_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders_public"
             referencedColumns: ["id"]
           },
           {
@@ -1770,6 +1798,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "table_sessions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "table_sessions_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
@@ -2021,6 +2056,88 @@ export type Database = {
       }
     }
     Views: {
+      orders_public: {
+        Row: {
+          created_at: string | null
+          estimated_ready_at: string | null
+          id: string | null
+          order_number: number | null
+          payment_method: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
+          ready_at: string | null
+          restaurant_id: string | null
+          service_charge: number | null
+          special_instructions: string | null
+          started_preparing_at: string | null
+          status: Database["public"]["Enums"]["order_status"] | null
+          subtotal: number | null
+          table_id: string | null
+          tax_amount: number | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          estimated_ready_at?: string | null
+          id?: string | null
+          order_number?: number | null
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          ready_at?: string | null
+          restaurant_id?: string | null
+          service_charge?: number | null
+          special_instructions?: string | null
+          started_preparing_at?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          subtotal?: number | null
+          table_id?: string | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          estimated_ready_at?: string | null
+          id?: string | null
+          order_number?: number | null
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          ready_at?: string | null
+          restaurant_id?: string | null
+          service_charge?: number | null
+          special_instructions?: string | null
+          started_preparing_at?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          subtotal?: number | null
+          table_id?: string | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants_public: {
         Row: {
           address: string | null
