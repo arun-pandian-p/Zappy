@@ -12,7 +12,7 @@ interface HeroSectionProps {
 
 const stats = [
 { value: '10K+', label: 'Orders Processed' },
-{ value: '500+', label: 'Restaurants' },
+{ value: '\n', label: 'Restaurants' },
 { value: '99.9%', label: 'Uptime' }];
 
 
