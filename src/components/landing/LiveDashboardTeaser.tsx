@@ -104,7 +104,7 @@ const LiveDashboardTeaser = () => {
             <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">Insights</span>
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Real-time metrics powering 1,500+ restaurants worldwide.
+            A freshly launched platform delivering real-time insights for modern restaurants.
           </p>
         </motion.div>
 
