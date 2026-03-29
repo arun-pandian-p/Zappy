@@ -716,7 +716,7 @@ const CustomerMenu = () => {
       ) : (
         <>
           {cartItems.map((item) => (
-            <Card key={item.id}>
+            <Card key={item.cartKey}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   {item.image_url && (
@@ -737,7 +737,7 @@ const CustomerMenu = () => {
                       variant="outline"
                       size="icon"
                       className="h-7 w-7"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.cartKey, item.quantity - 1)}
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </Button>
@@ -746,7 +746,7 @@ const CustomerMenu = () => {
                       variant="outline"
                       size="icon"
                       className="h-7 w-7"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.cartKey, item.quantity + 1)}
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </Button>
@@ -754,7 +754,7 @@ const CustomerMenu = () => {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive"
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item.cartKey)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
