@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Bell, ShoppingCart } from "lucide-react";
+import { Bell, LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { motion, useScroll } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ interface CustomerTopBarProps {
   isCallingWaiter?: boolean;
   primaryColor?: string;
   branding?: BrandingConfig;
+  restaurantId?: string;
 }
 
 export function CustomerTopBar({
@@ -39,7 +41,9 @@ export function CustomerTopBar({
   isCallingWaiter,
   primaryColor,
   branding,
+  restaurantId,
 }: CustomerTopBarProps) {
+  const navigate = useNavigate();
   const animEnabled = branding?.animation_enabled ?? false;
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -156,18 +160,10 @@ export function CustomerTopBar({
                 variant="ghost"
                 size="icon"
                 className="relative rounded-full h-9 w-9"
-                onClick={onCartClick}
+                onClick={() => navigate('/login')}
+                title="Waiter Login"
               >
-                <ShoppingCart className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-0.5 -right-0.5 bg-destructive text-destructive-foreground text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1"
-                  >
-                    {cartCount > 9 ? "9+" : cartCount}
-                  </motion.span>
-                )}
+                <LogIn className="w-5 h-5" />
               </Button>
             </div>
           </div>
