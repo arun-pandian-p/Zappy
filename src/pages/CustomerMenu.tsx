@@ -24,7 +24,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useMenuItems, useCategories, type MenuItem } from '@/hooks/useMenuItems';
 import { useRestaurant } from '@/hooks/useRestaurant';
-import { useOrders, useCreateOrder } from '@/hooks/useOrders';
+import { useCreateOrder } from '@/hooks/useOrders';
+import { useCustomerOrders } from '@/hooks/useCustomerOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
 
 import { useTableByNumber, useTables } from '@/hooks/useTables';
@@ -152,8 +153,8 @@ const CustomerMenu = () => {
   const { data: tableData, isLoading: tableLoading } = useTableByNumber(restaurantId, dynamicTableId || undefined);
   const resolvedTableId = tableData?.id;
 
-  // Fetch customer orders
-  const { data: allOrders = [] } = useOrders(restaurantId);
+  // Fetch customer orders for this table (with realtime)
+  const { data: customerOrders = [] } = useCustomerOrders(restaurantId, resolvedTableId);
 
 
   // Mutations
