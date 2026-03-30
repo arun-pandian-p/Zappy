@@ -226,11 +226,6 @@ const CustomerMenu = () => {
   }, [restaurantId, queryClient]);
 
 
-  // Filter orders for this table
-  const customerOrders = useMemo(() => 
-    allOrders.filter(o => o.table_id === resolvedTableId).slice(0, 10),
-    [allOrders, resolvedTableId]
-  );
 
   // Get available menu items only
   const availableMenuItems = useMemo(() => 
