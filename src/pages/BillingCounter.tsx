@@ -779,6 +779,18 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                                         Note: {invoice.notes}
                                       </p>
                                     )}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="w-full mt-3 gap-2"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePrintReceipt();
+                                      }}
+                                    >
+                                      <Printer className="w-3.5 h-3.5" />
+                                      Reprint
+                                    </Button>
                                   </div>
                                 </motion.div>
                               )}
