@@ -175,7 +175,7 @@ export const PostOrderReviewPrompt = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-5 py-4"
+              className="space-y-4 py-4"
             >
               <div className="flex flex-col items-center gap-3">
                 <StarRating value={rating} onChange={setRating} size="lg" />
@@ -197,6 +197,15 @@ export const PostOrderReviewPrompt = ({
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Comment field always visible */}
+              <Textarea
+                placeholder="Tell us about your experience (optional)..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+                className="resize-none"
+              />
 
               <div className="flex gap-3">
                 <Button
