@@ -289,6 +289,12 @@ const CustomerMenu = () => {
           title: statusLabels[currentStatus] || 'Order Updated',
           description: `Your order status changed to ${currentStatus}.`,
         });
+
+        // Auto-trigger review prompt when order is served
+        if (currentStatus === 'served' && activeOrder?.id) {
+          setReviewOrderId(activeOrder.id);
+          setReviewImmediate(false); // use delay
+        }
       }
     }
 
