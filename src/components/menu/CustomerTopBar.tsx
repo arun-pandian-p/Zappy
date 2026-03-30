@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, ShoppingCart } from "lucide-react";
+import { Bell, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, useScroll } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -163,7 +163,7 @@ export function CustomerTopBar({
                 onClick={() => navigate('/login')}
                 title="Waiter Login"
               >
-                <ShoppingCart className="w-5 h-5" />
+                <LogIn className="w-5 h-5" />
               </Button>
             </div>
           </div>
