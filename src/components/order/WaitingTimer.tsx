@@ -19,23 +19,29 @@ export function WaitingTimer({
   currencySymbol = "₹",
   onViewDetails,
 }: WaitingTimerProps) {
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  // Memoize createdAt timestamp to prevent timer resets on re-renders
+  const createdAtMs = useMemo(() => {
+    if (!order.created_at) return null;
+    return new Date(order.created_at).getTime();
+  }, [order.created_at]);
 
-  // Calculate elapsed time from order creation
+  const [elapsedSeconds, setElapsedSeconds] = useState(() => {
+    if (!createdAtMs) return 0;
+    return Math.max(0, Math.floor((Date.now() - createdAtMs) / 1000));
+  });
+
+  // Tick every second from order creation time
   useEffect(() => {
-    const createdAt = new Date(order.created_at || Date.now()).getTime();
+    if (!createdAtMs) return;
     
     const calculateElapsed = () => {
-      const now = Date.now();
-      const elapsed = Math.floor((now - createdAt) / 1000);
-      setElapsedSeconds(Math.max(0, elapsed));
+      setElapsedSeconds(Math.max(0, Math.floor((Date.now() - createdAtMs) / 1000)));
     };
 
     calculateElapsed();
     const interval = setInterval(calculateElapsed, 1000);
-    
     return () => clearInterval(interval);
-  }, [order.created_at]);
+  }, [createdAtMs]);
 
   // Format seconds to MM:SS
   const formatTime = (seconds: number) => {
@@ -186,9 +192,11 @@ export function WaitingTimer({
               <p className="text-sm font-medium">
                 Estimated wait:{" "}
                 <span className="text-primary">
-                  {estimatedMinutes - Math.floor(elapsedSeconds / 60) > 0
-                    ? `${Math.max(1, estimatedMinutes - Math.floor(elapsedSeconds / 60))}-${estimatedMinutes} mins`
-                    : "Almost ready!"}
+                  {(() => {
+                    const remaining = estimatedMinutes - Math.floor(elapsedSeconds / 60);
+                    if (remaining <= 0) return "Almost ready!";
+                    return `~${remaining} min${remaining > 1 ? 's' : ''}`;
+                  })()}
                 </span>
               </p>
             </div>
