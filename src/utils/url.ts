@@ -10,6 +10,10 @@ const FALLBACK_DOMAIN = "https://www.zappy.ind.in";
  */
 export function getAppOrigin(): string {
   if (typeof window !== "undefined" && window.location) {
+    // If we are on the production domain but missing 'www', force it in the origin
+    if (window.location.hostname === "zappy.ind.in") {
+      return "https://www.zappy.ind.in";
+    }
     return window.location.origin;
   }
   return import.meta.env.VITE_APP_URL || FALLBACK_DOMAIN;

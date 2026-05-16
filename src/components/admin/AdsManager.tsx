@@ -40,6 +40,9 @@ import {
 import { useAds, useCreateAd, useUpdateAd, useDeleteAd } from "@/hooks/useAds";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { useActiveEnterprisePromotions } from "@/hooks/useEnterprisePromotions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getAppOrigin } from "@/utils/url";
 
 interface AdsManagerProps {
   restaurantId?: string;
@@ -72,6 +75,7 @@ export function AdsManager({ restaurantId }: AdsManagerProps) {
   const [formData, setFormData] = useState<AdFormData>(defaultFormData);
 
   const { data: ads = [], isLoading } = useAds();
+  const { data: activePromotions = [] } = useActiveEnterprisePromotions(restaurantId || "");
   const createAd = useCreateAd();
   const updateAd = useUpdateAd();
   const deleteAd = useDeleteAd();
@@ -371,6 +375,35 @@ export function AdsManager({ restaurantId }: AdsManagerProps) {
                 }
                 placeholder="https://..."
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Link to Promotion (Optional)</Label>
+              <Select 
+                onValueChange={(promoId) => {
+                  const promo = activePromotions.find(p => p.id === promoId);
+                  if (promo) {
+                    const origin = getAppOrigin();
+                    const promoUrl = `${origin}/order?r=${restaurantId}&promo=${promo.id}`;
+                    setFormData({ ...formData, link_url: promoUrl, title: formData.title || promo.title });
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a campaign to link..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {activePromotions.map((promo) => (
+                    <SelectItem key={promo.id} value={promo.id}>
+                      {promo.title} ({promo.type})
+                    </SelectItem>
+                  ))}
+                  {activePromotions.length === 0 && (
+                    <SelectItem value="none" disabled>No active campaigns found</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground">Linking to a campaign will auto-fill the URL below.</p>
             </div>
 
             <div className="space-y-2">

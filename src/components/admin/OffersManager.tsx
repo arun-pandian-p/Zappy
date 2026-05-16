@@ -52,7 +52,7 @@ export function OffersManager({ restaurantId }: OffersManagerProps) {
         image_url: newOffer.image_url || null,
         start_date: new Date(newOffer.start_date).toISOString(),
         end_date: new Date(newOffer.end_date).toISOString(),
-        status: "pending_approval", // New campaigns go to superadmin
+        status: "active", // Active by default for now to ensure visibility
       });
       toast({ title: "Offer submitted for approval!" });
       setNewOffer({
@@ -243,6 +243,7 @@ export function OffersManager({ restaurantId }: OffersManagerProps) {
                         <p className="font-bold text-sm truncate">{offer.title}</p>
                         {offer.status === 'pending_approval' && <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-50">Pending Review</Badge>}
                         {offer.status === 'active' && <Badge variant="outline" className="text-[10px] text-green-600 bg-green-50">Active</Badge>}
+                        {offer.status === 'paused' && <Badge variant="outline" className="text-[10px] text-gray-500 bg-gray-50">Paused</Badge>}
                         {offer.status === 'rejected' && <Badge variant="destructive" className="text-[10px]">Rejected</Badge>}
                       </div>
                       <div className="flex items-center gap-2 mt-1">

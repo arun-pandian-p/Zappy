@@ -16,6 +16,8 @@ interface PostOrderReviewPromptProps {
   tableId?: string;
   googleReviewUrl?: string | null;
   delayMs?: number;
+  onClose?: () => void;
+  immediate?: boolean;
 }
 
 const STORAGE_KEY_PREFIX = 'enterprise_review_shown_';
@@ -26,6 +28,8 @@ export const PostOrderReviewPrompt = ({
   tableId,
   googleReviewUrl,
   delayMs = 5000,
+  onClose,
+  immediate = false,
 }: PostOrderReviewPromptProps) => {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -60,11 +64,9 @@ export const PostOrderReviewPrompt = ({
   }, [orderId]);
 
   useEffect(() => {
-    if (step === 'done') return;
-    
-    if (delayMs > 0) {
-      const alreadyShown = localStorage.getItem(storageKey);
-      if (alreadyShown) return;
+    if (immediate) {
+      setIsOpen(true);
+      return;
     }
 
     const timer = setTimeout(() => {
@@ -73,7 +75,7 @@ export const PostOrderReviewPrompt = ({
     }, delayMs);
 
     return () => clearTimeout(timer);
-  }, [orderId, restaurantId, delayMs, storageKey, step]);
+  }, [orderId, restaurantId, delayMs, storageKey, step, immediate]);
 
   const quickChips = overallRating >= 4 
     ? ["Delicious!", "Fast Service", "Friendly Staff", "Great Ambiance"]
@@ -170,6 +172,7 @@ export const PostOrderReviewPrompt = ({
   const handleClose = () => {
     setIsOpen(false);
     setStep('done');
+    if (onClose) onClose();
   };
 
   if (step === 'done') return null;

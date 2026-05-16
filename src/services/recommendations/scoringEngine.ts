@@ -29,9 +29,9 @@ function resolveDynamicNode(name: string): FoodNode {
   }
   
   // If no template, generate a dynamic node
-  const cuisines = detectCuisine(name);
-  const isDrink = lower.includes("drink") || lower.includes("soda") || lower.includes("coffee") || lower.includes("tea") || lower.includes("juice") || lower.includes("lassi");
-  const isDessert = lower.includes("ice cream") || lower.includes("sweet") || lower.includes("jamun") || lower.includes("cake") || lower.includes("kesari");
+  const isDrink = lower.includes("drink") || lower.includes("soda") || lower.includes("coffee") || lower.includes("tea") || lower.includes("juice") || lower.includes("lassi") || lower.includes("water") || lower.includes("mojito") || lower.includes("shake") || lower.includes("beer") || lower.includes("wine") || lower.includes("cocktail");
+  const isDessert = lower.includes("ice cream") || lower.includes("sweet") || lower.includes("jamun") || lower.includes("cake") || lower.includes("kesari") || lower.includes("brownie") || lower.includes("pudding") || lower.includes("mousse") || lower.includes("donut");
+  const isStarter = lower.includes("fry") || lower.includes("tikka") || lower.includes("kebab") || lower.includes("soup") || lower.includes("salad") || lower.includes("wing") || lower.includes("nugget");
   
   return {
     id: name,
@@ -39,8 +39,8 @@ function resolveDynamicNode(name: string): FoodNode {
     cuisine: cuisines.length > 0 ? cuisines : ["Universal"],
     ingredients: [],
     tags: [],
-    type: isDrink ? "drink" : isDessert ? "dessert" : "addon",
-    isVegetarian: !lower.includes("chicken") && !lower.includes("mutton") && !lower.includes("fish") && !lower.includes("egg") && !lower.includes("prawn"),
+    type: isDrink ? "drink" : isDessert ? "dessert" : isStarter ? "starter" : "addon",
+    isVegetarian: !lower.includes("chicken") && !lower.includes("mutton") && !lower.includes("fish") && !lower.includes("egg") && !lower.includes("prawn") && !lower.includes("meat") && !lower.includes("beef") && !lower.includes("pork"),
   };
 }
 
