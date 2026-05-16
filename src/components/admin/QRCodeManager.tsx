@@ -55,6 +55,7 @@ import { format } from "date-fns";
 import { getAppOrigin } from "@/utils/url";
 
 const DEFAULT_BASE_URL = getAppOrigin();
+const REDIRECT_BASE = "https://syvoshzxoedamaijongb.supabase.co/functions/v1/qr-redirect";
 
 interface QRCodeManagerProps {
   restaurantId: string;
@@ -224,6 +225,12 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
     if (qr.qr_type === "dynamic") {
       return `${REDIRECT_BASE}?id=${qr.id}`;
     }
+    
+    // Ensure static QR codes have absolute URLs
+    if (qr.target_url?.startsWith('/')) {
+      return `${BASE_URL}${qr.target_url}`;
+    }
+    
     return qr.target_url;
   };
 
