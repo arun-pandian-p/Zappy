@@ -50,7 +50,7 @@ import {
   type QRCode,
 } from "@/hooks/useQRCodes";
 import { useTables, useCreateTable, useDeleteTable, type Table } from "@/hooks/useTables";
-import { useRestaurant } from "@/hooks/useRestaurant";
+import { useRestaurantDetails } from "@/hooks/useRestaurant";
 import { format } from "date-fns";
 
 import { getAppOrigin } from "@/utils/url";
@@ -71,7 +71,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
   const deleteQR = useDeleteQRCode();
   const createTable = useCreateTable();
   const deleteTable = useDeleteTable();
-  const { data: restaurant } = useRestaurant(restaurantId);
+  const { data: restaurant } = useRestaurantDetails(restaurantId);
 
   const BASE_URL = (restaurant?.settings as any)?.qr_base_url || DEFAULT_BASE_URL;
 

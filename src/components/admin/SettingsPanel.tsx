@@ -44,7 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useRestaurant, useUpdateRestaurant } from "@/hooks/useRestaurant";
+import { useRestaurantDetails, useUpdateRestaurant } from "@/hooks/useRestaurant";
 import { useToast } from "@/hooks/use-toast";
 import { usePrinter } from "@/hooks/usePrinter";
 import { getAppOrigin } from "@/utils/url";
@@ -125,7 +125,7 @@ const defaultSettings: RestaurantSettings = {
 
 export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
   const { toast } = useToast();
-  const { data: restaurant, isLoading } = useRestaurant(restaurantId);
+  const { data: restaurant, isLoading } = useRestaurantDetails(restaurantId);
   const updateRestaurant = useUpdateRestaurant();
 
   const [settings, setSettings] = useState<RestaurantSettings>(defaultSettings);

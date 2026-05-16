@@ -6,7 +6,7 @@ export type Restaurant = Tables<"restaurants">;
 export type RestaurantInsert = TablesInsert<"restaurants">;
 export type RestaurantUpdate = TablesUpdate<"restaurants">;
 
-export function useRestaurant(restaurantId?: string) {
+export function useRestaurantDetails(restaurantId?: string) {
   return useQuery({
     queryKey: ["restaurant", restaurantId],
     queryFn: async () => {

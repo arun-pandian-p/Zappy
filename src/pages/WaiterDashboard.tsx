@@ -11,7 +11,7 @@ import { useTables } from '@/hooks/useTables';
 import { useOrders } from '@/hooks/useOrders';
 import { usePendingWaiterCalls, useAcknowledgeWaiterCall, useResolveWaiterCall } from '@/hooks/useWaiterCalls';
 import { useAuth } from '@/hooks/useAuth';
-import { useRestaurant } from '@/hooks/useRestaurant';
+import { useRestaurantDetails } from '@/hooks/useRestaurant';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { LogOut } from 'lucide-react';
 
@@ -23,7 +23,7 @@ const WaiterDashboard = () => {
 
   const urlRestaurantId = searchParams.get('r');
   const restaurantId = authRestaurantId || urlRestaurantId || undefined;
-  const { data: restaurant } = useRestaurant(restaurantId);
+  const { data: restaurant } = useRestaurantDetails(restaurantId);
 
   const handleLogout = async () => {
     await signOut();

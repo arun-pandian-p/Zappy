@@ -92,7 +92,7 @@ import { useActiveAds } from "@/hooks/useAds";
 import { CustomerBehaviorPanel } from "@/components/analytics/CustomerBehaviorPanel";
 import { QRCodeManager } from "@/components/admin/QRCodeManager";
 import { QRScanAnalytics } from "@/components/analytics/QRScanAnalytics";
-import { useRestaurants, useRestaurant } from "@/hooks/useRestaurant";
+import { useRestaurants, useRestaurantDetails } from "@/hooks/useRestaurant";
 import { 
   useMenuItems, 
   useCategories, 
@@ -347,7 +347,7 @@ const AdminDashboard = () => {
     }
   }, [authLoading, user, navigate]);
   
-  const { data: restaurant } = useRestaurant(restaurantId);
+  const { data: restaurant } = useRestaurantDetails(restaurantId);
   const { canAccess, isLocked } = useFeatureGate(
     restaurant?.subscription_tier,
     restaurant?.ads_enabled,

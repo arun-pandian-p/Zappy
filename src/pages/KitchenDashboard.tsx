@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSound, SOUNDS } from '@/hooks/useSound';
 import { useOrders, useKitchenOrderActions, type OrderWithItems } from '@/hooks/useOrders';
 import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
-import { useRestaurant } from '@/hooks/useRestaurant';
+import { useRestaurantDetails } from '@/hooks/useRestaurant';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 
 import { usePrinter } from '@/hooks/usePrinter';
@@ -29,7 +29,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   
   const urlRestaurantId = searchParams.get('r');
   const restaurantId = propRestaurantId || authRestaurantId || urlRestaurantId || undefined;
-  const { data: restaurant } = useRestaurant(restaurantId);
+  const { data: restaurant } = useRestaurantDetails(restaurantId);
 
   const handleLogout = async () => {
     await signOut();

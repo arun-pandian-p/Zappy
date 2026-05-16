@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useOrders, useUpdateOrderPayment, type OrderWithItems } from '@/hooks/useOrders';
-import { useRestaurant } from '@/hooks/useRestaurant';
+import { useRestaurantDetails } from '@/hooks/useRestaurant';
 import { useCreateInvoice, useTodayInvoices, useInvoiceStats, generateInvoiceNumber, type Invoice } from '@/hooks/useInvoices';
 import { useTables } from '@/hooks/useTables';
 import DiscountButtons from '@/components/billing/DiscountButtons';
@@ -53,7 +53,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  const { data: restaurant } = useRestaurant(restaurantId);
+  const { data: restaurant } = useRestaurantDetails(restaurantId);
   const { data: tables = [] } = useTables(restaurantId);
   const { data: allOrders = [], isLoading: ordersLoading, refetch: refetchOrders } = useOrders(
     restaurantId,

@@ -23,7 +23,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useMenuItems, useCategories, type MenuItem } from '@/hooks/useMenuItems';
-import { useRestaurant } from '@/hooks/useRestaurant';
+import { useRestaurantDetails } from '@/hooks/useRestaurant';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useCustomerOrders } from '@/hooks/useCustomerOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
@@ -123,7 +123,7 @@ const CustomerMenu = () => {
 
   // Fetch restaurant data
   // Fetch restaurant - try authenticated first, fall back to public view for anon users
-  const { data: restaurantAuth } = useRestaurant(restaurantId);
+  const { data: restaurantAuth } = useRestaurantDetails(restaurantId);
   const { data: restaurantPub, isLoading: restaurantLoading } = useQuery({
     queryKey: ['restaurant_public_by_id', restaurantId],
     queryFn: async () => {

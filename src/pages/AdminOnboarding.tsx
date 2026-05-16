@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { useRestaurant } from '@/hooks/useRestaurant';
+import { useRestaurantDetails } from '@/hooks/useRestaurant';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { ImageCropDialog } from '@/components/admin/ImageCropDialog';
@@ -62,7 +62,7 @@ const AdminOnboarding = () => {
   const queryClient = useQueryClient();
   const { user, restaurantId, loading: authLoading, role } = useAuth();
 
-  const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId || '');
+  const { data: restaurant, isLoading: restaurantLoading } = useRestaurantDetails(restaurantId || '');
 
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
