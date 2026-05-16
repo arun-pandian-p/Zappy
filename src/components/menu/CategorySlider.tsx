@@ -19,12 +19,14 @@ export function CategorySlider({
   const getCategoryIcon = (cat: string) => {
     const l = cat.toLowerCase();
     if (l === 'all') return '⊞';
-    if (l.includes('gravy') || l.includes('curry')) return '🍲';
+    if (l.includes('chutney')) return '🥣';
+    if (l.includes('side')) return '🍱';
+    if (l.includes('gravy') || l.includes('curry') || l.includes('sambar')) return '🥘';
     if (l.includes('drink') || l.includes('beverage')) return '🍹';
-    if (l.includes('street')) return '🌮';
-    if (l.includes('burger')) return '🍔';
+    if (l.includes('addon') || l.includes('add-on')) return '➕';
     if (l.includes('dessert') || l.includes('sweet')) return '🍰';
     if (l.includes('pizza')) return '🍕';
+    if (l.includes('burger')) return '🍔';
     if (l.includes('salad') || l.includes('healthy')) return '🥗';
     if (l.includes('coffee') || l.includes('tea')) return '☕';
     return '🍽️';
