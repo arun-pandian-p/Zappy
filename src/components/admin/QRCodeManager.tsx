@@ -52,11 +52,9 @@ import {
 import { useTables, useCreateTable, useDeleteTable, type Table } from "@/hooks/useTables";
 import { format } from "date-fns";
 
-const REDIRECT_BASE = `https://syvoshzxoedamaijongb.supabase.co/functions/v1/qr-redirect`;
+import { getAppOrigin } from "@/utils/url";
 
-import { useRestaurant } from "@/hooks/useRestaurant";
-
-const DEFAULT_BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://www.zappy.ind.in";
+const DEFAULT_BASE_URL = getAppOrigin();
 
 interface QRCodeManagerProps {
   restaurantId: string;
@@ -108,7 +106,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
       createQR.mutate({
         tenant_id: restaurantId,
         qr_name: "Restaurant Base QR",
-        target_url: `${BASE_URL}${baseQRUrl}`,
+        target_url: `/order?r=${restaurantId}`,
         qr_type: "dynamic",
         metadata: { is_base_qr: true },
       });
@@ -127,7 +125,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
       createQR.mutate({
         tenant_id: restaurantId,
         qr_name: `Table ${table.table_number}`,
-        target_url: `${BASE_URL}/order?r=${restaurantId}&table=${table.table_number}`,
+        target_url: `/order?r=${restaurantId}&table=${table.table_number}`,
         qr_type: "dynamic",
         metadata: { table_id: table.id, table_number: table.table_number },
       });
@@ -177,7 +175,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
       await createQR.mutateAsync({
         tenant_id: restaurantId,
         qr_name: `Table ${newTableNumber.trim()}`,
-        target_url: `${BASE_URL}/order?r=${restaurantId}&table=${newTableNumber.trim()}`,
+        target_url: `/order?r=${restaurantId}&table=${newTableNumber.trim()}`,
         qr_type: "dynamic",
         metadata: {
           table_id: table.id,
@@ -509,7 +507,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
           {tables.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {tables.map((table) => {
-                const menuUrl = `${BASE_URL}/order?r=${restaurantId}&table=${table.table_number}`;
+                const menuUrl = `/order?r=${restaurantId}&table=${table.table_number}`;
                 return (
                   <div
                     key={table.id}

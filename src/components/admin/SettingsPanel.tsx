@@ -47,6 +47,7 @@ import {
 import { useRestaurant, useUpdateRestaurant } from "@/hooks/useRestaurant";
 import { useToast } from "@/hooks/use-toast";
 import { usePrinter } from "@/hooks/usePrinter";
+import { getAppOrigin } from "@/utils/url";
 
 interface SettingsPanelProps {
   restaurantId: string;
@@ -90,7 +91,7 @@ interface RestaurantSettings {
   menu_title: string;
 }
 
-const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://www.zappy.ind.in";
+const BASE_URL = getAppOrigin();
 
 const defaultSettings: RestaurantSettings = {
   name: "",

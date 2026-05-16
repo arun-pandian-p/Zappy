@@ -26,6 +26,12 @@ import RoleGuard from "./components/auth/RoleGuard";
 
 const queryClient = new QueryClient();
 
+// Redirect from zappy.ind.in to www.zappy.ind.in
+if (typeof window !== "undefined" && 
+    window.location.hostname === "zappy.ind.in") {
+  window.location.replace(`https://www.zappy.ind.in${window.location.pathname}${window.location.search}`);
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
