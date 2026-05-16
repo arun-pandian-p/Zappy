@@ -141,6 +141,7 @@ const mainTabs = [
   { value: "inventory", label: "Inventory", icon: Package },
   { value: "exports", label: "Exports", icon: FileSpreadsheet },
   { value: "promotions", label: "Promotions", icon: Megaphone },
+  { value: "ads", label: "Ads Manager", icon: Sparkles },
   { value: "qr-manager", label: "QR Manager", icon: QrCode },
   { value: "preview", label: "Preview Site", icon: Eye },
   { value: "settings", label: "Settings", icon: Settings },
@@ -616,6 +617,39 @@ const AdminDashboard = () => {
                   className="space-y-6"
                 >
                   <DashboardStats orders={orders} currencySymbol={currencySymbol} />
+                  
+                  <Card className="border-0 shadow-md bg-gradient-to-r from-emerald-500/5 to-blue-500/5">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <RefreshCw className={cn("w-4 h-4", restaurantsLoading ? "animate-spin" : "text-emerald-500")} />
+                        System Health Diagnostic
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-4 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <div className={cn("w-2 h-2 rounded-full", user ? "bg-green-500" : "bg-red-500")} />
+                          <span className="text-muted-foreground">Auth:</span>
+                          <span className="font-medium">{user ? "Connected" : "Disconnected"}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className={cn("w-2 h-2 rounded-full", restaurant ? "bg-green-500" : "bg-yellow-500")} />
+                          <span className="text-muted-foreground">Database:</span>
+                          <span className="font-medium">{restaurant ? "Accessible" : "Wait..."}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-blue-500" />
+                          <span className="text-muted-foreground">Role:</span>
+                          <span className="font-medium uppercase">{role || "None"}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 ml-auto">
+                          <span className="text-muted-foreground">Version:</span>
+                          <span className="font-mono opacity-50">v2.4.1-prod</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <RevenueChart orders={orders} currencySymbol={currencySymbol} days={7} />
                     <RevenueTrends orders={orders} currencySymbol={currencySymbol} days={7} />
@@ -1054,6 +1088,18 @@ const AdminDashboard = () => {
                 >
                   <OffersManager restaurantId={restaurantId} />
                   <PlatformAdsReadOnly restaurantId={restaurantId} />
+                </motion.div>
+              )}
+
+              {activeTab === "ads" && (
+                <motion.div
+                  key="ads"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <AdsManager restaurantId={restaurantId} />
                 </motion.div>
               )}
 

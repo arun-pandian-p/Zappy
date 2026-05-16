@@ -27,6 +27,7 @@ import {
   Lock,
   Package,
   Camera,
+  Sparkles,
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
@@ -63,6 +64,7 @@ const allNavItems: NavItem[] = [
   { title: "Billing", icon: Receipt, value: "billing" },
   { title: "Coupons", icon: Ticket, value: "coupons" },
   { title: "Promotions", icon: Megaphone, value: "promotions" },
+  { title: "Ads Manager", icon: Sparkles, value: "ads" },
   { title: "Reviews", icon: Star, value: "reviews" },
   { title: "Users", icon: Users, value: "users" },
   { title: "Inventory", icon: Package, value: "inventory" },
