@@ -18,6 +18,7 @@ export function analyzeCart(context: CartContext): CartIntelligenceResult {
   let hasDessert = false;
   let hasMain = false;
   let hasSide = false;
+  let hasAddon = false;
   
   let vegCount = 0;
   const cuisines: Record<string, number> = {};
@@ -32,6 +33,7 @@ export function analyzeCart(context: CartContext): CartIntelligenceResult {
       if (nodeMatch.type === "dessert") hasDessert = true;
       if (nodeMatch.type === "combo") hasMain = true;
       if (nodeMatch.type === "side") hasSide = true;
+      if (nodeMatch.type === "addon") hasAddon = true;
       
       if (nodeMatch.isVegetarian) vegCount++;
       
@@ -46,6 +48,9 @@ export function analyzeCart(context: CartContext): CartIntelligenceResult {
       if (normalizedName.includes("ice cream") || normalizedName.includes("jamun") || normalizedName.includes("sweet")) {
         hasDessert = true;
       }
+      if (normalizedName.includes("chutney") || normalizedName.includes("sambar") || normalizedName.includes("raita") || normalizedName.includes("pickle")) {
+        hasAddon = true;
+      }
       if (item.isVegetarian) vegCount++;
     }
   });
@@ -55,8 +60,11 @@ export function analyzeCart(context: CartContext): CartIntelligenceResult {
   // Rules for missing items
   if (!hasDrink) missingTypes.push("drink");
   if (!hasDessert && items.length > 1) missingTypes.push("dessert"); // only suggest dessert for larger meals
-  if (hasMain && !hasSide) missingTypes.push("side");
-  if (hasSide && !hasMain) missingTypes.push("addon");
+  if (hasMain && !hasSide && !hasAddon) {
+    missingTypes.push("side");
+    missingTypes.push("addon");
+  }
+  if ((hasSide || hasAddon) && !hasMain) missingTypes.push("combo");
 
   // Contextual rules
   if (context.weather === "rainy" && !hasDrink) {

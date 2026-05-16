@@ -32,11 +32,12 @@ function resolveDynamicNode(name: string): FoodNode {
   const isDrink = lower.includes("drink") || lower.includes("soda") || lower.includes("coffee") || lower.includes("tea") || lower.includes("juice") || lower.includes("lassi") || lower.includes("water") || lower.includes("mojito") || lower.includes("shake") || lower.includes("beer") || lower.includes("wine") || lower.includes("cocktail");
   const isDessert = lower.includes("ice cream") || lower.includes("sweet") || lower.includes("jamun") || lower.includes("cake") || lower.includes("kesari") || lower.includes("brownie") || lower.includes("pudding") || lower.includes("mousse") || lower.includes("donut");
   const isStarter = lower.includes("fry") || lower.includes("tikka") || lower.includes("kebab") || lower.includes("soup") || lower.includes("salad") || lower.includes("wing") || lower.includes("nugget");
+  const detectedCuisines = detectCuisine(name);
   
   return {
     id: name,
     name: name,
-    cuisine: cuisines.length > 0 ? cuisines : ["Universal"],
+    cuisine: detectedCuisines.length > 0 ? detectedCuisines : ["Universal"],
     ingredients: [],
     tags: [],
     type: isDrink ? "drink" : isDessert ? "dessert" : isStarter ? "starter" : "addon",

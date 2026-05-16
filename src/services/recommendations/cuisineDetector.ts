@@ -17,6 +17,7 @@ const CUISINE_MAP: Record<string, CuisineType> = {
   "porotta": "South Indian",
   "chettinad": "South Indian",
   "filter coffee": "South Indian",
+  "chutney": "South Indian",
 
   // North Indian
   "paneer": "North Indian",
