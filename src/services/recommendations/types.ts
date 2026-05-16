@@ -21,6 +21,14 @@ export type RecommendationType =
   | "premium" 
   | "chef_special";
 
+export type RecommendationCategory = 
+  | "Pairs Perfectly"
+  | "Frequently Bought Together"
+  | "Chef Recommended"
+  | "Trending Add-ons"
+  | "Popular Combo"
+  | "Customers Also Ordered";
+
 export interface FoodNode {
   id: string;
   name: string;
@@ -30,7 +38,12 @@ export interface FoodNode {
   type: RecommendationType;
   isVegetarian: boolean;
   basePrice?: number;
-}
+  mealType?: string[];
+  recommendedWith?: string[];
+  pairingTags?: string[];
+  comboPriority?: number;
+  upsellPriority?: number;
+  frequentlyBoughtTogether?: string[];
 
 export interface Edge {
   source: string; // FoodNode ID
@@ -50,7 +63,11 @@ export interface RecommendationResult {
   reason: string;
   ingredientsMatched: string[];
   popularity: number;
-}
+  category: RecommendationCategory;
+  relationBadge: string;
+  comboSavings?: number;
+  isBestseller?: boolean;
+  isChefSpecial?: boolean;
 
 export interface CartContext {
   items: Array<{ name: string; price: number; isVegetarian?: boolean }>;

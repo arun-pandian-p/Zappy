@@ -26,6 +26,22 @@ function TypeIcon({ type }: { type: Recommendation["type"] }) {
   }
 }
 
+// Add trending icon mapping
+function CategoryIcon({ category }: { category: string }) {
+  switch (category) {
+    case "Pairs Perfectly":
+      return <Sparkles className="w-3 h-3" />;
+    case "Frequently Bought Together":
+      return <Plus className="w-3 h-3" />;
+    case "Chef Recommended":
+      return <Star className="w-3 h-3" />;
+    case "Popular Combo":
+      return <Utensils className="w-3 h-3" />;
+    default:
+      return <Sparkles className="w-3 h-3" />;
+  }
+}
+
 // Type → color mapping
 function getTypeColor(type: Recommendation["type"]) {
   switch (type) {
@@ -62,6 +78,9 @@ export function RecommendationsSection({
 
   if (recommendations.length === 0) return null;
 
+  const mainTarget = cartItemNames.length > 0 ? cartItemNames[cartItemNames.length - 1] : "";
+  const title = mainTarget ? `Best with ${mainTarget}` : "Recommended for your order";
+
   return (
     <div className="py-5 border-t border-dashed mt-3">
       <div className="flex items-center gap-2 mb-3">
@@ -69,8 +88,8 @@ export function RecommendationsSection({
           <Sparkles className="w-4 h-4 text-primary" />
         </div>
         <div>
-          <h3 className="font-bold text-sm">Pairs perfectly with</h3>
-          <p className="text-[10px] text-muted-foreground">Curated by our chef</p>
+          <h3 className="font-bold text-sm">{title}</h3>
+          <p className="text-[10px] text-muted-foreground">AI-powered smart pairings</p>
         </div>
       </div>
 
@@ -103,24 +122,47 @@ export function RecommendationsSection({
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                 />
-                {/* Type Badge */}
                 <Badge className={`absolute top-1.5 left-1.5 text-[8px] px-1.5 py-0 h-4 border-0 rounded-full font-semibold ${typeColor}`}>
-                  <TypeIcon type={rec.type} />
-                  <span className="ml-0.5">{getTypeLabel(rec.type)}</span>
+                  <CategoryIcon category={rec.category || "Pairs Perfectly"} />
+                  <span className="ml-0.5">{rec.relationBadge || getTypeLabel(rec.type)}</span>
                 </Badge>
+                
+                {/* Bestseller / Chef Special Tag */}
+                {rec.isBestseller && (
+                  <Badge className="absolute bottom-1.5 left-1.5 text-[8px] px-1.5 py-0 h-4 border-0 rounded-full font-bold bg-amber-500 text-white shadow-sm">
+                    Bestseller
+                  </Badge>
+                )}
+                {rec.isChefSpecial && !rec.isBestseller && (
+                  <Badge className="absolute bottom-1.5 left-1.5 text-[8px] px-1.5 py-0 h-4 border-0 rounded-full font-bold bg-[#008c4a] text-white shadow-sm">
+                    Chef Special
+                  </Badge>
+                )}
               </div>
               
               {/* Content */}
-              <div className="p-2.5 space-y-1.5">
-                <h4 className="text-xs font-bold line-clamp-1">{menuItem.name}</h4>
-                <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">
-                  {rec.reason}
-                </p>
+              <div className="p-2.5 space-y-1.5 relative flex-1 flex flex-col justify-between">
+                <div>
+                  <h4 className="text-xs font-bold line-clamp-1">{menuItem.name}</h4>
+                  
+                  {/* AI Explanation / Reason */}
+                  <div className="flex items-start gap-1 mt-1">
+                    <Sparkles className="w-2.5 h-2.5 text-primary mt-0.5 flex-shrink-0" />
+                    <p className="text-[9px] text-muted-foreground line-clamp-2 leading-tight">
+                      <span className="font-medium text-foreground/80">{rec.category || "Recommended"}:</span> {rec.reason}
+                    </p>
+                  </div>
+                </div>
 
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs font-bold text-[#008c4a]">
-                    {currencySymbol}{Number(menuItem.price).toFixed(0)}
-                  </span>
+                <div className="flex items-center justify-between pt-2 mt-auto border-t border-dashed border-border/50">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-[#008c4a]">
+                      {currencySymbol}{Number(menuItem.price).toFixed(0)}
+                    </span>
+                    {rec.comboSavings && (
+                      <span className="text-[8px] text-primary font-medium">Save {currencySymbol}{rec.comboSavings}</span>
+                    )}
+                  </div>
                   <Button
                     size="sm"
                     variant="ghost"

@@ -252,37 +252,98 @@ export const FOOD_NODES: Record<string, FoodNode> = {
     tags: ["crispy", "savory", "breakfast"],
     type: "side",
     isVegetarian: true,
+  },
+  "chicken_65": {
+    id: "chicken_65",
+    name: "Chicken 65",
+    cuisine: ["South Indian"],
+    ingredients: ["chicken", "spices", "yogurt"],
+    tags: ["spicy", "fried", "starter"],
+    type: "starter",
+    isVegetarian: false,
+  },
+  "nuggets": {
+    id: "nuggets",
+    name: "Chicken Nuggets",
+    cuisine: ["Fast Food"],
+    ingredients: ["chicken", "breadcrumbs"],
+    tags: ["fried", "crispy", "snack"],
+    type: "starter",
+    isVegetarian: false,
+  },
+  "mojito": {
+    id: "mojito",
+    name: "Mojito",
+    cuisine: ["Beverage"],
+    ingredients: ["mint", "lime", "soda", "sugar"],
+    tags: ["cold", "refreshing", "drink"],
+    type: "drink",
+    isVegetarian: true,
+  },
+  "garlic_bread": {
+    id: "garlic_bread",
+    name: "Garlic Bread",
+    cuisine: ["Italian", "Fast Food"],
+    ingredients: ["bread", "garlic", "butter", "cheese"],
+    tags: ["baked", "cheesy", "side"],
+    type: "side",
+    isVegetarian: true,
+  },
+  "pasta": {
+    id: "pasta",
+    name: "Pasta",
+    cuisine: ["Italian"],
+    ingredients: ["pasta", "sauce", "cheese"],
+    tags: ["heavy", "dinner", "creamy"],
+    type: "combo",
+    isVegetarian: true,
   }
 };
 
 // Pre-computed explicit relationships (mimicking a graph structure like KitcheNette)
 export const EXPLICIT_EDGES: Edge[] = [
+  { source: "biryani", target: "chicken_65", weight: 0.98, reason: "Spicy starter combo", type: "starter" },
   { source: "biryani", target: "raita", weight: 0.95, reason: "Cools down the aromatic spices", type: "addon" },
   { source: "biryani", target: "coke", weight: 0.85, reason: "Perfect fizzy balance", type: "drink" },
+  { source: "biryani", target: "gulab_jamun", weight: 0.9, reason: "Sweet finish after a rich meal", type: "dessert" },
   { source: "biryani", target: "falooda", weight: 0.8, reason: "Traditional rich sweet finish", type: "dessert" },
+  
   { source: "idli", target: "sambar", weight: 0.98, reason: "Classic combination", type: "addon" },
   { source: "idli", target: "coconut_chutney", weight: 0.98, reason: "Essential South Indian dip", type: "addon" },
   { source: "idli", target: "vada", weight: 0.9, reason: "Make it a complete breakfast", type: "combo" },
   { source: "idli", target: "filter_coffee", weight: 0.9, reason: "Complete the South Indian breakfast", type: "drink" },
+  
   { source: "masala_dosa", target: "sambar", weight: 0.98, reason: "Classic pairing", type: "side" },
   { source: "masala_dosa", target: "coconut_chutney", weight: 0.99, reason: "Essential dip", type: "side" },
   { source: "masala_dosa", target: "tomato_chutney", weight: 0.95, reason: "Tangy accompaniment", type: "side" },
   { source: "masala_dosa", target: "medu_vada", weight: 0.9, reason: "Classic breakfast combo", type: "combo" },
+  
   { source: "rava_dosa", target: "coconut_chutney", weight: 0.99, reason: "Essential dip", type: "side" },
   { source: "rava_dosa", target: "tomato_chutney", weight: 0.95, reason: "Pairs perfectly with rava", type: "side" },
+  
   { source: "pongal", target: "medu_vada", weight: 0.95, reason: "Traditional breakfast pairing", type: "combo" },
+  
   { source: "paratha", target: "lassi", weight: 0.95, reason: "Authentic North Indian experience", type: "drink" },
   { source: "paratha", target: "raita", weight: 0.85, reason: "Cooling side for spicy paratha", type: "side" },
+  
   { source: "poori_bhaji", target: "masala_tea", weight: 0.85, reason: "Classic tea-time combo", type: "drink" },
+  
   { source: "dosa", target: "sambar", weight: 0.98, reason: "Essential dip", type: "side" },
   { source: "dosa", target: "coconut_chutney", weight: 0.99, reason: "Perfectly complements the crispy dosa", type: "side" },
   { source: "dosa", target: "tomato_chutney", weight: 0.95, reason: "Spicy & tangy twist", type: "side" },
   { source: "dosa", target: "vada", weight: 0.85, reason: "Crispy duo", type: "combo" },
-  { source: "dosa", target: "filter_coffee", weight: 0.8, reason: "Authentic South Indian finish", type: "drink" },
+  { source: "dosa", target: "filter_coffee", weight: 0.9, reason: "Authentic South Indian finish", type: "drink" },
+  
   { source: "paneer_butter_masala", target: "butter_naan", weight: 0.98, reason: "Perfect for scooping the creamy gravy", type: "combo" },
   { source: "chicken_tikka_masala", target: "butter_naan", weight: 0.98, reason: "Classic North Indian pairing", type: "combo" },
   { source: "paneer_butter_masala", target: "gulab_jamun", weight: 0.85, reason: "Sweet finish after a rich meal", type: "dessert" },
+  
   { source: "burger", target: "french_fries", weight: 0.95, reason: "Best friends forever", type: "combo" },
+  { source: "burger", target: "nuggets", weight: 0.9, reason: "Popular side", type: "side" },
+  { source: "burger", target: "mojito", weight: 0.85, reason: "Refreshing combo", type: "drink" },
   { source: "burger", target: "coke", weight: 0.9, reason: "Classic fast food combo", type: "drink" },
+  
+  { source: "pizza", target: "garlic_bread", weight: 0.98, reason: "Perfect baked side", type: "side" },
+  { source: "pizza", target: "pasta", weight: 0.9, reason: "Italian feast combo", type: "combo" },
   { source: "pizza", target: "coke", weight: 0.9, reason: "Classic pairing", type: "drink" }
 ];

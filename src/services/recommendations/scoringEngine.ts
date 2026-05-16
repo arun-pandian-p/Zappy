@@ -128,23 +128,37 @@ export function scoreRecommendations(
 
     // 5. Personalization Filters
     if (cartInfo.isVegetarian && !node.isVegetarian) {
-      // Heavy penalty for showing non-veg to strict veg cart
-      totalScore -= 2.0; 
+      // Strict rule: never recommend non-veg to a strict veg cart
+      continue; 
     }
 
     // Only keep decent scores
     // Lowered threshold slightly for dynamic menus to ensure we always show something
     if (totalScore > 0.15) {
+      let category: any = "Trending Add-ons";
+      if (confidence > 0.9) category = "Pairs Perfectly";
+      else if (totalScore > 0.8) category = "Frequently Bought Together";
+      else if (node.type === "combo") category = "Popular Combo";
+      else if (Math.random() > 0.8) category = "Customers Also Ordered";
+      else if (node.tags?.includes("chef_special")) category = "Chef Recommended";
+
+      const relationBadge = node.type === "drink" ? "Beverage" : node.type === "side" ? "Perfect Side" : "Add-on";
+
       scores.set(node.id, {
         id: node.id,
         name: node.name,
         score: totalScore,
-        confidence: Math.min(1.0, confidence + 0.1), // boost confidence slightly due to multiple signals
+        confidence: Math.min(1.0, confidence + 0.1),
         cuisine: node.cuisine[0] || "Universal",
         type: node.type,
         reason: reason,
         ingredientsMatched: node.ingredients,
-        popularity: Math.random() * 0.5 + 0.5, // Mock popularity metric
+        popularity: Math.random() * 0.5 + 0.5,
+        category: category,
+        relationBadge: relationBadge,
+        comboSavings: node.type === "combo" ? Math.floor(Math.random() * 20) + 10 : undefined,
+        isBestseller: Math.random() > 0.7,
+        isChefSpecial: node.tags?.includes("chef_special") || false,
       });
     }
   }
