@@ -148,9 +148,16 @@ export function RecommendationsSection({
                   {/* AI Explanation / Reason */}
                   <div className="flex items-start gap-1 mt-1">
                     <Sparkles className="w-2.5 h-2.5 text-primary mt-0.5 flex-shrink-0" />
-                    <p className="text-[9px] text-muted-foreground line-clamp-2 leading-tight">
-                      <span className="font-medium text-foreground/80">{rec.category || "Recommended"}:</span> {rec.reason}
-                    </p>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-[9px] text-muted-foreground line-clamp-2 leading-tight">
+                        <span className="font-medium text-foreground/80">{rec.category || "Recommended"}:</span> {rec.reason}
+                      </p>
+                      {rec.pairingPercentage && (
+                        <p className="text-[8px] font-medium text-emerald-600 dark:text-emerald-400">
+                          {rec.pairingPercentage}% customers order this together
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 

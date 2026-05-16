@@ -44,6 +44,7 @@ export interface FoodNode {
   comboPriority?: number;
   upsellPriority?: number;
   frequentlyBoughtTogether?: string[];
+}
 
 export interface Edge {
   source: string; // FoodNode ID
@@ -68,6 +69,8 @@ export interface RecommendationResult {
   comboSavings?: number;
   isBestseller?: boolean;
   isChefSpecial?: boolean;
+  pairingPercentage?: number;
+}
 
 export interface CartContext {
   items: Array<{ name: string; price: number; isVegetarian?: boolean }>;

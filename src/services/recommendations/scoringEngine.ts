@@ -159,6 +159,7 @@ export function scoreRecommendations(
         comboSavings: node.type === "combo" ? Math.floor(Math.random() * 20) + 10 : undefined,
         isBestseller: Math.random() > 0.7,
         isChefSpecial: node.tags?.includes("chef_special") || false,
+        pairingPercentage: Math.min(98, Math.floor(confidence * 100) + Math.floor(Math.random() * 5)),
       });
     }
   }
