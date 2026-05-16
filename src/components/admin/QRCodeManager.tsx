@@ -50,6 +50,7 @@ import {
   type QRCode,
 } from "@/hooks/useQRCodes";
 import { useTables, useCreateTable, useDeleteTable, type Table } from "@/hooks/useTables";
+import { useRestaurant } from "@/hooks/useRestaurant";
 import { format } from "date-fns";
 
 import { getAppOrigin } from "@/utils/url";
