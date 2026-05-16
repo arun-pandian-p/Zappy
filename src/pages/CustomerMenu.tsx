@@ -30,7 +30,8 @@ import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
 
 import { useTableByNumber, useTables } from '@/hooks/useTables';
 import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
-import { useActiveOffers } from '@/hooks/useOffers';
+import { useActiveEnterprisePromotions } from '@/hooks/useEnterprisePromotions';
+import { evaluateCartDiscounts } from '@/services/promotions/cartPricingEngine';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
 
 import { BottomNav } from '@/components/menu/BottomNav';
@@ -46,6 +47,9 @@ import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { SOUNDS } from '@/hooks/useSound';
 import { PostOrderReviewPrompt } from '@/components/order/PostOrderReviewPrompt';
+import { RecommendationsSection } from '@/components/menu/RecommendationsSection';
+import { ItemDetailsDialog } from '@/components/menu/ItemDetailsDialog';
+import { MenuGridSkeleton, MenuListSkeleton } from '@/components/menu/MenuSkeletons';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
@@ -108,6 +112,7 @@ const CustomerMenu = () => {
 
   const [currentView, setCurrentView] = useState<ViewType>('menu');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedItemForDetails, setSelectedItemForDetails] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddedToast, setShowAddedToast] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState('');
@@ -138,7 +143,7 @@ const CustomerMenu = () => {
   const restaurant = restaurantAuth || restaurantPub as any;
 
   // Fetch offers
-  const { data: offers = [] } = useActiveOffers(restaurantId);
+  const { data: offers = [] } = useActiveEnterprisePromotions(restaurantId);
 
   // Fetch menu items
   const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(restaurantId);
@@ -248,10 +253,10 @@ const CustomerMenu = () => {
     });
   }, [availableMenuItems, selectedCategory, searchQuery]);
 
-  // Find active order
+  // Find active order (including served so we can track the transition)
   const activeOrder = useMemo(() => {
     return customerOrders.find(
-      (o) => o.status !== "completed" && o.status !== "cancelled" && o.status !== "served"
+      (o) => o.status !== "completed" && o.status !== "cancelled"
     );
   }, [customerOrders]);
 
@@ -369,6 +374,15 @@ const CustomerMenu = () => {
     setTimeout(() => setShowAddedToast(false), 2000);
   }, [addItem]);
 
+  const cartPricing = useMemo(() => {
+    return evaluateCartDiscounts(
+      cartItems.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+      offers as any[],
+      taxRate / 100,
+      0 // No delivery fee
+    );
+  }, [cartItems, offers, taxRate]);
+
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) {
       toast({
@@ -388,10 +402,10 @@ const CustomerMenu = () => {
       return;
     }
 
-    const subtotal = getTotalPrice();
-    const taxAmount = subtotal * (taxRate / 100);
-    const serviceCharge = subtotal * (serviceChargeRate / 100);
-    const total = subtotal + taxAmount + serviceCharge;
+    const subtotal = cartPricing.subtotal;
+    const taxAmount = cartPricing.tax;
+    const serviceCharge = (cartPricing.subtotal - cartPricing.totalDiscount) * (serviceChargeRate / 100);
+    const total = cartPricing.finalTotal + serviceCharge;
 
     if (isDemoMode) {
       toast({
@@ -561,37 +575,26 @@ const CustomerMenu = () => {
         </div>
       )}
 
-      {/* Sticky Search + Categories */}
-      <div className="sticky top-[57px] z-30 bg-background pb-3 -mx-4 px-4 pt-1">
-        {/* Search + View Toggle */}
-        <div className="flex items-center gap-2 mb-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      {/* Search + Scan QR */}
+      <div className="sticky top-[57px] z-30 bg-background pb-3 -mx-4 px-4 pt-4">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="relative flex-1 flex items-center">
+            <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
             <Input
               placeholder="Search menu..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 rounded-full bg-muted/50 border-0"
+              className="pl-12 pr-12 h-12 rounded-2xl bg-muted/30 border-0 text-base"
             />
+            {/* Filter icon placeholder */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-4 text-muted-foreground">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
           </div>
-          <div className="flex items-center bg-muted rounded-lg p-0.5">
-            <Button
-              variant={menuViewMode === 'list' ? 'default' : 'ghost'}
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setMenuViewMode('list')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={menuViewMode === 'grid' ? 'default' : 'ghost'}
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setMenuViewMode('grid')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-          </div>
+          <Button className="h-12 px-4 rounded-2xl bg-[#008c4a] hover:bg-[#00703b] text-white flex flex-col items-center justify-center gap-0.5 min-w-[70px]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
+            <span className="text-[10px] font-medium leading-none">Scan QR</span>
+          </Button>
         </div>
 
         {/* Categories */}
@@ -602,10 +605,62 @@ const CustomerMenu = () => {
         />
       </div>
 
+      {/* Hero Banner */}
+      <div className="relative w-full rounded-3xl overflow-hidden bg-[#e0f0df] mt-2 mb-6 p-5 pr-[40%] min-h-[160px] flex flex-col justify-center shadow-sm">
+        <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-[55%] h-full">
+          <img 
+            src="https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&q=80" 
+            alt="Delicious Dosa" 
+            className="w-full h-full object-contain mix-blend-multiply opacity-90 scale-125"
+          />
+        </div>
+        
+        <div className="relative z-10 space-y-2">
+          <Badge variant="secondary" className="bg-white/80 text-success hover:bg-white text-[10px] px-2 py-0.5 font-semibold gap-1 w-max">
+            ✨ Today's Special
+          </Badge>
+          <div className="space-y-1">
+            <h2 className="text-2xl font-black text-[#1a3824] leading-tight tracking-tight">Good Food<br/>Good Mood</h2>
+            <p className="text-xs text-[#2a5a3a] font-medium">Delicious bites, happy vibes!</p>
+          </div>
+          <Button className="mt-2 bg-[#008c4a] hover:bg-[#00703b] text-white rounded-full h-8 px-4 text-xs font-semibold w-max gap-1">
+            Order Now 
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </Button>
+        </div>
+        
+        {/* Carousel Dots */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          <div className="w-2 h-2 rounded-full bg-[#008c4a]" />
+          <div className="w-2 h-2 rounded-full bg-white/60" />
+          <div className="w-2 h-2 rounded-full bg-white/60" />
+        </div>
+      </div>
+
+      {/* Recommended Section Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-lg text-foreground flex items-center gap-1.5">
+          Recommended for you <span className="text-success text-xl">✨</span>
+        </h3>
+        <button className="text-xs font-semibold text-success flex items-center gap-0.5 hover:underline">
+          View all
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+
+      {/* Dynamic Offers Slider (Promotions) */}
+      {offers && offers.length > 0 && (
+        <div className="mb-6 -mx-4 px-4">
+          <OffersSlider offers={offers} />
+        </div>
+      )}
+
 
       {/* Menu Items */}
       <div className="mt-4">
-      {menuViewMode === 'list' ? (
+      {menuLoading ? (
+        menuViewMode === 'list' ? <MenuListSkeleton /> : <MenuGridSkeleton />
+      ) : menuViewMode === 'list' ? (
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
             {filteredItems.map((item) => (
@@ -646,13 +701,14 @@ const CustomerMenu = () => {
                 onAdd={() => handleAddToCart(item)}
                 onIncrement={() => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) + 1)}
                 onDecrement={() => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) - 1)}
+                onClick={() => setSelectedItemForDetails(item)}
               />
             ))}
           </AnimatePresence>
         </div>
       )}
 
-      {filteredItems.length === 0 && (
+      {!menuLoading && filteredItems.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           No items found
         </div>
@@ -726,27 +782,46 @@ const CustomerMenu = () => {
             </Card>
           ))}
 
+          {/* Intelligent Recommendations */}
+          <RecommendationsSection 
+            cartItemNames={cartItems.map(item => item.name)}
+            allMenuItems={menuItems}
+            onAddItem={(id) => {
+              const item = menuItems.find(mi => mi.id === id);
+              if (item) addItem(item);
+            }}
+            currencySymbol={currencySymbol}
+          />
+
           {/* Order Summary */}
           <Card className="bg-primary/5 border-primary/20">
             <CardContent className="p-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
-                <span>{currencySymbol}{getTotalPrice().toFixed(2)}</span>
+                <span>{currencySymbol}{cartPricing.subtotal.toFixed(2)}</span>
               </div>
+              
+              {cartPricing.appliedDiscounts.map(discount => (
+                <div key={discount.promotionId} className="flex justify-between text-sm text-green-600 font-medium">
+                  <span>✨ {discount.title}</span>
+                  <span>-{currencySymbol}{discount.discountAmount.toFixed(2)}</span>
+                </div>
+              ))}
+
               <div className="flex justify-between text-sm">
                 <span>Tax ({taxRate}%)</span>
-                <span>{currencySymbol}{(getTotalPrice() * taxRate / 100).toFixed(2)}</span>
+                <span>{currencySymbol}{cartPricing.tax.toFixed(2)}</span>
               </div>
               {serviceChargeRate > 0 && (
                 <div className="flex justify-between text-sm">
                   <span>Service ({serviceChargeRate}%)</span>
-                  <span>{currencySymbol}{(getTotalPrice() * serviceChargeRate / 100).toFixed(2)}</span>
+                  <span>{currencySymbol}{((cartPricing.subtotal - cartPricing.totalDiscount) * serviceChargeRate / 100).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-lg pt-2 border-t">
                 <span>Total</span>
                 <span className="text-primary">
-                  {currencySymbol}{(getTotalPrice() * (1 + taxRate / 100 + serviceChargeRate / 100)).toFixed(2)}
+                  {currencySymbol}{(cartPricing.finalTotal + (cartPricing.subtotal - cartPricing.totalDiscount) * serviceChargeRate / 100).toFixed(2)}
                 </span>
               </div>
             </CardContent>
@@ -893,9 +968,29 @@ const CustomerMenu = () => {
         onSelectTable={handleTableSelect}
       />
 
+      {/* Details Dialog */}
+      <ItemDetailsDialog
+        item={selectedItemForDetails}
+        isOpen={!!selectedItemForDetails}
+        onClose={() => setSelectedItemForDetails(null)}
+        onAdd={() => selectedItemForDetails && handleAddToCart(selectedItemForDetails)}
+        onIncrement={() => selectedItemForDetails && updateQuantity(getItemCartKey(selectedItemForDetails.id), getItemQuantity(selectedItemForDetails.id) + 1)}
+        onDecrement={() => selectedItemForDetails && updateQuantity(getItemCartKey(selectedItemForDetails.id), getItemQuantity(selectedItemForDetails.id) - 1)}
+        quantity={selectedItemForDetails ? getItemQuantity(selectedItemForDetails.id) : 0}
+        allMenuItems={menuItems}
+        currencySymbol={currencySymbol}
+        onViewCart={() => {
+          setSelectedItemForDetails(null);
+          setCurrentView('cart');
+        }}
+      />
 
       {/* Added to Cart Toast */}
-      <AddedToCartToast show={showAddedToast} itemName={lastAddedItem} />
+      <AddedToCartToast
+        show={showAddedToast}
+        itemName={lastAddedItem}
+        onClose={() => setShowAddedToast(false)}
+      />
 
       {/* Branded Top Bar */}
       <CustomerTopBar
@@ -933,7 +1028,7 @@ const CustomerMenu = () => {
       {dynamicTableId && currentView === 'menu' && (
         <FloatingCartBar
           itemCount={getTotalItems()}
-          totalPrice={getTotalPrice()}
+          totalPrice={cartPricing.finalTotal + (cartPricing.subtotal - cartPricing.totalDiscount) * (serviceChargeRate / 100)}
           currencySymbol={currencySymbol}
           onViewCart={() => setCurrentView('cart')}
         />

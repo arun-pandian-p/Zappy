@@ -91,79 +91,54 @@ export function CustomerTopBar({
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
-            {/* Left: Mascot + Logo + Name + Table */}
+            {/* Left: Avatar + Greeting + Table */}
             <div className="flex items-center gap-3 min-w-0">
-              {animEnabled && branding?.mascot && branding.mascot !== "none" && (
-                <MascotIcon mascot={branding.mascot} size={isScrolled ? 28 : 34} primaryColor={primaryColor} customImageUrl={branding?.mascot_image_url} />
-              )}
-              {logoUrl && !logoFailed ? (
-                <img
-                  src={logoUrl}
-                  alt=""
-                  className={`rounded-full object-cover border-2 border-primary/20 shadow-sm transition-all ${
-                    isScrolled ? "w-8 h-8" : "w-10 h-10"
-                  }`}
-                  onError={() => setLogoFailed(true)}
-                />
-              ) : (
-                <div
-                  className={`rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary transition-all ${
-                    isScrolled ? "w-8 h-8 text-sm" : "w-10 h-10 text-base"
-                  }`}
-                >
-                  {restaurantName.charAt(0)}
-                </div>
-              )}
-              <div className="min-w-0">
-                {animEnabled ? (
-                  <AnimatedHotelName
-                    name={restaurantName}
-                    animation={branding?.letter_animation || "bounce"}
-                    speed={branding?.animation_speed || "normal"}
-                    primaryColor={branding?.glow_color_sync ? primaryColor : undefined}
-                    className={`font-bold transition-all ${isScrolled ? "text-sm" : "text-base"}`}
-                  />
-                ) : (
-                  <h1
-                    className={`font-bold truncate transition-all ${
-                      isScrolled ? "text-sm" : "text-base"
-                    }`}
-                  >
-                    {restaurantName}
-                  </h1>
-                )}
+              <img
+                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Breeze"
+                alt="User Avatar"
+                className="w-12 h-12 rounded-full border border-border bg-muted object-cover"
+              />
+              <div className="flex flex-col min-w-0">
+                <h1 className="font-medium text-sm text-muted-foreground flex items-center gap-1 truncate">
+                  Hello, <span className="font-bold text-foreground text-base">Breeze Bhai</span> <span className="text-base">👋</span>
+                </h1>
                 {tableNumber && (
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] px-1.5 py-0 h-4 font-medium"
-                  >
-                    Table {tableNumber}
-                  </Badge>
+                  <div className="mt-0.5">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] px-2 py-0.5 h-auto font-medium bg-background border shadow-sm text-muted-foreground"
+                    >
+                      <div className="w-3 h-3 rounded-sm bg-muted flex items-center justify-center mr-1 pb-0.5 border">
+                        <span className="text-[8px] font-bold">T</span>
+                      </div>
+                      Table {tableNumber}
+                    </Badge>
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Right: Bell + Cart */}
-            <div className="flex items-center gap-1">
+            {/* Right: Bell + Exit */}
+            <div className="flex items-center gap-2">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="relative rounded-full h-9 w-9"
+                className="relative rounded-full h-10 w-10 bg-background border-border shadow-sm"
                 onClick={onCallWaiter}
                 disabled={isCallingWaiter}
               >
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-warning" />
+                <Bell className="w-5 h-5 text-foreground" />
+                <span className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-destructive border-2 border-background" />
               </Button>
 
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="relative rounded-full h-9 w-9"
+                className="relative rounded-[12px] h-10 w-10 bg-background border-border shadow-sm"
                 onClick={() => navigate('/login')}
-                title="Waiter Login"
+                title="Exit/Login"
               >
-                <LogIn className="w-5 h-5" />
+                <LogIn className="w-5 h-5 text-foreground" />
               </Button>
             </div>
           </div>

@@ -37,14 +37,18 @@ export function useActiveOffers(restaurantId: string) {
   return useQuery({
     queryKey: ["offers", restaurantId, "active"],
     queryFn: async () => {
-      const now = new Date().toISOString();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
       const { data, error } = await supabase
         .from("offers" as any)
         .select("*")
         .eq("restaurant_id", restaurantId)
         .eq("is_active", true)
-        .lte("start_date", now)
-        .gte("end_date", now)
+        .lte("start_date", tomorrow.toISOString())
+        .gte("end_date", today.toISOString())
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return (data || []) as unknown as Offer[];

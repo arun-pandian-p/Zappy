@@ -6,8 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Published app base URL for resolving relative target_urls
-const APP_BASE_URL = "https://qr-restaurant.lovable.app";
+// Resolve app base URL from environment or fallback
+const APP_BASE_URL = Deno.env.get("PUBLIC_APP_URL") || "https://www.zappy.ind.in";
 
 // Simple in-memory rate limiter
 const scanCounts = new Map<string, { count: number; resetAt: number }>();

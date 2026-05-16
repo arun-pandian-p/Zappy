@@ -16,10 +16,10 @@ export function useRestaurant(restaurantId?: string) {
         .from("restaurants")
         .select("*")
         .eq("id", restaurantId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data as Restaurant;
+      return data as Restaurant | null;
     },
     enabled: !!restaurantId,
     staleTime: 5 * 60 * 1000, // 5 minutes

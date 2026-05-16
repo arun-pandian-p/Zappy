@@ -4,6 +4,15 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropDialog } from '@/components/admin/ImageCropDialog';
+import { UnsplashPicker } from '@/components/admin/UnsplashPicker';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Sparkles } from 'lucide-react';
 
 interface ImageUploadProps {
   currentImageUrl?: string | null;
@@ -33,6 +42,7 @@ export const ImageUpload = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [unsplashOpen, setUnsplashOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingFileRef = useRef<File | null>(null);
   const { toast } = useToast();
@@ -139,6 +149,39 @@ export const ImageUpload = ({
         className="hidden"
       />
 
+      <div className="flex gap-2 mb-2">
+        <Dialog open={unsplashOpen} onOpenChange={setUnsplashOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="flex-1 gap-2 border-primary/20 hover:bg-primary/5">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Unsplash
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Search Unsplash</DialogTitle>
+            </DialogHeader>
+            <UnsplashPicker 
+              onSelect={(url) => {
+                setPreviewUrl(url);
+                onImageUploaded(url);
+                setUnsplashOpen(false);
+                toast({ title: 'Image selected', description: 'Photo from Unsplash has been applied.' });
+              }} 
+            />
+          </DialogContent>
+        </Dialog>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex-1 gap-2"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload className="w-4 h-4" />
+          Upload
+        </Button>
+      </div>
+
       {previewUrl ? (
         <div className="relative w-full h-32 rounded-lg overflow-hidden border bg-muted">
           <img
@@ -203,19 +246,6 @@ export const ImageUpload = ({
             </Button>
           )}
         </div>
-      )}
-
-      {!previewUrl && !isUploading && !uploadError && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Choose Image
-        </Button>
       )}
 
       {/* Crop Dialog */}

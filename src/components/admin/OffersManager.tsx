@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Trash2, Loader2, Gift } from "lucide-react";
+import { Plus, Trash2, Loader2, Gift, Sparkles, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageUpload } from "@/components/admin/ImageUpload";
-import { useOffers, useCreateOffer, useUpdateOffer, useDeleteOffer } from "@/hooks/useOffers";
+import { useEnterprisePromotions, useCreateEnterprisePromotion, useUpdateEnterprisePromotion, useDeleteOffer } from "@/hooks/useEnterprisePromotions";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { generateFoodImage } from "@/services/imageGenService";
 
 interface OffersManagerProps {
   restaurantId: string;
@@ -18,15 +20,17 @@ interface OffersManagerProps {
 
 export function OffersManager({ restaurantId }: OffersManagerProps) {
   const { toast } = useToast();
-  const { data: offers = [], isLoading } = useOffers(restaurantId);
-  const createOffer = useCreateOffer();
-  const updateOffer = useUpdateOffer();
+  const { data: offers = [], isLoading } = useEnterprisePromotions(restaurantId);
+  const createOffer = useCreateEnterprisePromotion();
+  const updateOffer = useUpdateEnterprisePromotion();
   const deleteOffer = useDeleteOffer();
-
+  
   const [newOffer, setNewOffer] = useState({
     title: "",
     description: "",
-    discount_text: "",
+    type: "percentage" as any,
+    discount_value: "",
+    min_order_value: "0",
     image_url: "",
     start_date: new Date().toISOString().split("T")[0],
     end_date: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
@@ -42,19 +46,21 @@ export function OffersManager({ restaurantId }: OffersManagerProps) {
         restaurant_id: restaurantId,
         title: newOffer.title,
         description: newOffer.description || null,
-        discount_text: newOffer.discount_text || null,
+        type: newOffer.type,
+        discount_value: parseFloat(newOffer.discount_value) || 0,
+        min_order_value: parseFloat(newOffer.min_order_value) || 0,
         image_url: newOffer.image_url || null,
-        linked_menu_item_id: null,
         start_date: new Date(newOffer.start_date).toISOString(),
         end_date: new Date(newOffer.end_date).toISOString(),
-        is_active: true,
-        sort_order: offers.length,
+        status: "pending_approval", // New campaigns go to superadmin
       });
-      toast({ title: "Offer created!" });
+      toast({ title: "Offer submitted for approval!" });
       setNewOffer({
         title: "",
         description: "",
-        discount_text: "",
+        type: "percentage",
+        discount_value: "",
+        min_order_value: "0",
         image_url: "",
         start_date: new Date().toISOString().split("T")[0],
         end_date: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
@@ -64,14 +70,13 @@ export function OffersManager({ restaurantId }: OffersManagerProps) {
     }
   };
 
-  const handleToggle = async (id: string, isActive: boolean) => {
-    await updateOffer.mutateAsync({ id, updates: { is_active: !isActive } });
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this offer?")) return;
-    await deleteOffer.mutateAsync({ id, restaurantId });
-    toast({ title: "Offer deleted" });
+  const handleToggle = async (id: string, currentStatus: string) => {
+    if (currentStatus === 'pending_approval' || currentStatus === 'rejected') {
+      toast({ title: "Cannot toggle", description: "This offer must be approved by the superadmin first.", variant: "destructive" });
+      return;
+    }
+    const nextStatus = currentStatus === 'active' ? 'paused' : 'active';
+    await updateOffer.mutateAsync({ id, restaurantId, updates: { status: nextStatus } });
   };
 
   if (isLoading) {
@@ -89,37 +94,77 @@ export function OffersManager({ restaurantId }: OffersManagerProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5" />
-            New Offer
+            New Campaign
           </CardTitle>
-          <CardDescription>Create promotional banners for your menu</CardDescription>
+          <CardDescription>Submit a promotional campaign for approval</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Title *</Label>
+            <Label>Campaign Title *</Label>
             <Input
               value={newOffer.title}
               onChange={(e) => setNewOffer({ ...newOffer, title: e.target.value })}
               placeholder="e.g. Weekend Special"
             />
           </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Discount Type</Label>
+              <Select value={newOffer.type} onValueChange={(val: any) => setNewOffer({...newOffer, type: val})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="percentage">Percentage (%)</SelectItem>
+                  <SelectItem value="flat_discount">Flat Discount (₹)</SelectItem>
+                  <SelectItem value="free_delivery">Free Delivery</SelectItem>
+                  <SelectItem value="bogo">Buy 1 Get 1</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Value</Label>
+              <Input
+                type="number"
+                value={newOffer.discount_value}
+                onChange={(e) => setNewOffer({ ...newOffer, discount_value: e.target.value })}
+                placeholder={newOffer.type === 'percentage' ? 'e.g. 20' : 'e.g. 150'}
+                disabled={newOffer.type === 'free_delivery' || newOffer.type === 'bogo'}
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label>Minimum Order Value (₹)</Label>
             <Input
-              value={newOffer.description}
-              onChange={(e) => setNewOffer({ ...newOffer, description: e.target.value })}
-              placeholder="Optional description"
+              type="number"
+              value={newOffer.min_order_value}
+              onChange={(e) => setNewOffer({ ...newOffer, min_order_value: e.target.value })}
+              placeholder="0 for no minimum"
             />
           </div>
+
           <div className="space-y-2">
-            <Label>Discount Text</Label>
-            <Input
-              value={newOffer.discount_text}
-              onChange={(e) => setNewOffer({ ...newOffer, discount_text: e.target.value })}
-              placeholder="e.g. 20% OFF, Buy 1 Get 1"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Image</Label>
+            <div className="flex items-center justify-between">
+              <Label>Campaign Banner</Label>
+              {newOffer.title && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 text-[10px] gap-1 text-primary hover:text-primary"
+                  onClick={async () => {
+                    toast({ title: "Generating image...", description: "AI is creating a photo for " + newOffer.title });
+                    const url = await generateFoodImage(newOffer.title, newOffer.description || "", restaurantId);
+                    setNewOffer({ ...newOffer, image_url: url });
+                    toast({ title: "Image ready!" });
+                  }}
+                >
+                  <Sparkles className="w-3 h-3" />
+                  AI Generate
+                </Button>
+              )}
+            </div>
             <ImageUpload
               currentImageUrl={newOffer.image_url}
               onImageUploaded={(url) => setNewOffer({ ...newOffer, image_url: url })}
@@ -151,7 +196,7 @@ export function OffersManager({ restaurantId }: OffersManagerProps) {
             ) : (
               <Plus className="w-4 h-4 mr-2" />
             )}
-            Create Offer
+            Submit for Approval
           </Button>
         </CardContent>
       </Card>
@@ -162,13 +207,13 @@ export function OffersManager({ restaurantId }: OffersManagerProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Gift className="w-5 h-5" />
-              Active Offers ({offers.length})
+              Campaign Management ({offers.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             {offers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No offers yet. Create your first promotional offer!
+                No campaigns yet. Create your first promotional offer!
               </div>
             ) : (
               <div className="space-y-3">
@@ -182,7 +227,11 @@ export function OffersManager({ restaurantId }: OffersManagerProps) {
                       <img
                         src={offer.image_url}
                         alt={offer.title}
-                        className="w-16 h-10 rounded-md object-cover flex-shrink-0"
+                        className="w-16 h-10 rounded-md object-cover flex-shrink-0 bg-muted"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "https://placehold.co/100x60/png?text=Offer";
+                        }}
                       />
                     ) : (
                       <div className="w-16 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
@@ -190,28 +239,53 @@ export function OffersManager({ restaurantId }: OffersManagerProps) {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{offer.title}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {offer.discount_text && (
-                          <Badge variant="secondary" className="text-xs">{offer.discount_text}</Badge>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-sm truncate">{offer.title}</p>
+                        {offer.status === 'pending_approval' && <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-50">Pending Review</Badge>}
+                        {offer.status === 'active' && <Badge variant="outline" className="text-[10px] text-green-600 bg-green-50">Active</Badge>}
+                        {offer.status === 'rejected' && <Badge variant="destructive" className="text-[10px]">Rejected</Badge>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-[10px] font-semibold">
+                           {offer.type === 'percentage' ? `${offer.discount_value}% OFF` : 
+                            offer.type === 'flat_discount' ? `₹${offer.discount_value} OFF` :
+                            offer.type === 'bogo' ? 'BOGO' : 'Free Delivery'}
+                        </Badge>
+                        {offer.min_order_value > 0 && (
+                          <span className="text-[10px] text-muted-foreground">Min ₹{offer.min_order_value}</span>
                         )}
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-[10px] text-muted-foreground ml-auto">
                           {format(new Date(offer.start_date), "MMM d")} - {format(new Date(offer.end_date), "MMM d")}
                         </span>
                       </div>
                     </div>
-                    <Switch
-                      checked={offer.is_active}
-                      onCheckedChange={() => handleToggle(offer.id, offer.is_active)}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(offer.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex flex-col items-center gap-1">
+                       <Switch
+                        checked={offer.status === 'active'}
+                        disabled={offer.status === 'pending_approval' || offer.status === 'rejected'}
+                        onCheckedChange={() => handleToggle(offer.id, offer.status)}
+                       />
+                      {offer.status === 'pending_approval' && (
+                        <span className="text-[9px] text-muted-foreground text-center leading-tight max-w-[50px]">Requires Approval</span>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-destructive/50 hover:text-destructive transition-colors mt-1"
+                        onClick={async () => {
+                          if (confirm("Are you sure you want to delete this campaign?")) {
+                            try {
+                              await deleteOffer.mutateAsync({ id: offer.id, restaurantId });
+                              toast({ title: "Campaign deleted" });
+                            } catch (err: any) {
+                              toast({ title: "Error", description: err.message, variant: "destructive" });
+                            }
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </motion.div>
                 ))}
               </div>

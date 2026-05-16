@@ -1,0 +1,33 @@
+Category,Item Name,Price,Description,Vegetarian
+Starters,Vegetable Samosa,60,Crispy pastry filled with spiced potatoes and peas served with mint chutney,True
+Starters,Chicken 65,180,Deep-fried spicy chicken bites marinated in ginger garlic and red chili,False
+Starters,Paneer Tikka,160,Soft paneer cubes marinated in yogurt and spices grilled in tandoor,True
+Starters,Fish Fry,200,Fresh fish fillets coated in aromatic spices and shallow fried to perfection,False
+Starters,Onion Bajji,50,Golden crispy onion fritters made with besan batter and green chilies,True
+Starters,Prawn Pepper Fry,240,Juicy prawns tossed in freshly ground black pepper and curry leaves,False
+Starters,Mushroom Pepper Fry,130,Button mushrooms sautéed with cracked pepper onions and coastal spices,True
+Soups,Tomato Shorba,80,Velvety spiced tomato soup tempered with cumin and fresh coriander,True
+Soups,Sweet Corn Chicken Soup,110,Hearty sweet corn broth with shredded chicken and a hint of ginger,False
+Soups,Lemon Coriander Soup,75,Light tangy soup with fresh herbs and a zesty lemon finish,True
+Main Course,Butter Chicken,280,Tender chicken in a rich creamy tomato-based gravy with aromatic spices,False
+Main Course,Paneer Butter Masala,220,Soft paneer in a velvety buttery tomato gravy with cashew paste,True
+Main Course,Mutton Rogan Josh,340,Slow-cooked mutton in bold Kashmiri spices with caramelized onions,False
+Main Course,Dal Tadka,150,Yellow lentils tempered with ghee mustard seeds and dried red chilies,True
+Main Course,Chettinad Chicken Curry,300,Fiery authentic Chettinad curry with freshly ground kalpasi and marathi mokku,False
+Main Course,Veg Korma,180,Mixed vegetables simmered in a mild coconut and cashew based gravy,True
+Main Course,Fish Curry,260,Tangy tamarind-based fish curry with drumstick and raw mango,False
+Main Course,Egg Masala,170,Boiled eggs cooked in a spicy onion tomato gravy with coastal spices,False
+Rice & Breads,Chicken Biryani,280,Fragrant basmati rice slow-cooked with spiced chicken and caramelized onions,False
+Rice & Breads,Veg Biryani,200,Aromatic basmati layered with mixed vegetables saffron and fried onions,True
+Rice & Breads,Mutton Biryani,340,Dum-cooked basmati with tender mutton pieces and whole spices,False
+Rice & Breads,Garlic Naan,60,Soft leavened bread topped with garlic butter and fresh coriander,True
+Rice & Breads,Parotta,40,Flaky layered South Indian flatbread best paired with any curry,True
+Rice & Breads,Curd Rice,120,Comforting cooked rice mixed with creamy yogurt and tempered with mustard,True
+Desserts,Gulab Jamun,80,Soft milk-solid dumplings soaked in rose-flavored sugar syrup served warm,True
+Desserts,Rasmalai,100,Delicate cottage cheese patties in chilled saffron-infused sweetened milk,True
+Desserts,Kesari,70,Semolina halwa cooked with ghee saffron and cashews in a traditional style,True
+Desserts,Ice Cream,90,Two scoops of your choice from vanilla chocolate or mango flavors,True
+Drinks,Mango Lassi,90,Chilled blended yogurt with fresh Alphonso mango pulp and a pinch of cardamom,True
+Drinks,Fresh Lime Soda,60,Refreshing lime juice with soda served sweet salted or masala style,True
+Drinks,Filter Coffee,50,Classic South Indian decoction coffee served frothy in a traditional davara tumbler,True
+Drinks,Masala Chai,40,Spiced milk tea brewed with ginger cardamom and cinnamon,True

@@ -37,7 +37,7 @@ const PromotionsOverview = () => {
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const { data: offerCounts = {} } = useQuery({
+  const { data: offerCounts = {}, refetch: refetchCounts } = useQuery({
     queryKey: ['offers-count-by-restaurant'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -56,9 +56,38 @@ const PromotionsOverview = () => {
     },
   });
 
+  const { data: pendingPromos = [], refetch: refetchPending } = useQuery({
+    queryKey: ['pending-enterprise-promotions'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('enterprise_promotions' as any)
+          .select('*, restaurants!inner(name)')
+          .eq('status', 'pending_approval');
+        if (error) throw error;
+        return data || [];
+      } catch (err: any) {
+        if (err.code === '42P01' || err.message?.includes('Could not find the table')) return [];
+        throw err;
+      }
+    }
+  });
+
   const filtered = restaurants.filter((r) =>
     !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.slug.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleApprove = async (id: string, isApproved: boolean) => {
+    try {
+      await supabase.from('enterprise_promotions' as any).update({
+        status: isApproved ? 'active' : 'rejected'
+      }).eq('id', id);
+      toast({ title: isApproved ? 'Campaign Approved' : 'Campaign Rejected' });
+      refetchPending();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
 
   const handleToggleAds = async (id: string, current: boolean) => {
     try {
@@ -96,6 +125,41 @@ const PromotionsOverview = () => {
 
   return (
     <div className="space-y-6">
+      
+      {/* Approval Queue */}
+      {pendingPromos.length > 0 && (
+        <Card className="border-warning bg-warning/5">
+          <CardContent className="p-5">
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+              <ClipboardList className="w-5 h-5 text-warning" />
+              Campaigns Pending Approval ({pendingPromos.length})
+            </h3>
+            <div className="space-y-3">
+              {pendingPromos.map((promo: any) => (
+                <div key={promo.id} className="flex items-center justify-between p-3 bg-background rounded-lg border">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">{promo.title}</span>
+                      <Badge variant="secondary" className="text-xs">{promo.restaurants?.name}</Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {promo.type === 'percentage' ? `${promo.discount_value}% OFF` : 
+                       promo.type === 'flat_discount' ? `₹${promo.discount_value} OFF` :
+                       promo.type === 'bogo' ? 'BOGO' : 'Free Delivery'} 
+                      {promo.min_order_value > 0 && ` • Min Order ₹${promo.min_order_value}`}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleApprove(promo.id, false)}>Reject</Button>
+                    <Button size="sm" onClick={() => handleApprove(promo.id, true)}>Approve</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

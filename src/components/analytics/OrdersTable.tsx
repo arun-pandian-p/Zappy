@@ -49,10 +49,10 @@ export function OrdersTable({
   const [statusFilter, setStatusFilter] = useState<string>("all");
   
   const filteredOrders = useMemo(() => {
-    let filtered = orders;
+    let filtered = orders || [];
     
     if (statusFilter !== "all") {
-      filtered = orders.filter((o) => o.status === statusFilter);
+      filtered = (orders || []).filter((o) => o.status === statusFilter);
     }
     
     return filtered.slice(0, limit);

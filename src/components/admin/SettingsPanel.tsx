@@ -90,7 +90,7 @@ interface RestaurantSettings {
   menu_title: string;
 }
 
-const PUBLISHED_URL = "https://qr-pal-maker.lovable.app";
+const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://www.zappy.ind.in";
 
 const defaultSettings: RestaurantSettings = {
   name: "",
@@ -108,7 +108,7 @@ const defaultSettings: RestaurantSettings = {
   auto_print_billing: true,
   review_enabled: true,
   google_redirect_threshold: 4,
-  qr_base_url: PUBLISHED_URL,
+  qr_base_url: BASE_URL,
   branding: defaultBrandingConfig,
   admin_avatar: { type: "upload" as const, value: "" },
   admin_display_name: "",
@@ -199,7 +199,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         auto_print_billing: (printerSettings.auto_print_billing as boolean) ?? true,
         review_enabled: (reviewSettings.enabled as boolean) ?? true,
         google_redirect_threshold: (reviewSettings.google_redirect_threshold as number) || 4,
-        qr_base_url: (extraSettings.qr_base_url as string) || PUBLISHED_URL,
+        qr_base_url: (extraSettings.qr_base_url as string) || BASE_URL,
         branding: {
           animation_enabled: (brandingRaw.animation_enabled as boolean) ?? false,
           letter_animation: (brandingRaw.letter_animation as BrandingConfig["letter_animation"]) || "bounce",

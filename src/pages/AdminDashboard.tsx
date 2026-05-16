@@ -4,7 +4,6 @@ import {
   Settings,
   LayoutDashboard,
   UtensilsCrossed,
-  
   Plus,
   Trash2,
   Wallet,
@@ -30,6 +29,9 @@ import {
   Tablet,
   Monitor,
   QrCode,
+  Package,
+  Sparkles,
+  Lock as LockIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -40,6 +42,15 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 import {
   Select,
@@ -59,9 +70,11 @@ import { MenuPreviewCard } from "@/components/admin/MenuPreviewCard";
 
 import { OrderHistory } from "@/components/admin/OrderHistory";
 import { AdsManager } from "@/components/admin/AdsManager";
-import { FeedbackManager } from "@/components/admin/FeedbackManager";
+import { ReputationManager } from "@/components/admin/ReputationManager";
 import { SettingsPanel } from "@/components/admin/SettingsPanel";
 import { CategoryManager } from "@/components/admin/CategoryManager";
+import { MenuOCRImporter } from "@/components/admin/MenuOCRImporter";
+import { bulkEnrichMenu, generateFoodImage } from "@/services/imageGenService";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { ExportPanel } from "@/components/admin/ExportPanel";
 import { CouponManager } from "@/components/admin/CouponManager";
@@ -91,7 +104,6 @@ import {
 } from "@/hooks/useMenuItems";
 import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
 import { InventoryManager } from "@/components/admin/InventoryManager";
-import { Package } from "lucide-react";
 import { TenantThemeProvider } from "@/components/admin/TenantThemeProvider";
 import { useTables } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
@@ -100,7 +112,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeatureGate, type FeatureKey, type LockReason } from "@/hooks/useFeatureGate";
 import { FeatureLockedModal } from "@/components/admin/FeatureLockedModal";
-import { Lock } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 /** Append cache-busting param to storage URLs */
 function cacheBustUrl(url: string | null | undefined): string | null {
@@ -116,6 +128,23 @@ function cacheBustUrl(url: string | null | undefined): string | null {
 
 // Demo restaurant ID - fallback if no restaurant in DB
 const DEMO_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
+
+const mainTabs = [
+  { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { value: "menu", label: "Menu", icon: UtensilsCrossed },
+  { value: "orders", label: "Orders", icon: ClipboardList },
+  { value: "kitchen", label: "Kitchen", icon: ChefHat },
+  { value: "billing", label: "Billing", icon: Receipt },
+  { value: "coupons", label: "Coupons", icon: Ticket },
+  { value: "reviews", label: "Reviews", icon: Star },
+  { value: "users", label: "Users", icon: Users },
+  { value: "inventory", label: "Inventory", icon: Package },
+  { value: "exports", label: "Exports", icon: FileSpreadsheet },
+  { value: "promotions", label: "Promotions", icon: Megaphone },
+  { value: "qr-manager", label: "QR Manager", icon: QrCode },
+  { value: "preview", label: "Preview Site", icon: Eye },
+  { value: "settings", label: "Settings", icon: Settings },
+];
 
 /** Read-only view of platform ads appearing in this restaurant's menu */
 function PlatformAdsReadOnly({ restaurantId }: { restaurantId: string }) {
@@ -151,7 +180,21 @@ function PlatformAdsReadOnly({ restaurantId }: { restaurantId: string }) {
         <div className="space-y-3">
           {relevantAds.map(ad => (
             <div key={ad.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-              {ad.image_url && <img src={ad.image_url} alt="" className="w-12 h-12 rounded-lg object-cover" />}
+              {ad.image_url ? (
+                <img 
+                  src={ad.image_url} 
+                  alt="" 
+                  className="w-12 h-12 rounded-lg object-cover bg-muted" 
+                  onError={(e) => {
+                    e.currentTarget.onerror = null; // Prevent infinite loop
+                    e.currentTarget.src = "https://placehold.co/100x100/png?text=Ad";
+                  }}
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                  <Megaphone className="w-5 h-5 text-muted-foreground" />
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm">{ad.title}</p>
                 <p className="text-xs text-muted-foreground">{ad.description || 'No description'}</p>
@@ -210,16 +253,13 @@ function PreviewTabContent({ customerPreviewUrl, restaurantId, externalRefreshKe
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Sticky Header + Mode Tabs */}
       <div className="sticky top-0 z-30 bg-background pb-4 space-y-4">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
           <div>
             <h2 className="text-xl font-bold">Site Preview</h2>
             <p className="text-sm text-muted-foreground">Preview all customer & staff interfaces</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Device selector */}
             <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
               <Button variant={effectiveDevice === "mobile" ? "default" : "ghost"} size="sm" onClick={() => setDevice("mobile")}>
                 <Smartphone className="w-4 h-4" />
@@ -241,7 +281,6 @@ function PreviewTabContent({ customerPreviewUrl, restaurantId, externalRefreshKe
           </div>
         </div>
 
-        {/* Preview Mode Tabs */}
         <div className="flex items-center gap-2 bg-muted/50 rounded-xl p-1.5">
           {previewModes.map((mode) => (
             <button
@@ -260,7 +299,6 @@ function PreviewTabContent({ customerPreviewUrl, restaurantId, externalRefreshKe
         </div>
       </div>
 
-      {/* Preview Frame */}
       <div className="flex justify-center bg-muted/30 rounded-xl border p-4 mt-4" style={{ minHeight: '80vh' }}>
         <div
           className={`bg-background rounded-2xl shadow-2xl border-4 border-foreground/10 overflow-hidden transition-all duration-300 ${
@@ -287,30 +325,27 @@ function PreviewTabContent({ customerPreviewUrl, restaurantId, externalRefreshKe
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedAdminCategory, setSelectedAdminCategory] = useState("All");
   const [previewRefreshKey, setPreviewRefreshKey] = useState(0);
   const { user, role, restaurantId: authRestaurantId, loading: authLoading } = useAuth();
 
-  // Auto-refresh preview when switching to preview tab
   useEffect(() => {
     if (activeTab === "preview") {
       setPreviewRefreshKey(k => k + 1);
     }
   }, [activeTab]);
 
-
-  // Use auth restaurant context first, then fallback to DB query
   const { data: restaurants = [], isLoading: restaurantsLoading } = useRestaurants();
   const restaurantId = authRestaurantId || restaurants[0]?.id || DEMO_RESTAURANT_ID;
   
-  // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/login');
     }
   }, [authLoading, user, navigate]);
   
-  // Fetch live data
   const { data: restaurant } = useRestaurant(restaurantId);
   const { canAccess, isLocked } = useFeatureGate(
     restaurant?.subscription_tier,
@@ -318,7 +353,6 @@ const AdminDashboard = () => {
     (restaurant as any)?.feature_toggles
   );
 
-  // Feature lock modal state
   const [lockModalOpen, setLockModalOpen] = useState(false);
   const [lockModalFeature, setLockModalFeature] = useState("");
   const [lockModalReason, setLockModalReason] = useState<LockReason>(null);
@@ -335,7 +369,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Realtime: bump preview key when restaurant/offers/menu change
   useEffect(() => {
     if (!restaurantId) return;
     const channel = supabase
@@ -350,23 +383,27 @@ const AdminDashboard = () => {
     return () => { supabase.removeChannel(channel); };
   }, [restaurantId]);
 
-  // Redirect if onboarding not completed
   useEffect(() => {
     if (restaurant && !(restaurant as any).onboarding_completed && role === 'restaurant_admin') {
       navigate('/admin/onboarding');
     }
   }, [restaurant, role, navigate]);
+
   const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(restaurantId);
   const { data: categories = [] } = useCategories(restaurantId);
   const { data: tables = [], isLoading: tablesLoading } = useTables(restaurantId);
   const { data: orders = [] } = useOrders(restaurantId);
   const { data: invoiceStats } = useInvoiceStats(restaurantId);
-  
 
-  // Edit menu item dialog state
+  const filteredMenuItems = useMemo(() => {
+    if (!menuItems) return [];
+    return menuItems.filter(item => 
+      selectedAdminCategory === "All" || item.category?.name === selectedAdminCategory
+    );
+  }, [menuItems, selectedAdminCategory]);
+  
   const [editingItem, setEditingItem] = useState<(MenuItem & { category?: Pick<Category, "id" | "name"> | null }) | null>(null);
 
-  // New item form state
   const [newItem, setNewItem] = useState({
     name: "",
     description: "",
@@ -377,14 +414,42 @@ const AdminDashboard = () => {
     prep_time_minutes: "15",
   });
 
-  // Restaurant settings with defaults
   const currencySymbol = restaurant?.currency || "₹";
   const restaurantName = restaurant?.name || "ZAPPY";
 
-  // Mutations
   const createMenuItem = useCreateMenuItem();
   const deleteMenuItem = useDeleteMenuItem();
   const toggleAvailability = useToggleMenuItemAvailability();
+
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    const channel = supabase
+      .channel(`admin-realtime-${restaurantId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'restaurants', filter: `id=eq.${restaurantId}` },
+        () => { queryClient.invalidateQueries({ queryKey: ["restaurant", restaurantId] }); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'menu_items', filter: `restaurant_id=eq.${restaurantId}` },
+        () => { queryClient.invalidateQueries({ queryKey: ["menu_items", restaurantId] }); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders', filter: `restaurant_id=eq.${restaurantId}` },
+        () => { 
+          queryClient.invalidateQueries({ queryKey: ["orders", restaurantId] });
+          toast({ title: "New Order!", description: "A new order has been placed." });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [restaurantId, queryClient]);
 
   const handleAddItem = async () => {
     if (!newItem.name || !newItem.price) {
@@ -396,7 +461,6 @@ const AdminDashboard = () => {
       return;
     }
 
-    // Find category ID
     const category = categories.find(c => c.name === newItem.category);
 
     try {
@@ -469,13 +533,10 @@ const AdminDashboard = () => {
     }
   };
 
-
-  // Computed stats from live data
   const completedOrders = orders.filter((o) => o.status === "completed");
   const todayRevenue = invoiceStats?.totalRevenue || completedOrders.reduce((acc, o) => acc + Number(o.total_amount || 0), 0);
   const activeTables = tables.filter((t) => t.status !== "available").length;
 
-  // Transform orders for table display
   const recentOrders = useMemo(() => {
     return orders.slice(0, 5).map((order) => ({
       id: order.id,
@@ -489,9 +550,6 @@ const AdminDashboard = () => {
     }));
   }, [orders]);
 
-  
-
-  // Loading state
   if (restaurantsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
@@ -502,28 +560,6 @@ const AdminDashboard = () => {
       </div>
     );
   }
-
-  // Tab triggers for top navigation
-
-  const mainTabs = [
-    { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { value: "menu", label: "Menu", icon: UtensilsCrossed },
-    
-    { value: "orders", label: "Orders", icon: ClipboardList },
-    { value: "kitchen", label: "Kitchen", icon: ChefHat },
-    { value: "billing", label: "Billing", icon: Receipt },
-    { value: "coupons", label: "Coupons", icon: Ticket },
-    
-    { value: "reviews", label: "Reviews", icon: Star },
-    { value: "users", label: "Users", icon: Users },
-    { value: "inventory", label: "Inventory", icon: Package },
-    { value: "exports", label: "Exports", icon: FileSpreadsheet },
-    { value: "promotions", label: "Promotions", icon: Megaphone },
-    { value: "qr-manager", label: "QR Manager", icon: QrCode },
-    
-    { value: "preview", label: "Preview Site", icon: Eye },
-    { value: "settings", label: "Settings", icon: Settings },
-  ];
 
   const customerPreviewUrl = `/order?r=${restaurantId}`;
 
@@ -541,7 +577,6 @@ const AdminDashboard = () => {
             logoUrl={cacheBustUrl(restaurant?.logo_url)}
           />
 
-          {/* Tab Navigation */}
           <div className="border-b bg-card overflow-x-auto">
             <div className="px-6">
               <Tabs value={activeTab} onValueChange={handleTabChange}>
@@ -560,7 +595,7 @@ const AdminDashboard = () => {
                       >
                         <tab.icon className="w-4 h-4 mr-2" />
                         {tab.label}
-                        {locked && <Lock className="w-3 h-3 ml-1 opacity-60" />}
+                        {locked && <LockIcon className="w-3 h-3 ml-1 opacity-60" />}
                       </TabsTrigger>
                     );
                   })}
@@ -569,10 +604,8 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* Main Content */}
           <main className="p-6">
             <AnimatePresence mode="wait">
-              {/* Dashboard Tab */}
               {activeTab === "dashboard" && (
                 <motion.div
                   key="dashboard"
@@ -582,21 +615,13 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                   className="space-y-6"
                 >
-                  {/* Enhanced Stats Row */}
                   <DashboardStats orders={orders} currencySymbol={currencySymbol} />
-
-                  {/* Charts Row */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <RevenueChart orders={orders} currencySymbol={currencySymbol} days={7} />
                     <RevenueTrends orders={orders} currencySymbol={currencySymbol} days={7} />
                   </div>
-
-                  {/* Customer Behavior */}
                   <CustomerBehaviorPanel restaurantId={restaurantId} />
-
-                  {/* Content Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Recent Orders - 2 columns */}
                     <div className="lg:col-span-2">
                       <OrdersTable
                         orders={orders}
@@ -606,14 +631,8 @@ const AdminDashboard = () => {
                         showFilters={false}
                       />
                     </div>
-
-                    {/* Right Panel - QR & Menu Preview */}
                     <div className="space-y-6">
-                      {/* Table Session Timers */}
                       <TableSessionTimers restaurantId={restaurantId} />
-
-
-                      {/* Mini Menu Preview */}
                       <Card className="border-0 shadow-md">
                         <CardHeader className="pb-3">
                           <CardTitle className="text-lg font-semibold">
@@ -622,7 +641,7 @@ const AdminDashboard = () => {
                         </CardHeader>
                         <CardContent>
                           <div className="grid grid-cols-2 gap-3">
-                            {menuItems.slice(0, 2).map((item, index) => (
+                            {menuItems?.slice(0, 2).map((item, index) => (
                               <MenuPreviewCard
                                 key={item.id}
                                 id={item.id}
@@ -642,7 +661,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Menu Tab */}
               {activeTab === "menu" && (
                 <motion.div
                   key="menu"
@@ -650,132 +668,233 @@ const AdminDashboard = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="space-y-6"
                 >
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Add New Item */}
-                    <Card className="border-0 shadow-md">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Plus className="w-5 h-5" />
-                          Add Menu Item
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Name *</Label>
-                          <Input
-                            value={newItem.name}
-                            onChange={(e) =>
-                              setNewItem({ ...newItem, name: e.target.value })
-                            }
-                            placeholder="Item name"
-                          />
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                        <UtensilsCrossed className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold tracking-tight">Menu Management</h2>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                          <p className="text-sm text-muted-foreground">Connected to Supabase Realtime</p>
                         </div>
-                        <div className="space-y-2">
-                          <Label>Description</Label>
-                          <Textarea
-                            value={newItem.description}
-                            onChange={(e) =>
-                              setNewItem({ ...newItem, description: e.target.value })
-                            }
-                            placeholder="Item description"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Price *</Label>
-                            <Input
-                              type="number"
-                              value={newItem.price}
-                              onChange={(e) =>
-                                setNewItem({ ...newItem, price: e.target.value })
-                              }
-                              placeholder="0.00"
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 rounded-xl px-6">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Item
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Add Menu Item</DialogTitle>
+                            <DialogDescription>Create a new dish for your menu.</DialogDescription>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <div className="space-y-2">
+                              <Label>Item Name</Label>
+                              <Input
+                                placeholder="e.g., Butter Chicken"
+                                value={newItem.name}
+                                onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>Price ({currencySymbol})</Label>
+                                <Input
+                                  type="number"
+                                  placeholder="299"
+                                  value={newItem.price}
+                                  onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Prep Time (min)</Label>
+                                <Input
+                                  type="number"
+                                  placeholder="15"
+                                  value={newItem.prep_time_minutes}
+                                  onChange={(e) => setNewItem({ ...newItem, prep_time_minutes: e.target.value })}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Category</Label>
+                              <Select
+                                value={newItem.category}
+                                onValueChange={(v) => setNewItem({ ...newItem, category: v })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select Category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories.map((cat) => (
+                                    <SelectItem key={cat.id} value={cat.name}>
+                                      {cat.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label>Image</Label>
+                                  {newItem.name && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-7 text-[10px] gap-1 text-primary hover:text-primary"
+                                      onClick={async () => {
+                                        toast({ title: "Generating image...", description: "AI is creating a photo for " + newItem.name });
+                                        const url = await generateFoodImage(newItem.name, newItem.description || "", restaurantId);
+                                        setNewItem({ ...newItem, image_url: url });
+                                        toast({ title: "Image ready!" });
+                                      }}
+                                    >
+                                      <Sparkles className="w-3 h-3" />
+                                      AI Generate
+                                    </Button>
+                                  )}
+                                </div>
+                              <ImageUpload
+                                currentImageUrl={newItem.image_url}
+                                onImageUploaded={(url) => setNewItem({ ...newItem, image_url: url })}
+                                restaurantId={restaurantId}
+                                folder="menu"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2 pt-2">
+                              <Switch
+                                checked={newItem.is_vegetarian}
+                                onCheckedChange={(v) => setNewItem({ ...newItem, is_vegetarian: v })}
+                              />
+                              <Label>Vegetarian Dish</Label>
+                            </div>
+                            <Button 
+                              className="w-full mt-4 h-11 rounded-xl" 
+                              onClick={handleAddItem}
+                              disabled={createMenuItem.isPending}
+                            >
+                              {createMenuItem.isPending ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <Save className="w-4 h-4 mr-2" />
+                              )}
+                              Publish to Menu
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      <MenuOCRImporter restaurantId={restaurantId} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div className="lg:col-span-3 space-y-6">
+                      <CategoryManager restaurantId={restaurantId} />
+                      
+                      <Card className="border-0 shadow-xl bg-gradient-to-br from-primary/5 to-transparent">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Menu Health</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Total Items</span>
+                            <span className="font-bold">{menuItems.length}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Active Items</span>
+                            <span className="font-bold text-green-500">{menuItems.filter(i => i.is_available).length}</span>
+                          </div>
+                          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                            <div 
+                              className="bg-primary h-full transition-all duration-500" 
+                              style={{ width: `${(menuItems.filter(i => i.is_available).length / (menuItems.length || 1)) * 100}%` }}
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label>Prep Time (min)</Label>
-                            <Input
-                              type="number"
-                              value={newItem.prep_time_minutes}
-                              onChange={(e) =>
-                                setNewItem({
-                                  ...newItem,
-                                  prep_time_minutes: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Category</Label>
-                          <Select
-                            value={newItem.category}
-                            onValueChange={(v) =>
-                              setNewItem({ ...newItem, category: v })
-                            }
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <div className="lg:col-span-9 space-y-6">
+                      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-sm">
+                        <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar max-w-full sm:max-w-[60%]">
+                          <Button
+                            variant={selectedAdminCategory === "All" ? "default" : "ghost"}
+                            size="sm"
+                            className="rounded-full px-4"
+                            onClick={() => setSelectedAdminCategory("All")}
                           >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((cat) => (
-                                  <SelectItem key={cat.id} value={cat.name}>
-                                    {cat.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Image</Label>
-                          <ImageUpload
-                            currentImageUrl={newItem.image_url}
-                            onImageUploaded={(url) => setNewItem({ ...newItem, image_url: url })}
-                            restaurantId={restaurantId}
-                            folder="menu"
-                          />
+                            All
+                          </Button>
+                          {categories.map(cat => (
+                            <Button
+                              key={cat.id}
+                              variant={selectedAdminCategory === cat.name ? "default" : "ghost"}
+                              size="sm"
+                              className="rounded-full px-4 whitespace-nowrap"
+                              onClick={() => setSelectedAdminCategory(cat.name)}
+                            >
+                              {cat.name}
+                            </Button>
+                          ))}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Switch
-                            checked={newItem.is_vegetarian}
-                            onCheckedChange={(v) =>
-                              setNewItem({ ...newItem, is_vegetarian: v })
-                            }
-                          />
-                          <Label>Vegetarian</Label>
+                           <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-primary hover:bg-primary/10 rounded-full"
+                            onClick={() => {
+                              toast({ title: "Enriching items...", description: "AI is generating descriptions and images." });
+                              bulkEnrichMenu(restaurantId, menuItems).then(() => {
+                                toast({ title: "Menu Enriched!", description: "All items now have AI content." });
+                                queryClient.invalidateQueries({ queryKey: ["menu_items", restaurantId] });
+                              });
+                            }}
+                          >
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            AI Enrich
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="rounded-full"
+                            onClick={() => {
+                              const blob = new Blob([JSON.stringify(menuItems, null, 2)], { type: 'application/json' });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = `menu_backup_${new Date().toISOString().split('T')[0]}.json`;
+                              a.click();
+                              URL.revokeObjectURL(url);
+                            }}
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
                         </div>
-                        <Button 
-                          className="w-full" 
-                          onClick={handleAddItem}
-                          disabled={createMenuItem.isPending}
-                        >
-                          {createMenuItem.isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : (
-                            <Plus className="w-4 h-4 mr-2" />
-                          )}
-                          Add Item
-                        </Button>
-                      </CardContent>
-                    </Card>
+                      </div>
 
-                    {/* Category Manager */}
-                    <CategoryManager restaurantId={restaurantId} />
-                    {/* Menu Items Grid */}
-                    <div className="lg:col-span-2">
-                      <Card className="border-0 shadow-md">
-                        <CardHeader>
-                          <CardTitle>Menu Items ({menuItems.length})</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto">
-                            {menuItems.map((item, index) => (
-                              <motion.div
-                                key={item.id}
-                                layout
-                                className="relative"
-                              >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <AnimatePresence mode="popLayout">
+                          {filteredMenuItems.map((item, index) => (
+                            <motion.div
+                              key={item.id}
+                              layout
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.2, delay: index * 0.05 }}
+                              className="group relative"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-3xl -m-1 group-hover:m-0 transition-all duration-300" />
+                              <div className="relative bg-white/60 backdrop-blur-sm border border-white/40 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
                                 <MenuPreviewCard
                                   id={item.id}
                                   name={item.name}
@@ -786,44 +905,53 @@ const AdminDashboard = () => {
                                   currencySymbol={currencySymbol}
                                   index={index}
                                 />
-                                <div className="absolute top-2 right-2 flex gap-1">
-                                  <Button
-                                    variant="secondary"
-                                    size="icon"
-                                    className="w-7 h-7"
-                                    onClick={() => setEditingItem(item as any)}
-                                  >
-                                    <Edit2 className="w-3 h-3" />
-                                  </Button>
-                                <Switch
-                                    checked={item.is_available}
-                                    onCheckedChange={() =>
-                                      handleToggleAvailability(item.id, item.is_available ?? true)
-                                    }
-                                    className="scale-75"
-                                  />
-                                  <Button
-                                    variant="destructive"
-                                    size="icon"
-                                    className="w-7 h-7"
-                                    onClick={() => handleDeleteItem(item.id)}
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                                {!item.is_available && (
-                                  <div className="absolute inset-0 bg-background/80 rounded-lg flex items-center justify-center">
-                                    <Badge variant="secondary">Unavailable</Badge>
+                                <div className="p-4 flex items-center justify-between border-t border-black/5 bg-white/20">
+                                  <div className="flex items-center gap-2">
+                                    <Switch
+                                      checked={item.is_available}
+                                      onCheckedChange={() =>
+                                        handleToggleAvailability(item.id, item.is_available ?? true)
+                                      }
+                                      className="data-[state=checked]:bg-green-500"
+                                    />
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                      {item.is_available ? 'Live' : 'Hidden'}
+                                    </span>
                                   </div>
-                                )}
-                              </motion.div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="secondary"
+                                      size="icon"
+                                      className="w-8 h-8 rounded-full bg-white shadow-sm hover:scale-110 transition-transform"
+                                      onClick={() => setEditingItem(item as any)}
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                    <Button
+                                      variant="destructive"
+                                      size="icon"
+                                      className="w-8 h-8 rounded-full shadow-sm hover:scale-110 transition-transform"
+                                      onClick={() => handleDeleteItem(item.id)}
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                              {!item.is_available && (
+                                <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] rounded-2xl flex items-center justify-center pointer-events-none">
+                                  <Badge className="bg-white/90 text-slate-900 hover:bg-white border-0 shadow-lg px-3 py-1">
+                                    Offline
+                                  </Badge>
+                                </div>
+                              )}
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </div>
-                  {/* Edit Menu Item Dialog */}
+
                   {editingItem && (
                     <EditMenuItemDialog
                       open={!!editingItem}
@@ -836,8 +964,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-
-              {/* Orders Tab */}
               {activeTab === "orders" && (
                 <motion.div
                   key="orders"
@@ -853,7 +979,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Kitchen Tab - Embedded KDS */}
               {activeTab === "kitchen" && (
                 <motion.div
                   key="kitchen"
@@ -880,7 +1005,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Billing Tab - Embedded Billing */}
               {activeTab === "billing" && (
                 <motion.div
                   key="billing"
@@ -907,7 +1031,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Coupons Tab */}
               {activeTab === "coupons" && (
                 <motion.div
                   key="coupons"
@@ -920,7 +1043,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Promotions Tab (Ads + Offers combined) */}
               {activeTab === "promotions" && (
                 <motion.div
                   key="promotions"
@@ -935,7 +1057,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Reviews Tab */}
               {activeTab === "reviews" && (
                 <motion.div
                   key="reviews"
@@ -944,11 +1065,10 @@ const AdminDashboard = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FeedbackManager restaurantId={restaurantId} />
+                  <ReputationManager restaurantId={restaurantId} />
                 </motion.div>
               )}
 
-              {/* Exports Tab */}
               {activeTab === "exports" && (
                 <motion.div
                   key="exports"
@@ -961,7 +1081,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Users Tab */}
               {activeTab === "users" && (
                 <motion.div
                   key="users"
@@ -974,7 +1093,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {/* Inventory Tab */}
               {activeTab === "inventory" && (
                 <motion.div
                   key="inventory"
@@ -987,13 +1105,10 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-
-              {/* Preview Tab */}
               {activeTab === "preview" && (
                 <PreviewTabContent customerPreviewUrl={customerPreviewUrl} restaurantId={restaurantId} externalRefreshKey={previewRefreshKey} />
               )}
 
-              {/* QR Manager Tab */}
               {activeTab === "qr-manager" && (
                 <motion.div
                   key="qr-manager"
@@ -1008,8 +1123,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-
-              {/* Settings Tab */}
               {activeTab === "settings" && (
                 <motion.div
                   key="settings"

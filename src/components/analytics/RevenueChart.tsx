@@ -31,7 +31,7 @@ export function RevenueChart({ orders, currencySymbol = "₹", days = 7 }: Reven
       const displayDate = format(date, "EEE");
       
       // Filter orders for this day
-      const dayOrders = orders.filter((order) => {
+      const dayOrders = (orders || []).filter((order) => {
         if (!order.created_at) return false;
         const orderDate = format(new Date(order.created_at), "yyyy-MM-dd");
         return orderDate === dateStr;

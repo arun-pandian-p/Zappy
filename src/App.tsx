@@ -32,7 +32,12 @@ const App = () => (
       <Toaster />
       <Sonner />
       <Analytics />
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
@@ -45,6 +50,7 @@ const App = () => (
           <Route path="/tenant-admin/login" element={<TenantAdminLogin />} />
           <Route path="/customer-menu" element={<CustomerMenu />} />
           <Route path="/order" element={<CustomerMenu />} />
+          <Route path="/menu" element={<CustomerMenu />} />
           <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/guide" element={<UserGuide />} />
           <Route path="/request-quote" element={<RequestQuote />} />

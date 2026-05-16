@@ -53,7 +53,10 @@ import { useTables, useCreateTable, useDeleteTable, type Table } from "@/hooks/u
 import { format } from "date-fns";
 
 const REDIRECT_BASE = `https://syvoshzxoedamaijongb.supabase.co/functions/v1/qr-redirect`;
-const PUBLISHED_URL = "https://qr-restaurant.lovable.app";
+
+import { useRestaurant } from "@/hooks/useRestaurant";
+
+const DEFAULT_BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://www.zappy.ind.in";
 
 interface QRCodeManagerProps {
   restaurantId: string;
@@ -68,6 +71,9 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
   const deleteQR = useDeleteQRCode();
   const createTable = useCreateTable();
   const deleteTable = useDeleteTable();
+  const { data: restaurant } = useRestaurant(restaurantId);
+
+  const BASE_URL = (restaurant?.settings as any)?.qr_base_url || DEFAULT_BASE_URL;
 
   const [showCreate, setShowCreate] = useState(false);
   const [newQR, setNewQR] = useState({
@@ -102,7 +108,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
       createQR.mutate({
         tenant_id: restaurantId,
         qr_name: "Restaurant Base QR",
-        target_url: baseQRUrl,
+        target_url: `${BASE_URL}${baseQRUrl}`,
         qr_type: "dynamic",
         metadata: { is_base_qr: true },
       });
@@ -121,7 +127,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
       createQR.mutate({
         tenant_id: restaurantId,
         qr_name: `Table ${table.table_number}`,
-        target_url: `/order?r=${restaurantId}&table=${table.table_number}`,
+        target_url: `${BASE_URL}/order?r=${restaurantId}&table=${table.table_number}`,
         qr_type: "dynamic",
         metadata: { table_id: table.id, table_number: table.table_number },
       });
@@ -171,7 +177,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
       await createQR.mutateAsync({
         tenant_id: restaurantId,
         qr_name: `Table ${newTableNumber.trim()}`,
-        target_url: `/order?r=${restaurantId}&table=${newTableNumber.trim()}`,
+        target_url: `${BASE_URL}/order?r=${restaurantId}&table=${newTableNumber.trim()}`,
         qr_type: "dynamic",
         metadata: {
           table_id: table.id,
@@ -282,7 +288,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
         <TableCell className="text-sm text-muted-foreground">{format(new Date(qr.created_at), "MMM d, yyyy")}</TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end gap-1">
-            <Button variant="ghost" size="icon" onClick={() => window.open(`${PUBLISHED_URL}${qr.target_url}`, '_blank')} title="Open customer menu"><ExternalLink className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => window.open(qr.target_url.startsWith('http') ? qr.target_url : `${BASE_URL}${qr.target_url}`, '_blank')} title="Open customer menu"><ExternalLink className="w-4 h-4" /></Button>
             <Button variant="ghost" size="icon" onClick={() => handleCopyUrl(qr)} title="Copy URL"><Copy className="w-4 h-4" /></Button>
             <Button variant="ghost" size="icon" onClick={() => handleDownload(qr)} title="Download PNG"><Download className="w-4 h-4" /></Button>
             {!(meta.is_base_qr) && (
@@ -445,7 +451,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
                   Target: {baseQR.target_url}
                 </p>
                 <div className="flex gap-2 flex-wrap">
-                  <Button variant="outline" size="sm" onClick={() => window.open(`${PUBLISHED_URL}${baseQR.target_url}`, '_blank')}>
+                  <Button variant="outline" size="sm" onClick={() => window.open(baseQR.target_url.startsWith('http') ? baseQR.target_url : `${BASE_URL}${baseQR.target_url}`, '_blank')}>
                     <ExternalLink className="w-4 h-4 mr-1" /> Open
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => handleDownload(baseQR)}>
@@ -503,7 +509,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
           {tables.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {tables.map((table) => {
-                const menuUrl = `${PUBLISHED_URL}/order?r=${restaurantId}&table=${table.table_number}`;
+                const menuUrl = `${BASE_URL}/order?r=${restaurantId}&table=${table.table_number}`;
                 return (
                   <div
                     key={table.id}

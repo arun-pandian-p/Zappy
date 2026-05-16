@@ -74,13 +74,13 @@ export function DashboardStats({ orders, currencySymbol = "₹" }: DashboardStat
     const yesterday = subDays(today, 1);
     
     // Today's orders
-    const todayOrders = orders.filter((o) => {
+    const todayOrders = (orders || []).filter((o) => {
       if (!o.created_at) return false;
       return isToday(new Date(o.created_at));
     });
     
     // Yesterday's orders
-    const yesterdayOrders = orders.filter((o) => {
+    const yesterdayOrders = (orders || []).filter((o) => {
       if (!o.created_at) return false;
       return isYesterday(new Date(o.created_at));
     });

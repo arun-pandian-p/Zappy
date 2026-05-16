@@ -35,7 +35,7 @@ export function RevenueTrends({ orders, currencySymbol = "₹", days = 7 }: Reve
       const displayDate = i === 0 ? "Today" : i === 1 ? "Yesterday" : format(date, "EEE, MMM d");
       
       // Filter orders for this day
-      const dayOrders = orders.filter((order) => {
+      const dayOrders = (orders || []).filter((order) => {
         if (!order.created_at) return false;
         const orderDate = format(new Date(order.created_at), "yyyy-MM-dd");
         return orderDate === dateStr;
