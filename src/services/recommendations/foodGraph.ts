@@ -350,6 +350,71 @@ export const FOOD_NODES: Record<string, FoodNode> = {
     tags: ["sweet", "soft", "starter", "dessert"],
     type: "dessert",
     isVegetarian: true,
+  },
+
+  // --- MCDONALDS / FAST FOOD ---
+  "egg_mcmuffin": {
+    id: "egg_mcmuffin",
+    name: "Egg McMuffin",
+    cuisine: ["Fast Food"],
+    ingredients: ["egg", "canadian bacon", "english muffin", "cheese"],
+    tags: ["breakfast", "egg", "classic"],
+    type: "combo",
+    isVegetarian: false,
+  },
+  "big_mac": {
+    id: "big_mac",
+    name: "Big Mac",
+    cuisine: ["Fast Food"],
+    ingredients: ["beef patty", "special sauce", "lettuce", "cheese", "pickles", "sesame bun"],
+    tags: ["burger", "heavy", "classic", "beef"],
+    type: "combo",
+    isVegetarian: false,
+  },
+  "mcnuggets": {
+    id: "mcnuggets",
+    name: "Chicken McNuggets",
+    cuisine: ["Fast Food"],
+    ingredients: ["chicken", "breading"],
+    tags: ["chicken", "snack", "fried"],
+    type: "side",
+    isVegetarian: false,
+  },
+  "quarter_pounder": {
+    id: "quarter_pounder",
+    name: "Quarter Pounder",
+    cuisine: ["Fast Food"],
+    ingredients: ["beef patty", "cheese", "onion", "pickles"],
+    tags: ["burger", "beef", "heavy"],
+    type: "combo",
+    isVegetarian: false,
+  },
+  "mcchicken": {
+    id: "mcchicken",
+    name: "McChicken",
+    cuisine: ["Fast Food"],
+    ingredients: ["chicken patty", "lettuce", "mayonnaise"],
+    tags: ["burger", "chicken"],
+    type: "combo",
+    isVegetarian: false,
+  },
+  "filet_o_fish": {
+    id: "filet_o_fish",
+    name: "Filet-O-Fish",
+    cuisine: ["Fast Food"],
+    ingredients: ["fish patty", "tartar sauce", "cheese"],
+    tags: ["burger", "fish"],
+    type: "combo",
+    isVegetarian: false,
+  },
+  "vanilla_shake": {
+    id: "vanilla_shake",
+    name: "Vanilla Shake",
+    cuisine: ["Fast Food", "Dessert"],
+    ingredients: ["milk", "vanilla syrup", "soft serve"],
+    tags: ["cold", "sweet", "shake"],
+    type: "dessert",
+    isVegetarian: true,
   }
 };
 
@@ -396,5 +461,16 @@ export const EXPLICIT_EDGES: Edge[] = [
   { source: "burger", target: "coke", weight: 0.9, reason: "Classic fast food combo", type: "drink" },
   
   { source: "pizza", target: "garlic_bread", weight: 0.98, reason: "Perfect baked side", type: "side" },
-  { source: "pizza", target: "coke", weight: 0.9, reason: "Classic pairing", type: "drink" }
+  { source: "pizza", target: "coke", weight: 0.9, reason: "Classic pairing", type: "drink" },
+
+  // McDonalds Pairings
+  { source: "big_mac", target: "french_fries", weight: 0.99, reason: "The ultimate combo", type: "side" },
+  { source: "big_mac", target: "coke", weight: 0.95, reason: "Perfect burger companion", type: "drink" },
+  { source: "big_mac", target: "vanilla_shake", weight: 0.8, reason: "Classic American treat", type: "dessert" },
+  { source: "quarter_pounder", target: "french_fries", weight: 0.98, reason: "Classic beef pairing", type: "side" },
+  { source: "mcnuggets", target: "french_fries", weight: 0.9, reason: "Snack time favorite", type: "side" },
+  { source: "mcnuggets", target: "coke", weight: 0.92, reason: "Refreshing wash down", type: "drink" },
+  { source: "egg_mcmuffin", target: "hash_brown", weight: 0.99, reason: "Essential breakfast side", type: "side" },
+  { source: "egg_mcmuffin", target: "filter_coffee", weight: 0.9, reason: "Morning pick-me-up", type: "drink" },
+  { source: "mcchicken", target: "french_fries", weight: 0.95, reason: "Chicken and fries combo", type: "side" }
 ];

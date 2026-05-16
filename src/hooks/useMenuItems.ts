@@ -3,7 +3,10 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
-export type MenuItem = Tables<"menu_items">;
+export type MenuItem = Tables<"menu_items"> & {
+  category?: Pick<Category, "id" | "name" | "display_order"> | null;
+  recommended_with?: string[] | null;
+};
 export type Category = Tables<"categories">;
 export type MenuItemInsert = TablesInsert<"menu_items">;
 export type MenuItemUpdate = TablesUpdate<"menu_items">;
