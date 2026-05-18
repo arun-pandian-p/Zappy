@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
+import { analyticsService } from "@/services/analyticsService";
 
 export type Order = Tables<"orders">;
 export type OrderItem = Tables<"order_items">;
@@ -174,6 +175,31 @@ export function useCreateOrder() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["orders", data.restaurant_id] });
+
+      // Track order completed event
+      analyticsService.trackEvent({
+        campaignId: (data as any).coupon_code || 'organic_order',
+        eventType: 'order_completed',
+        tenantId: data.restaurant_id,
+        metadata: {
+          orderId: data.id,
+          orderTotal: (data as any).total_price,
+          discountAmount: (data as any).discount_amount || 0
+        },
+        revenueAmount: Number((data as any).total_price) || 0
+      });
+
+      // Track coupon redemption if code exists
+      if ((data as any).coupon_code) {
+        analyticsService.trackCouponRedemption({
+          couponCode: (data as any).coupon_code,
+          campaignId: null,
+          orderId: data.id,
+          discountAmount: Number((data as any).discount_amount) || 0,
+          orderTotal: Number((data as any).total_price) || 0,
+          tenantId: data.restaurant_id
+        });
+      }
     },
   });
 }

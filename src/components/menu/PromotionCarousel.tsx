@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
 import { Sparkles, ArrowRight } from 'lucide-react';
+import { analyticsService } from '@/services/analyticsService';
 
 interface Category {
   id: string;
@@ -58,8 +59,19 @@ export function PromotionCarousel({
   // Set up pagination snaps
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
+    const activeIndex = emblaApi.selectedScrollSnap();
+    setSelectedIndex(activeIndex);
+
+    // Track a carousel swipe event
+    const activePromo = promotions[activeIndex];
+    if (activePromo) {
+      analyticsService.trackEvent({
+        campaignId: activePromo.id,
+        eventType: 'carousel_swipe',
+        tenantId: (activePromo as any).restaurant_id
+      });
+    }
+  }, [emblaApi, promotions]);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -130,7 +142,7 @@ export function PromotionCarousel({
 
       {/* Modern Active Pagination Dots */}
       {promotions.length > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-4">
+        <div className="flex items-center justify-center gap-2 mt-3">
           {scrollSnaps.map((_, index) => (
             <button
               key={index}
@@ -261,7 +273,7 @@ function CarouselCard({
       animate={{ scale: isActive ? 1 : 0.97 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
       onClick={handleCardClick}
-      className="flex-[0_0_88%] md:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0 relative aspect-[16/9] rounded-[24px] overflow-hidden shadow-lg cursor-pointer group snap-center border border-white/10"
+      className="flex-[0_0_88%] md:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0 relative aspect-[16/9] rounded-[24px] overflow-hidden shadow-lg cursor-pointer group snap-start border border-white/10"
     >
       {/* Background Image Panel */}
       <div className="absolute inset-0 bg-neutral-900">

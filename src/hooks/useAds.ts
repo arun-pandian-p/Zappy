@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { analyticsService } from "@/services/analyticsService";
 
 export type Ad = Tables<"ads">;
 export type AdInsert = TablesInsert<"ads">;
@@ -170,7 +171,7 @@ export function useTrackAdImpression() {
     mutationFn: async (adId: string) => {
       const { data: ad } = await supabase
         .from("ads")
-        .select("impressions")
+        .select("impressions, restaurant_id")
         .eq("id", adId)
         .single();
       
@@ -178,6 +179,13 @@ export function useTrackAdImpression() {
         .from("ads")
         .update({ impressions: (ad?.impressions || 0) + 1 })
         .eq("id", adId);
+
+      // Async database event recording via analyticsService
+      await analyticsService.trackEvent({
+        campaignId: adId,
+        eventType: 'impression',
+        tenantId: ad?.restaurant_id
+      });
     },
   });
 }
@@ -187,7 +195,7 @@ export function useTrackAdClick() {
     mutationFn: async (adId: string) => {
       const { data: ad } = await supabase
         .from("ads")
-        .select("clicks")
+        .select("clicks, restaurant_id")
         .eq("id", adId)
         .single();
       
@@ -195,6 +203,13 @@ export function useTrackAdClick() {
         .from("ads")
         .update({ clicks: (ad?.clicks || 0) + 1 })
         .eq("id", adId);
+
+      // Async database event recording via analyticsService
+      await analyticsService.trackEvent({
+        campaignId: adId,
+        eventType: 'click',
+        tenantId: ad?.restaurant_id
+      });
     },
   });
 }

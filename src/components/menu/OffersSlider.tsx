@@ -30,16 +30,16 @@ export function OffersSlider({ offers, onOfferClick }: OffersSliderProps) {
   if (validOffers.length === 0) return null;
 
   return (
-    <div className="w-full px-4 mb-4">
-      <div className="overflow-hidden rounded-2xl" ref={emblaRef}>
-        <div className="flex select-none">
+    <div className="w-full mb-4">
+      <div className="overflow-hidden -mx-4 px-4" ref={emblaRef}>
+        <div className="flex select-none gap-4">
           {validOffers.map((offer) => (
             <div
               key={offer.id}
-              className="flex-[0_0_90%] min-w-0 pr-3 cursor-pointer"
+              className="flex-[0_0_88%] md:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0 cursor-pointer snap-start"
               onClick={() => onOfferClick?.(offer)}
             >
-              <div className="relative rounded-2xl overflow-hidden bg-[#f0f4f1] aspect-[21/9] shadow-sm border border-black/5">
+              <div className="relative rounded-2xl overflow-hidden bg-[#f0f4f1] dark:bg-zinc-900 aspect-[21/9] shadow-md border border-black/5 dark:border-white/5">
                 <img
                   src={offer.image_url!}
                   alt={offer.title}
