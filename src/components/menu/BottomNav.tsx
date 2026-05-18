@@ -1,6 +1,5 @@
 import { Home, UtensilsCrossed, ShoppingCart, ClipboardList, User } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
 
 type ViewType = "home" | "menu" | "cart" | "orders" | "profile";
 
@@ -25,30 +24,6 @@ export function BottomNav({
   cartCount = 0,
   orderCount = 0,
 }: BottomNavProps) {
-  const [isVisible, setIsVisible] = useState(true);
-  const lastScrollY = useRef(0);
-
-  // Scroll listener to auto-hide navbar on scroll down, show on scroll up (iOS/Airbnb native behavior)
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Ignore micro-scrolls (jitter protection)
-      if (Math.abs(currentScrollY - lastScrollY.current) < 12) return;
-
-      if (currentScrollY > lastScrollY.current && currentScrollY > 90) {
-        setIsVisible(false); // Scrolling Down
-      } else {
-        setIsVisible(true); // Scrolling Up
-      }
-      
-      lastScrollY.current = currentScrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const getBadgeCount = (view: ViewType) => {
     if (view === "cart") return cartCount;
     if (view === "orders") return orderCount;
@@ -57,7 +32,7 @@ export function BottomNav({
 
   return (
     <motion.nav 
-      animate={isVisible ? { y: 0, scale: 1, opacity: 1 } : { y: 110, scale: 0.96, opacity: 0 }}
+      animate={{ y: 0, scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 280, damping: 25 }}
       className="fixed bottom-5 left-4 right-4 mx-auto max-w-[420px] z-50 bg-slate-950/95 border border-emerald-500/20 rounded-[28px] shadow-[0_24px_60px_rgba(0,0,0,0.45)] p-2 backdrop-blur-2xl"
       style={{ minHeight: '64px' }}
