@@ -1060,7 +1060,7 @@ const CustomerMenu = () => {
       primaryColor={splashColor}
       isLoading={!!isDataLoading}
     />
-    <div className="min-h-[100dvh] bg-background pb-[130px] w-full relative">
+    <div className="min-h-[100dvh] bg-background pb-[110px] w-full relative">
       {/* Table Picker Dialog */}
       <TablePickerDialog
         open={showTablePicker}

@@ -34,10 +34,10 @@ export function BottomNav({
     <motion.nav 
       animate={{ y: 0, scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 280, damping: 25 }}
-      className="fixed bottom-[max(16px,env(safe-area-inset-bottom))] left-3 right-3 mx-auto max-w-[480px] h-[74px] z-50 bg-white/95 dark:bg-zinc-950/95 border border-zinc-200/80 dark:border-emerald-500/20 rounded-[28px] shadow-[0_24px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.45)] p-2 backdrop-blur-2xl"
+      className="fixed bottom-0 md:bottom-5 left-0 md:left-4 right-0 md:right-4 mx-auto w-full md:max-w-[420px] min-h-[64px] md:h-[74px] z-50 bg-white/95 dark:bg-zinc-950/95 border-t md:border border-zinc-200/80 dark:border-emerald-500/20 rounded-none md:rounded-[28px] shadow-[0_-8px_30px_rgba(0,0,0,0.06),0_24px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.45)] p-2 pb-[max(12px,env(safe-area-inset-bottom))] md:pb-2 backdrop-blur-2xl"
     >
       {/* Ambient background glow behind the active items */}
-      <div className="absolute inset-0 rounded-[28px] bg-gradient-to-tr from-emerald-500/5 to-transparent -z-20 pointer-events-none" />
+      <div className="absolute inset-0 rounded-none md:rounded-[28px] bg-gradient-to-tr from-emerald-500/5 to-transparent -z-20 pointer-events-none" />
 
       <div className="w-full h-full px-2">
         <div className="flex justify-between items-center h-full relative">
@@ -48,7 +48,7 @@ export function BottomNav({
             if (view === "cart") {
               return (
                 <div key={view} className="relative flex justify-center items-center w-[20%] h-full">
-                  <div className="absolute -top-[28px] w-16 h-16 bg-white dark:bg-zinc-950 rounded-full p-1.5 shadow-[0_-8px_20px_rgba(0,0,0,0.06),0_-8px_20px_rgba(16,185,129,0.1)] border border-zinc-200 dark:border-emerald-500/20 z-20">
+                  <div className="absolute -top-7 w-[58px] h-[58px] bg-white dark:bg-zinc-950 rounded-full p-1 shadow-[0_-8px_20px_rgba(0,0,0,0.06),0_-8px_20px_rgba(16,185,129,0.1)] border border-zinc-200 dark:border-emerald-500/20 z-20">
                     <motion.button
                       whileHover={{ scale: 1.1, y: -2 }}
                       whileTap={{ scale: 0.9 }}
@@ -63,7 +63,7 @@ export function BottomNav({
                           : "bg-emerald-600 dark:bg-emerald-500 text-white hover:bg-emerald-500 shadow-md"
                       }`}
                     >
-                      <Icon className="w-5 h-5 mb-0.5" />
+                      <Icon className="w-4 h-4 mb-0.5" />
                       <span className={`text-[8px] font-black uppercase tracking-wider leading-none ${isActive ? "text-white dark:text-slate-950" : "text-white"}`}>Cart</span>
                       {badgeCount > 0 && (
                         <motion.span
@@ -85,7 +85,7 @@ export function BottomNav({
                 key={view}
                 whileTap={{ scale: 0.92 }}
                 onClick={() => onViewChange(view)}
-                className="relative flex flex-col items-center justify-center w-[20%] h-[58px] transition-all duration-200 z-10"
+                className="relative flex flex-col items-center justify-center w-[20%] py-1.5 transition-all duration-200 z-10"
               >
                 <div className="relative flex flex-col items-center py-1 w-full h-full justify-center">
                   {/* Shared morphing pill background */}
