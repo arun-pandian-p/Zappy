@@ -122,7 +122,28 @@ const CustomerMenu = () => {
   const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('grid');
   const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
   const [reviewImmediate, setReviewImmediate] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const prevOrderStatusesRef = useRef<Record<string, string>>({});
+
+  // Detect virtual keyboard presence by tracking input focus on touch devices to hide sticky bars
+  useEffect(() => {
+    const handleFocus = () => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        setIsKeyboardOpen(true);
+      }
+    };
+    const handleBlur = () => {
+      setIsKeyboardOpen(false);
+    };
+
+    document.addEventListener('focusin', handleFocus);
+    document.addEventListener('focusout', handleBlur);
+    return () => {
+      document.removeEventListener('focusin', handleFocus);
+      document.removeEventListener('focusout', handleBlur);
+    };
+  }, []);
 
   // Fetch restaurant data
   // Fetch restaurant - try authenticated first, fall back to public view for anon users
@@ -1136,7 +1157,7 @@ const CustomerMenu = () => {
       </main>
 
       {/* Floating Cart Bar (menu view only, when table selected) */}
-      {dynamicTableId && currentView === 'menu' && (
+      {dynamicTableId && currentView === 'menu' && !selectedItemForDetails && !isKeyboardOpen && (
         <FloatingCartBar
           itemCount={getTotalItems()}
           totalPrice={cartPricing.finalTotal + (cartPricing.subtotal - cartPricing.totalDiscount) * (serviceChargeRate / 100)}
@@ -1146,13 +1167,15 @@ const CustomerMenu = () => {
       )}
 
 
-      {/* Bottom Navigation */}
-      <BottomNav
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        cartCount={getTotalItems()}
-        orderCount={customerOrders.filter(o => o.status !== 'completed').length}
-      />
+      {/* Bottom Navigation — Hidden during splash load, when table picker is open, item details dialog is visible, or virtual keyboard is active */}
+      {!isDataLoading && dynamicTableId && !showTablePicker && !selectedItemForDetails && !isKeyboardOpen && (
+        <BottomNav
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          cartCount={getTotalItems()}
+          orderCount={customerOrders.filter(o => o.status !== 'completed').length}
+        />
+      )}
 
       {/* Post-Order Review Prompt — triggers when order is served */}
       {reviewOrderId && restaurantId && (

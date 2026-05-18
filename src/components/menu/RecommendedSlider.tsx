@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { Plus, Minus, Heart } from "lucide-react";
 import { motion } from "framer-motion";
-import useEmblaCarousel from "embla-carousel-react";
 import { type MenuItem } from "@/hooks/useMenuItems";
 
 interface RecommendedSliderProps {
@@ -23,29 +22,26 @@ export function RecommendedSlider({
   onDecrement,
   onItemClick,
 }: RecommendedSliderProps) {
-  const [emblaRef] = useEmblaCarousel({
-    align: "start",
-    containScroll: "trimSnaps",
-    dragFree: true,
-  });
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="w-full mb-6">
-      <div className="overflow-hidden -mx-4 px-4" ref={emblaRef}>
-        <div className="flex select-none gap-4">
-          {items.map((item) => (
-            <RecommendedCard
-              key={item.id}
-              item={item}
-              currencySymbol={currencySymbol}
-              quantity={getItemQuantity(item.id)}
-              onAdd={onAdd}
-              onIncrement={onIncrement}
-              onDecrement={onDecrement}
-              onClick={() => onItemClick(item)}
-            />
-          ))}
-        </div>
+      <div
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto scrollbar-hide py-1.5 -mx-4 px-4 snap-x snap-mandatory scroll-smooth"
+      >
+        {items.map((item) => (
+          <RecommendedCard
+            key={item.id}
+            item={item}
+            currencySymbol={currencySymbol}
+            quantity={getItemQuantity(item.id)}
+            onAdd={onAdd}
+            onIncrement={onIncrement}
+            onDecrement={onDecrement}
+            onClick={() => onItemClick(item)}
+          />
+        ))}
       </div>
     </div>
   );
