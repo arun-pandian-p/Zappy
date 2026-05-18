@@ -69,12 +69,12 @@ export function BottomNav({
               <button
                 key={view}
                 onClick={() => onViewChange(view)}
-                className="relative flex flex-col items-center justify-center flex-1 min-w-0 h-[58px] transition-colors duration-150 z-10"
+                className="relative flex flex-col items-center justify-center flex-1 min-w-0 h-full transition-colors duration-150 z-10"
               >
-                <div className="relative flex flex-col items-center py-1 w-full h-full justify-center">
-                  {/* Shared active tab background */}
+                <div className="relative flex flex-col items-center justify-center w-full h-full py-1">
+                  {/* Perfectly-aligned active capsule background */}
                   {isActive && (
-                    <span className="absolute inset-0 rounded-2xl bg-emerald-500/5 dark:bg-emerald-400/10 border border-emerald-500/10 dark:border-emerald-400/20 -z-10" />
+                    <span className="absolute inset-x-3 inset-y-1.5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-400/10 border border-emerald-500/10 dark:border-emerald-400/20 -z-10" />
                   )}
 
                   <div className={isActive ? "text-emerald-600 dark:text-emerald-400 scale-105" : "text-zinc-500 dark:text-zinc-400"}>
@@ -96,11 +96,6 @@ export function BottomNav({
                   <span className={`text-[9px] font-bold tracking-tight ${isActive ? "text-emerald-600 dark:text-emerald-400 font-extrabold" : "text-zinc-500 dark:text-zinc-400"}`}>
                     {label}
                   </span>
-                  
-                  {/* Underline laser glow indicator */}
-                  {isActive && (
-                    <div className="absolute -bottom-1 w-5 h-0.5 rounded-full bg-emerald-600 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                  )}
                 </div>
               </button>
             );
