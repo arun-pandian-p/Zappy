@@ -33,6 +33,8 @@ import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
 import { useActiveEnterprisePromotions } from '@/hooks/useEnterprisePromotions';
 import { evaluateCartDiscounts } from '@/services/promotions/cartPricingEngine';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
+import { useActiveAds } from '@/hooks/useAds';
+import { HeaderBannerAd } from '@/components/menu/HeaderBannerAd';
 
 import { BottomNav } from '@/components/menu/BottomNav';
 import { AddedToCartToast } from '@/components/menu/AddedToCartToast';
@@ -144,6 +146,19 @@ const CustomerMenu = () => {
 
   // Fetch offers
   const { data: offers = [] } = useActiveEnterprisePromotions(restaurantId);
+
+  // Fetch active ads from the global Ads Manager
+  const { data: activeAds = [] } = useActiveAds();
+
+  // Filter ads to match current restaurant
+  const filteredAds = useMemo(() => {
+    if (!activeAds || activeAds.length === 0) return [];
+    return activeAds.filter(ad => {
+      const targets = ad.target_restaurants as string[] | null;
+      if (!targets || targets.length === 0) return true;
+      return targets.includes(restaurantId);
+    });
+  }, [activeAds, restaurantId]);
 
   // Fetch menu items
   const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(restaurantId);
@@ -510,6 +525,21 @@ const CustomerMenu = () => {
         <OffersSlider offers={offers} />
       )}
 
+      {/* Active Ads from Ads Manager */}
+      {filteredAds.map(ad => (
+        <HeaderBannerAd 
+          key={ad.id} 
+          ad={{
+            id: ad.id,
+            title: ad.title,
+            description: ad.description,
+            image_url: ad.image_url,
+            link_url: ad.link_url,
+            cta_text: ad.cta_text || "View Offer"
+          }} 
+        />
+      ))}
+
       {/* Banner */}
       {restaurant?.banner_image_url && (
         <div className="rounded-2xl overflow-hidden -mx-4 -mt-4 mb-4">
@@ -575,6 +605,22 @@ const CustomerMenu = () => {
         </div>
       )}
 
+      {/* Active Ads from Ads Manager */}
+      {filteredAds.map(ad => (
+        <div key={ad.id} className="mb-4">
+          <HeaderBannerAd 
+            ad={{
+              id: ad.id,
+              title: ad.title,
+              description: ad.description,
+              image_url: ad.image_url,
+              link_url: ad.link_url,
+              cta_text: ad.cta_text || "View Offer"
+            }} 
+          />
+        </div>
+      ))}
+
       {/* Search + Scan QR */}
       <div className="sticky top-[57px] z-30 bg-background pb-3 -mx-4 px-4 pt-4">
         <div className="flex items-center gap-3 mb-5">
@@ -605,26 +651,50 @@ const CustomerMenu = () => {
         />
       </div>
 
-      {/* Hero Banner */}
+      {/* Hero Banner (Dynamic from active offers, falling back gracefully if none available) */}
       {menuDisplaySettings.show_offers && (
         <div className="relative w-full rounded-3xl overflow-hidden bg-[#e0f0df] mt-2 mb-6 p-5 pr-[40%] min-h-[160px] flex flex-col justify-center shadow-sm">
           <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-[55%] h-full">
             <img 
-              src="https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&q=80" 
-              alt="Delicious Dosa" 
-              className="w-full h-full object-contain mix-blend-multiply opacity-90 scale-125"
+              src={offers.length > 0 && offers[0].image_url ? offers[0].image_url : "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&q=80"} 
+              alt={offers.length > 0 ? offers[0].title : "Delicious Food"} 
+              className="w-full h-full object-cover mix-blend-multiply opacity-90 scale-125"
+              onError={(e) => {
+                e.currentTarget.src = "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&q=80"; // Dynamic image fallback validation
+              }}
             />
           </div>
           
           <div className="relative z-10 space-y-2">
             <Badge variant="secondary" className="bg-white/80 text-success hover:bg-white text-[10px] px-2 py-0.5 font-semibold gap-1 w-max">
-              ✨ Today's Special
+              {offers.length > 0 && offers[0].discount_value ? `✨ ${offers[0].discount_value}% Special` : "✨ Today's Special"}
             </Badge>
             <div className="space-y-1">
-              <h2 className="text-2xl font-black text-[#1a3824] leading-tight tracking-tight">Good Food<br/>Good Mood</h2>
-              <p className="text-xs text-[#2a5a3a] font-medium">Delicious bites, happy vibes!</p>
+              <h2 className="text-2xl font-black text-[#1a3824] leading-tight tracking-tight whitespace-pre-line">
+                {offers.length > 0 ? offers[0].title : "Good Food\nGood Mood"}
+              </h2>
+              <p className="text-xs text-[#2a5a3a] font-medium">
+                {offers.length > 0 && offers[0].description ? offers[0].description : "Delicious bites, happy vibes!"}
+              </p>
             </div>
-            <Button className="mt-2 bg-[#008c4a] hover:bg-[#00703b] text-white rounded-full h-8 px-4 text-xs font-semibold w-max gap-1">
+            <Button 
+              className="mt-2 bg-[#008c4a] hover:bg-[#00703b] text-white rounded-full h-8 px-4 text-xs font-semibold w-max gap-1"
+              onClick={() => {
+                // Enterprise-grade click analytics tracking
+                if (offers.length > 0) {
+                  console.log(`[Analytics] Promotion Banner Clicked - ID: ${offers[0].id}, Title: ${offers[0].title}`);
+                  
+                  // Category Deep link targeting check
+                  if (offers[0].target_category_ids && offers[0].target_category_ids.length > 0) {
+                    const matchedCat = categories.find(c => c.id === offers[0].target_category_ids![0]);
+                    if (matchedCat) {
+                      setSelectedCategory(matchedCat.name);
+                      console.log(`[Deep Link] Filtering menu category to: ${matchedCat.name}`);
+                    }
+                  }
+                }
+              }}
+            >
               Order Now 
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </Button>
@@ -632,9 +702,20 @@ const CustomerMenu = () => {
           
           {/* Carousel Dots */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-            <div className="w-2 h-2 rounded-full bg-[#008c4a]" />
-            <div className="w-2 h-2 rounded-full bg-white/60" />
-            <div className="w-2 h-2 rounded-full bg-white/60" />
+            {offers.length > 1 ? (
+              offers.map((_, idx) => (
+                <div 
+                  key={idx} 
+                  className={`w-2 h-2 rounded-full ${idx === 0 ? "bg-[#008c4a]" : "bg-white/60"}`} 
+                />
+              ))
+            ) : (
+              <>
+                <div className="w-2 h-2 rounded-full bg-[#008c4a]" />
+                <div className="w-2 h-2 rounded-full bg-white/60" />
+                <div className="w-2 h-2 rounded-full bg-white/60" />
+              </>
+            )}
           </div>
         </div>
       )}

@@ -75,3 +75,36 @@ The most critical retention feature is Zappy's proactive damage-control ecosyste
 
 ---
 *Built to transform restaurants into data-driven powerhouses.*
+
+---
+
+## 🛡️ Production Hardening & Security Architecture
+
+Zappy has been hardened to enterprise-grade standards to ensure security, high performance, and ease of deployment:
+
+### 1. 🐳 Containerization & Deployment
+We provide a production-ready, multi-stage Docker build system:
+* **Dockerfile**: Multi-stage build which compiles the Vite/React application using lightweight `node:20-alpine` and serves static files using `nginx:stable-alpine`.
+* **nginx.conf**: A highly secure reverse proxy configuration that implements strict cache controls (1-year immutable for static assets, 1-month for media), enables high-performance gzip compression, and handles React client-side routing fallback gracefully.
+* **docker-compose.yml**: Orchestrates the containerized service, enabling automatic restart policy (`unless-stopped`), custom health checks (checking application server health), and environment configurations.
+
+### 2. 🔒 Web Security & Custom Headers
+The reverse proxy applies robust HTTP headers to safeguard client browser sessions:
+* **Strict-Transport-Security (HSTS)**: Enforces SSL connections for up to 1 year, protecting against SSL-stripping attacks.
+* **Content-Security-Policy (CSP)**: Curated policy restricting scripts, connections, and images to HTTPS, WSS, and trusted origins, neutralizing Cross-Site Scripting (XSS) and data injection.
+* **X-Frame-Options**: Set to `DENY` to prevent clickjacking attacks by blocking iframe embedding.
+* **X-Content-Type-Options**: Set to `nosniff` to protect against MIME-type sniffing.
+
+### 3. 🌐 Redirection & SSL Enforcement
+A unified production routing policy has been configured inside `src/main.tsx` to protect user sessions:
+* **Force HTTPS**: Automatically upgrades insecure `http:` connections to `https:` for all production client routes.
+* **Apex-to-www Redirect**: Resolves bare-domain apex requests (`zappy.ind.in`) to the secure `www.zappy.ind.in` subdomain before rendering the DOM, ensuring robust DNS and routing performance under Hostinger/Vercel namespaces.
+
+### 4. 🏷️ Dynamic Database-Driven Promotion Sync
+We have eliminated static mock-ups to construct a fully dynamic promotional carousel on the Customer Menu:
+* Automatically fetches active offers from your Supabase backend using the unified `offers`/`enterprise_promotions` engine.
+* Gracefully filters promotions based on expiration dates and status.
+* Embedded click analytics tracking for conversion tracking.
+* Fully supports category deep-link targeting (filtering the menu layout immediately when a promotion is clicked).
+* Includes automatic fallback placeholder images for network resilience.
+

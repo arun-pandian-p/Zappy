@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  zappy-frontend:
+    container_name: zappy-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      - NODE_ENV=production
+      - VITE_APP_URL=https://www.zappy.ind.in
