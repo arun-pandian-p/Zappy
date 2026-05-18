@@ -62,30 +62,35 @@ export function ItemDetailsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden rounded-[24px] border-0 max-h-[92vh] flex flex-col">
-        
-        {/* Hero Image */}
-        <div className="relative aspect-[16/10] w-full bg-muted flex-shrink-0">
+      <DialogContent 
+        className="fixed bottom-0 top-auto left-0 right-0 sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] translate-x-0 translate-y-0 w-full sm:max-w-[440px] rounded-t-[32px] sm:rounded-[24px] border-0 max-h-[88vh] sm:max-h-[92vh] flex flex-col bg-background overflow-hidden [&>button:last-child]:hidden shadow-[0_-8px_40px_rgba(0,0,0,0.15)] sm:shadow-lg focus:outline-none z-50 animate-in slide-in-from-bottom duration-300"
+      >
+        {/* Hero Image Container - capped to prevent stretching */}
+        <div className="relative h-[30vh] min-h-[200px] max-h-[300px] w-full bg-muted flex-shrink-0 overflow-hidden">
+          {/* Mobile Bottom Sheet Swipe Bar */}
+          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full bg-white/40 backdrop-blur-sm z-10" />
+
           <img
             src={item.image_url || "/placeholder.svg"}
             alt={item.name}
             className="w-full h-full object-cover"
           />
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           
-          {/* Close button */}
+          {/* Custom Close button */}
           <button 
             onClick={onClose}
-            className="absolute top-4 right-4 bg-black/30 backdrop-blur-md text-white p-2 rounded-full hover:bg-black/50 transition-colors"
+            className="absolute top-5 right-4 bg-black/45 backdrop-blur-md text-white p-2 rounded-full hover:bg-black/60 transition-transform active:scale-95 z-20 flex items-center justify-center"
+            aria-label="Close details"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
 
           {/* Badges overlay */}
-          <div className="absolute top-4 left-4 flex gap-2">
+          <div className="absolute top-5 left-4 flex gap-2 z-10">
             {item.is_vegetarian !== null && (
-              <Badge className={`border-0 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-lg ${
+              <Badge className={`border-0 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-md ${
                 item.is_vegetarian 
                   ? "bg-green-600/90 backdrop-blur-sm" 
                   : "bg-red-600/90 backdrop-blur-sm"
@@ -98,26 +103,26 @@ export function ItemDetailsDialog({
               </Badge>
             )}
             {item.is_popular && (
-              <Badge className="bg-amber-500/90 backdrop-blur-sm border-0 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-lg">
+              <Badge className="bg-amber-500/90 backdrop-blur-sm border-0 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-md">
                 <Star className="w-3 h-3 mr-1 fill-current" />Bestseller
               </Badge>
             )}
           </div>
 
           {/* Bottom info pills */}
-          <div className="absolute bottom-3 left-3 right-3 flex gap-2">
-            <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-foreground text-[10px] px-2 py-1 rounded-full border-0 shadow">
+          <div className="absolute bottom-3 left-3 right-3 flex gap-2 z-10">
+            <Badge variant="secondary" className="bg-white/95 backdrop-blur-sm text-foreground text-[10px] px-2.5 py-1 rounded-full border-0 shadow-sm font-semibold">
               <Clock className="w-3 h-3 mr-1" />{recipe.prepTime}
             </Badge>
-            <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-foreground text-[10px] px-2 py-1 rounded-full border-0 shadow">
+            <Badge variant="secondary" className="bg-white/95 backdrop-blur-sm text-foreground text-[10px] px-2.5 py-1 rounded-full border-0 shadow-sm font-semibold">
               <Flame className="w-3 h-3 mr-1" />{recipe.calories}
             </Badge>
           </div>
         </div>
 
-        {/* Scrollable Content */}
-        <ScrollArea className="flex-1 overflow-y-auto">
-          <div className="p-5 space-y-5 pb-2">
+        {/* Scrollable Content Container - standard flex-1 overflow-y-auto to fix ScrollArea layout crashes */}
+        <div className="flex-1 overflow-y-auto pb-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-slate-200">
+          <div className="p-5 space-y-5 pb-6">
 
             {/* Title & Description */}
             <div className="space-y-2">
@@ -214,10 +219,10 @@ export function ItemDetailsDialog({
               currencySymbol={currencySymbol}
             />
           </div>
-        </ScrollArea>
+        </div>
 
-        {/* Sticky Bottom CTA */}
-        <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur-md p-4 space-y-2">
+        {/* Glassmorphic Sticky Bottom CTA - respects safe area on newer mobile screen heights */}
+        <div className="flex-shrink-0 border-t bg-white/95 backdrop-blur-md p-4 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.05)] sticky bottom-0 z-30">
           <AnimatePresence mode="wait">
             {quantity === 0 ? (
               <motion.div
