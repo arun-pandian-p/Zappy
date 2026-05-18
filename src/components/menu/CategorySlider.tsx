@@ -83,22 +83,22 @@ export function CategorySlider({
               <motion.div 
                 animate={isActive ? { scale: 1.08, y: -2 } : { scale: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 18 }}
-                className={`relative w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-sm border transition-all ${
+                className={`relative w-16 h-16 rounded-full flex items-center justify-center bg-white dark:bg-zinc-900 shadow-sm border transition-all ${
                   isActive 
-                    ? "border-success bg-[#e8f5e9]/60 shadow-md ring-2 ring-success/25" 
-                    : "border-border hover:border-primary/30"
+                    ? "border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/30 shadow-[0_4px_12px_rgba(16,185,129,0.15)] ring-2 ring-emerald-500/20" 
+                    : "border-zinc-200/60 dark:border-zinc-800/60 hover:border-emerald-500/30"
                 }`}
               >
                 {isActive && (
                   <motion.span
                     layoutId="activeMorphIndicator"
-                    className="absolute inset-0 rounded-full bg-success/10 -z-10"
+                    className="absolute inset-0 rounded-full bg-emerald-500/10 -z-10"
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   />
                 )}
                 <span className="text-2xl">{getCategoryIcon(category)}</span>
               </motion.div>
-              <span className={`text-[10px] font-bold tracking-tight whitespace-nowrap ${isActive ? "text-success font-extrabold" : "text-muted-foreground"}`}>
+              <span className={`text-[10px] font-bold tracking-tight whitespace-nowrap ${isActive ? "text-emerald-600 dark:text-emerald-400 font-extrabold" : "text-zinc-500 dark:text-zinc-400"}`}>
                 {category}
               </span>
             </motion.button>

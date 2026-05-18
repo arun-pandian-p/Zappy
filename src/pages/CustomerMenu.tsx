@@ -658,24 +658,24 @@ const CustomerMenu = () => {
 
 
       {/* Search + Scan QR */}
-      <div className="sticky top-[57px] z-30 bg-background pb-3 -mx-4 px-4 pt-4">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="relative flex-1 flex items-center">
-            <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
+      <div className="sticky top-[73px] z-30 bg-background pb-3 -mx-4 px-4 pt-1 transition-all duration-300">
+        <div className="flex items-center gap-2.5 mb-3.5">
+          <div className="relative flex-1 flex items-center group">
+            <Search className="absolute left-4 w-5 h-5 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
             <Input
               placeholder="Search menu..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-12 h-12 rounded-2xl bg-muted/30 border-0 text-base"
+              className="pl-12 pr-10 h-11 rounded-2xl bg-zinc-100/70 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 text-sm focus-visible:ring-1 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/50 transition-all shadow-[0_4px_16px_rgba(0,0,0,0.02)]"
             />
             {/* Filter icon placeholder */}
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-4 text-muted-foreground">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-4 text-zinc-400">
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
             </svg>
           </div>
-          <Button className="h-12 px-4 rounded-2xl bg-[#008c4a] hover:bg-[#00703b] text-white flex flex-col items-center justify-center gap-0.5 min-w-[70px]">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
-            <span className="text-[10px] font-medium leading-none">Scan QR</span>
+          <Button className="h-11 px-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white flex flex-col items-center justify-center gap-0.5 min-w-[64px] shadow-sm border border-emerald-500/20 active:scale-95 transition-transform">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
+            <span className="text-[9px] font-bold leading-none tracking-tight">Scan QR</span>
           </Button>
         </div>
 
@@ -700,13 +700,13 @@ const CustomerMenu = () => {
       )}
 
       {/* Recommended Section Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-lg text-foreground flex items-center gap-1.5">
-          Recommended for you <span className="text-success text-xl">✨</span>
+      <div className="flex items-center justify-between mt-6 mb-4">
+        <h3 className="font-extrabold text-xl text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5 tracking-tight">
+          Recommended for you <span className="text-emerald-500 text-lg">✨</span>
         </h3>
-        <button className="text-xs font-semibold text-success flex items-center gap-0.5 hover:underline">
+        <button className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 hover:text-emerald-500 hover:underline transition-colors">
           View all
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         </button>
       </div>
 
@@ -1021,7 +1021,7 @@ const CustomerMenu = () => {
       primaryColor={splashColor}
       isLoading={!!isDataLoading}
     />
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-[140px]">
       {/* Table Picker Dialog */}
       <TablePickerDialog
         open={showTablePicker}
