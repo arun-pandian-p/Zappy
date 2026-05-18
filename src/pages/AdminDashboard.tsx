@@ -32,6 +32,7 @@ import {
   Package,
   Sparkles,
   Lock as LockIcon,
+  BarChart3,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,7 @@ import KitchenDashboard from "@/pages/KitchenDashboard";
 import BillingCounter from "@/pages/BillingCounter";
 import { OffersManager } from "@/components/admin/OffersManager";
 import { useActiveAds } from "@/hooks/useAds";
+import { MarketingAnalyticsDashboard } from "@/components/admin/MarketingAnalyticsDashboard";
 
 import { CustomerBehaviorPanel } from "@/components/analytics/CustomerBehaviorPanel";
 import { QRCodeManager } from "@/components/admin/QRCodeManager";
@@ -135,13 +137,11 @@ const mainTabs = [
   { value: "orders", label: "Orders", icon: ClipboardList },
   { value: "kitchen", label: "Kitchen", icon: ChefHat },
   { value: "billing", label: "Billing", icon: Receipt },
-  { value: "coupons", label: "Coupons", icon: Ticket },
+  { value: "marketing", label: "Marketing", icon: Sparkles },
   { value: "reviews", label: "Reviews", icon: Star },
   { value: "users", label: "Users", icon: Users },
   { value: "inventory", label: "Inventory", icon: Package },
   { value: "exports", label: "Exports", icon: FileSpreadsheet },
-  { value: "promotions", label: "Promotions", icon: Megaphone },
-  { value: "ads", label: "Ads Manager", icon: Sparkles },
   { value: "qr-manager", label: "QR Manager", icon: QrCode },
   { value: "preview", label: "Preview Site", icon: Eye },
   { value: "settings", label: "Settings", icon: Settings },
@@ -1065,41 +1065,62 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {activeTab === "coupons" && (
+              {activeTab === "marketing" && (
                 <motion.div
-                  key="coupons"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <CouponManager restaurantId={restaurantId} />
-                </motion.div>
-              )}
-
-              {activeTab === "promotions" && (
-                <motion.div
-                  key="promotions"
+                  key="marketing"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                   className="space-y-6"
                 >
-                  <OffersManager restaurantId={restaurantId} />
-                  <PlatformAdsReadOnly restaurantId={restaurantId} />
-                </motion.div>
-              )}
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                      <Sparkles className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold tracking-tight">Marketing Center</h2>
+                      <p className="text-sm text-muted-foreground">Manage your campaigns, ads, coupons, and track conversion ROI.</p>
+                    </div>
+                  </div>
 
-              {activeTab === "ads" && (
-                <motion.div
-                  key="ads"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <AdsManager restaurantId={restaurantId} />
+                  <Tabs defaultValue="analytics" className="w-full space-y-6">
+                    <TabsList className="bg-muted/50 p-1 rounded-xl w-fit flex flex-wrap gap-1">
+                      <TabsTrigger value="analytics" className="rounded-lg px-4 py-2 gap-2 text-xs font-semibold">
+                        <BarChart3 className="w-4 h-4" />
+                        Campaign Analytics
+                      </TabsTrigger>
+                      <TabsTrigger value="promotions" className="rounded-lg px-4 py-2 gap-2 text-xs font-semibold">
+                        <Megaphone className="w-4 h-4" />
+                        Promotions
+                      </TabsTrigger>
+                      <TabsTrigger value="coupons" className="rounded-lg px-4 py-2 gap-2 text-xs font-semibold">
+                        <Ticket className="w-4 h-4" />
+                        Coupons & Offers
+                      </TabsTrigger>
+                      <TabsTrigger value="ads" className="rounded-lg px-4 py-2 gap-2 text-xs font-semibold">
+                        <Sparkles className="w-4 h-4" />
+                        Banner Ads Manager
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="analytics" className="space-y-6 outline-none">
+                      <MarketingAnalyticsDashboard restaurantId={restaurantId} />
+                    </TabsContent>
+
+                    <TabsContent value="promotions" className="space-y-6 outline-none">
+                      <OffersManager restaurantId={restaurantId} />
+                      <PlatformAdsReadOnly restaurantId={restaurantId} />
+                    </TabsContent>
+
+                    <TabsContent value="coupons" className="outline-none">
+                      <CouponManager restaurantId={restaurantId} />
+                    </TabsContent>
+
+                    <TabsContent value="ads" className="outline-none">
+                      <AdsManager restaurantId={restaurantId} />
+                    </TabsContent>
+                  </Tabs>
                 </motion.div>
               )}
 

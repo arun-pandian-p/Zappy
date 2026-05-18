@@ -33,7 +33,7 @@ import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
 import { useActiveEnterprisePromotions } from '@/hooks/useEnterprisePromotions';
 import { evaluateCartDiscounts } from '@/services/promotions/cartPricingEngine';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
-import { PromotionBanner } from '@/components/menu/PromotionBanner';
+import { PromotionCarousel } from '@/components/menu/PromotionCarousel';
 
 import { BottomNav } from '@/components/menu/BottomNav';
 import { AddedToCartToast } from '@/components/menu/AddedToCartToast';
@@ -580,28 +580,14 @@ const CustomerMenu = () => {
 
       {/* Active Ads from Ads Manager */}
       {promotions && promotions.length > 0 && (
-        <div className="space-y-4">
-          {promotions.map((promo) => (
-            <PromotionBanner
-              key={promo.id}
-              promotion={{
-                id: promo.id,
-                title: promo.title,
-                description: promo.description,
-                image_url: promo.image_url,
-                link_url: promo.link_url,
-                cta_text: promo.cta_text,
-                target_categories: promo.target_categories,
-                priority: promo.priority
-              }}
-              categories={categories}
-              onSelectCategory={(catName) => setSelectedCategory(catName)}
-              onApplyCoupon={(code) => {
-                console.log(`[Coupon Applied] Code: ${code}`);
-              }}
-            />
-          ))}
-        </div>
+        <PromotionCarousel
+          promotions={promotions}
+          categories={categories}
+          onSelectCategory={(catName) => setSelectedCategory(catName)}
+          onApplyCoupon={(code) => {
+            console.log(`[Coupon Applied] Code: ${code}`);
+          }}
+        />
       )}
 
       {/* Banner */}
@@ -703,28 +689,14 @@ const CustomerMenu = () => {
 
       {/* Dynamic Advertisement Banners */}
       {promotions && promotions.length > 0 && (
-        <div className="mt-2 mb-6 space-y-4">
-          {promotions.map((promo) => (
-            <PromotionBanner
-              key={promo.id}
-              promotion={{
-                id: promo.id,
-                title: promo.title,
-                description: promo.description,
-                image_url: promo.image_url,
-                link_url: promo.link_url,
-                cta_text: promo.cta_text,
-                target_categories: promo.target_categories,
-                priority: promo.priority
-              }}
-              categories={categories}
-              onSelectCategory={(catName) => setSelectedCategory(catName)}
-              onApplyCoupon={(code) => {
-                console.log(`[Coupon Applied] Code: ${code}`);
-              }}
-            />
-          ))}
-        </div>
+        <PromotionCarousel
+          promotions={promotions}
+          categories={categories}
+          onSelectCategory={(catName) => setSelectedCategory(catName)}
+          onApplyCoupon={(code) => {
+            console.log(`[Coupon Applied] Code: ${code}`);
+          }}
+        />
       )}
 
       {/* Recommended Section Header */}
