@@ -1147,12 +1147,14 @@ const CustomerMenu = () => {
 
 
       {/* Bottom Navigation — Always fixed and visible at the bottom of the viewport once loaded */}
-      <BottomNav
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        cartCount={getTotalItems()}
-        orderCount={customerOrders.filter(o => o.status !== 'completed').length}
-      />
+      {!selectedItemForDetails && (
+        <BottomNav
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          cartCount={getTotalItems()}
+          orderCount={customerOrders.filter(o => o.status !== 'completed').length}
+        />
+      )}
 
       {/* Post-Order Review Prompt — triggers when order is served */}
       {reviewOrderId && restaurantId && (
