@@ -36,6 +36,8 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
   onDecrement,
   onClick,
 }, ref) => {
+  const [isLiked, setIsLiked] = React.useState(false);
+
   return (
     <motion.div
       ref={ref}
@@ -76,12 +78,13 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
           
           {/* Heart Icon - Top Right */}
           <button 
-            className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:scale-110 transition-transform"
+            className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:scale-110 active:scale-90 transition-transform z-10"
             onClick={(e) => {
               e.stopPropagation();
+              setIsLiked(!isLiked);
             }}
           >
-            <Heart className="w-3.5 h-3.5 text-muted-foreground" />
+            <Heart className={`w-3.5 h-3.5 transition-colors ${isLiked ? "fill-rose-500 stroke-rose-500 animate-pulse" : "text-muted-foreground"}`} />
           </button>
         </div>
 

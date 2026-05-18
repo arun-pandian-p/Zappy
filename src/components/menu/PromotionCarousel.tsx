@@ -98,7 +98,7 @@ export function PromotionCarousel({
 
   return (
     <div 
-      className="w-full relative py-3 group"
+      className="w-full relative py-4 group"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={() => setIsPaused(true)}

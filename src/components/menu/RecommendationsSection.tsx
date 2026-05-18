@@ -94,7 +94,7 @@ export function RecommendationsSection({
       </div>
 
       {/* Horizontal Carousel */}
-      <div className="flex gap-2.5 overflow-x-auto pb-3 -mx-5 px-5 scrollbar-hide snap-x snap-mandatory">
+      <div className="flex gap-2.5 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory">
         {recommendations.map((rec, idx) => {
           // Find matching menu item
           const menuItem = allMenuItems.find(item => 
