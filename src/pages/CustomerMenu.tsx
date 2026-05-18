@@ -1108,7 +1108,7 @@ const CustomerMenu = () => {
       />
 
       {/* Content */}
-      <main className="container mx-auto px-4 pt-0 pb-4 overflow-hidden">
+      <main className="container mx-auto px-4 pt-0 pb-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentView}
