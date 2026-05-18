@@ -43,6 +43,7 @@ import { FloatingCartBar } from '@/components/menu/FloatingCartBar';
 import { MenuItemRow } from '@/components/menu/MenuItemRow';
 import { FoodCard } from '@/components/menu/FoodCard';
 import { OrderStatusPipeline } from '@/components/menu/OrderStatusPipeline';
+import { analyticsService } from '@/services/analyticsService';
 import { OffersSlider } from '@/components/menu/OffersSlider';
 import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
@@ -256,6 +257,17 @@ const CustomerMenu = () => {
       setTableNumber(dynamicTableId);
     }
   }, [dynamicTableId, setTableNumber]);
+
+  // Track category views in analytics
+  useEffect(() => {
+    if (selectedCategory && restaurantId) {
+      analyticsService.trackEvent({
+        campaignId: selectedCategory === 'All' ? 'all_categories' : selectedCategory,
+        eventType: 'category_opened',
+        tenantId: restaurantId
+      });
+    }
+  }, [selectedCategory, restaurantId]);
 
   const handleTableSelect = (tableNumber: string) => {
     setDynamicTableId(tableNumber);
@@ -850,7 +862,20 @@ const CustomerMenu = () => {
             allMenuItems={menuItems}
             onAddItem={(id) => {
               const item = menuItems.find(mi => mi.id === id);
-              if (item) addItem(item);
+              if (item) {
+                addItem(item);
+                if (restaurantId) {
+                  analyticsService.trackEvent({
+                    campaignId: id,
+                    eventType: 'recommendation_click',
+                    tenantId: restaurantId,
+                    metadata: {
+                      item_name: item.name,
+                      price: item.price
+                    }
+                  });
+                }
+              }
             }}
             currencySymbol={currencySymbol}
           />
