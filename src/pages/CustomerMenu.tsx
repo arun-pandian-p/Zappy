@@ -606,36 +606,38 @@ const CustomerMenu = () => {
       </div>
 
       {/* Hero Banner */}
-      <div className="relative w-full rounded-3xl overflow-hidden bg-[#e0f0df] mt-2 mb-6 p-5 pr-[40%] min-h-[160px] flex flex-col justify-center shadow-sm">
-        <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-[55%] h-full">
-          <img 
-            src="https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&q=80" 
-            alt="Delicious Dosa" 
-            className="w-full h-full object-contain mix-blend-multiply opacity-90 scale-125"
-          />
-        </div>
-        
-        <div className="relative z-10 space-y-2">
-          <Badge variant="secondary" className="bg-white/80 text-success hover:bg-white text-[10px] px-2 py-0.5 font-semibold gap-1 w-max">
-            ✨ Today's Special
-          </Badge>
-          <div className="space-y-1">
-            <h2 className="text-2xl font-black text-[#1a3824] leading-tight tracking-tight">Good Food<br/>Good Mood</h2>
-            <p className="text-xs text-[#2a5a3a] font-medium">Delicious bites, happy vibes!</p>
+      {menuDisplaySettings.show_offers && (
+        <div className="relative w-full rounded-3xl overflow-hidden bg-[#e0f0df] mt-2 mb-6 p-5 pr-[40%] min-h-[160px] flex flex-col justify-center shadow-sm">
+          <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-[55%] h-full">
+            <img 
+              src="https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&q=80" 
+              alt="Delicious Dosa" 
+              className="w-full h-full object-contain mix-blend-multiply opacity-90 scale-125"
+            />
           </div>
-          <Button className="mt-2 bg-[#008c4a] hover:bg-[#00703b] text-white rounded-full h-8 px-4 text-xs font-semibold w-max gap-1">
-            Order Now 
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </Button>
+          
+          <div className="relative z-10 space-y-2">
+            <Badge variant="secondary" className="bg-white/80 text-success hover:bg-white text-[10px] px-2 py-0.5 font-semibold gap-1 w-max">
+              ✨ Today's Special
+            </Badge>
+            <div className="space-y-1">
+              <h2 className="text-2xl font-black text-[#1a3824] leading-tight tracking-tight">Good Food<br/>Good Mood</h2>
+              <p className="text-xs text-[#2a5a3a] font-medium">Delicious bites, happy vibes!</p>
+            </div>
+            <Button className="mt-2 bg-[#008c4a] hover:bg-[#00703b] text-white rounded-full h-8 px-4 text-xs font-semibold w-max gap-1">
+              Order Now 
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </Button>
+          </div>
+          
+          {/* Carousel Dots */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            <div className="w-2 h-2 rounded-full bg-[#008c4a]" />
+            <div className="w-2 h-2 rounded-full bg-white/60" />
+            <div className="w-2 h-2 rounded-full bg-white/60" />
+          </div>
         </div>
-        
-        {/* Carousel Dots */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-          <div className="w-2 h-2 rounded-full bg-[#008c4a]" />
-          <div className="w-2 h-2 rounded-full bg-white/60" />
-          <div className="w-2 h-2 rounded-full bg-white/60" />
-        </div>
-      </div>
+      )}
 
       {/* Recommended Section Header */}
       <div className="flex items-center justify-between mb-4">
