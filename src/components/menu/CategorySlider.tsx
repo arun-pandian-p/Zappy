@@ -73,24 +73,35 @@ export function CategorySlider({
             key={category}
             layout
             data-category={category}
+            className="flex-shrink-0"
           >
-              <button
-                onClick={() => onSelectCategory(category)}
-                className={`flex flex-col items-center gap-1.5 transition-all outline-none`}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => onSelectCategory(category)}
+              className="flex flex-col items-center gap-1.5 transition-all outline-none"
+            >
+              <motion.div 
+                animate={isActive ? { scale: 1.08, y: -2 } : { scale: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                className={`relative w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-sm border transition-all ${
+                  isActive 
+                    ? "border-success bg-[#e8f5e9]/60 shadow-md ring-2 ring-success/25" 
+                    : "border-border hover:border-primary/30"
+                }`}
               >
-                <div 
-                  className={`w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-sm border transition-all ${
-                    isActive 
-                      ? "border-success bg-[#e8f5e9] shadow-md ring-2 ring-success/20" 
-                      : "border-border hover:border-primary/50"
-                  }`}
-                >
-                  <span className="text-2xl">{getCategoryIcon(category)}</span>
-                </div>
-                <span className={`text-xs font-medium whitespace-nowrap ${isActive ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
-                  {category}
-                </span>
-              </button>
+                {isActive && (
+                  <motion.span
+                    layoutId="activeMorphIndicator"
+                    className="absolute inset-0 rounded-full bg-success/10 -z-10"
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  />
+                )}
+                <span className="text-2xl">{getCategoryIcon(category)}</span>
+              </motion.div>
+              <span className={`text-[10px] font-bold tracking-tight whitespace-nowrap ${isActive ? "text-success font-extrabold" : "text-muted-foreground"}`}>
+                {category}
+              </span>
+            </motion.button>
           </motion.div>
         );
       })}

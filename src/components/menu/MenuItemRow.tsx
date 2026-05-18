@@ -36,10 +36,13 @@ export function MenuItemRow({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: -10 }}
+      initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 10 }}
-      className="flex items-center gap-3 p-3 rounded-xl bg-card border shadow-sm"
+      exit={{ opacity: 0, x: 16 }}
+      whileHover={{ scale: 1.01, x: 2 }}
+      whileTap={{ scale: 0.99 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className="flex items-center gap-3 p-3 rounded-xl bg-card border shadow-sm cursor-pointer"
     >
       {/* Thumbnail */}
       <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-muted">

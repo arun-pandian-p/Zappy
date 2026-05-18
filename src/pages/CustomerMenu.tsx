@@ -13,7 +13,7 @@ function cacheBustUrl(url: string | null | undefined): string | undefined {
 }
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List, MessageSquare } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCartStore } from '@/stores/cartStore';
@@ -1069,21 +1069,31 @@ const CustomerMenu = () => {
       />
 
       {/* Content */}
-      <main className="container mx-auto px-4 py-4">
-        {currentView === 'home' && renderHome()}
-        {currentView === 'menu' && renderMenu()}
-        {dynamicTableId && currentView === 'cart' && renderCart()}
-        {dynamicTableId && currentView === 'orders' && renderOrders()}
-        {currentView === 'profile' && renderProfile()}
-        {!dynamicTableId && (currentView === 'cart' || currentView === 'orders') && (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-lg font-medium">Please select a table first</p>
-            <p className="text-sm mt-1">Tap to select your table</p>
-            <Button variant="outline" className="mt-4" onClick={() => setDynamicTableId('')}>
-              Select Table
-            </Button>
-          </div>
-        )}
+      <main className="container mx-auto px-4 py-4 overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentView}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+          >
+            {currentView === 'home' && renderHome()}
+            {currentView === 'menu' && renderMenu()}
+            {dynamicTableId && currentView === 'cart' && renderCart()}
+            {dynamicTableId && currentView === 'orders' && renderOrders()}
+            {currentView === 'profile' && renderProfile()}
+            {!dynamicTableId && (currentView === 'cart' || currentView === 'orders') && (
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-lg font-medium">Please select a table first</p>
+                <p className="text-sm mt-1">Tap to select your table</p>
+                <Button variant="outline" className="mt-4" onClick={() => setDynamicTableId('')}>
+                  Select Table
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Floating Cart Bar (menu view only, when table selected) */}

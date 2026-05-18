@@ -40,12 +40,14 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
     <motion.div
       ref={ref}
       layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: 15, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 350, damping: 25 }}
       onClick={onClick}
-      className="cursor-pointer"
+      className="cursor-pointer h-full"
     >
       <Card className="overflow-hidden card-hover border shadow-sm rounded-[20px] bg-white dark:bg-card h-full flex flex-col">
         {/* Image Section with Badges */}
