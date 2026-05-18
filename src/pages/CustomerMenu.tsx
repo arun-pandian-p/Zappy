@@ -1060,7 +1060,7 @@ const CustomerMenu = () => {
       primaryColor={splashColor}
       isLoading={!!isDataLoading}
     />
-    <div className="min-h-screen bg-background pb-[140px] w-full relative">
+    <div className="min-h-screen bg-background pb-[96px] w-full relative">
       {/* Table Picker Dialog */}
       <TablePickerDialog
         open={showTablePicker}
@@ -1147,14 +1147,12 @@ const CustomerMenu = () => {
 
 
       {/* Bottom Navigation — Always fixed and visible at the bottom of the viewport once loaded */}
-      {!isDataLoading && (
-        <BottomNav
-          currentView={currentView}
-          onViewChange={setCurrentView}
-          cartCount={getTotalItems()}
-          orderCount={customerOrders.filter(o => o.status !== 'completed').length}
-        />
-      )}
+      <BottomNav
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        cartCount={getTotalItems()}
+        orderCount={customerOrders.filter(o => o.status !== 'completed').length}
+      />
 
       {/* Post-Order Review Prompt — triggers when order is served */}
       {reviewOrderId && restaurantId && (

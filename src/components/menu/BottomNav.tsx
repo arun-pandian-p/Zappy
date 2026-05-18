@@ -34,11 +34,11 @@ export function BottomNav({
     <motion.nav 
       animate={{ y: 0, scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 280, damping: 25 }}
-      className="fixed bottom-0 md:bottom-5 left-0 md:left-4 right-0 md:right-4 mx-auto w-full md:max-w-[420px] z-50 bg-slate-950/95 border-t md:border border-emerald-500/20 rounded-none md:rounded-[28px] shadow-[0_24px_60px_rgba(0,0,0,0.45)] p-2 pb-safe backdrop-blur-2xl"
+      className="fixed bottom-0 md:bottom-5 left-0 md:left-4 right-0 md:right-4 mx-auto w-full md:max-w-[420px] z-50 bg-white/95 dark:bg-zinc-950/95 border-t md:border border-zinc-200/80 dark:border-emerald-500/20 rounded-none md:rounded-[28px] shadow-[0_-8px_30px_rgba(0,0,0,0.06),0_24px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.45)] p-2 pb-safe backdrop-blur-2xl"
       style={{ minHeight: '64px' }}
     >
       {/* Ambient background glow behind the active items */}
-      <div className="absolute inset-0 rounded-[28px] bg-gradient-to-tr from-emerald-500/5 to-transparent -z-20 pointer-events-none" />
+      <div className="absolute inset-0 rounded-none md:rounded-[28px] bg-gradient-to-tr from-emerald-500/5 to-transparent -z-20 pointer-events-none" />
 
       <div className="w-full h-full px-2">
         <div className="flex justify-between items-center h-[52px] relative">
@@ -49,7 +49,7 @@ export function BottomNav({
             if (view === "cart") {
               return (
                 <div key={view} className="relative flex justify-center items-center w-[20%]">
-                  <div className="absolute -top-7 w-[58px] h-[58px] bg-slate-950 rounded-full p-1 shadow-[0_-8px_20px_rgba(16,185,129,0.2)] border border-emerald-500/20 z-20">
+                  <div className="absolute -top-7 w-[58px] h-[58px] bg-white dark:bg-zinc-950 rounded-full p-1 shadow-[0_-8px_20px_rgba(0,0,0,0.06),0_-8px_20px_rgba(16,185,129,0.1)] border border-zinc-200 dark:border-emerald-500/20 z-20">
                     <motion.button
                       whileHover={{ scale: 1.1, y: -2 }}
                       whileTap={{ scale: 0.9 }}
@@ -60,17 +60,17 @@ export function BottomNav({
                       onClick={() => onViewChange(view)}
                       className={`w-full h-full rounded-full flex flex-col items-center justify-center transition-all ${
                         isActive 
-                          ? "bg-emerald-400 text-slate-950 shadow-[0_4px_15px_rgba(52,211,153,0.4)]" 
-                          : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-md"
+                          ? "bg-emerald-500 dark:bg-emerald-400 text-white dark:text-slate-950 shadow-[0_4px_15px_rgba(52,211,153,0.4)]" 
+                          : "bg-emerald-600 dark:bg-emerald-500 text-white hover:bg-emerald-500 shadow-md"
                       }`}
                     >
                       <Icon className="w-4 h-4 mb-0.5" />
-                      <span className={`text-[8px] font-black uppercase tracking-wider leading-none ${isActive ? "text-slate-950" : "text-white"}`}>Cart</span>
+                      <span className={`text-[8px] font-black uppercase tracking-wider leading-none ${isActive ? "text-white dark:text-slate-950" : "text-white"}`}>Cart</span>
                       {badgeCount > 0 && (
                         <motion.span
                           initial={{ scale: 0, rotate: -10 }}
                           animate={{ scale: 1, rotate: 0 }}
-                          className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 text-[9px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center border-2 border-slate-950 shadow-md font-mono"
+                          className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 text-[9px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center border-2 border-white dark:border-zinc-950 shadow-md font-mono"
                         >
                           {badgeCount > 9 ? "9+" : badgeCount}
                         </motion.span>
@@ -93,7 +93,7 @@ export function BottomNav({
                   {isActive && (
                     <motion.span
                       layoutId="activeNavTabBg"
-                      className="absolute inset-0 rounded-2xl bg-emerald-400/10 border border-emerald-400/20 -z-10"
+                      className="absolute inset-0 rounded-2xl bg-emerald-500/5 dark:bg-emerald-400/10 border border-emerald-500/10 dark:border-emerald-400/20 -z-10"
                       transition={{ type: "spring", stiffness: 380, damping: 26 }}
                     />
                   )}
@@ -101,7 +101,7 @@ export function BottomNav({
                   <motion.div
                     animate={isActive ? { scale: 1.15, y: -2 } : { scale: 1, y: 0 }}
                     transition={{ type: "spring", stiffness: 400, damping: 16 }}
-                    className={isActive ? "text-emerald-400" : "text-zinc-400"}
+                    className={isActive ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-500 dark:text-zinc-400"}
                   >
                     <Icon className={`w-5 h-5 mb-0.5 ${isActive ? "stroke-[2.5]" : "stroke-2"}`} />
                   </motion.div>
@@ -122,7 +122,7 @@ export function BottomNav({
                     <span className="absolute top-1 right-3 w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                   )}
                   
-                  <span className={`text-[9px] font-bold tracking-tight ${isActive ? "text-emerald-400 font-extrabold" : "text-zinc-400"}`}>
+                  <span className={`text-[9px] font-bold tracking-tight ${isActive ? "text-emerald-600 dark:text-emerald-400 font-extrabold" : "text-zinc-500 dark:text-zinc-400"}`}>
                     {label}
                   </span>
                   
@@ -130,7 +130,7 @@ export function BottomNav({
                   {isActive && (
                     <motion.div
                       layoutId="activeIndicatorGlow"
-                      className="absolute -bottom-1 w-5 h-0.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"
+                      className="absolute -bottom-1 w-5 h-0.5 rounded-full bg-emerald-600 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
                       transition={{ type: "spring", stiffness: 480, damping: 28 }}
                     />
                   )}
