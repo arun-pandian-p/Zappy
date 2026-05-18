@@ -86,7 +86,7 @@ export function CustomerTopBar({
             ? "bg-card/95 backdrop-blur-xl shadow-sm py-2"
             : bannerImageUrl
             ? "bg-card/90 backdrop-blur-md py-2.5"
-            : "bg-card py-3"
+            : "bg-card py-2.5"
         }`}
       >
         <div className="container mx-auto px-4">

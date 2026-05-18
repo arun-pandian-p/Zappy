@@ -668,15 +668,6 @@ const CustomerMenu = () => {
   const renderMenu = () => (
     <div>
 
-      {/* Offers Slider */}
-      {menuDisplaySettings.show_offers && offers.length > 0 && (
-        <div className="mb-4">
-          <OffersSlider offers={offers} />
-        </div>
-      )}
-
-
-
       {/* Search + Scan QR */}
       <div className="sticky top-[73px] z-30 bg-background pb-3 -mx-4 px-4 pt-1 transition-all duration-300">
         <div className="flex items-center gap-2.5 mb-3.5">
@@ -1119,7 +1110,7 @@ const CustomerMenu = () => {
       />
 
       {/* Content */}
-      <main className="container mx-auto px-4 py-4 overflow-hidden">
+      <main className="container mx-auto px-4 pt-0 pb-4 overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentView}
