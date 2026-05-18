@@ -63,32 +63,32 @@ export function ItemDetailsDialog({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
-        className="fixed bottom-0 top-auto left-0 right-0 sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] translate-x-0 translate-y-0 w-full sm:max-w-[440px] rounded-t-[32px] sm:rounded-[24px] border-0 max-h-[88vh] sm:max-h-[92vh] flex flex-col bg-background overflow-hidden [&>button:last-child]:hidden shadow-[0_-8px_40px_rgba(0,0,0,0.15)] sm:shadow-lg focus:outline-none z-50 animate-in slide-in-from-bottom duration-300"
+        className="fixed bottom-0 top-auto left-0 right-0 sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] translate-x-0 translate-y-0 w-full sm:max-w-[440px] rounded-t-[32px] sm:rounded-[24px] border-0 max-h-[92dvh] sm:max-h-[92dvh] flex flex-col bg-background overflow-hidden [&>button:last-child]:hidden shadow-[0_-8px_40px_rgba(0,0,0,0.15)] sm:shadow-lg focus:outline-none z-[200] animate-in slide-in-from-bottom duration-300"
       >
-        {/* Hero Image Container - capped to prevent stretching */}
-        <div className="relative h-[30vh] min-h-[200px] max-h-[300px] w-full bg-muted flex-shrink-0 overflow-hidden">
-          {/* Mobile Bottom Sheet Swipe Bar */}
-          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full bg-white/40 backdrop-blur-sm z-10" />
+        {/* Cinematic Hero Image Container */}
+        <div className="relative h-[32dvh] min-h-[220px] max-h-[340px] w-full bg-muted flex-shrink-0 overflow-hidden">
+          {/* Mobile Bottom Sheet Swipe Bar Indicator */}
+          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-white/35 backdrop-blur-sm z-10 pointer-events-none" />
 
           <img
             src={item.image_url || "/placeholder.svg"}
             alt={item.name}
             className="w-full h-full object-cover"
           />
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          {/* Ambient Cinematic fade-out bottom gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           
-          {/* Custom Close button */}
+          {/* Premium Glass Close Button with standard 44px touch area */}
           <button 
             onClick={onClose}
-            className="absolute top-5 right-4 bg-black/45 backdrop-blur-md text-white p-2 rounded-full hover:bg-black/60 transition-transform active:scale-95 z-20 flex items-center justify-center"
+            className="absolute top-4 right-4 w-11 h-11 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full transition-all active:scale-95 z-30 flex items-center justify-center shadow-lg border border-white/10"
             aria-label="Close details"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
 
           {/* Badges overlay */}
-          <div className="absolute top-5 left-4 flex gap-2 z-10">
+          <div className="absolute top-4 left-4 flex gap-2 z-10">
             {item.is_vegetarian !== null && (
               <Badge className={`border-0 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-md ${
                 item.is_vegetarian 
@@ -109,120 +109,125 @@ export function ItemDetailsDialog({
             )}
           </div>
 
-          {/* Bottom info pills */}
-          <div className="absolute bottom-3 left-3 right-3 flex gap-2 z-10">
-            <Badge variant="secondary" className="bg-white/95 backdrop-blur-sm text-foreground text-[10px] px-2.5 py-1 rounded-full border-0 shadow-sm font-semibold">
-              <Clock className="w-3 h-3 mr-1" />{recipe.prepTime}
+          {/* Dynamic Floating metadata pills */}
+          <div className="absolute bottom-4 left-4 right-4 flex gap-2 z-10">
+            <Badge variant="secondary" className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm text-foreground text-[10px] px-3 py-1 rounded-full border-0 shadow-sm font-semibold">
+              <Clock className="w-3.5 h-3.5 mr-1" />{recipe.prepTime}
             </Badge>
-            <Badge variant="secondary" className="bg-white/95 backdrop-blur-sm text-foreground text-[10px] px-2.5 py-1 rounded-full border-0 shadow-sm font-semibold">
-              <Flame className="w-3 h-3 mr-1" />{recipe.calories}
+            <Badge variant="secondary" className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm text-foreground text-[10px] px-3 py-1 rounded-full border-0 shadow-sm font-semibold">
+              <Flame className="w-3.5 h-3.5 mr-1 text-orange-500" />{recipe.calories}
             </Badge>
           </div>
         </div>
 
-        {/* Scrollable Content Container - standard flex-1 overflow-y-auto to fix ScrollArea layout crashes */}
-        <div className="flex-1 overflow-y-auto pb-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-slate-200">
-          <div className="p-5 space-y-5 pb-6">
+        {/* Scrollable Container — Hidden Scrollbars & Momentum Inertia */}
+        <div 
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+          className="flex-1 overflow-y-auto pb-4 overscroll-contain [&::-webkit-scrollbar]:hidden"
+        >
+          <div className="p-5 space-y-6 pb-8">
 
-            {/* Title & Description */}
+            {/* Title & Description Section */}
             <div className="space-y-2">
-              <DialogTitle className="text-2xl font-black tracking-tight">{item.name}</DialogTitle>
-              <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
+              <DialogTitle className="text-2xl font-black tracking-tight leading-tight">{item.name}</DialogTitle>
+              <DialogDescription className="text-sm leading-relaxed text-muted-foreground/90">
                 {item.description || recipe.description}
               </DialogDescription>
             </div>
 
-            {/* Quick Info Pills */}
+            {/* Quick Info Tags */}
             <div className="flex flex-wrap gap-2">
-              <div className="flex items-center gap-1.5 bg-muted/60 rounded-full px-3 py-1.5">
+              <div className="flex items-center gap-1.5 bg-muted/65 rounded-full px-3 py-1.5 border border-zinc-200/20">
                 <UtensilsCrossed className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-medium">{recipe.cookingStyle}</span>
+                <span className="text-xs font-semibold">{recipe.cookingStyle}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-muted/60 rounded-full px-3 py-1.5">
+              <div className="flex items-center gap-1.5 bg-muted/65 rounded-full px-3 py-1.5 border border-zinc-200/20">
                 <Flame className="w-3.5 h-3.5 text-orange-500" />
-                <span className="text-xs font-medium">{getSpiceLevelLabel(recipe.spiceLevel)}</span>
+                <span className="text-xs font-semibold mr-1">{getSpiceLevelLabel(recipe.spiceLevel)}</span>
                 <SpiceMeter level={recipe.spiceLevel} />
               </div>
               {recipe.servingSize && (
-                <div className="flex items-center gap-1.5 bg-muted/60 rounded-full px-3 py-1.5">
-                  <span className="text-xs font-medium">📦 {recipe.servingSize}</span>
+                <div className="flex items-center gap-1.5 bg-muted/65 rounded-full px-3 py-1.5 border border-zinc-200/20">
+                  <span className="text-xs font-semibold">📦 {recipe.servingSize}</span>
                 </div>
               )}
             </div>
 
-            {/* Price Row */}
-            <div className="flex items-center justify-between py-3 border-t border-b border-dashed">
+            {/* Spacing Partition Row */}
+            <div className="flex items-center justify-between py-4 border-t border-b border-dashed border-zinc-200 dark:border-zinc-800">
               <div className="flex flex-col">
-                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Price</span>
-                <span className="text-2xl font-black text-[#008c4a]">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Base Price</span>
+                <span className="text-2xl font-black text-[#008c4a] dark:text-[#10b981]">
                   {currencySymbol}{Number(item.price).toFixed(2)}
                 </span>
               </div>
             </div>
 
-            {/* Recipe Section */}
-            <div className="space-y-3">
+            {/* Recipe Details */}
+            <div className="space-y-3.5">
               <div className="flex items-center gap-2">
-                <div className="bg-amber-500/10 p-1.5 rounded-lg">
-                  <ChefHat className="w-4 h-4 text-amber-600" />
+                <div className="bg-amber-500/10 p-2 rounded-xl">
+                  <ChefHat className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 </div>
-                <h3 className="font-bold text-sm">Recipe & Ingredients</h3>
+                <h3 className="font-extrabold text-sm tracking-tight text-zinc-900 dark:text-zinc-50">Ingredients & Preparation</h3>
               </div>
               
               <p className="text-sm text-muted-foreground leading-relaxed pl-0.5">
                 {recipe.description}
               </p>
 
-              {/* Ingredients Grid */}
-              <div className="flex flex-wrap gap-1.5">
+              {/* Recipe Ingredients Badges */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
                 {recipe.ingredients.map((ing, idx) => (
                   <motion.span
                     key={idx}
-                    initial={{ opacity: 0, scale: 0.8 }}
+                    initial={{ opacity: 0, scale: 0.85 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="inline-flex items-center bg-green-50 dark:bg-green-950/30 text-green-800 dark:text-green-300 text-[11px] font-medium px-2.5 py-1 rounded-full border border-green-200/50 dark:border-green-800/30"
+                    transition={{ delay: idx * 0.04 }}
+                    className="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 text-[11px] font-semibold px-3 py-1.5 rounded-full border border-emerald-200/40 dark:border-emerald-800/20 shadow-sm"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0" />
                     {ing}
                   </motion.span>
                 ))}
               </div>
 
-              {/* Allergens */}
+              {/* Dynamic Allergy warning flags */}
               {recipe.allergens && recipe.allergens.length > 0 && (
-                <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
-                  <span className="font-semibold">⚠️ Allergens:</span>
-                  <span>{recipe.allergens.join(", ")}</span>
+                <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400 pl-0.5 pt-1">
+                  <span className="font-bold">⚠️ Allergen Info:</span>
+                  <span className="font-medium">{recipe.allergens.join(", ")}</span>
                 </div>
               )}
 
-              {/* Chef Note */}
-              <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3 border border-amber-200/30 dark:border-amber-800/20">
-                <div className="flex items-start gap-2">
-                  <span className="text-base flex-shrink-0">👨‍🍳</span>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 tracking-wide">Chef's Note</span>
-                    <p className="text-xs text-amber-900 dark:text-amber-300 mt-0.5 leading-relaxed">{recipe.chefNote}</p>
+              {/* Inset Chef Note */}
+              <div className="bg-amber-50/70 dark:bg-amber-950/15 rounded-2xl p-4 border border-amber-200/30 dark:border-amber-950/30 shadow-sm mt-3">
+                <div className="flex items-start gap-2.5">
+                  <span className="text-lg flex-shrink-0">👨‍🍳</span>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] uppercase font-extrabold text-amber-800 dark:text-amber-400 tracking-wider">Chef's Secret Notes</span>
+                    <p className="text-xs text-amber-900 dark:text-amber-300 leading-relaxed font-medium">{recipe.chefNote}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Intelligent Recommendations */}
-            <RecommendationsSection 
-              cartItemNames={[item.name]}
-              allMenuItems={allMenuItems}
-              onAddItem={(id) => {
-                onAdd(); 
-              }}
-              currencySymbol={currencySymbol}
-            />
+            {/* Contextual side-recommendations slider */}
+            <div className="pt-2">
+              <RecommendationsSection 
+                cartItemNames={[item.name]}
+                allMenuItems={allMenuItems}
+                onAddItem={(id) => {
+                  onAdd(); 
+                }}
+                currencySymbol={currencySymbol}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Glassmorphic Sticky Bottom CTA - respects safe area on newer mobile screen heights */}
-        <div className="flex-shrink-0 border-t bg-white/95 backdrop-blur-md p-4 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.05)] sticky bottom-0 z-30">
+        {/* Sticky safe-area CTA Footer overlay */}
+        <div className="flex-shrink-0 border-t bg-white/95 dark:bg-zinc-950/95 backdrop-blur-lg p-4 pb-[max(16px,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.06)] sticky bottom-0 z-[210]">
           <AnimatePresence mode="wait">
             {quantity === 0 ? (
               <motion.div
@@ -230,11 +235,11 @@ export function ItemDetailsDialog({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.18 }}
               >
                 <Button 
                   onClick={onAdd}
-                  className="w-full bg-[#008c4a] hover:bg-[#00703b] text-white rounded-2xl h-14 font-bold text-base shadow-lg shadow-[#008c4a]/20 gap-2"
+                  className="w-full bg-[#008c4a] hover:bg-[#00703b] text-white rounded-2xl h-14 font-extrabold text-base shadow-lg shadow-[#008c4a]/15 gap-2 transition-transform active:scale-[0.98]"
                 >
                   <ShoppingBag className="w-5 h-5" />
                   Add to Cart — {currencySymbol}{Number(item.price).toFixed(0)}
@@ -246,49 +251,49 @@ export function ItemDetailsDialog({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-2"
+                transition={{ duration: 0.18 }}
+                className="space-y-3"
               >
-                {/* Quantity row */}
+                {/* Quantity Row Controls */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 bg-muted rounded-2xl px-2 py-1 h-12">
+                  <div className="flex items-center gap-3 bg-muted dark:bg-zinc-900 rounded-2xl px-2 py-1 h-12 border border-zinc-200/20">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-10 w-10 rounded-xl hover:bg-white/80 dark:hover:bg-white/10"
+                      className="h-10 w-10 rounded-xl hover:bg-white/80 dark:hover:bg-zinc-800"
                       onClick={onDecrement}
                     >
-                      <Minus className="w-5 h-5" />
+                      <Minus className="w-4 h-4" />
                     </Button>
                     <motion.span
                       key={quantity}
-                      initial={{ scale: 1.4, opacity: 0 }}
+                      initial={{ scale: 1.25, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="w-8 text-center font-black text-lg"
+                      className="w-8 text-center font-black text-lg text-zinc-900 dark:text-zinc-100"
                     >
                       {quantity}
                     </motion.span>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-10 w-10 rounded-xl hover:bg-white/80 dark:hover:bg-white/10"
+                      className="h-10 w-10 rounded-xl hover:bg-white/80 dark:hover:bg-zinc-800"
                       onClick={onIncrement}
                     >
-                      <Plus className="w-5 h-5" />
+                      <Plus className="w-4 h-4" />
                     </Button>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-muted-foreground">Total</span>
-                    <p className="text-lg font-black text-[#008c4a]">
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Subtotal</span>
+                    <p className="text-xl font-black text-[#008c4a] dark:text-[#10b981]">
                       {currencySymbol}{(Number(item.price) * quantity).toFixed(0)}
                     </p>
                   </div>
                 </div>
 
-                {/* View Cart button */}
+                {/* View Cart Button */}
                 <Button 
                   onClick={onViewCart || onClose}
-                  className="w-full bg-[#008c4a] hover:bg-[#00703b] text-white rounded-2xl h-12 font-bold text-sm shadow-lg shadow-[#008c4a]/20 gap-2"
+                  className="w-full bg-[#008c4a] hover:bg-[#00703b] text-white rounded-2xl h-12 font-extrabold text-sm shadow-md shadow-[#008c4a]/10 gap-2 transition-transform active:scale-[0.98]"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   View Cart
