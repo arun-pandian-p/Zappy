@@ -53,6 +53,8 @@ import { PostOrderReviewPrompt } from '@/components/order/PostOrderReviewPrompt'
 import { RecommendationsSection } from '@/components/menu/RecommendationsSection';
 import { ItemDetailsDialog } from '@/components/menu/ItemDetailsDialog';
 import { MenuGridSkeleton, MenuListSkeleton } from '@/components/menu/MenuSkeletons';
+import { notificationService, type NotificationType } from '@/services/notificationService';
+import { NotificationBar } from '@/components/menu/NotificationBar';
 
 type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
 
@@ -112,6 +114,13 @@ const CustomerMenu = () => {
   const isPreviewMode = false;
   const showTablePicker = !dynamicTableId && !!restaurantId;
   const { toast } = useToast();
+
+  const [activeNotification, setActiveNotification] = useState<{
+    id: string;
+    title: string;
+    message: string;
+    type: NotificationType;
+  } | null>(null);
 
   const [currentView, setCurrentView] = useState<ViewType>('menu');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -348,51 +357,79 @@ const CustomerMenu = () => {
     );
   }, [customerOrders]);
 
-  // ===== Order status sound notifications =====
+  // ===== Upgraded Realtime Sound & Immersive Haptic Order Notification System =====
   const prevOrderStatusRef = useRef<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const currentStatus = activeOrder?.status || null;
     const prevStatus = prevOrderStatusRef.current;
 
-    if (prevStatus && currentStatus && prevStatus !== currentStatus) {
-      // Play sound on meaningful status transitions
+    if (prevStatus && currentStatus && prevStatus !== currentStatus && activeOrder) {
       const soundStatuses = ['accepted', 'preparing', 'ready', 'served', 'completed'];
+      
       if (soundStatuses.includes(currentStatus)) {
-        try {
-          if (audioRef.current) {
-            audioRef.current.pause();
+        const dedupeId = `${activeOrder.id}_${currentStatus}`;
+        
+        if (notificationService.shouldTrigger(dedupeId)) {
+          // Resolve matching category configs
+          let eventType: NotificationType = 'received';
+          let title = 'Order Update';
+          let message = `Your order status changed to ${currentStatus}.`;
+
+          if (currentStatus === 'accepted') {
+            eventType = 'received';
+            title = '✅ Order Accepted';
+            message = 'Our kitchen team has received and verified your order. Prep starts now!';
+          } else if (currentStatus === 'preparing') {
+            eventType = 'preparing';
+            title = '👨‍🍳 Chef is Preparing!';
+            message = 'Your freshly ordered dishes are currently in the hot pan. Smells amazing!';
+          } else if (currentStatus === 'ready') {
+            eventType = 'ready';
+            title = '🔔 Order Ready to Serve!';
+            message = 'Your delicious meal is ready to be served. Our waitstaff is bringing it hot!';
+          } else if (currentStatus === 'served') {
+            eventType = 'delivered';
+            title = '🍽️ Order Served';
+            message = `Enjoy your meal! Your hot food has been served at Table ${tableNumber || 'N/A'}.`;
+          } else if (currentStatus === 'completed') {
+            eventType = 'delivered';
+            title = '✨ Meal Completed';
+            message = 'Thank you for dining with us! We hope you loved your culinary experience.';
           }
-          const sound = currentStatus === 'ready' ? SOUNDS.ORDER_READY : SOUNDS.NEW_ORDER;
-          audioRef.current = new Audio(sound);
-          audioRef.current.volume = 0.6;
-          audioRef.current.play().catch(() => {});
-        } catch {}
 
-        // Also show a toast notification
-        const statusLabels: Record<string, string> = {
-          accepted: '✅ Order Accepted',
-          preparing: '👨‍🍳 Preparing Your Food',
-          ready: '🔔 Your Order is Ready!',
-          served: '🍽️ Order Served',
-          completed: '✨ Order Complete',
-        };
-        toast({
-          title: statusLabels[currentStatus] || 'Order Updated',
-          description: `Your order status changed to ${currentStatus}.`,
-        });
+          // 1. Play Dynamic Tone / Buzz Haptic Fallback
+          notificationService.playSound(eventType, restaurantId);
 
-        // Auto-trigger review prompt when order is served
-        if (currentStatus === 'served' && activeOrder?.id) {
-          setReviewOrderId(activeOrder.id);
-          setReviewImmediate(false); // use delay
+          // 2. Trigger Premium UI Slides Down
+          setActiveNotification({
+            id: dedupeId,
+            title,
+            message,
+            type: eventType
+          });
+
+          // 3. Log / Sync public notification record in DB (RLS Protected)
+          notificationService.logNotification({
+            restaurant_id: restaurantId || '',
+            table_id: dynamicTableId || undefined,
+            order_id: activeOrder.id,
+            title,
+            message,
+            event_type: eventType
+          });
+
+          // Auto-trigger review prompt when order is served
+          if (currentStatus === 'served') {
+            setReviewOrderId(activeOrder.id);
+            setReviewImmediate(false);
+          }
         }
       }
     }
 
     prevOrderStatusRef.current = currentStatus;
-  }, [activeOrder?.status, toast]);
+  }, [activeOrder?.status, restaurantId, dynamicTableId, tableNumber]);
 
 
   const estimatedPrepTime = useMemo(() => {
@@ -1166,6 +1203,23 @@ const CustomerMenu = () => {
           delayMs={reviewImmediate ? 0 : 5000}
         />
       )}
+
+      {/* Realtime Animated Order Notification Bar Overlay */}
+      <AnimatePresence>
+        {activeNotification && (
+          <NotificationBar
+            id={activeNotification.id}
+            title={activeNotification.title}
+            message={activeNotification.message}
+            type={activeNotification.type}
+            onDismiss={() => setActiveNotification(null)}
+            onActionClick={() => {
+              setCurrentView('orders');
+              setActiveNotification(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
     </TenantThemeProvider>
   );
