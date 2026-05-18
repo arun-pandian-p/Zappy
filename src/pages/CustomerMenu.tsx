@@ -669,7 +669,7 @@ const CustomerMenu = () => {
     <div>
 
       {/* Search + Scan QR */}
-      <div className="sticky top-[73px] z-30 bg-background pb-4 -mx-4 px-4 pt-2 transition-all duration-300">
+      <div className="sticky top-[56px] z-30 bg-background pb-3 -mx-4 px-4 pt-2 transition-all duration-300">
         <div className="flex items-center gap-3 mb-4">
           <div className="relative flex-1 flex items-center group">
             <Search className="absolute left-4 w-5 h-5 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
@@ -1060,7 +1060,7 @@ const CustomerMenu = () => {
       primaryColor={splashColor}
       isLoading={!!isDataLoading}
     />
-    <div className="min-h-screen bg-background pb-[140px] overflow-x-hidden w-full relative">
+    <div className="min-h-screen bg-background pb-[140px] w-full relative">
       {/* Table Picker Dialog */}
       <TablePickerDialog
         open={showTablePicker}
@@ -1108,7 +1108,7 @@ const CustomerMenu = () => {
       />
 
       {/* Content */}
-      <main className="container mx-auto px-4 pt-0 pb-4">
+      <main className="w-full px-4 pt-0 pb-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentView}

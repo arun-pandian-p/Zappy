@@ -65,14 +65,14 @@ export function CustomerTopBar({
       {/* Banner Image — smoothly collapses on scroll */}
       {bannerImageUrl && !bannerFailed && (
         <motion.div
-          animate={{ height: isScrolled ? 0 : 120, opacity: isScrolled ? 0 : 1 }}
+          animate={{ height: isScrolled ? 0 : 80, opacity: isScrolled ? 0 : 1 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="relative w-full overflow-hidden"
         >
           <img
             src={bannerImageUrl}
             alt=""
-            className="w-full h-[120px] object-cover"
+            className="w-full h-[80px] object-cover"
             onError={() => setBannerFailed(true)}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
@@ -85,8 +85,8 @@ export function CustomerTopBar({
           isScrolled
             ? "bg-card/95 backdrop-blur-xl shadow-sm py-2"
             : bannerImageUrl
-            ? "bg-card/90 backdrop-blur-md py-2.5"
-            : "bg-card py-2.5"
+            ? "bg-card/90 backdrop-blur-md py-2"
+            : "bg-card py-2"
         }`}
       >
         <div className="container mx-auto px-4">

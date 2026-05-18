@@ -40,7 +40,7 @@ export function PromotionCarousel({
 }: PromotionCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
-    align: 'start',
+    align: 'center',
     skipSnaps: false,
   });
 
@@ -105,7 +105,7 @@ export function PromotionCarousel({
       onTouchEnd={() => setIsPaused(false)}
     >
       {/* Horizontal Carousel Viewport with -mx-4 px-4 for beautiful unclipped edge overflows */}
-      <div className="overflow-hidden -mx-4 px-4" ref={emblaRef}>
+      <div className="overflow-visible -mx-4 px-4" ref={emblaRef}>
         <div className="flex select-none gap-4">
           {promotions.map((promo, idx) => (
             <CarouselCard

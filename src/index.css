@@ -365,12 +365,4 @@
   animation: marquee-slow 30s linear infinite;
 }
 
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .animate-marquee,
-  .animate-marquee-slow,
-  .animate-pulse-ring,
-  .animate-gradient-shift {
-    animation: none !important;
-  }
-}
+
