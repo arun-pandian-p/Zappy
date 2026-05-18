@@ -34,7 +34,7 @@ export function BottomNav({
     <motion.nav 
       animate={{ y: 0, scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 280, damping: 25 }}
-      className="fixed bottom-5 left-4 right-4 mx-auto max-w-[420px] z-50 bg-slate-950/95 border border-emerald-500/20 rounded-[28px] shadow-[0_24px_60px_rgba(0,0,0,0.45)] p-2 backdrop-blur-2xl"
+      className="fixed bottom-0 md:bottom-5 left-0 md:left-4 right-0 md:right-4 mx-auto w-full md:max-w-[420px] z-50 bg-slate-950/95 border-t md:border border-emerald-500/20 rounded-none md:rounded-[28px] shadow-[0_24px_60px_rgba(0,0,0,0.45)] p-2 pb-safe backdrop-blur-2xl"
       style={{ minHeight: '64px' }}
     >
       {/* Ambient background glow behind the active items */}
