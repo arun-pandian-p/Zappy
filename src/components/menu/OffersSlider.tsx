@@ -9,6 +9,9 @@ interface OffersSliderProps {
 }
 
 export function OffersSlider({ offers, onOfferClick }: OffersSliderProps) {
+  // Only render offers that contain a valid background image to avoid empty/placeholder banners
+  const validOffers = offers.filter((offer) => !!offer.image_url);
+
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
     align: "start",
@@ -17,37 +20,31 @@ export function OffersSlider({ offers, onOfferClick }: OffersSliderProps) {
 
   // Auto-play
   useEffect(() => {
-    if (!emblaApi || offers.length <= 1) return;
+    if (!emblaApi || validOffers.length <= 1) return;
     const interval = setInterval(() => {
       emblaApi.scrollNext();
     }, 4000);
     return () => clearInterval(interval);
-  }, [emblaApi, offers.length]);
+  }, [emblaApi, validOffers.length]);
 
-  if (offers.length === 0) return null;
+  if (validOffers.length === 0) return null;
 
   return (
     <div className="w-full px-4 mb-4">
       <div className="overflow-hidden rounded-2xl" ref={emblaRef}>
         <div className="flex select-none">
-          {offers.map((offer) => (
+          {validOffers.map((offer) => (
             <div
               key={offer.id}
               className="flex-[0_0_90%] min-w-0 pr-3 cursor-pointer"
               onClick={() => onOfferClick?.(offer)}
             >
               <div className="relative rounded-2xl overflow-hidden bg-[#f0f4f1] aspect-[21/9] shadow-sm border border-black/5">
-                {offer.image_url ? (
-                  <img
-                    src={offer.image_url}
-                    alt={offer.title}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#e8f5e9] to-[#c8e6c9] flex items-center justify-center">
-                    <span className="text-3xl">🎁</span>
-                  </div>
-                )}
+                <img
+                  src={offer.image_url!}
+                  alt={offer.title}
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                />
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
