@@ -23,7 +23,7 @@ export function FloatingCartBar({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          className="fixed bottom-[85px] left-0 right-0 z-40 flex justify-center pointer-events-none"
+          className="fixed bottom-[calc(max(16px,env(safe-area-inset-bottom))+88px)] left-0 right-0 z-40 flex justify-center pointer-events-none"
         >
           {/* Decorative background leaves */}
           <div className="absolute top-1/2 -translate-y-1/2 w-[280px] h-[60px] flex justify-between px-2">
