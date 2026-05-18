@@ -45,6 +45,7 @@ import { FoodCard } from '@/components/menu/FoodCard';
 import { OrderStatusPipeline } from '@/components/menu/OrderStatusPipeline';
 import { analyticsService } from '@/services/analyticsService';
 import { OffersSlider } from '@/components/menu/OffersSlider';
+import { RecommendedSlider } from '@/components/menu/RecommendedSlider';
 import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { SOUNDS } from '@/hooks/useSound';
@@ -332,6 +333,13 @@ const CustomerMenu = () => {
       return matchesCategory && matchesSearch;
     });
   }, [availableMenuItems, selectedCategory, searchQuery]);
+
+  const recommendedItems = useMemo(() => {
+    // Return items that have is_popular === true, or fall back to the first 6 items in menuItems
+    const popular = menuItems.filter(item => item.is_popular && item.is_available);
+    if (popular.length > 0) return popular;
+    return menuItems.filter(item => item.is_available).slice(0, 6);
+  }, [menuItems]);
 
   // Find active order (including served so we can track the transition)
   const activeOrder = useMemo(() => {
@@ -711,22 +719,39 @@ const CustomerMenu = () => {
         />
       )}
 
-      {/* Recommended Section Header */}
-      <div className="flex items-center justify-between mt-6 mb-4">
-        <h3 className="font-extrabold text-xl text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5 tracking-tight">
-          Recommended for you <span className="text-emerald-500 text-lg">✨</span>
-        </h3>
-        <button className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 hover:text-emerald-500 hover:underline transition-colors">
-          View all
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-        </button>
-      </div>
-
       {/* Dynamic Offers Slider (Promotions) */}
       {offers && offers.length > 0 && (
         <div className="mb-6 -mx-4 px-4">
           <OffersSlider offers={offers} />
         </div>
+      )}
+
+      {/* Recommended Section Header */}
+      {recommendedItems.length > 0 && (
+        <>
+          <div className="flex items-center justify-between mt-6 mb-4">
+            <h3 className="font-extrabold text-xl text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5 tracking-tight">
+              Recommended for you <span className="text-emerald-500 text-lg">✨</span>
+            </h3>
+            <button
+              onClick={() => setSelectedCategory('All')}
+              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 hover:text-emerald-500 hover:underline transition-colors"
+            >
+              View all
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+
+          <RecommendedSlider
+            items={recommendedItems}
+            currencySymbol={currencySymbol}
+            getItemQuantity={getItemQuantity}
+            onAdd={handleAddToCart}
+            onIncrement={(item) => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) + 1)}
+            onDecrement={(item) => updateQuantity(getItemCartKey(item.id), getItemQuantity(item.id) - 1)}
+            onItemClick={(item) => setSelectedItemForDetails(item)}
+          />
+        </>
       )}
 
 
