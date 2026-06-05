@@ -60,8 +60,8 @@ BEGIN
     subscription_tier, is_active, ads_enabled, onboarding_completed
   ) VALUES (
     v_restaurant_id,
-    'Admin123 Restaurant',
-    'admin123-restaurant',
+    'Zappy Demo Restaurant',
+    'zappy-demo',
     'A premium dining experience with QR-based ordering. Fresh ingredients, bold flavors.',
     '123 Food Street, Bengaluru, Karnataka 560001',
     '+91 98765 43210',
