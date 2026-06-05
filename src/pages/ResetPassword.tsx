@@ -16,20 +16,42 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    // Listen for the PASSWORD_RECOVERY event from the magic link
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+    const checkRecovery = async () => {
+      try {
+        const hash = window.location.hash || "";
+        const search = window.location.search || "";
+        
+        // Immediately allow if URL contains valid recovery params
+        if (
+          hash.includes("type=recovery") || 
+          hash.includes("access_token=") || 
+          search.includes("type=recovery") || 
+          search.includes("code=")
+        ) {
+          setIsRecovery(true);
+          return;
+        }
+
+        // Fallback: check if we already have an active session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (session && !error) {
+          setIsRecovery(true);
+        }
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkRecovery();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
         setIsRecovery(true);
       }
     });
-
-    // Also check hash for type=recovery
-    const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
-      setIsRecovery(true);
-    }
 
     return () => subscription.unsubscribe();
   }, []);
@@ -55,6 +77,17 @@ const ResetPassword = () => {
     }
     setLoading(false);
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-[420px] text-center space-y-4">
+          <h2 className="text-xl font-bold text-slate-800">Verifying link...</h2>
+          <p className="text-slate-500 text-sm">Please wait while we verify your password reset link.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isRecovery) {
     return (

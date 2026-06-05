@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { ImageCropDialog } from "@/components/admin/ImageCropDialog";
+import { BannerLogoUploader } from "@/components/admin/BannerLogoUploader";
 import {
   Select,
   SelectContent,
@@ -546,7 +547,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                 maxSizeMB={10}
                 enableCrop
                 cropShape="rect"
-                cropAspect={3}
+                cropAspect={4}
               />
             </div>
 
@@ -570,16 +571,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
 
             <Separator />
 
-            {/* Menu Title */}
-            <div className="space-y-2">
-              <Label>Menu Title</Label>
-              <Input
-                value={settings.menu_title}
-                onChange={(e) => setSettings({ ...settings, menu_title: e.target.value })}
-                placeholder="e.g. Our Menu, Today's Specials"
-              />
-              <p className="text-xs text-muted-foreground">Custom heading displayed above menu categories. Leave empty for default.</p>
-            </div>
+
 
             {/* Live preview */}
             <div className="rounded-lg border overflow-hidden bg-muted/30">

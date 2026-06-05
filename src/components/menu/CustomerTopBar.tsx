@@ -85,6 +85,13 @@ export function CustomerTopBar({
     });
   }, [tableNumber]);
 
+  // Sync SEO / tab title with restaurant name dynamically
+  useEffect(() => {
+    if (restaurantName) {
+      document.title = `${restaurantName} | Digital Menu & Order`;
+    }
+  }, [restaurantName]);
+
   useEffect(() => {
     const unsubscribe = scrollY.on("change", (v) => setIsScrolled(v > 30));
     return () => unsubscribe();
@@ -95,32 +102,36 @@ export function CustomerTopBar({
 
   return (
     <div className="sticky top-0 z-50">
-      {/* Banner Image — collapses on scroll */}
       {/* Banner Image — smoothly collapses on scroll */}
-      {bannerImageUrl && !bannerFailed && (
-        <motion.div
-          animate={{ height: isScrolled ? 0 : 80, opacity: isScrolled ? 0 : 1 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="relative w-full overflow-hidden"
-        >
+      <motion.div
+        animate={{ height: isScrolled ? 0 : 80, opacity: isScrolled ? 0 : 1 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="relative w-full overflow-hidden"
+      >
+        {bannerImageUrl && !bannerFailed ? (
           <img
             src={bannerImageUrl}
             alt=""
             className="w-full h-[80px] object-cover"
             onError={() => setBannerFailed(true)}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
-        </motion.div>
-      )}
+        ) : (
+          <div 
+            className="w-full h-[80px] transition-all"
+            style={{
+              background: `linear-gradient(135deg, ${primaryColor || '#10B981'} 0%, #065F46 100%)`
+            }}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+      </motion.div>
 
       {/* Top Bar */}
       <motion.header
         className={`transition-all duration-300 border-b ${
           isScrolled
             ? "bg-card/95 backdrop-blur-xl shadow-sm py-2"
-            : bannerImageUrl
-            ? "bg-card/90 backdrop-blur-md py-2"
-            : "bg-card py-2"
+            : "bg-card/90 backdrop-blur-md py-2"
         }`}
       >
         <div className="container mx-auto px-4">

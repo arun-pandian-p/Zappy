@@ -329,9 +329,11 @@ const CustomerMenu = () => {
   );
 
   // Build category list with "All" option
-  const categoryNames = useMemo(() => {
-    const names = ['All', ...categories.map(c => c.name)];
-    return names;
+  const categoryObjects = useMemo(() => {
+    return [
+      { id: 'all', name: 'All', image_url: null },
+      ...categories.map(c => ({ id: c.id, name: c.name, image_url: c.image_url }))
+    ];
   }, [categories]);
 
   // Filter items
@@ -650,7 +652,7 @@ const CustomerMenu = () => {
       {/* Banner */}
       {restaurant?.banner_image_url && (
         <div className="rounded-2xl overflow-hidden -mx-4 -mt-4 mb-4">
-          <img src={restaurant.banner_image_url} alt="Banner" className="w-full h-44 object-cover" />
+          <img src={cacheBustUrl(restaurant.banner_image_url)} alt="Banner" className="w-full h-44 object-cover" />
         </div>
       )}
 
@@ -729,7 +731,7 @@ const CustomerMenu = () => {
 
         {/* Categories */}
         <CategorySlider
-          categories={categoryNames}
+          categories={categoryObjects}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
         />
