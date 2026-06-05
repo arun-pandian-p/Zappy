@@ -427,6 +427,7 @@ export const EXPLICIT_EDGES: Edge[] = [
   { source: "biryani", target: "falooda", weight: 0.8, reason: "Traditional rich sweet finish", type: "dessert" },
   
   { source: "idli", target: "tiffin_sambar", weight: 0.99, reason: "Classic combination", type: "side" },
+  { source: "idli", target: "sambar", weight: 0.99, reason: "Classic combination", type: "side" },
   { source: "idli", target: "coconut_chutney", weight: 0.98, reason: "Essential South Indian dip", type: "side" },
   { source: "idli", target: "vada", weight: 0.9, reason: "Make it a complete breakfast", type: "combo" },
   { source: "idli", target: "filter_coffee", weight: 0.9, reason: "Complete the South Indian breakfast", type: "drink" },

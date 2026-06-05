@@ -52,11 +52,18 @@ export async function analyzeReviewSentiment(
     if (positive_highlights.length > 0) sentimentScore += 0.3;
     
     // Critical escalation
-    if (keywords.refund_intent.some(k => text.includes(k)) || rating === 1) {
+    if (keywords.refund_intent.some(k => text.includes(k))) {
       sentiment = 'angry';
       requires_manager_attention = true;
       sentimentScore = -1.0;
     }
+  }
+
+  // Critical escalation check (even if no comment text)
+  if (rating === 1) {
+    sentiment = 'angry';
+    requires_manager_attention = true;
+    sentimentScore = -1.0;
   }
 
   // Finalize Sentiment

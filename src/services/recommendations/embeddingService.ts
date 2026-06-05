@@ -59,6 +59,14 @@ for (const term of VOCABULARY) {
  * Generate a Sparse TF-IDF Embedding Vector for a given food node.
  */
 export function generateEmbedding(node: FoodNode | string): Vector {
+  if (typeof node === "string") {
+    const key = node.toLowerCase().replace(/\s+/g, '_');
+    const matchedNode = FOOD_NODES[key] || Object.values(FOOD_NODES).find(n => n.name.toLowerCase() === node.toLowerCase());
+    if (matchedNode) {
+      return generateEmbedding(matchedNode);
+    }
+  }
+
   let targetNode: FoodNode | undefined;
   
   if (typeof node === "string") {
