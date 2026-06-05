@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AnimatedHotelName, type LetterAnimation, type AnimationSpeed } from "@/components/branding/AnimatedHotelName";
 import { MascotIcon, type MascotType } from "@/components/branding/MascotIcon";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BrandingConfig {
   animation_enabled?: boolean;
@@ -49,15 +50,48 @@ export function CustomerTopBar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
   const [bannerFailed, setBannerFailed] = useState(false);
+  const [customerName, setCustomerName] = useState<string>("");
+  const [avatarSeed, setAvatarSeed] = useState<string>("Guest");
 
   // Reset fallback states when URLs change (tenant switch)
   useEffect(() => { setLogoFailed(false); }, [logoUrl]);
   useEffect(() => { setBannerFailed(false); }, [bannerImageUrl]);
 
+  // Fetch logged-in customer name from Supabase auth
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const user = data?.user;
+      if (user) {
+        // Use display name → full name → email prefix
+        const name =
+          user.user_metadata?.name ||
+          user.user_metadata?.full_name ||
+          user.user_metadata?.display_name ||
+          user.email?.split("@")[0] ||
+          "Guest";
+        // Capitalize first letter of each word
+        const formatted = name
+          .split(/[\s._-]+/)
+          .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ");
+        setCustomerName(formatted);
+        setAvatarSeed(user.id || formatted);
+      } else {
+        // Not logged in — use table-based consistent guest name
+        const guestSeed = tableNumber || "Guest";
+        setCustomerName("Guest");
+        setAvatarSeed(guestSeed);
+      }
+    });
+  }, [tableNumber]);
+
   useEffect(() => {
     const unsubscribe = scrollY.on("change", (v) => setIsScrolled(v > 30));
     return () => unsubscribe();
   }, [scrollY]);
+
+  const displayName = customerName || "Guest";
+  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(avatarSeed)}`;
 
   return (
     <div className="sticky top-0 z-50">
@@ -94,13 +128,13 @@ export function CustomerTopBar({
             {/* Left: Avatar + Greeting + Table */}
             <div className="flex items-center gap-3 min-w-0">
               <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Breeze"
+                src={avatarUrl}
                 alt="User Avatar"
                 className="w-12 h-12 rounded-full border border-border bg-muted object-cover"
               />
               <div className="flex flex-col min-w-0">
                 <h1 className="font-medium text-sm text-muted-foreground flex items-center gap-1 truncate">
-                  Hello, <span className="font-bold text-foreground text-base">Breeze Bhai</span> <span className="text-base">👋</span>
+                  Hello, <span className="font-bold text-foreground text-base">{displayName}</span> <span className="text-base">👋</span>
                 </h1>
                 {tableNumber && (
                   <div className="mt-0.5">
@@ -147,3 +181,4 @@ export function CustomerTopBar({
     </div>
   );
 }
+
