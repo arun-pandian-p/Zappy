@@ -52,7 +52,8 @@ function resolveDynamicNode(name: string): FoodNode {
 export function scoreRecommendations(
   targetItems: string[],
   context: CartContext,
-  availableMenuNames: string[]
+  availableMenuNames: string[],
+  dbPairings?: { sourceName: string; targetName: string; weight: number }[]
 ): RecommendationResult[] {
   const scores = new Map<string, RecommendationResult>();
 
@@ -110,6 +111,20 @@ export function scoreRecommendations(
         totalScore += edge.weight * DEFAULT_WEIGHTS.explicit;
         reason = edge.reason;
         confidence = Math.max(confidence, edge.weight);
+      }
+    }
+
+    // 2b. Database Explicit Pairings (Highly weighted)
+    if (dbPairings) {
+      for (const pairing of dbPairings) {
+        const cartHasSource = normalizedTargetNames.some(t => t.includes(pairing.sourceName.toLowerCase()) || pairing.sourceName.toLowerCase().includes(t));
+        const candidateIsTarget = node.name.toLowerCase().includes(pairing.targetName.toLowerCase()) || pairing.targetName.toLowerCase().includes(node.name.toLowerCase());
+        
+        if (cartHasSource && candidateIsTarget) {
+          totalScore += Number(pairing.weight) * DEFAULT_WEIGHTS.explicit;
+          reason = `Pairs perfectly (restaurant choice)`;
+          confidence = Math.max(confidence, Number(pairing.weight));
+        }
       }
     }
 

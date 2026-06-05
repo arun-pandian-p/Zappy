@@ -68,17 +68,6 @@ export function useOrders(restaurantId?: string, status?: OrderStatus | OrderSta
           queryClient.invalidateQueries({ queryKey: ["orders", restaurantId] });
         }
       )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "order_items",
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["orders", restaurantId] });
-        }
-      )
       .subscribe();
 
     return () => {

@@ -10,6 +10,8 @@ import { ImageUpload } from "@/components/admin/ImageUpload";
 import { useUpdateMenuItem, type MenuItem, type Category } from "@/hooks/useMenuItems";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save } from "lucide-react";
+import { sanitize } from "@/utils/sanitize";
+
 
 interface EditMenuItemDialogProps {
   open: boolean;
@@ -56,11 +58,13 @@ export function EditMenuItemDialog({ open, onOpenChange, item, categories, resta
     }
 
     try {
+      const cleanName = sanitize(form.name);
+      const cleanDesc = form.description ? sanitize(form.description) : null;
       await updateMenuItem.mutateAsync({
         id: item.id,
         updates: {
-          name: form.name,
-          description: form.description || null,
+          name: cleanName,
+          description: cleanDesc,
           price: parseFloat(form.price),
           category_id: form.category_id || null,
           image_url: form.image_url || null,
@@ -69,7 +73,7 @@ export function EditMenuItemDialog({ open, onOpenChange, item, categories, resta
           prep_time_minutes: parseInt(form.prep_time_minutes) || 15,
         },
       });
-      toast({ title: "Item Updated", description: `${form.name} has been updated.` });
+      toast({ title: "Item Updated", description: `${cleanName} has been updated.` });
       onOpenChange(false);
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to update item.", variant: "destructive" });

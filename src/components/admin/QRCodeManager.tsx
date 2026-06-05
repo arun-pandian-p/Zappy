@@ -56,7 +56,7 @@ import { format } from "date-fns";
 import { getAppOrigin } from "@/utils/url";
 
 const DEFAULT_BASE_URL = getAppOrigin();
-const REDIRECT_BASE = "https://syvoshzxoedamaijongb.supabase.co/functions/v1/qr-redirect";
+const REDIRECT_BASE = `${import.meta.env.VITE_SUPABASE_URL || "https://copkzrwvpqfjpsyyyqdy.supabase.co"}/functions/v1/qr-redirect`;
 
 interface QRCodeManagerProps {
   restaurantId: string;
@@ -282,7 +282,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
             <QRCodeSVG value={getQRValue(qr)} size={48} level="M" fgColor={meta.fg_color || "#000000"} bgColor={meta.bg_color || "#FFFFFF"} />
           </div>
           <div ref={(el) => { canvasRefs.current[qr.id] = el; }} className="hidden">
-            <QRCodeCanvas value={getQRValue(qr)} size={512} level="H" includeMargin fgColor={meta.fg_color || "#000000"} bgColor={meta.bg_color || "#FFFFFF"} />
+            <QRCodeCanvas value={getQRValue(qr)} size={1200} level="H" includeMargin fgColor={meta.fg_color || "#000000"} bgColor={meta.bg_color || "#FFFFFF"} />
           </div>
         </TableCell>
         <TableCell className="font-medium">{qr.qr_name}</TableCell>
@@ -443,7 +443,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
                 ref={(el) => { canvasRefs.current[baseQR.id] = el; }}
                 className="hidden"
               >
-                <QRCodeCanvas value={getQRValue(baseQR)} size={512} level="H" includeMargin />
+                <QRCodeCanvas value={getQRValue(baseQR)} size={1200} level="H" includeMargin />
               </div>
               <div className="flex-1 space-y-3">
                 <div className="flex items-center gap-2">

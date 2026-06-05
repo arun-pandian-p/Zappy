@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getCartRecommendations, type Recommendation } from "@/services/recommendationService";
 import type { MenuItem } from "@/hooks/useMenuItems";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RecommendationsSectionProps {
+  restaurantId?: string;
   cartItemNames: string[];
   allMenuItems: MenuItem[];
   onAddItem: (itemId: string) => void;
@@ -66,14 +69,42 @@ function getTypeLabel(type: Recommendation["type"]) {
 }
 
 export function RecommendationsSection({
+  restaurantId,
   cartItemNames,
   allMenuItems,
   onAddItem,
   currencySymbol = "₹"
 }: RecommendationsSectionProps) {
+  const { data: dbPairings = [] } = useQuery({
+    queryKey: ["food-pairings", restaurantId],
+    queryFn: async () => {
+      if (!restaurantId) return [];
+      const { data, error } = await supabase
+        .from("food_pairings")
+        .select(`
+          weight,
+          item:menu_items!item_id (name),
+          paired_item:menu_items!paired_item_id (name)
+        `)
+        .eq("restaurant_id", restaurantId);
+      
+      if (error) {
+        console.error("Error fetching food pairings:", error);
+        return [];
+      }
+      return (data || []).map((p: any) => ({
+        sourceName: p.item?.name || "",
+        targetName: p.paired_item?.name || "",
+        weight: Number(p.weight) || 1.0
+      }));
+    },
+    enabled: !!restaurantId,
+  });
+
   const recommendations = getCartRecommendations(
     cartItemNames, 
-    allMenuItems.map(i => i.name)
+    allMenuItems.map(i => i.name),
+    dbPairings
   );
 
   if (recommendations.length === 0) return null;

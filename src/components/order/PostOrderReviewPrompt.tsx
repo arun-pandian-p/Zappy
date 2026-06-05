@@ -64,6 +64,11 @@ export const PostOrderReviewPrompt = ({
   }, [orderId]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (localStorage.getItem(storageKey) === 'true' || sessionStorage.getItem(`reviewed_${orderId}`) === 'true') {
+      return;
+    }
+
     if (immediate) {
       setIsOpen(true);
       return;
@@ -170,12 +175,19 @@ export const PostOrderReviewPrompt = ({
   };
 
   const handleClose = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`reviewed_${orderId}`, 'true');
+      localStorage.setItem(storageKey, 'true');
+    }
     setIsOpen(false);
     setStep('done');
     if (onClose) onClose();
   };
 
-  if (step === 'done') return null;
+  const isReviewed = typeof window !== 'undefined' && 
+    (localStorage.getItem(storageKey) === 'true' || sessionStorage.getItem(`reviewed_${orderId}`) === 'true');
+
+  if (isReviewed || step === 'done') return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>

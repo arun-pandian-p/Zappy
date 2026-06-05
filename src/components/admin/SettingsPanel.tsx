@@ -49,6 +49,8 @@ import { useRestaurantDetails, useUpdateRestaurant } from "@/hooks/useRestaurant
 import { useToast } from "@/hooks/use-toast";
 import { usePrinter } from "@/hooks/usePrinter";
 import { getAppOrigin } from "@/utils/url";
+import { sanitize } from "@/utils/sanitize";
+
 
 interface SettingsPanelProps {
   restaurantId: string;
@@ -228,13 +230,20 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
     setIsSaving(true);
 
     try {
+      const cleanName = sanitize(settings.name);
+      const cleanAddress = sanitize(settings.address);
+      const cleanPhone = sanitize(settings.phone);
+      const cleanEmail = sanitize(settings.email);
+      const cleanMenuTitle = settings.menu_title ? sanitize(settings.menu_title) : null;
+      const cleanDisplayName = settings.admin_display_name ? sanitize(settings.admin_display_name) : "";
+
       await updateRestaurant.mutateAsync({
         id: restaurantId,
         updates: {
-          name: settings.name,
-          address: settings.address,
-          phone: settings.phone,
-          email: settings.email,
+          name: cleanName,
+          address: cleanAddress,
+          phone: cleanPhone,
+          email: cleanEmail,
           currency: settings.currency,
           tax_rate: settings.tax_rate,
           service_charge_rate: settings.service_charge_rate,
@@ -255,7 +264,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
             qr_base_url: settings.qr_base_url,
             branding: { ...settings.branding },
             admin_avatar: settings.admin_avatar,
-            admin_display_name: settings.admin_display_name,
+            admin_display_name: cleanDisplayName,
           } as any,
           primary_color: settings.primary_color,
           secondary_color: settings.secondary_color,
@@ -263,7 +272,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           logo_url: settings.logo_url || null,
           banner_image_url: settings.banner_image_url || null,
           favicon_url: settings.favicon_url || null,
-          menu_title: settings.menu_title || null,
+          menu_title: cleanMenuTitle,
           theme_config: {
             preset: settings.theme_preset,
             custom_primary: settings.theme_preset === 'custom' ? settings.primary_color : null,

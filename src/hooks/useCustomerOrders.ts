@@ -57,17 +57,6 @@ export function useCustomerOrders(restaurantId?: string, tableId?: string) {
           queryClient.invalidateQueries({ queryKey });
         }
       )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "order_items",
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey });
-        }
-      )
       .subscribe();
 
     return () => {

@@ -215,6 +215,7 @@ export function ItemDetailsDialog({
             {/* Contextual side-recommendations slider */}
             <div className="pt-2">
               <RecommendationsSection 
+                restaurantId={item.restaurant_id}
                 cartItemNames={[item.name]}
                 allMenuItems={allMenuItems}
                 onAddItem={(id) => {

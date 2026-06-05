@@ -21,7 +21,11 @@ export function getRecommendations(dishName: string): RecommendationResult[] {
 }
 
 // Legacy wrapper to support existing code
-export function getCartRecommendations(items: string[], availableItems: string[] = []): RecommendationResult[] {
+export function getCartRecommendations(
+  items: string[], 
+  availableItems: string[] = [],
+  dbPairings?: { sourceName: string; targetName: string; weight: number }[]
+): RecommendationResult[] {
   if (!items || items.length === 0) return [];
 
   const context: CartContext = {
@@ -30,7 +34,7 @@ export function getCartRecommendations(items: string[], availableItems: string[]
     weather: "normal" // Could be wired up to an API
   };
 
-  return scoreRecommendations(items, context, availableItems);
+  return scoreRecommendations(items, context, availableItems, dbPairings);
 }
 
 // Export intelligent sub-systems for future UI expansion

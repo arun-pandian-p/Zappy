@@ -42,6 +42,23 @@ export const ReputationManager = ({ restaurantId }: { restaurantId: string }) =>
     }
   });
 
+  const { data: ratingAggregate } = useQuery({
+    queryKey: ['restaurant_rating_aggregate', restaurantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mv_restaurant_ratings' as any)
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .maybeSingle();
+      if (error) {
+        console.error('Error fetching rating aggregate:', error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!restaurantId,
+  });
+
   const filteredReviews = useMemo(() => {
     return reviews.filter(r => {
       const insight = r.review_ai_insights?.[0];
@@ -55,9 +72,17 @@ export const ReputationManager = ({ restaurantId }: { restaurantId: string }) =>
 
   // Analytics
   const avgRating = useMemo(() => {
-    if (!reviews.length) return 0;
+    if (ratingAggregate) {
+      return Number(ratingAggregate.average_rating).toFixed(1);
+    }
+    if (!reviews.length) return '0.0';
     return (reviews.reduce((acc, r) => acc + r.overall_rating, 0) / reviews.length).toFixed(1);
-  }, [reviews]);
+  }, [reviews, ratingAggregate]);
+
+  const totalReviewsCount = useMemo(() => {
+    if (ratingAggregate) return ratingAggregate.total_reviews;
+    return reviews.length;
+  }, [reviews, ratingAggregate]);
 
   const totalComplaints = useMemo(() => reviews.filter(r => r.review_ai_insights?.[0]?.is_complaint).length, [reviews]);
 
@@ -95,7 +120,7 @@ export const ReputationManager = ({ restaurantId }: { restaurantId: string }) =>
               <span className="font-semibold">Average Rating</span>
             </div>
             <div className="text-3xl font-bold">{avgRating}</div>
-            <p className="text-sm text-muted-foreground mt-1">Based on {reviews.length} reviews</p>
+            <p className="text-sm text-muted-foreground mt-1">Based on {totalReviewsCount} reviews</p>
           </CardContent>
         </Card>
         <Card>

@@ -612,6 +612,23 @@ const CustomerMenu = () => {
 
 
   const isDataLoading = restaurantLoading || menuLoading || (dynamicTableId && tableLoading);
+  const isInvalidTable = dynamicTableId && !tableLoading && (!tableData || tableData.active === false);
+
+  if (isInvalidTable) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
+            <h2 className="text-lg font-semibold mb-2">Invalid or Inactive Table</h2>
+            <p className="text-muted-foreground mb-4">
+              This table is not valid or has been deactivated. Please ask the restaurant staff for assistance.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Error state
   if (!restaurantId) {
@@ -911,6 +928,7 @@ const CustomerMenu = () => {
 
           {/* Intelligent Recommendations */}
           <RecommendationsSection 
+            restaurantId={restaurantId}
             cartItemNames={cartItems.map(item => item.name)}
             allMenuItems={menuItems}
             onAddItem={(id) => {

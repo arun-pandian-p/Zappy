@@ -180,6 +180,17 @@ export function useTrackAdImpression() {
         .update({ impressions: (ad?.impressions || 0) + 1 })
         .eq("id", adId);
 
+      // Save to promotions_analytics
+      const sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('zappy_analytics_session') || 'unknown' : 'server';
+      await supabase
+        .from("promotions_analytics" as any)
+        .insert({
+          restaurant_id: ad?.restaurant_id || null,
+          promotion_id: adId,
+          event_type: 'impression',
+          session_id: sessionId
+        });
+
       // Async database event recording via analyticsService
       await analyticsService.trackEvent({
         campaignId: adId,
@@ -203,6 +214,17 @@ export function useTrackAdClick() {
         .from("ads")
         .update({ clicks: (ad?.clicks || 0) + 1 })
         .eq("id", adId);
+
+      // Save to promotions_analytics
+      const sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('zappy_analytics_session') || 'unknown' : 'server';
+      await supabase
+        .from("promotions_analytics" as any)
+        .insert({
+          restaurant_id: ad?.restaurant_id || null,
+          promotion_id: adId,
+          event_type: 'click',
+          session_id: sessionId
+        });
 
       // Async database event recording via analyticsService
       await analyticsService.trackEvent({
