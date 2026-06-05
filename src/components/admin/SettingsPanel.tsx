@@ -409,9 +409,8 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                         } : {}),
                       }));
                     }}
-                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${
-                      isSelected ? 'border-primary bg-primary/5 shadow-md' : 'border-border hover:border-muted-foreground/30'
-                    }`}
+                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${isSelected ? 'border-primary bg-primary/5 shadow-md' : 'border-border hover:border-muted-foreground/30'
+                      }`}
                   >
                     {isSelected && (
                       <div className="absolute top-2 right-2">

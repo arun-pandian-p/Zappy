@@ -5,12 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  useCategories, 
-  useCreateCategory, 
-  useUpdateCategory, 
+import {
+  useCategories,
+  useCreateCategory,
+  useUpdateCategory,
   useDeleteCategory,
-  type Category 
+  type Category
 } from '@/hooks/useCategories';
 
 interface CategoryManagerProps {
