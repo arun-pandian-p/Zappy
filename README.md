@@ -1,110 +1,144 @@
-# 🚀 Zappy: Enterprise Restaurant AI Operating System
+# 🍽️ Zappy: Multi-Tenant Restaurant Operating System
 
-Zappy is a comprehensive, multi-tenant SaaS platform that modernizes the entire restaurant lifecycle. From digital QR ordering and intelligent cart promotions to AI-driven kitchen displays and automated review recovery, Zappy provides an end-to-end ecosystem for modern food and beverage businesses.
-
----
-
-## 🌟 Core Architecture & Ecosystem Overview
-
-The application is broken down into several distinct portals and intelligence layers that synchronize in real-time via Supabase PostgreSQL and WebSockets.
-
-### 1. 🏢 Multi-Tenant SaaS Infrastructure
-*   **Superadmin Dashboard**: The central command center for Zappy operators. Manage all restaurant tenants, handle global platform analytics, approve/reject restaurant promotion campaigns, and oversee system health.
-*   **Feature Gating & Subscriptions**: Tiered access (Free, Basic, Premium, Enterprise) unlocks advanced features like AI insights, custom branding, and automated exports.
-*   **Global Ad Platform**: Superadmins can push platform-wide advertisements directly into the menus of participating restaurants.
-
-### 2. 🍽️ The Customer Menu (QR Ordering System)
-*   **Frictionless Ordering**: Scan a QR code to view a dynamic, visually stunning menu—no app download required.
-*   **Enterprise Promotion Engine**: A robust cart logic engine that evaluates active promotions, handles multi-level discount stacking, enforces minimum order values, and prevents conflict (e.g., stopping a user from combining mutually exclusive BOGO deals with a 20% off coupon).
-*   **AI Food Graph Recommendations**: Moving beyond static "upsells", Zappy uses a semantic relationship graph to analyze the user's cart in real-time. It suggests highly relevant pairings (e.g., suggesting a cooling beverage if a spicy main course is added) to maximize Average Order Value (AOV).
-*   **Live Order Tracking**: Customers receive real-time UI and audio feedback as their order transitions from *Preparing* to *Ready* to *Served*.
-
-### 3. 👨‍🍳 Staff Operations (Kitchen & Waitstaff)
-*   **Kitchen Display System (KDS)**: An embedded, real-time tablet interface for kitchen staff. Orders appear instantly. Kitchen staff can mark items as *Preparing* or *Ready*, triggering WebSockets that update the customer's phone instantly.
-*   **Waitstaff / Billing Counter**: Dedicated views for managing table sessions, handling cash/card transactions, finalizing invoices, and printing receipts.
-*   **Table Session Timers**: Admins can monitor how long tables have been occupied to optimize turnover rates.
-
-### 4. 🧠 Intelligence & AI Services Layer
-Zappy has moved away from external heavy dependencies (like Gemini) toward a fast, localized AI architecture processing data directly within the ecosystem.
-
-*   **Offline-First OCR Menu Importer**: Restaurant owners can upload raw PDFs or images of their old menus. The system uses robust local parsing logic to extract items, prices, and categories for instant menu generation.
-*   **Automated Food Image Generation**: When managers add items without photos, Zappy uses local image generation workflows to automatically generate high-quality, delicious-looking representations of the dishes.
-
-### 5. 🛡️ Intelligent Review & Reputation Management
-The most critical retention feature is Zappy's proactive damage-control ecosystem that intercepts bad experiences before they reach public platforms (like Google Reviews).
-
-*   **Gamified Post-Order Flow**: Exactly when the kitchen marks an order as `Served`, the customer receives a frictionless review prompt.
-*   **Heuristic Sentiment Analysis**: The engine parses customer text, extracting pain points (e.g., `food_cold`, `service_slow`) and generating compound sentiment scores (-1.0 to +1.0) without relying on slow external LLMs.
-*   **Automated Review Recovery**: If a customer leaves a negative review, the system automatically intervenes. Based on the severity, it issues a personalized apology and a unique discount coupon (e.g., `15% OFF`) to win them back instantly.
-*   **Smart Routing**: Satisfied customers (4-5 stars) are celebrated and smoothly redirected to Google Reviews, driving the restaurant's public ranking up. Angry customers are kept internal.
-*   **Reputation Center Dashboard**: Managers can view AI Insights, track resolved complaints, and monitor their overall sentiment distribution.
+Zappy is an enterprise-grade multi-tenant B2B SaaS platform that digitizes the entire restaurant dining experience. It features real-time QR ordering, dynamic promotion engines, data-driven food graphs, automated reputation management, and real-time kitchen display dashboards.
 
 ---
 
-## 🛠️ Technical Stack & Frameworks
+## 🔑 System User Credentials
 
-*   **Frontend**: React (Vite), TypeScript, Tailwind CSS, Framer Motion (Micro-animations)
-*   **UI Components**: Radix UI, Lucide Icons, Shadcn UI
-*   **State Management & Data Fetching**: TanStack React Query (`useQuery`, `useMutation`)
-*   **Backend & Database**: Supabase (PostgreSQL), Row Level Security (RLS) for absolute multi-tenant isolation, Supabase Realtime (WebSockets)
-*   **Routing**: React Router v7
+The following seeded accounts are configured in the database schema for authentication and platform testing. 
 
----
+> [!NOTE]
+> For security, all credentials belong to distinct roles. The system enforces multi-tenant row-level isolation so that restaurant admins can only read and write data belonging to their respective tenants.
 
-## 📂 Key Codebase Directories
-
-*   `src/pages/`: Contains the main portal views (`AdminDashboard.tsx`, `SuperAdminDashboard.tsx`, `CustomerMenu.tsx`, `KitchenDashboard.tsx`).
-*   `src/components/admin/`: Modules for the restaurant owner (Menu Manager, Promotions, Reputation Center, QR Code Generator).
-*   `src/components/superadmin/`: Modules for the platform operator (Global Analytics, Tenant Management, Campaign Approvals).
-*   `src/components/order/`: The core ordering UI and the highly customized `PostOrderReviewPrompt.tsx`.
-*   `src/services/`: The brain of Zappy.
-    *   `/promotions/cartPricingEngine.ts`: The enterprise discount resolution math.
-    *   `/recommendations/foodGraph.ts`: The semantic cart upselling logic.
-    *   `/reviews/sentimentAnalysisService.ts`: NLP and reputation analytics.
-    *   `/reviews/recoveryEngine.ts`: Automated apology & coupon generation.
+| Email | Password | Role | Assigned Tenant / Scope |
+|---|---|---|---|
+| **zappyscan@gmail.com** | *Set in Dashboard* | `super_admin` | Global Platform Control |
+| **spicegarden@zappy.ind.in** | `arun4709s` | `restaurant_admin` | Spice Garden (Indian Cuisine) |
+| **urbanfork@zappy.ind.in** | `arun4709s` | `restaurant_admin` | Urban Fork (Continental/Fusion) |
+| **admin123@gmail.com** | `admin123` | `restaurant_admin` | Zappy Demo Restaurant |
 
 ---
 
-## 🚦 Application Workflow Summary
+## 🚦 End-to-End Application Workflow
 
-1.  **Onboarding**: Restaurant signs up -> Configures branding, tables, and subscription tier -> Bulk imports their menu via the OCR tool.
-2.  **Dining In**: Customer scans QR code -> Views menu -> Adds items -> *CartPricingEngine* applies active valid promotions -> *FoodGraph* suggests a complementary drink -> Order is placed.
-3.  **Fulfillment**: Order appears on Kitchen KDS -> Chef marks as *Preparing* -> Marks as *Ready* -> Waiter delivers and marks as *Served*.
-4.  **Feedback & Retention**: Customer sees the *PostOrderReviewPrompt* -> Leaves 2 stars due to slow service -> *SentimentAnalysis* categorizes the complaint -> *RecoveryEngine* issues a 20% apology coupon instantly -> Manager gets alerted in the *Reputation Center*.
-5.  **Analytics & Billing**: Customer pays at the counter -> Transaction clears -> Data flows into the Admin Dashboard's Revenue Trends & Heatmaps. Superadmin views platform-wide growth.
+Zappy synchronizes five distinct operating flows in real time via WebSockets and PostgreSQL triggers:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as 📱 Customer
+    actor Kitchen as 👨‍🍳 Kitchen (KDS)
+    actor Waiter as 💁‍♂️ Waiter
+    actor Admin as 📊 Admin Panel
+
+    Customer->>Admin: Scans Table QR Code
+    Admin-->>Customer: Loads branding & menu (Table verified active)
+    Customer->>Customer: Adds item & reviews smart recommendations
+    Customer->>Admin: Places Order (math processed with active promotions)
+    Admin-->>Kitchen: WebSocket broadcast of new order
+    Kitchen->>Kitchen: Marks order as "Preparing" (Client notified)
+    Kitchen->>Kitchen: Marks order as "Ready"
+    Kitchen-->>Waiter: Pling Sound Notification
+    Waiter->>Customer: Serves food at table
+    Waiter->>Admin: Marks order as "Served"
+    Admin-->>Customer: Triggers sessionStorage-guarded feedback prompt
+    Customer->>Admin: Submits review (positive -> Google redirect; negative -> apology coupon)
+    Waiter->>Customer: Processes payment at billing counter
+    Waiter->>Admin: Marks order as "Completed / Paid"
+```
+
+### 1. 📱 Customer Ordering Flow
+1. **QR Scan & Verification:** Customer scans the QR code at the table, navigating to `/order?r=RESTAURANT_ID&table=TABLE_NUMBER`. The system verifies the table exists and is active.
+2. **Menu Browsing:** The menu loads with the restaurant's custom branding, theme colors, and cover banner.
+3. **Cart Pricing Math:** Customer adds items to the cart. The promotion engine dynamically calculates BOGO deals, item-specific discounts, and percentages, then enforces minimum spend limits.
+4. **Food Graph Upsells:** Based on the ingredients and types of items in the cart, the recommendation engine suggests pairings (e.g., a sweet beverage if a spicy main course is added).
+5. **Checkout:** Order is placed and order items are inserted into the database.
+
+### 2. 👨‍🍳 Kitchen Display System (KDS) Flow
+1. **WebSocket Trigger:** The kitchen display immediately receives the order.
+2. **Status Transitions:** Kitchen staff change status from `pending` to `preparing` (highlighting active prep timers) and then to `ready`.
+3. **SLA Monitoring:** If an order exceeds 20 minutes in prep, it flashes red.
+
+### 3. 💁‍♂️ Waitstaff & Billing Counter Flow
+1. **Waiter Call:** Customers can press "Call Waiter" from their phones, which dispatches a notification to staff.
+2. **Serving:** The waiter serves the food and marks it as `served`.
+3. **Billing:** When checkout is requested, the system computes subtotals, tax rates (GST), and service charges, then outputs a print-ready invoice. The transaction is finalized as `completed / paid`.
+
+### 4. 📊 Restaurant Admin Dashboard
+* **Menu Manager:** Configure categories, items, variant selections, and prices. Supports upload of banners and category cover thumbnails.
+* **QR Generator:** Generate table-specific dynamic tracking QR codes, downloadable at `1200px` print-resolution.
+* **Reputation Center:** Proactive AI damage control. Satisfied customers are redirected to Google Reviews, while unhappy customers receive unique discount coupons generated server-side.
+
+### 5. 👑 Superadmin Command Center
+* **Tenant Management:** Oversee subscription tiers (Free, Pro, Enterprise) and onboarding progress.
+* **Global Ads:** Create campaigns that insert promotional banners into target menus.
+* **Platform Analytics:** Review global revenue graphs and tenant metrics.
 
 ---
-*Built to transform restaurants into data-driven powerhouses.*
+
+## 📂 Core Folder Structure
+
+```
+Zappy/
+├── .env.example          # Environment onboarding configurations
+├── Dockerfile            # Multi-stage production building file
+├── nginx/
+│   └── nginx.conf        # Secure reverse proxy with strict headers
+├── src/
+│   ├── components/
+│   │   ├── admin/       # Restaurant administration tools (Reputation, Settings)
+│   │   ├── menu/        # Customer menu items, cart drawer, promotions
+│   │   └── order/       # Ordering states and PostOrderReviewPrompt.tsx
+│   ├── hooks/            # TanStack queries for ads, orders, tables, and settings
+│   ├── pages/            # Core views: AdminDashboard, SuperAdmin, CustomerMenu
+│   ├── services/
+│   │   ├── promotions/  # Discount resolution and tax engine
+│   │   ├── recommendations/ # Database food pairings scoring algorithm
+│   │   └── reviews/     # Sentiment categorization and recovery coupons
+│   └── utils/
+│       ├── sanitize.ts   # Client-side input HTML sanitization
+│       └── url.ts        # App origin URL utility resolver
+└── supabase/
+    ├── config.toml       # Functions edge config
+    └── migrations/       # Production migration SQL schemas
+```
 
 ---
 
-## 🛡️ Production Hardening & Security Architecture
+## 🚀 Setup & Execution Guide
 
-Zappy has been hardened to enterprise-grade standards to ensure security, high performance, and ease of deployment:
+### Prerequisites
+* **Node.js:** v18+ or v20+
+* **Package Manager:** npm
 
-### 1. 🐳 Containerization & Deployment
-We provide a production-ready, multi-stage Docker build system:
-* **Dockerfile**: Multi-stage build which compiles the Vite/React application using lightweight `node:20-alpine` and serves static files using `nginx:stable-alpine`.
-* **nginx.conf**: A highly secure reverse proxy configuration that implements strict cache controls (1-year immutable for static assets, 1-month for media), enables high-performance gzip compression, and handles React client-side routing fallback gracefully.
-* **docker-compose.yml**: Orchestrates the containerized service, enabling automatic restart policy (`unless-stopped`), custom health checks (checking application server health), and environment configurations.
+### Installation
+1. Clone the repository and navigate to the directory:
+   ```bash
+   git clone https://github.com/shadow-byte-warrior/Zappy.git
+   cd Zappy
+   ```
+2. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Add your Supabase keys, Unsplash secrets, and VITE_APP_URL
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### 2. 🔒 Web Security & Custom Headers
-The reverse proxy applies robust HTTP headers to safeguard client browser sessions:
-* **Strict-Transport-Security (HSTS)**: Enforces SSL connections for up to 1 year, protecting against SSL-stripping attacks.
-* **Content-Security-Policy (CSP)**: Curated policy restricting scripts, connections, and images to HTTPS, WSS, and trusted origins, neutralizing Cross-Site Scripting (XSS) and data injection.
-* **X-Frame-Options**: Set to `DENY` to prevent clickjacking attacks by blocking iframe embedding.
-* **X-Content-Type-Options**: Set to `nosniff` to protect against MIME-type sniffing.
+### Running Locally
+To launch the development server:
+```bash
+npm run dev
+```
 
-### 3. 🌐 Redirection & SSL Enforcement
-A unified production routing policy has been configured inside `src/main.tsx` to protect user sessions:
-* **Force HTTPS**: Automatically upgrades insecure `http:` connections to `https:` for all production client routes.
-* **Apex-to-www Redirect**: Resolves bare-domain apex requests (`zappy.ind.in`) to the secure `www.zappy.ind.in` subdomain before rendering the DOM, ensuring robust DNS and routing performance under Hostinger/Vercel namespaces.
+### Production Build & Hardening
+To compile a minimized, optimized production bundle:
+```bash
+npm run build
+```
 
-### 4. 🏷️ Dynamic Database-Driven Promotion Sync
-We have eliminated static mock-ups to construct a fully dynamic promotional carousel on the Customer Menu:
-* Automatically fetches active offers from your Supabase backend using the unified `offers`/`enterprise_promotions` engine.
-* Gracefully filters promotions based on expiration dates and status.
-* Embedded click analytics tracking for conversion tracking.
-* Fully supports category deep-link targeting (filtering the menu layout immediately when a promotion is clicked).
-* Includes automatic fallback placeholder images for network resilience.
-
+---
+*Built to transform restaurants into data-driven operating engines.*
