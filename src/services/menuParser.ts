@@ -12,6 +12,10 @@ export interface ParsedMenuItem {
   category: string;
   description: string;
   confidence: number;
+  isVegetarian?: boolean;
+  isVegan?: boolean;
+  isJain?: boolean;
+  isGlutenFree?: boolean;
 }
 
 // Category keywords for auto-classification
@@ -225,13 +229,81 @@ function parseMenuLine(line: string, currentCategory: string): ParsedMenuItem | 
       if (/^\d+$/.test(name)) continue; // Pure numbers
 
       const category = detectCategory(name, currentCategory);
+      const lowerName = name.toLowerCase();
+
+      const isVegetarian = !lowerName.includes("chicken") && 
+                           !lowerName.includes("mutton") && 
+                           !lowerName.includes("fish") && 
+                           !lowerName.includes("egg") && 
+                           !lowerName.includes("prawn") && 
+                           !lowerName.includes("meat") && 
+                           !lowerName.includes("beef") && 
+                           !lowerName.includes("pork") && 
+                           !lowerName.includes("crab") &&
+                           !lowerName.includes("wings") &&
+                           !lowerName.includes("seekh") &&
+                           !lowerName.includes("kebab") &&
+                           !lowerName.includes("bacon") &&
+                           !lowerName.includes("duck") &&
+                           !lowerName.includes("shrimp") &&
+                           !lowerName.includes("lobster") &&
+                           !lowerName.includes("squid") &&
+                           !lowerName.includes("lamb");
+
+      const isVegan = isVegetarian && 
+                      !lowerName.includes("paneer") && 
+                      !lowerName.includes("butter") && 
+                      !lowerName.includes("cheese") && 
+                      !lowerName.includes("ghee") && 
+                      !lowerName.includes("cream") && 
+                      !lowerName.includes("milk") && 
+                      !lowerName.includes("curd") && 
+                      !lowerName.includes("yogurt") &&
+                      !lowerName.includes("lassi") &&
+                      !lowerName.includes("honey") &&
+                      !lowerName.includes("mayo") &&
+                      !lowerName.includes("mayonnaise");
+
+      const isJain = isVegetarian &&
+                     !lowerName.includes("onion") &&
+                     !lowerName.includes("garlic") &&
+                     !lowerName.includes("potato") &&
+                     !lowerName.includes("carrot") &&
+                     !lowerName.includes("radish") &&
+                     !lowerName.includes("ginger") &&
+                     !lowerName.includes("beetroot") &&
+                     !lowerName.includes("leek") &&
+                     !lowerName.includes("shallot");
+
+      const isGlutenFree = !lowerName.includes("bread") &&
+                           !lowerName.includes("naan") &&
+                           !lowerName.includes("roti") &&
+                           !lowerName.includes("bun") &&
+                           !lowerName.includes("pizza") &&
+                           !lowerName.includes("pasta") &&
+                           !lowerName.includes("maida") &&
+                           !lowerName.includes("wheat") &&
+                           !lowerName.includes("flour") &&
+                           !lowerName.includes("cookie") &&
+                           !lowerName.includes("cake") &&
+                           !lowerName.includes("parotta") &&
+                           !lowerName.includes("kulcha") &&
+                           !lowerName.includes("burger");
+
+      const hasVeganKeyword = lowerName.includes("vegan");
+      const hasJainKeyword = lowerName.includes("jain");
+      const hasGlutenFreeKeyword = lowerName.includes("gluten free") || lowerName.includes("gluten-free") || lowerName.includes("gf");
 
       return {
         name,
         price,
         category,
         description: "",
-        confidence: 0.85,
+        confidence: 85,
+        isVegetarian,
+        isVegan: hasVeganKeyword || isVegan,
+        isJain: hasJainKeyword || isJain,
+        isGlutenFree: hasGlutenFreeKeyword || isGlutenFree,
       };
     }
   }
@@ -305,12 +377,80 @@ export function parseMenuFromCSV(csvText: string): ParsedMenuItem[] {
       ? titleCase(rawCategory)
       : detectCategory(name);
 
+    const lowerName = name.toLowerCase();
+    const isVegetarian = !lowerName.includes("chicken") && 
+                         !lowerName.includes("mutton") && 
+                         !lowerName.includes("fish") && 
+                         !lowerName.includes("egg") && 
+                         !lowerName.includes("prawn") && 
+                         !lowerName.includes("meat") && 
+                         !lowerName.includes("beef") && 
+                         !lowerName.includes("pork") && 
+                         !lowerName.includes("crab") &&
+                         !lowerName.includes("wings") &&
+                         !lowerName.includes("seekh") &&
+                         !lowerName.includes("kebab") &&
+                         !lowerName.includes("bacon") &&
+                         !lowerName.includes("duck") &&
+                         !lowerName.includes("shrimp") &&
+                         !lowerName.includes("lobster") &&
+                         !lowerName.includes("squid") &&
+                         !lowerName.includes("lamb");
+
+    const isVegan = isVegetarian && 
+                    !lowerName.includes("paneer") && 
+                    !lowerName.includes("butter") && 
+                    !lowerName.includes("cheese") && 
+                    !lowerName.includes("ghee") && 
+                    !lowerName.includes("cream") && 
+                    !lowerName.includes("milk") && 
+                    !lowerName.includes("curd") && 
+                    !lowerName.includes("yogurt") &&
+                    !lowerName.includes("lassi") &&
+                    !lowerName.includes("honey") &&
+                    !lowerName.includes("mayo") &&
+                    !lowerName.includes("mayonnaise");
+
+    const isJain = isVegetarian &&
+                   !lowerName.includes("onion") &&
+                   !lowerName.includes("garlic") &&
+                   !lowerName.includes("potato") &&
+                   !lowerName.includes("carrot") &&
+                   !lowerName.includes("radish") &&
+                   !lowerName.includes("ginger") &&
+                   !lowerName.includes("beetroot") &&
+                   !lowerName.includes("leek") &&
+                   !lowerName.includes("shallot");
+
+    const isGlutenFree = !lowerName.includes("bread") &&
+                         !lowerName.includes("naan") &&
+                         !lowerName.includes("roti") &&
+                         !lowerName.includes("bun") &&
+                         !lowerName.includes("pizza") &&
+                         !lowerName.includes("pasta") &&
+                         !lowerName.includes("maida") &&
+                         !lowerName.includes("wheat") &&
+                         !lowerName.includes("flour") &&
+                         !lowerName.includes("cookie") &&
+                         !lowerName.includes("cake") &&
+                         !lowerName.includes("parotta") &&
+                         !lowerName.includes("kulcha") &&
+                         !lowerName.includes("burger");
+
+    const hasVeganKeyword = lowerName.includes("vegan");
+    const hasJainKeyword = lowerName.includes("jain");
+    const hasGlutenFreeKeyword = lowerName.includes("gluten free") || lowerName.includes("gluten-free") || lowerName.includes("gf");
+
     items.push({
       name: titleCase(name),
       price,
       category,
       description,
       confidence: 0.95, // CSV data is more reliable
+      isVegetarian,
+      isVegan: hasVeganKeyword || isVegan,
+      isJain: hasJainKeyword || isJain,
+      isGlutenFree: hasGlutenFreeKeyword || isGlutenFree,
     });
   }
 

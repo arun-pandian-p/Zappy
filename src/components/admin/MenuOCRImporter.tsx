@@ -28,6 +28,10 @@ interface OCRItem {
   confidence: number;
   image_url?: string;
   description?: string;
+  isVegetarian?: boolean;
+  isVegan?: boolean;
+  isJain?: boolean;
+  isGlutenFree?: boolean;
 }
 
 // Status icon component
@@ -52,6 +56,8 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
   const [progressValue, setProgressValue] = useState(0);
   const [batchResults, setBatchResults] = useState<BatchFileResult[]>([]);
   const [isBatchMode, setIsBatchMode] = useState(false);
+  const [ocrEngine, setOcrEngine] = useState<"paddle" | "surya" | "tesseract" | "easy">("tesseract");
+  const [languageCode, setLanguageCode] = useState<string>("eng");
   const { toast } = useToast();
 
   // Single file handler
@@ -61,10 +67,14 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
     setProgressValue(0);
 
     try {
-      const items = await processMenuFile(file, (p: OCRProgress) => {
-        setProgressStatus(p.status);
-        setProgressValue(p.progress);
-      });
+      const items = await processMenuFile(
+        file,
+        { ocrEngine, languageCode },
+        (p: OCRProgress) => {
+          setProgressStatus(p.status);
+          setProgressValue(p.progress);
+        }
+      );
 
       const ocrItems: OCRItem[] = items.map(i => ({
         name: i.name,
@@ -72,6 +82,10 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
         category: i.category,
         confidence: i.confidence,
         description: i.description,
+        isVegetarian: i.isVegetarian,
+        isVegan: i.isVegan,
+        isJain: i.isJain,
+        isGlutenFree: i.isGlutenFree,
       }));
 
       setExtractedItems(ocrItems);
@@ -89,7 +103,7 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
       setIsProcessing(false);
       setProgressValue(100);
     }
-  }, [toast]);
+  }, [toast, ocrEngine, languageCode]);
 
   // Bulk file handler
   const handleBulkFiles = useCallback(async (files: File[]) => {
@@ -97,15 +111,19 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
     setIsBatchMode(true);
     setProgressStatus(`Processing ${files.length} files...`);
 
-    const results = await processMenuFilesBatch(files, (idx, result) => {
-      setBatchResults(prev => {
-        const newResults = [...prev];
-        newResults[idx] = result;
-        return newResults;
-      });
-      setProgressStatus(`Processing file ${idx + 1}/${files.length}: ${result.fileName}`);
-      setProgressValue(Math.round(((idx + 1) / files.length) * 100));
-    });
+    const results = await processMenuFilesBatch(
+      files,
+      { ocrEngine, languageCode },
+      (idx, result) => {
+        setBatchResults(prev => {
+          const newResults = [...prev];
+          newResults[idx] = result;
+          return newResults;
+        });
+        setProgressStatus(`Processing file ${idx + 1}/${files.length}: ${result.fileName}`);
+        setProgressValue(Math.round(((idx + 1) / files.length) * 100));
+      }
+    );
 
     // Merge all successful items
     const allItems: OCRItem[] = results
@@ -117,6 +135,10 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
           category: i.category,
           confidence: i.confidence,
           description: i.description,
+          isVegetarian: i.isVegetarian,
+          isVegan: i.isVegan,
+          isJain: i.isJain,
+          isGlutenFree: i.isGlutenFree,
         }))
       );
 
@@ -131,7 +153,7 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
       title: "Batch Processing Complete",
       description: `${successCount} files processed, ${allItems.length} items extracted${failCount > 0 ? `, ${failCount} files failed` : ""}.`,
     });
-  }, [toast]);
+  }, [toast, ocrEngine, languageCode]);
 
   // File input handler
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,15 +226,26 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
       }
 
       // 2. Insert items
-      const itemsToInsert = extractedItems.map(item => ({
-        restaurant_id: restaurantId,
-        category_id: categoryMap[item.category],
-        name: item.name,
-        price: item.price,
-        image_url: item.image_url,
-        description: item.description,
-        is_available: true,
-      }));
+      const itemsToInsert = extractedItems.map(item => {
+        const tags: string[] = [];
+        if (item.isVegetarian) tags.push("Veg");
+        if (item.isVegan) tags.push("Vegan");
+        if (item.isJain) tags.push("Jain");
+        if (item.isGlutenFree) tags.push("Gluten-Free");
+
+        return {
+          restaurant_id: restaurantId,
+          category_id: categoryMap[item.category],
+          name: item.name,
+          price: item.price,
+          image_url: item.image_url,
+          description: item.description,
+          is_vegetarian: !!item.isVegetarian,
+          is_vegan: !!item.isVegan,
+          tags: tags,
+          is_available: true,
+        };
+      });
 
       const { error } = await supabase.from('menu_items').insert(itemsToInsert);
       
@@ -255,6 +288,50 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
 
         {!extractedItems.length ? (
           <div className="flex flex-col space-y-4">
+            {/* Configuration Panel */}
+            <div className="grid grid-cols-2 gap-4 p-4 border rounded-xl bg-muted/30">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">OCR Processing Engine</Label>
+                <div className="grid grid-cols-2 gap-1 bg-muted p-1 rounded-lg">
+                  {[
+                    { id: "tesseract", label: "Tesseract.js" },
+                    { id: "surya", label: "Surya OCR" },
+                    { id: "paddle", label: "PaddleOCR" },
+                    { id: "easy", label: "EasyOCR" },
+                  ].map((engineOpt) => (
+                    <button
+                      key={engineOpt.id}
+                      type="button"
+                      onClick={() => setOcrEngine(engineOpt.id as any)}
+                      className={`text-xs px-2 py-1.5 rounded-md transition-all font-medium ${
+                        ocrEngine === engineOpt.id
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
+                      }`}
+                    >
+                      {engineOpt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Primary Menu Language</Label>
+                <select
+                  value={languageCode}
+                  onChange={(e) => setLanguageCode(e.target.value)}
+                  className="w-full text-xs h-8 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="eng">English (eng)</option>
+                  <option value="tam">Tamil (tam)</option>
+                  <option value="hin">Hindi (hin)</option>
+                  <option value="tel">Telugu (tel)</option>
+                  <option value="mal">Malayalam (mal)</option>
+                  <option value="kan">Kannada (kan)</option>
+                </select>
+              </div>
+            </div>
+
             {/* Upload Zone */}
             <div
               className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-xl space-y-4 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
@@ -369,52 +446,150 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
               <div className="p-4 space-y-3">
                 {extractedItems.map((item, idx) => (
                   <Card key={idx} className="border-l-4 border-l-primary/50">
-                    <CardContent className="p-3 flex items-center justify-between gap-4">
-                      <div className="flex-1 grid grid-cols-3 gap-3">
-                        <div className="col-span-1">
-                          <Label className="text-[10px] uppercase text-muted-foreground">Name</Label>
-                          <Input 
-                            value={item.name} 
-                            onChange={(e) => {
-                              const newItems = [...extractedItems];
-                              newItems[idx].name = e.target.value;
-                              setExtractedItems(newItems);
-                            }}
-                            className="h-8 text-sm"
-                          />
+                    <CardContent className="p-3 space-y-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1 grid grid-cols-3 gap-3">
+                          <div className="col-span-1">
+                            <Label className="text-[10px] uppercase text-muted-foreground font-semibold">Name</Label>
+                            <Input 
+                              value={item.name} 
+                              onChange={(e) => {
+                                const newItems = [...extractedItems];
+                                newItems[idx].name = e.target.value;
+                                setExtractedItems(newItems);
+                              }}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase text-muted-foreground font-semibold">Price (₹)</Label>
+                            <Input 
+                              type="number"
+                              value={item.price} 
+                              onChange={(e) => {
+                                const newItems = [...extractedItems];
+                                newItems[idx].price = Number(e.target.value);
+                                setExtractedItems(newItems);
+                              }}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase text-muted-foreground font-semibold">Category</Label>
+                            <Input 
+                              value={item.category} 
+                              onChange={(e) => {
+                                const newItems = [...extractedItems];
+                                newItems[idx].category = e.target.value;
+                                setExtractedItems(newItems);
+                              }}
+                              className="h-8 text-sm"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <Label className="text-[10px] uppercase text-muted-foreground">Price</Label>
-                          <Input 
-                            type="number"
-                            value={item.price} 
-                            onChange={(e) => {
-                              const newItems = [...extractedItems];
-                              newItems[idx].price = Number(e.target.value);
-                              setExtractedItems(newItems);
-                            }}
-                            className="h-8 text-sm"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-[10px] uppercase text-muted-foreground">Category</Label>
-                          <Input 
-                            value={item.category} 
-                            onChange={(e) => {
-                              const newItems = [...extractedItems];
-                              newItems[idx].category = e.target.value;
-                              setExtractedItems(newItems);
-                            }}
-                            className="h-8 text-sm"
-                          />
+                        <div className="flex items-center gap-2 pt-4">
+                          <span className="text-[10px] font-semibold text-muted-foreground">Confidence: {item.confidence}%</span>
+                          {item.confidence > 80 && <Check className="w-4 h-4 text-green-500" />}
+                          {item.confidence <= 80 && <AlertCircle className="w-4 h-4 text-yellow-500" />}
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setExtractedItems(items => items.filter((_, i) => i !== idx))}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {item.confidence > 0.9 && <Check className="w-4 h-4 text-green-500" />}
-                        {item.confidence <= 0.9 && item.confidence > 0.7 && <AlertCircle className="w-4 h-4 text-yellow-500" />}
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setExtractedItems(items => items.filter((_, i) => i !== idx))}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+
+                      {/* Dietary Badges and Toggle Controls */}
+                      <div className="flex items-center gap-4 border-t pt-2 text-xs flex-wrap">
+                        <span className="text-[10px] uppercase text-muted-foreground font-semibold">Dietary Profile:</span>
+                        
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={item.isVegetarian || false}
+                            onChange={(e) => {
+                              const newItems = [...extractedItems];
+                              newItems[idx].isVegetarian = e.target.checked;
+                              if (!e.target.checked) {
+                                newItems[idx].isVegan = false;
+                                newItems[idx].isJain = false;
+                              }
+                              setExtractedItems(newItems);
+                            }}
+                            className="w-3.5 h-3.5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          />
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            item.isVegetarian 
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" 
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            Veg
+                          </span>
+                        </label>
+
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={item.isVegan || false}
+                            onChange={(e) => {
+                              const newItems = [...extractedItems];
+                              newItems[idx].isVegan = e.target.checked;
+                              if (e.target.checked) {
+                                newItems[idx].isVegetarian = true;
+                              }
+                              setExtractedItems(newItems);
+                            }}
+                            className="w-3.5 h-3.5 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
+                          />
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            item.isVegan 
+                              ? "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400" 
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            Vegan
+                          </span>
+                        </label>
+
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={item.isJain || false}
+                            onChange={(e) => {
+                              const newItems = [...extractedItems];
+                              newItems[idx].isJain = e.target.checked;
+                              if (e.target.checked) {
+                                newItems[idx].isVegetarian = true;
+                              }
+                              setExtractedItems(newItems);
+                            }}
+                            className="w-3.5 h-3.5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            item.isJain 
+                              ? "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" 
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            Jain
+                          </span>
+                        </label>
+
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={item.isGlutenFree || false}
+                            onChange={(e) => {
+                              const newItems = [...extractedItems];
+                              newItems[idx].isGlutenFree = e.target.checked;
+                              setExtractedItems(newItems);
+                            }}
+                            className="w-3.5 h-3.5 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                          />
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            item.isGlutenFree 
+                              ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400" 
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            Gluten-Free
+                          </span>
+                        </label>
                       </div>
                     </CardContent>
                   </Card>

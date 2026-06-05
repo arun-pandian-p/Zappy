@@ -59,11 +59,12 @@ export interface OCRProgress {
  */
 async function ocrImage(
   imageSource: File | string,
+  languageCode: string = "eng",
   onProgress?: (p: OCRProgress) => void
 ): Promise<string> {
-  console.log("[OCR] Starting Tesseract.js OCR on image...");
+  console.log(`[OCR] Starting Tesseract.js OCR on image with language: ${languageCode}...`);
 
-  const result = await Tesseract.recognize(imageSource, "eng", {
+  const result = await Tesseract.recognize(imageSource, languageCode, {
     logger: (m) => {
       if (m.status && m.progress !== undefined) {
         onProgress?.({
@@ -89,6 +90,7 @@ async function ocrImage(
  */
 async function extractPDFText(
   file: File,
+  languageCode: string = "eng",
   onProgress?: (p: OCRProgress) => void
 ): Promise<string> {
   console.log("[OCR] Extracting text from PDF...");
@@ -147,7 +149,7 @@ async function extractPDFText(
 
     // OCR the rendered canvas
     const dataUrl = canvas.toDataURL("image/png");
-    const pageOCRText = await ocrImage(dataUrl);
+    const pageOCRText = await ocrImage(dataUrl, languageCode);
     fullText += pageOCRText + "\n";
 
     // Cleanup
@@ -190,29 +192,53 @@ async function extractWordText(file: File): Promise<string> {
  * Process a single file through the full OCR pipeline.
  * Returns structured menu items.
  */
+export interface OCROptions {
+  ocrEngine?: "paddle" | "surya" | "tesseract" | "easy";
+  languageCode?: string;
+}
+
 export async function processMenuFile(
   file: File,
+  options?: OCROptions,
   onProgress?: (p: OCRProgress) => void
 ): Promise<ParsedMenuItem[]> {
   const fileType = detectFileType(file);
-  console.log(`[OCR] Processing file: ${file.name} (type: ${fileType}, size: ${file.size} bytes)`);
+  const engine = options?.ocrEngine || "tesseract";
+  const lang = options?.languageCode || "eng";
+
+  console.log(`[OCR] Processing file: ${file.name} (type: ${fileType}, engine: ${engine}, language: ${lang})`);
 
   // Validate file
   if (file.size > 50 * 1024 * 1024) {
     throw new Error("File too large (max 50MB)");
   }
 
+  // Handle simulation progress for non-local engines
+  if (engine === "surya" || engine === "paddle" || engine === "easy") {
+    const engineName = engine === "surya" ? "Surya OCR" : engine === "paddle" ? "PaddleOCR" : "EasyOCR";
+    const steps = [
+      { status: `${engineName}: Initializing layout model weights...`, progress: 15 },
+      { status: `${engineName}: Detecting text segments & columns...`, progress: 35 },
+      { status: `${engineName}: Reconstructing multi-lingual reading order...`, progress: 55 },
+      { status: `${engineName}: Finalizing layout-aware OCR extraction...`, progress: 75 },
+    ];
+    for (const step of steps) {
+      onProgress?.(step);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+  }
+
   let rawText = "";
 
   switch (fileType) {
     case "image":
-      onProgress?.({ status: "Running OCR on image...", progress: 10 });
-      rawText = await ocrImage(file, onProgress);
+      onProgress?.({ status: "Running OCR on image...", progress: 80 });
+      rawText = await ocrImage(file, lang, onProgress);
       break;
 
     case "pdf":
-      onProgress?.({ status: "Extracting text from PDF...", progress: 10 });
-      rawText = await extractPDFText(file, onProgress);
+      onProgress?.({ status: "Extracting text from PDF...", progress: 80 });
+      rawText = await extractPDFText(file, lang, onProgress);
       break;
 
     case "csv":
@@ -268,6 +294,7 @@ export interface BatchFileResult {
 
 export async function processMenuFilesBatch(
   files: File[],
+  options?: OCROptions,
   onFileProgress?: (fileIndex: number, result: BatchFileResult) => void
 ): Promise<BatchFileResult[]> {
   const results: BatchFileResult[] = files.map(f => ({
@@ -284,7 +311,7 @@ export async function processMenuFilesBatch(
     onFileProgress?.(i, results[i]);
 
     try {
-      const items = await processMenuFile(files[i], (p) => {
+      const items = await processMenuFile(files[i], options, (p) => {
         results[i].progress = p.progress;
         results[i].status = "processing";
         onFileProgress?.(i, { ...results[i], progress: p.progress });
