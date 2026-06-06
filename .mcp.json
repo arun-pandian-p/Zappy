@@ -4,7 +4,7 @@
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?project_ref=copkzrwvpqfjpsyyyqdy&read_only=true",
       "headers": {
-        "Authorization": "Bearer sb_secret_sqmPVrqBg0yYlZ55cRG0hA_kks4CmPP"
+        "Authorization": "Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY"
       }
     },
     "arize-tracing-assistant": {
