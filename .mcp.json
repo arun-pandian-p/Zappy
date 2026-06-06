@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=copkzrwvpqfjpsyyyqdy&read_only=true",
+      "headers": {
+        "Authorization": "Bearer sb_secret_sqmPVrqBg0yYlZ55cRG0hA_kks4CmPP"
+      }
+    },
+    "arize-tracing-assistant": {
+      "command": "uvx",
+      "args": [
+        "arize-tracing-assistant@latest"
+      ]
+    },
+    "toolbox": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@toolbox-sdk/server",
+        "--config",
+        "c:\\Users\\Rishi\\Desktop\\Zappy\\tools.yaml"
+      ]
+    },
+    "twilio-docs": {
+      "type": "http",
+      "url": "https://mcp.twilio.com/docs"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp"
+      ]
+    }
+  }
+}
