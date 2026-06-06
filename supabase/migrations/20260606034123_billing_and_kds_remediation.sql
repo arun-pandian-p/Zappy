@@ -1,16 +1,23 @@
 -- 1. Drop trigger and function that depend on orders status column
 DROP TRIGGER IF EXISTS trigger_order_status_notification ON public.orders;
 DROP FUNCTION IF EXISTS public.queue_order_status_notification();
+DROP VIEW IF EXISTS public.orders_public CASCADE;
 
 -- 2. Recreate type by renaming, creating new type, altering columns, and dropping old type
+DROP TYPE IF EXISTS public.order_status_old;
 ALTER TYPE public.order_status RENAME TO order_status_old;
 
 CREATE TYPE public.order_status AS ENUM ('pending', 'confirmed', 'preparing', 'ready', 'served', 'billed', 'completed', 'cancelled');
 
+ALTER TABLE public.orders ALTER COLUMN status DROP DEFAULT;
 ALTER TABLE public.orders ALTER COLUMN status TYPE public.order_status USING status::text::public.order_status;
-ALTER TABLE public.order_items ALTER COLUMN status TYPE public.order_status USING status::text::public.order_status;
+ALTER TABLE public.orders ALTER COLUMN status SET DEFAULT 'pending'::public.order_status;
 
-DROP TYPE public.order_status_old;
+ALTER TABLE public.order_items ALTER COLUMN status DROP DEFAULT;
+ALTER TABLE public.order_items ALTER COLUMN status TYPE public.order_status USING status::text::public.order_status;
+ALTER TABLE public.order_items ALTER COLUMN status SET DEFAULT 'pending'::public.order_status;
+
+DROP TYPE IF EXISTS public.order_status_old;
 
 -- 3. Recreate the trigger function (including 'billed' case!) and the trigger
 CREATE OR REPLACE FUNCTION public.queue_order_status_notification()
@@ -292,3 +299,16 @@ EXCEPTION WHEN OTHERS THEN
   RAISE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Recreate orders_public view that was dropped during column type alterations
+CREATE OR REPLACE VIEW public.orders_public
+WITH (security_invoker = on) AS
+SELECT
+  id, restaurant_id, table_id, order_number, status,
+  subtotal, tax_amount, service_charge, total_amount,
+  payment_method, payment_status, special_instructions,
+  estimated_ready_at, started_preparing_at, ready_at,
+  created_at, updated_at
+FROM public.orders
+WHERE table_id IS NOT NULL
+  AND created_at > now() - interval '24 hours';

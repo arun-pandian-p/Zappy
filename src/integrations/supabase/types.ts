@@ -14,6 +14,196 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_enrichments: {
+        Row: {
+          id: string
+          menu_item_id: string
+          short_description: string | null
+          medium_description: string | null
+          seo_description: string | null
+          calories: number | null
+          protein: number | null
+          carbs: number | null
+          fat: number | null
+          allergens: string[] | null
+          tags: string[] | null
+          upsell_recommendations: Json | null
+          image_search_queries: string[] | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          menu_item_id: string
+          short_description?: string | null
+          medium_description?: string | null
+          seo_description?: string | null
+          calories?: number | null
+          protein?: number | null
+          carbs?: number | null
+          fat?: number | null
+          allergens?: string[] | null
+          tags?: string[] | null
+          upsell_recommendations?: Json | null
+          image_search_queries?: string[] | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          menu_item_id?: string
+          short_description?: string | null
+          medium_description?: string | null
+          seo_description?: string | null
+          calories?: number | null
+          protein?: number | null
+          carbs?: number | null
+          fat?: number | null
+          allergens?: string[] | null
+          tags?: string[] | null
+          upsell_recommendations?: Json | null
+          image_search_queries?: string[] | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_enrichments_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      image_discoveries: {
+        Row: {
+          id: string
+          menu_item_id: string
+          query_used: string
+          candidate_url: string
+          source_platform: string
+          visual_confidence_score: number
+          aesthetic_quality_score: number
+          rejection_reason: string | null
+          is_selected: boolean | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          menu_item_id: string
+          query_used: string
+          candidate_url: string
+          source_platform: string
+          visual_confidence_score: number
+          aesthetic_quality_score: number
+          rejection_reason?: string | null
+          is_selected?: boolean | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          menu_item_id?: string
+          query_used?: string
+          candidate_url?: string
+          source_platform?: string
+          visual_confidence_score?: number
+          aesthetic_quality_score?: number
+          rejection_reason?: string | null
+          is_selected?: boolean | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_discoveries_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      ocr_imports: {
+        Row: {
+          id: string
+          restaurant_id: string
+          file_path: string | null
+          status: string
+          raw_ocr_text: string | null
+          extracted_menu: Json | null
+          confidence_score: number | null
+          processing_time_ms: number | null
+          error_message: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          restaurant_id: string
+          file_path?: string | null
+          status?: string
+          raw_ocr_text?: string | null
+          extracted_menu?: Json | null
+          confidence_score?: number | null
+          processing_time_ms?: number | null
+          error_message?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          restaurant_id?: string
+          file_path?: string | null
+          status?: string
+          raw_ocr_text?: string | null
+          extracted_menu?: Json | null
+          confidence_score?: number | null
+          processing_time_ms?: number | null
+          error_message?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocr_imports_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      ocr_analytics_metrics: {
+        Row: {
+          id: string
+          restaurant_id: string
+          action_type: string
+          is_success: boolean
+          processing_time_ms: number
+          manual_corrections_count: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          restaurant_id: string
+          action_type: string
+          is_success: boolean
+          processing_time_ms: number
+          manual_corrections_count?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          restaurant_id?: string
+          action_type?: string
+          is_success?: boolean
+          processing_time_ms?: number
+          manual_corrections_count?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocr_analytics_metrics_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       addon_groups: {
         Row: {
           created_at: string

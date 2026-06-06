@@ -26,7 +26,14 @@ export const ReputationManager = ({ restaurantId }: { restaurantId: string }) =>
           .from('enterprise_reviews' as any)
           .select(`
             *,
-            orders ( order_number ),
+            orders ( 
+              order_number,
+              order_items (
+                name,
+                menu_item_id,
+                quantity
+              )
+            ),
             tables ( table_number ),
             review_ai_insights (*),
             review_recoveries (*)
@@ -85,6 +92,34 @@ export const ReputationManager = ({ restaurantId }: { restaurantId: string }) =>
   }, [reviews, ratingAggregate]);
 
   const totalComplaints = useMemo(() => reviews.filter(r => r.review_ai_insights?.[0]?.is_complaint).length, [reviews]);
+
+  // Calculate per-item ratings dynamically from reviews and order items
+  const itemRatings = useMemo(() => {
+    const itemMap: Record<string, { name: string; totalRating: number; count: number }> = {};
+    
+    reviews.forEach((review: any) => {
+      const items = review.orders?.order_items || [];
+      const rating = review.overall_rating;
+      if (rating === undefined || rating === null) return;
+      
+      items.forEach((item: any) => {
+        const key = item.menu_item_id || item.name;
+        if (!itemMap[key]) {
+          itemMap[key] = { name: item.name, totalRating: 0, count: 0 };
+        }
+        itemMap[key].totalRating += rating;
+        itemMap[key].count += 1;
+      });
+    });
+    
+    return Object.values(itemMap)
+      .map(item => ({
+        name: item.name,
+        avgRating: item.totalRating / item.count,
+        count: item.count
+      }))
+      .sort((a, b) => b.avgRating - a.avgRating);
+  }, [reviews]);
 
   const markResolved = useMutation({
     mutationFn: async (recoveryId: string) => {
@@ -165,25 +200,29 @@ export const ReputationManager = ({ restaurantId }: { restaurantId: string }) =>
         </Card>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>
-          All Reviews ({reviews.length})
-        </Button>
-        <Button variant={filter === 'needs_attention' ? 'default' : 'outline'} onClick={() => setFilter('needs_attention')} className="gap-2">
-          <AlertCircle className="w-4 h-4 text-warning" /> Needs Attention
-        </Button>
-        <Button variant={filter === 'recovered' ? 'default' : 'outline'} onClick={() => setFilter('recovered')} className="gap-2">
-          <CheckCircle2 className="w-4 h-4 text-success" /> Recovered
-        </Button>
-        <Button variant={filter === 'positive' ? 'default' : 'outline'} onClick={() => setFilter('positive')} className="gap-2">
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> Positive
-        </Button>
-      </div>
+      {/* Grid Layout: Reviews Feed (Left) & Menu Item Ratings (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Reviews Feed & Filter Tabs (2/3 width) */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Filter Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>
+              All Reviews ({reviews.length})
+            </Button>
+            <Button variant={filter === 'needs_attention' ? 'default' : 'outline'} onClick={() => setFilter('needs_attention')} className="gap-2">
+              <AlertCircle className="w-4 h-4 text-warning" /> Needs Attention
+            </Button>
+            <Button variant={filter === 'recovered' ? 'default' : 'outline'} onClick={() => setFilter('recovered')} className="gap-2">
+              <CheckCircle2 className="w-4 h-4 text-success" /> Recovered
+            </Button>
+            <Button variant={filter === 'positive' ? 'default' : 'outline'} onClick={() => setFilter('positive')} className="gap-2">
+              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> Positive
+            </Button>
+          </div>
 
-      {/* Reviews Feed */}
-      <div className="space-y-4">
-        {filteredReviews.length === 0 ? (
+          {/* Reviews Feed */}
+          <div className="space-y-4">
+            {filteredReviews.length === 0 ? (
           <div className="text-center py-12 bg-muted/30 rounded-2xl border border-dashed">
             <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-3 opacity-20" />
             <h3 className="text-lg font-medium">No reviews found</h3>
@@ -272,6 +311,60 @@ export const ReputationManager = ({ restaurantId }: { restaurantId: string }) =>
             );
           })
         )}
+          </div>
+        </div>
+
+        {/* Right: Per-Item Ratings List (1/3 width) */}
+        <div className="space-y-4">
+          <Card className="border-0 shadow-md">
+            <CardHeader className="pb-3 border-b">
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <span>🍽️</span> Menu Item Ratings
+              </CardTitle>
+              <CardDescription>
+                Average customer rating aggregated by menu items ordered.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-5 max-h-[600px] overflow-y-auto space-y-4">
+              {itemRatings.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  No menu item ratings computed yet. Place orders and submit ratings to view statistics.
+                </div>
+              ) : (
+                itemRatings.map((item) => (
+                  <div
+                    key={item.name}
+                    className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0 transition-colors"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <p className="font-semibold text-sm text-foreground truncate">{item.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {item.count} order{item.count > 1 ? 's' : ''} rated
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end shrink-0 gap-1">
+                      <span className="text-sm font-bold text-amber-500 flex items-center gap-0.5 leading-none">
+                        ★ {item.avgRating.toFixed(1)}
+                      </span>
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-3 h-3 ${
+                              star <= Math.round(item.avgRating)
+                                ? 'text-yellow-500 fill-yellow-500'
+                                : 'text-zinc-200 dark:text-zinc-800'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

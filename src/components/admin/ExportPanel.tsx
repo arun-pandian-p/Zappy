@@ -37,24 +37,28 @@ export function ExportPanel({ restaurantId }: ExportPanelProps) {
     today.setHours(23, 59, 59, 999);
     
     switch (datePreset) {
-      case "today":
+      case "today": {
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
         return { startDate: todayStart, endDate: today };
-      case "yesterday":
+      }
+      case "yesterday": {
         const yesterdayStart = subDays(today, 1);
         yesterdayStart.setHours(0, 0, 0, 0);
         const yesterdayEnd = subDays(today, 1);
         yesterdayEnd.setHours(23, 59, 59, 999);
         return { startDate: yesterdayStart, endDate: yesterdayEnd };
-      case "last7days":
+      }
+      case "last7days": {
         const last7Start = subDays(today, 6);
         last7Start.setHours(0, 0, 0, 0);
         return { startDate: last7Start, endDate: today };
-      case "last30days":
+      }
+      case "last30days": {
         const last30Start = subDays(today, 29);
         last30Start.setHours(0, 0, 0, 0);
         return { startDate: last30Start, endDate: today };
+      }
       case "thisMonth":
         return { startDate: startOfMonth(today), endDate: endOfMonth(today) };
       case "custom":
@@ -62,10 +66,11 @@ export function ExportPanel({ restaurantId }: ExportPanelProps) {
           startDate: customStartDate ? new Date(customStartDate) : subDays(today, 7),
           endDate: customEndDate ? new Date(customEndDate) : today,
         };
-      default:
+      default: {
         const defaultStart = subDays(today, 6);
         defaultStart.setHours(0, 0, 0, 0);
         return { startDate: defaultStart, endDate: today };
+      }
     }
   };
 

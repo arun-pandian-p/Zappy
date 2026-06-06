@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +11,8 @@ import { lovable } from '@/integrations/lovable/index';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isExpired = searchParams.get('expired') === 'true';
   const { toast } = useToast();
   const { signIn, user, role, loading: authLoading, getRouteForRole } = useAuth();
 
@@ -102,6 +104,13 @@ const Login = () => {
             <h2 className="text-2xl font-bold text-slate-800">Welcome back</h2>
             <p className="text-slate-500 mt-1 text-sm">Sign in to your account</p>
           </div>
+
+          {isExpired && (
+            <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-semibold flex items-start gap-2 animate-pulse">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+              <span>Your session has expired due to inactivity. Please sign in again.</span>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-3.5">
             <div className="space-y-1.5">

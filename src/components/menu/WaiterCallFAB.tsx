@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { checkRateLimit, RATE_LIMITS, getRemainingCooldown } from '@/utils/rateLimiter';
 
 interface WaiterCallFABProps {
   restaurantId: string;
@@ -102,6 +103,17 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber }: WaiterCall
 
   // Trigger call
   const handleQuickCall = async (reason = 'Assistance requested') => {
+    // Rate Limit Check
+    if (!checkRateLimit(`waiter_call_${restaurantId}_${tableId}`, RATE_LIMITS.WAITER_CALL.maxAttempts, RATE_LIMITS.WAITER_CALL.windowMs)) {
+      const cooldown = getRemainingCooldown(`waiter_call_${restaurantId}_${tableId}`);
+      toast({
+        title: 'Too many requests',
+        description: `Please wait ${cooldown}s before requesting assistance again.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       await createCall.mutateAsync(reason);
       toast({
@@ -305,18 +317,21 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber }: WaiterCall
             {currentState === 'idle' && (
               <>
                 <span className="absolute inset-0 rounded-full bg-emerald-500/25 animate-[ping_2s_infinite]" />
+                <span className="absolute inset-0 rounded-full bg-emerald-500/10 animate-[ping_2s_infinite_1s]" />
                 <HandHelping className="w-5.5 h-5.5" />
               </>
             )}
             {currentState === 'pending' && (
               <>
-                <span className="absolute inset-0 rounded-full bg-amber-500/20 animate-ping" />
+                <span className="absolute inset-0 rounded-full bg-amber-500/30 animate-[ping_2s_infinite]" />
+                <span className="absolute inset-0 rounded-full bg-amber-500/15 animate-[ping_2s_infinite_1s]" />
                 <Loader2 className="w-5.5 h-5.5 animate-spin" />
               </>
             )}
             {currentState === 'acknowledged' && (
               <>
-                <span className="absolute inset-0 rounded-full bg-indigo-500/25 animate-ping" />
+                <span className="absolute inset-0 rounded-full bg-indigo-500/30 animate-[ping_2s_infinite]" />
+                <span className="absolute inset-0 rounded-full bg-indigo-500/15 animate-[ping_2s_infinite_1s]" />
                 <Loader2 className="w-5.5 h-5.5 animate-spin text-white" />
               </>
             )}

@@ -34,6 +34,7 @@ export function EditMenuItemDialog({ open, onOpenChange, item, categories, resta
     is_vegetarian: false,
     is_popular: false,
     prep_time_minutes: "15",
+    tags: "",
   });
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export function EditMenuItemDialog({ open, onOpenChange, item, categories, resta
         is_vegetarian: item.is_vegetarian || false,
         is_popular: item.is_popular || false,
         prep_time_minutes: String(item.prep_time_minutes || 15),
+        tags: item.tags ? item.tags.join(", ") : "",
       });
     }
   }, [item]);
@@ -71,6 +73,7 @@ export function EditMenuItemDialog({ open, onOpenChange, item, categories, resta
           is_vegetarian: form.is_vegetarian,
           is_popular: form.is_popular,
           prep_time_minutes: parseInt(form.prep_time_minutes) || 15,
+          tags: form.tags.split(",").map(t => t.trim()).filter(Boolean),
         },
       });
       toast({ title: "Item Updated", description: `${cleanName} has been updated.` });
@@ -115,6 +118,14 @@ export function EditMenuItemDialog({ open, onOpenChange, item, categories, resta
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Tags (comma separated)</Label>
+            <Input
+              value={form.tags}
+              onChange={(e) => setForm({ ...form, tags: e.target.value })}
+              placeholder="e.g. Spicy, Vegan, Chef Special"
+            />
           </div>
           <div className="space-y-2">
             <Label>Image</Label>

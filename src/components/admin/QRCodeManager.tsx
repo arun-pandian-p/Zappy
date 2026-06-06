@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Plus,
@@ -12,6 +12,10 @@ import {
   Grid3X3,
   X,
   Loader2,
+  Palette,
+  Eye,
+  Maximize2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +63,26 @@ const DEFAULT_BASE_URL = getAppOrigin();
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://copkzrwvpqfjpsyyyqdy.supabase.co';
 const REDIRECT_BASE = `${SUPABASE_URL}/functions/v1/qr-redirect`;
 
+// QR Style Presets
+const QR_COLOR_PRESETS = [
+  { name: "Classic", fg: "#000000", bg: "#FFFFFF" },
+  { name: "Ocean", fg: "#0077B6", bg: "#CAF0F8" },
+  { name: "Forest", fg: "#1B4332", bg: "#D8F3DC" },
+  { name: "Sunset", fg: "#9D0208", bg: "#FFF0F3" },
+  { name: "Royal", fg: "#3C096C", bg: "#F0E6FF" },
+  { name: "Night", fg: "#E0E1DD", bg: "#1B1B1B" },
+  { name: "Coffee", fg: "#6F4E37", bg: "#FFF8F0" },
+  { name: "Berry", fg: "#9B2226", bg: "#FFF1F2" },
+];
+
+// QR Download sizes
+const QR_SIZES = [
+  { label: "Small (256px)", value: 256 },
+  { label: "Medium (512px)", value: 512 },
+  { label: "Large (1024px)", value: 1024 },
+  { label: "Print (2048px)", value: 2048 },
+];
+
 interface QRCodeManagerProps {
   restaurantId: string;
 }
@@ -85,12 +109,21 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
     fg_color: "#000000",
     bg_color: "#FFFFFF",
     frame_text: "",
+    corner_style: "square" as "square" | "rounded",
+    logo_url: "",
+    error_level: "M" as "L" | "M" | "Q" | "H",
   });
+  const [downloadSize, setDownloadSize] = useState(1024);
+  const [previewQR, setPreviewQR] = useState<QRCode | null>(null);
   const canvasRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Table form state
   const [newTableNumber, setNewTableNumber] = useState("");
   const [newTableCapacity, setNewTableCapacity] = useState("4");
+
+  // Refs to prevent re-creating QRs in loops
+  const baseQRCreated = useRef(false);
+  const orphanSyncDone = useRef(false);
 
   const activeQRCodes = qrCodes.filter((q) => q.is_active);
   const tableQRCodes = activeQRCodes.filter(
@@ -103,9 +136,10 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
 
   const baseQRUrl = `/order?r=${restaurantId}`;
 
-  // Auto-create base QR if it doesn't exist
+  // Auto-create base QR if it doesn't exist (with guard against loops)
   useEffect(() => {
-    if (!isLoading && !baseQR && restaurantId) {
+    if (!isLoading && !baseQR && restaurantId && !baseQRCreated.current) {
+      baseQRCreated.current = true;
       createQR.mutate({
         tenant_id: restaurantId,
         qr_name: "Restaurant Base QR",
@@ -114,15 +148,21 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
         metadata: { is_base_qr: true },
       });
     }
+    // Reset flag when base QR appears
+    if (baseQR) baseQRCreated.current = false;
   }, [isLoading, baseQR, restaurantId]);
 
-  // Auto-sync orphaned tables: create QR entries for tables missing one
+  // Auto-sync orphaned tables (with guard against infinite loops)
   useEffect(() => {
     if (isLoading || tablesLoading || !restaurantId || tables.length === 0) return;
+    if (orphanSyncDone.current) return;
 
     const orphaned = tables.filter(
       (t) => !activeQRCodes.some((q) => (q.metadata as any)?.table_id === t.id)
     );
+
+    if (orphaned.length === 0) return;
+    orphanSyncDone.current = true;
 
     orphaned.forEach((table) => {
       createQR.mutate({
@@ -134,6 +174,20 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
       });
     });
   }, [isLoading, tablesLoading, tables.length, activeQRCodes.length, restaurantId]);
+
+  // Reset orphan sync flag when tables change
+  useEffect(() => {
+    orphanSyncDone.current = false;
+  }, [tables.length]);
+
+  const applyColorPreset = (preset: typeof QR_COLOR_PRESETS[0]) => {
+    setNewQR(prev => ({ ...prev, fg_color: preset.fg, bg_color: preset.bg }));
+  };
+
+  // Apply restaurant brand colors as a preset
+  const brandPreset = restaurant?.primary_color
+    ? { name: "Brand", fg: restaurant.primary_color, bg: "#FFFFFF" }
+    : null;
 
   const handleCreateCustomQR = async () => {
     if (!newQR.qr_name || !newQR.target_url) {
@@ -151,11 +205,18 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
           fg_color: newQR.fg_color,
           bg_color: newQR.bg_color,
           frame_text: newQR.frame_text,
+          corner_style: newQR.corner_style,
+          logo_url: newQR.logo_url,
+          error_level: newQR.error_level,
         },
       });
       toast({ title: "QR Code Created", description: `${newQR.qr_name} has been created.` });
       setShowCreate(false);
-      setNewQR({ qr_name: "", target_url: "", qr_type: "dynamic", expires_at: "", fg_color: "#000000", bg_color: "#FFFFFF", frame_text: "" });
+      setNewQR({
+        qr_name: "", target_url: "", qr_type: "dynamic", expires_at: "",
+        fg_color: "#000000", bg_color: "#FFFFFF", frame_text: "",
+        corner_style: "square", logo_url: "", error_level: "M",
+      });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -227,32 +288,55 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
     if (qr.qr_type === "dynamic") {
       return `${REDIRECT_BASE}?id=${qr.id}`;
     }
-    // Ensure static QR codes always have absolute URLs
     if (qr.target_url?.startsWith('/')) {
       return `${BASE_URL}${qr.target_url}`;
     }
     return qr.target_url || BASE_URL;
   };
 
-  /** Always returns an absolute URL for browser navigation (open button). */
   const getOpenUrl = (qr: QRCode) => {
-    // For dynamic: go through the redirect edge function (same as QR scan)
     if (qr.qr_type === "dynamic") return `${REDIRECT_BASE}?id=${qr.id}`;
-    // For static: resolve to absolute
     if (qr.target_url?.startsWith('http')) return qr.target_url;
     return `${BASE_URL}${qr.target_url || ''}`;
   };
 
-  const handleDownload = (qr: QRCode) => {
+  const handleDownload = useCallback((qr: QRCode, size = downloadSize) => {
     const container = canvasRefs.current[qr.id];
     const canvas = container?.querySelector("canvas");
     if (!canvas) return;
-    const pngUrl = canvas.toDataURL("image/png");
+
+    // Create a new canvas at the requested size
+    const exportCanvas = document.createElement("canvas");
+    const meta = (qr.metadata || {}) as Record<string, any>;
+    const frameText = meta.frame_text || "";
+    const padding = 40;
+    const textHeight = frameText ? 50 : 0;
+    
+    exportCanvas.width = size + padding * 2;
+    exportCanvas.height = size + padding * 2 + textHeight;
+    
+    const ctx = exportCanvas.getContext("2d")!;
+    // Background
+    ctx.fillStyle = meta.bg_color || "#FFFFFF";
+    ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    
+    // Draw QR code
+    ctx.drawImage(canvas, padding, padding, size, size);
+    
+    // Draw frame text
+    if (frameText) {
+      ctx.fillStyle = meta.fg_color || "#000000";
+      ctx.font = `bold ${Math.max(16, size / 20)}px Inter, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText(frameText, exportCanvas.width / 2, size + padding + textHeight - 10);
+    }
+
+    const pngUrl = exportCanvas.toDataURL("image/png");
     const link = document.createElement("a");
-    link.download = `QR-${qr.qr_name}.png`;
+    link.download = `QR-${qr.qr_name}-${size}px.png`;
     link.href = pngUrl;
     link.click();
-  };
+  }, [downloadSize]);
 
   const handleCopyUrl = (qr: QRCode) => {
     navigator.clipboard.writeText(getQRValue(qr));
@@ -287,10 +371,10 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
       <TableRow key={qr.id}>
         <TableCell>
           <div className="bg-white p-1 rounded inline-block border">
-            <QRCodeSVG value={getQRValue(qr)} size={48} level="M" fgColor={meta.fg_color || "#000000"} bgColor={meta.bg_color || "#FFFFFF"} />
+            <QRCodeSVG value={getQRValue(qr)} size={48} level={(meta.error_level as any) || "M"} fgColor={meta.fg_color || "#000000"} bgColor={meta.bg_color || "#FFFFFF"} />
           </div>
           <div ref={(el) => { canvasRefs.current[qr.id] = el; }} className="hidden">
-            <QRCodeCanvas value={getQRValue(qr)} size={1200} level="H" includeMargin fgColor={meta.fg_color || "#000000"} bgColor={meta.bg_color || "#FFFFFF"} />
+            <QRCodeCanvas value={getQRValue(qr)} size={2048} level="H" includeMargin fgColor={meta.fg_color || "#000000"} bgColor={meta.bg_color || "#FFFFFF"} />
           </div>
         </TableCell>
         <TableCell className="font-medium">{qr.qr_name}</TableCell>
@@ -302,6 +386,9 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
         <TableCell className="text-sm text-muted-foreground">{format(new Date(qr.created_at), "MMM d, yyyy")}</TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" onClick={() => setPreviewQR(qr)} title="Preview & Customize">
+              <Eye className="w-4 h-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => window.open(getOpenUrl(qr), '_blank')} title="Open customer menu"><ExternalLink className="w-4 h-4" /></Button>
             <Button variant="ghost" size="icon" onClick={() => handleCopyUrl(qr)} title="Copy URL"><Copy className="w-4 h-4" /></Button>
             <Button variant="ghost" size="icon" onClick={() => handleDownload(qr)} title="Download PNG"><Download className="w-4 h-4" /></Button>
@@ -333,7 +420,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
             <DialogTrigger asChild>
               <Button size="sm"><Plus className="w-4 h-4 mr-1" /> Custom QR</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Create Custom QR Code</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -342,36 +429,126 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Target URL *</Label>
-                  <Input value={newQR.target_url} onChange={(e) => setNewQR({ ...newQR, target_url: e.target.value })} placeholder="https://..." />
+                  <Input value={newQR.target_url} onChange={(e) => setNewQR({ ...newQR, target_url: e.target.value })} placeholder="https://... or /order?r=..." />
                 </div>
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={newQR.qr_type} onValueChange={(v) => setNewQR({ ...newQR, qr_type: v as any })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dynamic">Dynamic (trackable)</SelectItem>
-                      <SelectItem value="static">Static (direct link)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Type</Label>
+                    <Select value={newQR.qr_type} onValueChange={(v) => setNewQR({ ...newQR, qr_type: v as any })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dynamic">Dynamic (trackable)</SelectItem>
+                        <SelectItem value="static">Static (direct link)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Error Correction</Label>
+                    <Select value={newQR.error_level} onValueChange={(v) => setNewQR({ ...newQR, error_level: v as any })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="L">Low (7%)</SelectItem>
+                        <SelectItem value="M">Medium (15%)</SelectItem>
+                        <SelectItem value="Q">Quartile (25%)</SelectItem>
+                        <SelectItem value="H">High (30%)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Expires At (optional)</Label>
                   <Input type="datetime-local" value={newQR.expires_at} onChange={(e) => setNewQR({ ...newQR, expires_at: e.target.value })} />
                 </div>
+
+                {/* Color Presets */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1"><Palette className="w-3.5 h-3.5" /> Color Presets</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {QR_COLOR_PRESETS.map((preset) => (
+                      <button
+                        key={preset.name}
+                        type="button"
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs hover:ring-2 ring-primary/50 transition-all"
+                        style={{ backgroundColor: preset.bg, color: preset.fg, borderColor: preset.fg + '30' }}
+                        onClick={() => applyColorPreset(preset)}
+                      >
+                        <span className="w-3 h-3 rounded-full border" style={{ backgroundColor: preset.fg }} />
+                        {preset.name}
+                      </button>
+                    ))}
+                    {brandPreset && (
+                      <button
+                        type="button"
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs hover:ring-2 ring-primary/50 transition-all"
+                        style={{ backgroundColor: brandPreset.bg, color: brandPreset.fg, borderColor: brandPreset.fg + '30' }}
+                        onClick={() => applyColorPreset(brandPreset)}
+                      >
+                        <span className="w-3 h-3 rounded-full border" style={{ backgroundColor: brandPreset.fg }} />
+                        {brandPreset.name}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Custom Colors */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>QR Color</Label>
-                    <Input type="color" value={newQR.fg_color} onChange={(e) => setNewQR({ ...newQR, fg_color: e.target.value })} />
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="w-10 h-10 p-1 cursor-pointer" value={newQR.fg_color} onChange={(e) => setNewQR({ ...newQR, fg_color: e.target.value })} />
+                      <Input value={newQR.fg_color} onChange={(e) => setNewQR({ ...newQR, fg_color: e.target.value })} className="font-mono text-xs" />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Background</Label>
-                    <Input type="color" value={newQR.bg_color} onChange={(e) => setNewQR({ ...newQR, bg_color: e.target.value })} />
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="w-10 h-10 p-1 cursor-pointer" value={newQR.bg_color} onChange={(e) => setNewQR({ ...newQR, bg_color: e.target.value })} />
+                      <Input value={newQR.bg_color} onChange={(e) => setNewQR({ ...newQR, bg_color: e.target.value })} className="font-mono text-xs" />
+                    </div>
                   </div>
                 </div>
+
+                {/* Frame Text */}
                 <div className="space-y-2">
-                  <Label>Frame Text</Label>
+                  <Label>Frame Text (printed below QR)</Label>
                   <Input value={newQR.frame_text} onChange={(e) => setNewQR({ ...newQR, frame_text: e.target.value })} placeholder="Scan to Order" />
                 </div>
+
+                {/* Logo URL */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1"><ImageIcon className="w-3.5 h-3.5" /> Center Logo URL (optional)</Label>
+                  <Input value={newQR.logo_url} onChange={(e) => setNewQR({ ...newQR, logo_url: e.target.value })} placeholder="https://... (logo overlayed on QR center)" />
+                  <p className="text-xs text-muted-foreground">Use High error correction when adding a logo overlay.</p>
+                </div>
+
+                {/* Live Preview */}
+                <div className="space-y-2">
+                  <Label>Preview</Label>
+                  <div className="flex justify-center p-4 rounded-lg border-2 border-dashed" style={{ backgroundColor: newQR.bg_color }}>
+                    <div className="space-y-2 text-center">
+                      <QRCodeSVG
+                        value={newQR.target_url || "https://zappy.ind.in"}
+                        size={160}
+                        level={newQR.error_level}
+                        fgColor={newQR.fg_color}
+                        bgColor={newQR.bg_color}
+                        includeMargin
+                        imageSettings={newQR.logo_url ? {
+                          src: newQR.logo_url,
+                          x: undefined,
+                          y: undefined,
+                          height: 32,
+                          width: 32,
+                          excavate: true,
+                        } : undefined}
+                      />
+                      {newQR.frame_text && (
+                        <p className="text-sm font-semibold" style={{ color: newQR.fg_color }}>{newQR.frame_text}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <Button onClick={handleCreateCustomQR} className="w-full" disabled={createQR.isPending}>
                   {createQR.isPending ? "Creating..." : "Create QR Code"}
                 </Button>
@@ -451,7 +628,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
                 ref={(el) => { canvasRefs.current[baseQR.id] = el; }}
                 className="hidden"
               >
-                <QRCodeCanvas value={getQRValue(baseQR)} size={1200} level="H" includeMargin />
+                <QRCodeCanvas value={getQRValue(baseQR)} size={2048} level="H" includeMargin />
               </div>
               <div className="flex-1 space-y-3">
                 <div className="flex items-center gap-2">
@@ -464,6 +641,19 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
                 <p className="text-sm text-muted-foreground">
                   Target: {baseQR.target_url}
                 </p>
+                {/* Download Size Selector */}
+                <div className="flex items-center gap-2">
+                  <Select value={String(downloadSize)} onValueChange={(v) => setDownloadSize(Number(v))}>
+                    <SelectTrigger className="w-[160px] h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {QR_SIZES.map((s) => (
+                        <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex gap-2 flex-wrap">
                   <Button variant="outline" size="sm" onClick={() => window.open(getOpenUrl(baseQR), '_blank')}>
                     <ExternalLink className="w-4 h-4 mr-1" /> Open
@@ -615,6 +805,72 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* QR Preview/Customize Dialog */}
+      <Dialog open={!!previewQR} onOpenChange={(open) => !open && setPreviewQR(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              {previewQR?.qr_name}
+            </DialogTitle>
+          </DialogHeader>
+          {previewQR && (() => {
+            const meta = (previewQR.metadata || {}) as Record<string, any>;
+            return (
+              <div className="space-y-4">
+                <div className="flex justify-center p-6 rounded-xl border-2" style={{ backgroundColor: meta.bg_color || "#FFFFFF" }}>
+                  <div className="space-y-3 text-center">
+                    <QRCodeSVG
+                      value={getQRValue(previewQR)}
+                      size={220}
+                      level={(meta.error_level as any) || "H"}
+                      fgColor={meta.fg_color || "#000000"}
+                      bgColor={meta.bg_color || "#FFFFFF"}
+                      includeMargin
+                      imageSettings={meta.logo_url ? {
+                        src: meta.logo_url,
+                        x: undefined,
+                        y: undefined,
+                        height: 40,
+                        width: 40,
+                        excavate: true,
+                      } : undefined}
+                    />
+                    {meta.frame_text && (
+                      <p className="text-sm font-bold" style={{ color: meta.fg_color || "#000000" }}>{meta.frame_text}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-sm space-y-1 text-muted-foreground">
+                  <p><strong>Type:</strong> {previewQR.qr_type}</p>
+                  <p><strong>Scans:</strong> {previewQR.scan_count}</p>
+                  <p className="break-all"><strong>URL:</strong> {getQRValue(previewQR)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs shrink-0">Download Size:</Label>
+                  <Select value={String(downloadSize)} onValueChange={(v) => setDownloadSize(Number(v))}>
+                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {QR_SIZES.map((s) => (
+                        <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2">
+                  <Button className="flex-1" onClick={() => handleDownload(previewQR)}>
+                    <Download className="w-4 h-4 mr-1" /> Download
+                  </Button>
+                  <Button variant="outline" className="flex-1" onClick={() => handleCopyUrl(previewQR)}>
+                    <Copy className="w-4 h-4 mr-1" /> Copy URL
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

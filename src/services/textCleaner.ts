@@ -36,7 +36,7 @@ const OCR_TYPO_MAP: Record<string, string> = {
   "Mutt0n": "Mutton",
   "mutt0n": "Mutton",
   "F1sh": "Fish",
-  "Pra\/vn": "Prawn",
+  "Pravn": "Prawn",
   "lassi": "Lassi",
   "1assi": "Lassi",
   "c0ffee": "Coffee",
@@ -77,7 +77,7 @@ export function extractPrice(priceStr: string): number | null {
   if (!priceStr) return null;
 
   // Remove currency symbols and whitespace
-  let cleaned = priceStr
+  const cleaned = priceStr
     .replace(/[₹$€£¥]/g, "")
     .replace(/Rs\.?/gi, "")
     .replace(/INR/gi, "")
@@ -88,7 +88,7 @@ export function extractPrice(priceStr: string): number | null {
 
   // Try to extract a number
   const match = cleaned.match(/(\d+(?:\.\d{1,2})?)/);
-  if (match) {
+  if (match && match[1]) {
     const price = parseFloat(match[1]);
     // Sanity check: menu items are usually ₹10 - ₹5000
     if (price >= 1 && price <= 10000) {

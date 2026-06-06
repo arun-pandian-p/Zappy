@@ -33,6 +33,7 @@ import { useAtomicBilling } from '@/hooks/useAtomicBilling';
 import { useAuth } from '@/hooks/useAuth';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { LogOut } from 'lucide-react';
+import { usePrinter } from '@/hooks/usePrinter';
 
 interface BillingCounterProps {
   embedded?: boolean;
@@ -53,6 +54,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   };
   const { toast } = useToast();
   const receiptRef = useRef<HTMLDivElement>(null);
+  const printer = usePrinter(restaurantId);
 
   const { data: restaurant } = useRestaurantDetails(restaurantId);
   const { data: tables = [] } = useTables(restaurantId);
@@ -239,8 +241,73 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
     }
   };
 
-  const handlePrintReceipt = () => {
-    window.print();
+  const handlePrintReceipt = async (itemToPrint?: OrderWithItems | Invoice) => {
+    const target = itemToPrint || orderToPrint;
+    if (!target) {
+      window.print();
+      return;
+    }
+
+    let receiptData;
+    if ('invoice_number' in target) {
+      // It's an Invoice
+      receiptData = {
+        restaurantName: restaurantName,
+        address: restaurant?.address || undefined,
+        phone: restaurant?.phone || undefined,
+        invoiceNumber: target.invoice_number,
+        tableNumber: 'Table',
+        date: new Date(target.created_at),
+        items: target.items.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: Number(item.price),
+          total: Number(item.total),
+        })),
+        subtotal: Number(target.subtotal) || 0,
+        taxRate: taxRate,
+        taxAmount: Number(target.tax_amount) || 0,
+        serviceCharge: Number(target.service_charge) || 0,
+        discount: Number(target.discount_amount) || 0,
+        total: Number(target.total_amount) || 0,
+        paymentMethod: target.payment_method,
+      };
+    } else {
+      // It's an OrderWithItems
+      receiptData = {
+        restaurantName: restaurantName,
+        address: restaurant?.address || undefined,
+        phone: restaurant?.phone || undefined,
+        invoiceNumber: String(target.order_number),
+        tableNumber: target.table?.table_number || 'N/A',
+        date: new Date(target.created_at || Date.now()),
+        items: target.order_items?.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: Number(item.price),
+          total: Number(item.price) * item.quantity,
+        })) || [],
+        subtotal: Number(target.subtotal) || 0,
+        taxRate: taxRate,
+        taxAmount: Number(target.tax_amount) || 0,
+        serviceCharge: Number(target.service_charge) || 0,
+        discount: target.id === selectedOrder?.id ? discountAmount : 0,
+        total: Number(target.total_amount) || 0,
+        paymentMethod: target.payment_method || 'cash',
+      };
+    }
+
+    try {
+      if (printer.isConnected) {
+        await printer.printReceipt(receiptData, currencySymbol);
+        toast({ title: 'Receipt Printed', description: 'Invoice sent to printer.' });
+      } else {
+        window.print();
+      }
+    } catch (err) {
+      toast({ title: 'Print Failed', description: 'Failed, running browser fallback.', variant: 'destructive' });
+      window.print();
+    }
   };
 
   const getTimeAgo = (date: string) => {
@@ -843,7 +910,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                                       className="w-full mt-3 gap-2"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handlePrintReceipt();
+                                        handlePrintReceipt(invoice);
                                       }}
                                     >
                                       <Printer className="w-3.5 h-3.5" />

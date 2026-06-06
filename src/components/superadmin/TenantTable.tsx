@@ -28,6 +28,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Tables } from "@/integrations/supabase/types";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 type Restaurant = Tables<"restaurants">;
 type SubscriptionTier = "free" | "pro" | "enterprise";
@@ -40,6 +42,7 @@ interface TenantTableProps {
   onViewDetails?: (id: string) => void;
   onDelete?: (id: string) => void;
   isLoading?: boolean;
+  metrics?: Record<string, { tableCount: number; orderCount: number }>;
 }
 
 export function TenantTable({ 
@@ -49,8 +52,10 @@ export function TenantTable({
   onToggleAds,
   onViewDetails,
   onDelete,
-  isLoading 
+  metrics
 }: TenantTableProps) {
+  const { impersonateRestaurant } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<string>("all");
 
@@ -74,16 +79,6 @@ export function TenantTable({
     return filtered;
   }, [restaurants, searchQuery, tierFilter]);
 
-  const getTierBadge = (tier: string | null) => {
-    switch (tier) {
-      case "pro":
-        return <Badge className="bg-blue-500 hover:bg-blue-600">Pro</Badge>;
-      case "enterprise":
-        return <Badge className="bg-purple-500 hover:bg-purple-600">Enterprise</Badge>;
-      default:
-        return <Badge variant="secondary">Free</Badge>;
-    }
-  };
 
   const getStatusBadge = (isActive: boolean | null) => {
     return isActive ? (
@@ -135,6 +130,8 @@ export function TenantTable({
                 <TableHead className="font-semibold">Restaurant</TableHead>
                 <TableHead className="font-semibold">Slug</TableHead>
                 <TableHead className="font-semibold">Plan</TableHead>
+                <TableHead className="font-semibold">Tables</TableHead>
+                <TableHead className="font-semibold">Orders</TableHead>
                 <TableHead className="font-semibold">Ads</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold">Created</TableHead>
@@ -171,6 +168,12 @@ export function TenantTable({
                         <SelectItem value="enterprise">Enterprise</SelectItem>
                       </SelectContent>
                     </Select>
+                  </TableCell>
+                  <TableCell className="font-semibold text-center sm:text-left">
+                    {metrics?.[restaurant.id]?.tableCount ?? 0}
+                  </TableCell>
+                  <TableCell className="font-semibold text-center sm:text-left">
+                    {metrics?.[restaurant.id]?.orderCount ?? 0}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -214,6 +217,16 @@ export function TenantTable({
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem
+                          onClick={() => {
+                            impersonateRestaurant(restaurant.id);
+                            navigate("/admin");
+                          }}
+                          className="text-purple-600 font-semibold"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Impersonate
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                           onClick={() => onToggleActive(restaurant.id, restaurant.is_active ?? false)}
                         >
                           <Power className="w-4 h-4 mr-2" />
@@ -235,7 +248,7 @@ export function TenantTable({
               ))}
               {filteredRestaurants.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       No restaurants found
                     </TableCell>
                 </TableRow>

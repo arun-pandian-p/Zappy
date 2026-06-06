@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import UserGuide from "./pages/UserGuide";
 import RequestQuote from "./pages/RequestQuote";
 import RoleGuard from "./components/auth/RoleGuard";
+import { ImpersonationBanner } from "./components/superadmin/ImpersonationBanner";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ if (typeof window !== "undefined" &&
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <ImpersonationBanner />
       <Toaster />
       <Sonner />
       <Analytics />

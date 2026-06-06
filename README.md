@@ -142,3 +142,22 @@ npm run build
 
 ---
 *Built to transform restaurants into data-driven operating engines.*
+
+---
+
+## Enterprise Remediation Tracker
+
+### Sprint 7: Customer Review, Super Admin, Seed Data & E2E Audit
+- [x] Move customer rating out of automatic post-order served flow
+- [x] Add standalone customer review entry point in customer profile
+- [x] Fix feedback route table resolution for QR table numbers and table UUIDs
+- [ ] Verify customer review insert against Supabase after migrations are applied
+- [ ] Apply pending database migrations in Supabase SQL Editor
+- [ ] Create/verify super admin dashboard access for `zappyscan@gmail.com`
+- [ ] Create two restaurant admin accounts with password `arun4709s`
+- [ ] Seed two restaurants with at least 20 food items each
+- [ ] Create five active tables per restaurant
+- [ ] Audit full customer scenario: QR open, table select, menu load, cart, order, KDS, billing, review
+- [ ] Audit restaurant admin isolation for both seeded restaurant users
+- [ ] Audit super admin tenant management, admin accounts, logs, and dashboard UI
+- [ ] Run full test suite, build, and customer-flow smoke test

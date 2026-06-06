@@ -15,13 +15,16 @@ CREATE TABLE IF NOT EXISTS public.notification_subscriptions (
 ALTER TABLE public.notification_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Subscriptions Policies
+DROP POLICY IF EXISTS "Staff can view subscriptions in their restaurant" ON public.notification_subscriptions;
 CREATE POLICY "Staff can view subscriptions in their restaurant" ON public.notification_subscriptions
   FOR SELECT TO authenticated
   USING (restaurant_id = public.get_user_restaurant_id(auth.uid()));
 
+DROP POLICY IF EXISTS "Anyone can create subscriptions" ON public.notification_subscriptions;
 CREATE POLICY "Anyone can create subscriptions" ON public.notification_subscriptions
   FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Anyone can delete subscriptions" ON public.notification_subscriptions;
 CREATE POLICY "Anyone can delete subscriptions" ON public.notification_subscriptions
   FOR DELETE USING (true);
 
@@ -41,6 +44,7 @@ CREATE TABLE IF NOT EXISTS public.notification_preferences (
 ALTER TABLE public.notification_preferences ENABLE ROW LEVEL SECURITY;
 
 -- Preferences Policies
+DROP POLICY IF EXISTS "Users can manage their own preferences" ON public.notification_preferences;
 CREATE POLICY "Users can manage their own preferences" ON public.notification_preferences
   FOR ALL TO authenticated
   USING (user_id = auth.uid())
@@ -68,6 +72,7 @@ CREATE TABLE IF NOT EXISTS public.notification_queue (
 ALTER TABLE public.notification_queue ENABLE ROW LEVEL SECURITY;
 
 -- Queue Policies
+DROP POLICY IF EXISTS "Staff can view notification queue" ON public.notification_queue;
 CREATE POLICY "Staff can view notification queue" ON public.notification_queue
   FOR SELECT TO authenticated
   USING (restaurant_id = public.get_user_restaurant_id(auth.uid()));
@@ -86,6 +91,7 @@ CREATE TABLE IF NOT EXISTS public.notification_logs (
 ALTER TABLE public.notification_logs ENABLE ROW LEVEL SECURITY;
 
 -- Logs Policies
+DROP POLICY IF EXISTS "Staff can view notification logs" ON public.notification_logs;
 CREATE POLICY "Staff can view notification logs" ON public.notification_logs
   FOR SELECT TO authenticated
   USING (EXISTS (

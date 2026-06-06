@@ -1,11 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Building2,
   Plus,
   Search,
-  Check,
-  X,
   Loader2,
   Power,
   LayoutGrid,
@@ -15,17 +11,9 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useRestaurants, useCreateRestaurant, useUpdateRestaurant, useDeleteRestaurant } from '@/hooks/useRestaurant';
+import { useRestaurants, useUpdateRestaurant, useDeleteRestaurant } from '@/hooks/useRestaurant';
 import { useAuth } from '@/hooks/useAuth';
 import { TenantStats } from '@/components/superadmin/TenantStats';
 import { MonthlyTrendChart } from '@/components/superadmin/MonthlyTrendChart';
@@ -36,7 +24,6 @@ import { SuperAdminSidebar } from '@/components/superadmin/SuperAdminSidebar';
 import { CreateHotelForm } from '@/components/superadmin/CreateHotelForm';
 import { SubscriptionPlansManager } from '@/components/superadmin/SubscriptionPlansManager';
 import { PlatformAdsManager } from '@/components/superadmin/PlatformAdsManager';
-import { PlatformSettings } from '@/components/superadmin/PlatformSettings';
 import { DefaultTaxSettings } from '@/components/superadmin/DefaultTaxSettings';
 import { EmailTemplateManager } from '@/components/superadmin/EmailTemplateManager';
 import { SystemLogs } from '@/components/superadmin/SystemLogs';
@@ -48,8 +35,9 @@ import PromotionsOverview from '@/components/superadmin/PromotionsOverview';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminAccountsTable from '@/components/superadmin/AdminAccountsTable';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import type { Tables } from '@/integrations/supabase/types';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 type Restaurant = Tables<"restaurants">;
 
@@ -61,13 +49,121 @@ const SuperAdminDashboard = () => {
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
   const [showCreateHotel, setShowCreateHotel] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [tenantViewMode, setTenantViewMode] = useState<'table' | 'grid'>('table');
 
   const { data: restaurants = [], isLoading } = useRestaurants();
-  const createRestaurant = useCreateRestaurant();
+
+  // Fetch all tables
+  const { data: allTablesData = [] } = useQuery({
+    queryKey: ['super-admin-tables'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('tables').select('id, restaurant_id');
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 30000,
+  });
+
+  // Fetch all orders
+  const { data: allOrdersData = [] } = useQuery({
+    queryKey: ['super-admin-orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('id, restaurant_id, total_amount, created_at, status');
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 30000,
+  });
+
+  // Fetch all order items for top items chart
+  const { data: allOrderItemsData = [] } = useQuery({
+    queryKey: ['super-admin-order-items'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('name, quantity, price');
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 30000,
+  });
+
+  const tenantMetrics = useMemo(() => {
+    const map: Record<string, { tableCount: number; orderCount: number; revenue: number }> = {};
+    
+    restaurants.forEach((r) => {
+      map[r.id] = { tableCount: 0, orderCount: 0, revenue: 0 };
+    });
+
+    allTablesData.forEach((t) => {
+      if (t.restaurant_id) {
+        const metric = map[t.restaurant_id];
+        if (metric) {
+          metric.tableCount += 1;
+        }
+      }
+    });
+
+    allOrdersData.forEach((o) => {
+      if (o.restaurant_id) {
+        const metric = map[o.restaurant_id];
+        if (metric) {
+          metric.orderCount += 1;
+          if (o.status === 'completed') {
+            metric.revenue += Number(o.total_amount || 0);
+          }
+        }
+      }
+    });
+
+    return map;
+  }, [restaurants, allTablesData, allOrdersData]);
+
+  const totalPlatformRevenue = useMemo(() => {
+    return allOrdersData
+      .filter((o) => o.status === 'completed')
+      .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+  }, [allOrdersData]);
+
+  const topItemsData = useMemo(() => {
+    const counts: Record<string, { name: string; quantity: number; revenue: number }> = {};
+    allOrderItemsData.forEach((item) => {
+      const name = item.name;
+      const qty = Number(item.quantity || 0);
+      const price = Number(item.price || 0);
+      if (!counts[name]) {
+        counts[name] = { name, quantity: 0, revenue: 0 };
+      }
+      counts[name].quantity += qty;
+      counts[name].revenue += qty * price;
+    });
+    return Object.values(counts)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+  }, [allOrderItemsData]);
+
+  const busyHoursData = useMemo(() => {
+    const hours = Array.from({ length: 24 }, (_, i) => ({
+      hour: `${String(i).padStart(2, '0')}:00`,
+      count: 0,
+    }));
+    allOrdersData.forEach((order) => {
+      if (order.created_at) {
+        const date = new Date(order.created_at);
+        const hour = date.getHours();
+        const slot = hours[hour];
+        if (slot) {
+          slot.count += 1;
+        }
+      }
+    });
+    return hours;
+  }, [allOrdersData]);
+
   const updateRestaurant = useUpdateRestaurant();
   const deleteRestaurant = useDeleteRestaurant();
 
@@ -188,8 +284,8 @@ const SuperAdminDashboard = () => {
       case 'dashboard':
         return (
           <div className="space-y-6">
-            <TenantStats restaurants={restaurants} totalRevenue={0} currencySymbol="₹" />
-            <MonthlyTrendChart restaurants={restaurants} currencySymbol="₹" months={6} />
+            <TenantStats restaurants={restaurants} totalRevenue={totalPlatformRevenue} currencySymbol="₹" />
+            <MonthlyTrendChart restaurants={restaurants} orders={allOrdersData} currencySymbol="₹" months={6} />
           </div>
         );
 
@@ -245,6 +341,7 @@ const SuperAdminDashboard = () => {
               ) : tenantViewMode === 'table' ? (
                 <TenantTable
                   restaurants={filteredRestaurants}
+                  metrics={tenantMetrics}
                   onToggleActive={handleToggleActive}
                   onChangeTier={handleChangeTier}
                   onToggleAds={handleToggleAds}
@@ -275,9 +372,83 @@ const SuperAdminDashboard = () => {
       case 'analytics':
         return (
           <div className="space-y-6">
-            <MonthlyTrendChart restaurants={restaurants} currencySymbol="₹" months={6} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <MonthlyTrendChart restaurants={restaurants} orders={allOrdersData} currencySymbol="₹" months={6} />
+              </div>
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">Top Selling Items</CardTitle>
+                  <CardDescription>Overall item sales volume</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                  {topItemsData.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                      No order data available
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={topItemsData} layout="vertical" margin={{ left: 20, right: 10, top: 10, bottom: 10 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis type="number" />
+                        <YAxis dataKey="name" type="category" width={80} style={{ fontSize: 11 }} />
+                        <RechartsTooltip />
+                        <Bar dataKey="quantity" fill="#8b5cf6" radius={[0, 4, 4, 0]} name="Qty Sold" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="border-0 shadow-md lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">Busiest Hours</CardTitle>
+                  <CardDescription>Platform-wide order frequency by hour of the day</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[280px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={busyHoursData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="hour" style={{ fontSize: 11 }} />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Orders" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">Platform Metrics Summary</CardTitle>
+                  <CardDescription>Aggregated operations status</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <span className="text-sm text-muted-foreground">Total Revenue</span>
+                    <span className="font-bold text-lg text-emerald-600">₹{totalPlatformRevenue.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <span className="text-sm text-muted-foreground">Total Orders Placed</span>
+                    <span className="font-bold text-lg">{allOrdersData.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <span className="text-sm text-muted-foreground">Active Tables Seated</span>
+                    <span className="font-bold text-lg">{allTablesData.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Active Restaurants</span>
+                    <span className="font-bold text-lg">{restaurants.filter(r => r.is_active).length}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <TenantTable
               restaurants={restaurants}
+              metrics={tenantMetrics}
               onToggleActive={handleToggleActive}
               onChangeTier={handleChangeTier}
               onToggleAds={handleToggleAds}
@@ -360,8 +531,8 @@ const SuperAdminDashboard = () => {
               <div className="flex items-center gap-3">
                 <SidebarTrigger />
                 <div>
-                  <h1 className="text-xl font-bold">{currentPage.title}</h1>
-                  <p className="text-sm text-muted-foreground">{currentPage.description}</p>
+                  <h1 className="text-xl font-bold">{currentPage?.title}</h1>
+                  <p className="text-sm text-muted-foreground">{currentPage?.description}</p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>

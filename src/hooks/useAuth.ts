@@ -10,6 +10,7 @@ interface AuthState {
   session: Session | null;
   role: AppRole | null;
   restaurantId: string | null;
+  originalRestaurantId: string | null;
   loading: boolean;
 }
 
@@ -19,6 +20,7 @@ export const useAuth = () => {
     session: null,
     role: null,
     restaurantId: null,
+    originalRestaurantId: null,
     loading: true,
   });
 
@@ -33,11 +35,16 @@ export const useAuth = () => {
               .eq('user_id', session.user.id)
               .single();
 
+            const impersonatedId = localStorage.getItem('impersonated_restaurant_id');
+            const actualRestId = roleData?.restaurant_id || null;
+            const restIdToUse = (roleData?.role === 'super_admin' && impersonatedId) ? impersonatedId : actualRestId;
+
             setAuthState({
               user: session.user,
               session,
               role: roleData?.role || null,
-              restaurantId: roleData?.restaurant_id || null,
+              restaurantId: restIdToUse,
+              originalRestaurantId: actualRestId,
               loading: false,
             });
           }, 0);
@@ -47,6 +54,7 @@ export const useAuth = () => {
             session: null,
             role: null,
             restaurantId: null,
+            originalRestaurantId: null,
             loading: false,
           });
         }
@@ -61,11 +69,16 @@ export const useAuth = () => {
           .eq('user_id', session.user.id)
           .single()
           .then(({ data: roleData }) => {
+            const impersonatedId = localStorage.getItem('impersonated_restaurant_id');
+            const actualRestId = roleData?.restaurant_id || null;
+            const restIdToUse = (roleData?.role === 'super_admin' && impersonatedId) ? impersonatedId : actualRestId;
+
             setAuthState({
               user: session.user,
               session,
               role: roleData?.role || null,
-              restaurantId: roleData?.restaurant_id || null,
+              restaurantId: restIdToUse,
+              originalRestaurantId: actualRestId,
               loading: false,
             });
           });
@@ -92,8 +105,25 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
+    localStorage.removeItem('impersonated_restaurant_id');
     const { error } = await supabase.auth.signOut();
     return { error };
+  };
+
+  const impersonateRestaurant = (id: string | null) => {
+    if (id) {
+      localStorage.setItem('impersonated_restaurant_id', id);
+      setAuthState(prev => ({ 
+        ...prev, 
+        restaurantId: id 
+      }));
+    } else {
+      localStorage.removeItem('impersonated_restaurant_id');
+      setAuthState(prev => ({ 
+        ...prev, 
+        restaurantId: null 
+      }));
+    }
   };
 
   const getRouteForRole = (role: AppRole | null): string => {
@@ -107,5 +137,5 @@ export const useAuth = () => {
     }
   };
 
-  return { ...authState, signIn, signUp, signOut, getRouteForRole };
+  return { ...authState, signIn, signUp, signOut, impersonateRestaurant, getRouteForRole };
 };

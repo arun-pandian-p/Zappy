@@ -2,11 +2,11 @@ import pg from 'pg';
 const { Client } = pg;
 
 async function testPort(port) {
-  console.log(`Testing connection on port ${port}...`);
+  console.log(`Testing direct connection to db.copkzrwvpqfjpsyyyqdy.supabase.co on port ${port}...`);
   const client = new Client({
-    host: 'aws-0-ap-south-1.pooler.supabase.com',
+    host: 'db.copkzrwvpqfjpsyyyqdy.supabase.co',
     port: port,
-    user: 'postgres.copkzrwvpqfjpsyyyqdy',
+    user: 'postgres',
     password: 'Zappy@4709$',
     database: 'postgres',
     ssl: { rejectUnauthorized: false },

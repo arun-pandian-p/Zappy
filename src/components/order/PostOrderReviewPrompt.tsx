@@ -4,10 +4,12 @@ import { ExternalLink, X, MessageSquare, AlertCircle, CheckCircle2, Ticket } fro
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import StarRating from '@/components/feedback/StarRating';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { checkRateLimit, RATE_LIMITS, getRemainingCooldown } from '@/utils/rateLimiter';
 import { analyzeReviewSentiment, generateRecoveryPlan, ReviewAIInsight, ReviewRecovery } from '@/services/reviews';
 
 interface PostOrderReviewPromptProps {
@@ -104,6 +106,18 @@ export const PostOrderReviewPrompt = ({
 
   const handleSubmitAll = useCallback(async () => {
     if (overallRating === 0) return;
+
+    // Rate Limit Check
+    if (!checkRateLimit(`feedback_${restaurantId}`, RATE_LIMITS.FEEDBACK.maxAttempts, RATE_LIMITS.FEEDBACK.windowMs)) {
+      const cooldown = getRemainingCooldown(`feedback_${restaurantId}`);
+      toast({
+        title: 'Too many requests',
+        description: `Please wait ${cooldown}s before submitting another review.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSubmitting(true);
 
     try {

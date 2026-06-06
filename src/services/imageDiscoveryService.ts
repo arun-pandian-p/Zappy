@@ -5,7 +5,6 @@
 
 import { detectCuisine } from "./recommendations/cuisineDetector";
 import { FOOD_NODES, EXPLICIT_EDGES } from "./recommendations/foodGraph";
-import { generateItemDescription } from "./ocrService";
 import { syncImageToSupabase } from "./storageService";
 import { tracer } from "./telemetry";
 import { SpanStatusCode } from "@opentelemetry/api";

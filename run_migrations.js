@@ -20,48 +20,33 @@ const regions = [
 
 const password = 'Zappy@4709$';
 const projectRef = 'copkzrwvpqfjpsyyyqdy';
-const dbUser = `postgres.${projectRef}`;
+const dbUser = 'postgres';
 
 async function tryConnectAndMigrate() {
-  let successfulClient = null;
-  let successfulRegion = null;
+  console.log(`Connecting directly to db.${projectRef}.supabase.co...`);
+  const successfulClient = new Client({
+    host: `db.${projectRef}.supabase.co`,
+    port: 5432,
+    user: dbUser,
+    password: password,
+    database: 'postgres',
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 10000
+  });
 
-  for (const region of regions) {
-    const host = `aws-0-${region}.pooler.supabase.com`;
-    console.log(`Trying to connect to region: ${region} (${host})...`);
-    
-    const client = new Client({
-      host,
-      port: 6543,
-      user: dbUser,
-      password: password,
-      database: 'postgres',
-      ssl: { rejectUnauthorized: false },
-      connectionTimeoutMillis: 5000 // 5 seconds timeout
-    });
-
-    try {
-      await client.connect();
-      console.log(`SUCCESS: Connected to database in region: ${region}!`);
-      successfulClient = client;
-      successfulRegion = region;
-      break;
-    } catch (err) {
-      console.log(`Failed to connect to region ${region}: ${err.message}`);
-      await client.end().catch(() => {});
-    }
-  }
-
-  if (!successfulClient) {
-    console.error('ERROR: Could not connect to the database in any region.');
+  try {
+    await successfulClient.connect();
+    console.log('SUCCESS: Connected to database directly!');
+  } catch (err) {
+    console.error('ERROR: Could not connect to the database directly:', err.message);
     process.exit(1);
   }
 
   try {
     const migrationsDir = 'supabase/migrations';
     const files = [
-      '20260606000000_push_notifications_schema.sql',
-      '20260606034123_billing_and_kds_remediation.sql'
+      '20260605010000_ai_menu_enrichment_schema.sql',
+      '20260605020000_fix_review_rls_for_customers.sql'
     ];
 
     for (const file of files) {

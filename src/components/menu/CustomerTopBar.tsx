@@ -21,6 +21,8 @@ interface CustomerTopBarProps {
   restaurantId?: string;
   tableId?: string;
   notificationCount?: number;
+  avgRating?: number;
+  totalReviews?: number;
 }
 
 export function CustomerTopBar({
@@ -33,6 +35,8 @@ export function CustomerTopBar({
   restaurantId,
   tableId,
   notificationCount = 0,
+  avgRating,
+  totalReviews,
 }: CustomerTopBarProps) {
   const navigate = useNavigate();
   const { scrollY } = useScroll();
@@ -111,13 +115,18 @@ export function CustomerTopBar({
           <h1 className="font-extrabold text-xs text-zinc-900 dark:text-zinc-50 tracking-tight leading-none truncate mb-1">
             {restaurantName}
           </h1>
-          <div className="flex items-center">
+          <div className="flex items-center gap-1.5">
             <Badge
               variant="outline"
-              className="text-[8px] px-1.5 py-0 h-[14px] font-black uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-400/20 leading-none shadow-[0_1px_2px_rgba(16,185,129,0.02)]"
+              className="text-[8px] px-1.5 py-0 h-[14px] font-black uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-400/20 leading-none shadow-[0_1px_2px_rgba(16,185,129,0.02)] shrink-0"
             >
               Table {tableNumber || 'N/A'}
             </Badge>
+            {avgRating !== undefined && totalReviews !== undefined && totalReviews > 0 && (
+              <span className="text-[9px] font-bold text-amber-500 dark:text-amber-400 flex items-center gap-0.5 shrink-0 leading-none">
+                ★ {avgRating.toFixed(1)} <span className="text-muted-foreground dark:text-zinc-500 font-normal">({totalReviews})</span>
+              </span>
+            )}
           </div>
         </div>
       </div>

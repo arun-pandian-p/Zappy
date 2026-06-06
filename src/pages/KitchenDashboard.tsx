@@ -17,6 +17,10 @@ import { CancelOrderDialog } from '@/components/admin/CancelOrderDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { LogOut } from 'lucide-react';
 
+import { KitchenStationFilter } from '@/components/admin/KitchenStationFilter';
+import { KitchenTVMode } from '@/components/admin/KitchenTVMode';
+import { KitchenOrderCard } from '@/components/admin/KitchenOrderCard';
+
 interface KitchenDashboardProps {
   embedded?: boolean;
   restaurantId?: string;
@@ -54,22 +58,55 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   const { play: playNewOrderSound, isMuted, toggleMute } = useSound(SOUNDS.NEW_ORDER);
   const { play: playWaiterCallSound } = useSound(SOUNDS.WAITER_CALL);
 
+  // KDS UI State
+  const [isTvMode, setIsTvMode] = useState(false);
+  const [activeStation, setActiveStation] = useState<string>('all');
+
+  // Extract all unique stations dynamically from orders
+  const availableStations = useMemo(() => {
+    const stationsSet = new Set<string>();
+    orders.forEach((order) => {
+      order.order_items?.forEach((item) => {
+        if (item.kitchen_station) {
+          stationsSet.add(item.kitchen_station.toLowerCase());
+        }
+      });
+    });
+    if (stationsSet.size === 0) {
+      return ['kitchen', 'bar', 'dessert'];
+    }
+    return Array.from(stationsSet);
+  }, [orders]);
+
+  // Filter orders by active station
+  const filteredOrders = useMemo(() => {
+    if (activeStation === 'all') return orders;
+    return orders
+      .map((order) => {
+        const itemsForStation = order.order_items?.filter(
+          (item) => item.kitchen_station?.toLowerCase() === activeStation.toLowerCase()
+        ) || [];
+        return { ...order, order_items: itemsForStation };
+      })
+      .filter((order) => order.order_items.length > 0);
+  }, [orders, activeStation]);
+
   // Filter orders by status
   const pendingOrders = useMemo(() => 
-    orders.filter((o) => o.status === 'pending' || o.status === 'confirmed'), 
-    [orders]
+    filteredOrders.filter((o) => o.status === 'pending' || o.status === 'confirmed'), 
+    [filteredOrders]
   );
   const preparingOrders = useMemo(() => 
-    orders.filter((o) => o.status === 'preparing'), 
-    [orders]
+    filteredOrders.filter((o) => o.status === 'preparing'), 
+    [filteredOrders]
   );
   const readyOrders = useMemo(() => 
-    orders.filter((o) => o.status === 'ready'), 
-    [orders]
+    filteredOrders.filter((o) => o.status === 'ready'), 
+    [filteredOrders]
   );
   const servedOrders = useMemo(() => 
-    orders.filter((o) => o.status === 'served'), 
-    [orders]
+    filteredOrders.filter((o) => o.status === 'served'), 
+    [filteredOrders]
   );
 
   const waiterCallsCount = waiterCalls.length;
@@ -176,111 +213,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
     return diff > 10 * 60 * 1000; // >10 min
   };
 
-  const OrderCard = ({ order, showActions }: { order: OrderWithItems; showActions?: 'start' | 'ready' | 'served' }) => {
-    const prepMins = getPrepTimer(order);
-    const urgent = isUrgent(order);
-
-    return (
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-      >
-        <Card className={`border-2 ${getStatusColor(order.status || 'pending')} overflow-hidden ${urgent ? 'ring-2 ring-destructive/50' : ''}`}>
-          {(order.status === 'pending' || order.status === 'confirmed') && (
-            <motion.div
-              className={`h-1 ${urgent ? 'bg-destructive' : 'bg-warning'}`}
-              initial={{ width: '100%' }}
-              animate={{ width: '0%' }}
-              transition={{ duration: 600, ease: 'linear' }}
-            />
-          )}
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-base font-bold">
-                  {order.table?.table_number || 'N/A'}
-                </Badge>
-                <span className="text-xs text-muted-foreground">#{order.order_number}</span>
-                {urgent && <Badge variant="destructive" className="text-[10px]">URGENT</Badge>}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {prepMins !== null && (
-                  <Badge variant="secondary" className="text-[10px]">
-                    <Clock className="w-3 h-3 mr-0.5" />{prepMins}m
-                  </Badge>
-                )}
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {getTimeAgo(order.created_at || new Date().toISOString())}
-                </span>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-2">
-              {order.order_items?.map((item) => (
-                <div key={item.id} className="text-sm">
-                  <span>
-                    <span className="font-medium">{item.quantity}x</span> {item.name}
-                    {/* Show selected variants/addons */}
-                    {item.selected_variants && Array.isArray(item.selected_variants) && (item.selected_variants as any[]).length > 0 && (
-                      <span className="block text-xs text-info ml-4">
-                        {(item.selected_variants as any[]).map((v: any) => v.name).join(', ')}
-                      </span>
-                    )}
-                    {item.selected_addons && Array.isArray(item.selected_addons) && (item.selected_addons as any[]).length > 0 && (
-                      <span className="block text-xs text-info ml-4">
-                        + {(item.selected_addons as any[]).map((a: any) => a.name).join(', ')}
-                      </span>
-                    )}
-                    {item.special_instructions && (
-                      <span className="block text-xs text-muted-foreground">
-                        Note: {item.special_instructions}
-                      </span>
-                    )}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {showActions === 'start' && (
-              <div className="flex gap-2">
-                <Button className="flex-1" onClick={() => handleStartPrep(order.id)} disabled={isUpdating}>
-                  <Play className="w-4 h-4 mr-2" />
-                  Start Prep
-                </Button>
-                <Button variant="outline" size="icon" className="text-destructive hover:text-destructive" onClick={() => setCancelOrder({ id: order.id, number: order.order_number })}>
-                  <XCircle className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-
-            {showActions === 'ready' && (
-              <div className="flex gap-2">
-                <Button className="flex-1 bg-success hover:bg-success/90" onClick={() => handleMarkReady(order.id)} disabled={isUpdating}>
-                  <Check className="w-4 h-4 mr-2" />
-                  Mark Ready
-                </Button>
-                <Button variant="outline" size="icon" className="text-destructive hover:text-destructive" onClick={() => setCancelOrder({ id: order.id, number: order.order_number })}>
-                  <XCircle className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-
-            {showActions === 'served' && (
-              <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => handleMarkServed(order.id)} disabled={isUpdating}>
-                <UtensilsCrossed className="w-4 h-4 mr-2" />
-                Mark Served
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
+  // OrderCard has been extracted to KitchenOrderCard component
 
   // Show error state
   if (error) {
@@ -336,7 +269,22 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                {/* Station Filter */}
+                {restaurantId && (
+                  <KitchenStationFilter
+                    activeStation={activeStation}
+                    onChange={setActiveStation}
+                    stations={availableStations}
+                  />
+                )}
+
+                {/* TV Mode Toggle */}
+                <KitchenTVMode
+                  isTvMode={isTvMode}
+                  onToggle={setIsTvMode}
+                />
+
                 <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2" disabled={isLoading}>
                   <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                   <span className="hidden sm:inline">Refresh</span>
@@ -377,7 +325,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
       )}
 
       {/* Main Content - 4 columns */}
-      <main className="container mx-auto px-4 py-6">
+      <main className={`${isTvMode ? 'w-full max-w-full px-6 py-4 flex-1' : 'container mx-auto px-4 py-6'}`}>
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
@@ -395,18 +343,28 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {columns.map((col) => (
               <div key={col.title}>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4 border-b pb-2">
                   <motion.div
                     className={`w-3 h-3 rounded-full ${col.color}`}
                     animate={col.animate ? { scale: [1, 1.2, 1], opacity: [1, 0.7, 1] } : col.spin ? { rotate: 360 } : {}}
                     transition={col.animate ? { duration: 1.5, repeat: Infinity } : col.spin ? { duration: 2, repeat: Infinity, ease: 'linear' } : {}}
                   />
-                  <h2 className="font-semibold">{col.title} ({col.orders.length})</h2>
+                  <h2 className={`font-bold ${isTvMode ? 'text-lg' : 'text-base'}`}>{col.title} ({col.orders.length})</h2>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4 mt-4">
                   <AnimatePresence mode="popLayout">
                     {col.orders.map((order) => (
-                      <OrderCard key={order.id} order={order} showActions={col.action} />
+                      <KitchenOrderCard
+                        key={order.id}
+                        order={order}
+                        showActions={col.action}
+                        isUpdating={isUpdating}
+                        onStartPrep={handleStartPrep}
+                        onMarkReady={handleMarkReady}
+                        onMarkServed={handleMarkServed}
+                        onCancelClick={(id, num) => setCancelOrder({ id, number: num })}
+                        isTvMode={isTvMode}
+                      />
                     ))}
                   </AnimatePresence>
                   {col.orders.length === 0 && (

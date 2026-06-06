@@ -1,4 +1,5 @@
-import { Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
@@ -11,7 +12,42 @@ interface RoleGuardProps {
 }
 
 const RoleGuard = ({ allowedRoles, children }: RoleGuardProps) => {
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // Inactivity timeout: 30 minutes of no user interaction
+  useEffect(() => {
+    if (!user || role === 'super_admin' || !role || !allowedRoles.includes(role)) return;
+
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+    let timeoutId: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(async () => {
+        console.warn('[RoleGuard] Session expired due to inactivity');
+        await signOut();
+        navigate('/login?expired=true', { replace: true });
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Events to monitor for active user engagement
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    // Initialize timer
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      activityEvents.forEach((event) => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [user, role, allowedRoles, signOut, navigate]);
 
   if (loading) {
     return (

@@ -56,9 +56,9 @@ export function ItemDetailsDialog({
   currencySymbol = "₹",
   onViewCart,
 }: ItemDetailsDialogProps) {
-  if (!item) return null;
+  const recipe = useMemo(() => getRecipeInfo(item?.name || ""), [item?.name]);
 
-  const recipe = useMemo(() => getRecipeInfo(item.name), [item.name]);
+  if (!item) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

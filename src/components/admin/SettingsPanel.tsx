@@ -74,7 +74,7 @@ interface RestaurantSettings {
   service_charge_rate: number;
   ads_enabled: boolean;
   google_review_url: string;
-  printer_type: "none" | "bluetooth" | "usb" | "wifi";
+  printer_type: "none" | "bluetooth" | "usb" | "wifi" | "window";
   printer_ip: string;
   auto_print_kitchen: boolean;
   auto_print_billing: boolean;
@@ -163,11 +163,22 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         if (!settings.printer_ip) {
           toast({ title: "IP Required", description: "Enter the printer IP address first.", variant: "destructive" });
         } else {
+          const success = await printer.connectWiFi(settings.printer_ip);
           toast({
-            title: "WiFi Printer Configured",
-            description: `Printer IP set to ${settings.printer_ip}. Print test will be sent on next order.`,
+            title: success ? "WiFi Printer Connected" : "Connection Failed",
+            description: success
+              ? `Connected to WiFi printer at ${settings.printer_ip}`
+              : "Could not connect to WiFi printer.",
           });
         }
+      } else if (settings.printer_type === "window") {
+        const success = await printer.connectWindowPrint();
+        toast({
+          title: success ? "Browser Print Enabled" : "Failed to Enable",
+          description: success
+            ? "Browser print setup successful. Test page will open via printer dialog."
+            : "Could not configure browser window print.",
+        });
       }
     } catch (error) {
       toast({
@@ -197,7 +208,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         service_charge_rate: restaurant.service_charge_rate || 0,
         ads_enabled: restaurant.ads_enabled ?? true,
         google_review_url: restaurant.google_review_url || "",
-        printer_type: (printerSettings.type as "none" | "bluetooth" | "usb" | "wifi") || "none",
+        printer_type: (printerSettings.type as "none" | "bluetooth" | "usb" | "wifi" | "window") || "none",
         printer_ip: (printerSettings.ip as string) || "",
         auto_print_kitchen: (printerSettings.auto_print_kitchen as boolean) ?? false,
         auto_print_billing: (printerSettings.auto_print_billing as boolean) ?? true,
@@ -706,7 +717,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
               <Select
                 value={settings.printer_type}
                 onValueChange={(v) =>
-                  setSettings({ ...settings, printer_type: v as "none" | "bluetooth" | "usb" | "wifi" })
+                  setSettings({ ...settings, printer_type: v as "none" | "bluetooth" | "usb" | "wifi" | "window" })
                 }
               >
                 <SelectTrigger>
@@ -732,6 +743,12 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                     <span className="flex items-center gap-2">
                       <Wifi className="w-4 h-4 text-primary" />
                       WiFi / Network
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="window">
+                    <span className="flex items-center gap-2">
+                      <Printer className="w-4 h-4 text-primary" />
+                      Browser Window Print
                     </span>
                   </SelectItem>
                 </SelectContent>

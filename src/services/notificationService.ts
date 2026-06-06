@@ -14,7 +14,7 @@ class NotificationService {
     return true;
   }
 
-  playSound(eventType: NotificationType, restaurantId?: string): void {
+  playSound(eventType: NotificationType, _restaurantId?: string): void {
     let soundUrl = SOUNDS.NEW_ORDER;
     if (eventType === 'ready' || eventType === 'delivered') {
       soundUrl = SOUNDS.ORDER_READY;

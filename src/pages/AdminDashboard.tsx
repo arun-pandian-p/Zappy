@@ -1,115 +1,52 @@
-import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import {
   Settings,
   LayoutDashboard,
   UtensilsCrossed,
-  Plus,
-  Trash2,
-  Wallet,
   ChefHat,
-  Utensils,
-  Save,
-  ClipboardList,
   Receipt,
-  Megaphone,
   Star,
   Users,
-  Loader2,
-  Download,
-  Edit2,
-  X,
-  Ticket,
   FileSpreadsheet,
   Eye,
   ExternalLink,
-  Gift,
   RefreshCw,
-  Smartphone,
-  Tablet,
-  Monitor,
   QrCode,
   Package,
   Sparkles,
   Lock as LockIcon,
-  BarChart3,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { StatCard } from "@/components/admin/StatCard";
-import { RecentOrdersTable } from "@/components/admin/RecentOrdersTable";
-import { MenuPreviewCard } from "@/components/admin/MenuPreviewCard";
-
 import { OrderHistory } from "@/components/admin/OrderHistory";
 import { AdsManager } from "@/components/admin/AdsManager";
 import { ReputationManager } from "@/components/admin/ReputationManager";
 import { SettingsPanel } from "@/components/admin/SettingsPanel";
-import { CategoryManager } from "@/components/admin/CategoryManager";
-import { MenuOCRImporter } from "@/components/admin/MenuOCRImporter";
-import { bulkEnrichMenu, generateFoodImage } from "@/services/imageGenService";
-import { ImageUpload } from "@/components/admin/ImageUpload";
 import { ExportPanel } from "@/components/admin/ExportPanel";
 import { CouponManager } from "@/components/admin/CouponManager";
-import { TableSessionTimers } from "@/components/admin/TableSessionTimers";
 import UserManagement from "@/components/admin/UserManagement";
-import { RevenueChart } from "@/components/analytics/RevenueChart";
-import { DashboardStats } from "@/components/analytics/DashboardStats";
-import { OrdersTable } from "@/components/analytics/OrdersTable";
-import { RevenueTrends } from "@/components/analytics/RevenueTrends";
 import KitchenDashboard from "@/pages/KitchenDashboard";
 import BillingCounter from "@/pages/BillingCounter";
 import { OffersManager } from "@/components/admin/OffersManager";
-import { useActiveAds } from "@/hooks/useAds";
 import { MarketingAnalyticsDashboard } from "@/components/admin/MarketingAnalyticsDashboard";
-
-import { CustomerBehaviorPanel } from "@/components/analytics/CustomerBehaviorPanel";
+import { PlatformAdsReadOnly } from "@/components/admin/PlatformAdsReadOnly";
+import { PreviewTabContent } from "@/components/admin/PreviewTabContent";
+import { OverviewTab } from "@/components/admin/OverviewTab";
+import { MenuTab } from "@/components/admin/MenuTab";
 import { QRCodeManager } from "@/components/admin/QRCodeManager";
 import { QRScanAnalytics } from "@/components/analytics/QRScanAnalytics";
 import { useRestaurants, useRestaurantDetails } from "@/hooks/useRestaurant";
-import { 
-  useMenuItems, 
-  useCategories, 
-  useCreateMenuItem, 
-  useDeleteMenuItem, 
-  useToggleMenuItemAvailability,
-  type MenuItem,
-  type Category,
-} from "@/hooks/useMenuItems";
-import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
+import { useMenuItems, useCategories } from "@/hooks/useMenuItems";
 import { InventoryManager } from "@/components/admin/InventoryManager";
 import { TenantThemeProvider } from "@/components/admin/TenantThemeProvider";
-import { useTables } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
-import { useInvoiceStats } from "@/hooks/useInvoices";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeatureGate, type FeatureKey, type LockReason } from "@/hooks/useFeatureGate";
@@ -147,188 +84,13 @@ const mainTabs = [
   { value: "settings", label: "Settings", icon: Settings },
 ];
 
-/** Read-only view of platform ads appearing in this restaurant's menu */
-function PlatformAdsReadOnly({ restaurantId }: { restaurantId: string }) {
-  const { data: ads = [], isLoading } = useActiveAds();
-  
-  // Filter ads that target this restaurant (or all restaurants)
-  const relevantAds = ads.filter(ad => {
-    const targets = (ad as any).target_restaurants as string[] | null;
-    if (!targets || targets.length === 0) return true;
-    return targets.includes(restaurantId);
-  });
 
-  if (isLoading) return null;
-  if (relevantAds.length === 0) return null;
-
-  const PLACEMENT_LABELS: Record<string, string> = {
-    header_banner: 'Header Banner',
-    category_divider: 'Category Divider',
-    popup_offer: 'Popup',
-    footer_banner: 'Footer Banner',
-  };
-
-  return (
-    <Card className="border-0 shadow-md">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Megaphone className="w-5 h-5" />
-          Platform Ads
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">Promotional ads managed by the platform appearing in your customer menu.</p>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {relevantAds.map(ad => (
-            <div key={ad.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-              {ad.image_url ? (
-                <img 
-                  src={ad.image_url} 
-                  alt="" 
-                  className="w-12 h-12 rounded-lg object-cover bg-muted" 
-                  onError={(e) => {
-                    e.currentTarget.onerror = null; // Prevent infinite loop
-                    e.currentTarget.src = "https://placehold.co/100x100/png?text=Ad";
-                  }}
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                  <Megaphone className="w-5 h-5 text-muted-foreground" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{ad.title}</p>
-                <p className="text-xs text-muted-foreground">{ad.description || 'No description'}</p>
-              </div>
-              <Badge variant="outline" className="text-xs whitespace-nowrap">
-                {PLACEMENT_LABELS[(ad as any).placement_type] || 'Popup'}
-              </Badge>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-type DeviceType = "mobile" | "tablet" | "desktop";
-type PreviewMode = "customer" | "kitchen" | "billing";
-
-function PreviewTabContent({ customerPreviewUrl, restaurantId, externalRefreshKey }: { customerPreviewUrl: string; restaurantId: string; externalRefreshKey: number }) {
-  const [device, setDevice] = useState<DeviceType>("mobile");
-  const [previewMode, setPreviewMode] = useState<PreviewMode>("customer");
-  const [refreshKey, setRefreshKey] = useState(0);
-  const combinedKey = `${previewMode}-${refreshKey}-${externalRefreshKey}`;
-
-  const deviceConfig = {
-    mobile: { width: 375, height: 812, label: "Mobile" },
-    tablet: { width: 768, height: 1024, label: "Tablet" },
-    desktop: { width: "100%" as const, height: "100%" as const, label: "Desktop" },
-  };
-
-  const previewModes = [
-    { value: "customer" as const, label: "Customer Menu", icon: Eye, description: "Menu & ordering flow" },
-    { value: "kitchen" as const, label: "Kitchen Display", icon: ChefHat, description: "KDS order management" },
-    { value: "billing" as const, label: "Billing Counter", icon: Receipt, description: "POS & invoicing" },
-  ];
-
-  const getPreviewUrl = () => {
-    switch (previewMode) {
-      case "kitchen":
-        return `/kitchen?r=${restaurantId}&preview=true`;
-      case "billing":
-        return `/billing?r=${restaurantId}&preview=true`;
-      default:
-        return customerPreviewUrl;
-    }
-  };
-
-  // Kitchen & billing are better previewed at tablet/desktop
-  const effectiveDevice = previewMode !== "customer" && device === "mobile" ? "tablet" : device;
-
-  return (
-    <motion.div
-      key="preview"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="sticky top-0 z-30 bg-background pb-4 space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
-          <div>
-            <h2 className="text-xl font-bold">Site Preview</h2>
-            <p className="text-sm text-muted-foreground">Preview all customer & staff interfaces</p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
-              <Button variant={effectiveDevice === "mobile" ? "default" : "ghost"} size="sm" onClick={() => setDevice("mobile")}>
-                <Smartphone className="w-4 h-4" />
-              </Button>
-              <Button variant={effectiveDevice === "tablet" ? "default" : "ghost"} size="sm" onClick={() => setDevice("tablet")}>
-                <Tablet className="w-4 h-4" />
-              </Button>
-              <Button variant={effectiveDevice === "desktop" ? "default" : "ghost"} size="sm" onClick={() => setDevice("desktop")}>
-                <Monitor className="w-4 h-4" />
-              </Button>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setRefreshKey(k => k + 1)}>
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => window.open(getPreviewUrl(), '_blank')}>
-              <ExternalLink className="w-4 h-4 mr-1" />
-              Open
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 bg-muted/50 rounded-xl p-1.5">
-          {previewModes.map((mode) => (
-            <button
-              key={mode.value}
-              onClick={() => setPreviewMode(mode.value)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex-1 justify-center ${
-                previewMode === mode.value
-                  ? "bg-background shadow-sm text-foreground border border-border"
-                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-              }`}
-            >
-              <mode.icon className="w-4 h-4" />
-              <span className="hidden sm:inline">{mode.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex justify-center bg-muted/30 rounded-xl border p-4 mt-4" style={{ minHeight: '80vh' }}>
-        <div
-          className={`bg-background rounded-2xl shadow-2xl border-4 border-foreground/10 overflow-hidden transition-all duration-300 ${
-            effectiveDevice === "desktop" ? "w-full" : ""
-          }`}
-          style={
-            effectiveDevice !== "desktop"
-              ? { width: deviceConfig[effectiveDevice].width, height: deviceConfig[effectiveDevice].height, maxHeight: '78vh' }
-              : { height: '78vh', width: '100%' }
-          }
-        >
-          <iframe
-            key={combinedKey}
-            src={getPreviewUrl()}
-            className="w-full h-full border-0"
-            title={`${previewModes.find(m => m.value === previewMode)?.label} Preview`}
-          />
-        </div>
-      </div>
-    </motion.div>
-  );
-}
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [selectedAdminCategory, setSelectedAdminCategory] = useState("All");
   const [previewRefreshKey, setPreviewRefreshKey] = useState(0);
   const { user, role, restaurantId: authRestaurantId, loading: authLoading } = useAuth();
 
@@ -390,37 +152,12 @@ const AdminDashboard = () => {
     }
   }, [restaurant, role, navigate]);
 
-  const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(restaurantId);
+  const { data: menuItems = [] } = useMenuItems(restaurantId);
   const { data: categories = [] } = useCategories(restaurantId);
-  const { data: tables = [], isLoading: tablesLoading } = useTables(restaurantId);
   const { data: orders = [] } = useOrders(restaurantId);
-  const { data: invoiceStats } = useInvoiceStats(restaurantId);
-
-  const filteredMenuItems = useMemo(() => {
-    if (!menuItems) return [];
-    return menuItems.filter(item => 
-      selectedAdminCategory === "All" || item.category?.name === selectedAdminCategory
-    );
-  }, [menuItems, selectedAdminCategory]);
-  
-  const [editingItem, setEditingItem] = useState<(MenuItem & { category?: Pick<Category, "id" | "name"> | null }) | null>(null);
-
-  const [newItem, setNewItem] = useState({
-    name: "",
-    description: "",
-    price: "",
-    category: "Starters",
-    image_url: "",
-    is_vegetarian: false,
-    prep_time_minutes: "15",
-  });
 
   const currencySymbol = restaurant?.currency || "₹";
   const restaurantName = restaurant?.name || "ZAPPY";
-
-  const createMenuItem = useCreateMenuItem();
-  const deleteMenuItem = useDeleteMenuItem();
-  const toggleAvailability = useToggleMenuItemAvailability();
 
   useEffect(() => {
     if (!restaurantId) return;
@@ -451,105 +188,6 @@ const AdminDashboard = () => {
       supabase.removeChannel(channel);
     };
   }, [restaurantId, queryClient]);
-
-  const handleAddItem = async () => {
-    if (!newItem.name || !newItem.price) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const category = categories.find(c => c.name === newItem.category);
-
-    try {
-      await createMenuItem.mutateAsync({
-        restaurant_id: restaurantId,
-        name: newItem.name,
-        description: newItem.description || undefined,
-        price: parseFloat(newItem.price),
-        category_id: category?.id,
-        image_url: newItem.image_url || undefined,
-        is_vegetarian: newItem.is_vegetarian,
-        prep_time_minutes: parseInt(newItem.prep_time_minutes) || 15,
-        is_available: true,
-      });
-      
-      toast({
-        title: "Item Added",
-        description: `${newItem.name} has been added to the menu.`,
-      });
-      
-      setNewItem({
-        name: "",
-        description: "",
-        price: "",
-        category: categories[0]?.name || "Starters",
-        image_url: "",
-        is_vegetarian: false,
-        prep_time_minutes: "15",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add menu item.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteItem = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this item?")) return;
-    
-    try {
-      await deleteMenuItem.mutateAsync({ id, restaurantId });
-      toast({
-        title: "Item Deleted",
-        description: "Menu item has been removed.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete item.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleToggleAvailability = async (id: string, currentValue: boolean) => {
-    try {
-      await toggleAvailability.mutateAsync({ id, isAvailable: !currentValue });
-      toast({
-        title: "Availability Updated",
-        description: `Item is now ${!currentValue ? 'available' : 'unavailable'}.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update availability.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const completedOrders = orders.filter((o) => o.status === "completed");
-  const todayRevenue = invoiceStats?.totalRevenue || completedOrders.reduce((acc, o) => acc + Number(o.total_amount || 0), 0);
-  const activeTables = tables.filter((t) => t.status !== "available").length;
-
-  const recentOrders = useMemo(() => {
-    return orders.slice(0, 5).map((order) => ({
-      id: order.id,
-      tableNumber: order.table?.table_number || "N/A",
-      items: order.order_items?.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-      })) || [],
-      status: order.status as "pending" | "preparing" | "ready" | "delivered" | "completed",
-      amount: Number(order.total_amount || 0),
-    }));
-  }, [orders]);
 
   if (restaurantsLoading) {
     return (
@@ -608,394 +246,26 @@ const AdminDashboard = () => {
           <main className="p-6">
             <AnimatePresence mode="wait">
               {activeTab === "dashboard" && (
-                <motion.div
-                  key="dashboard"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-6"
-                >
-                  <DashboardStats orders={orders} currencySymbol={currencySymbol} />
-                  
-                  <Card className="border-0 shadow-md bg-gradient-to-r from-emerald-500/5 to-blue-500/5">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <RefreshCw className={cn("w-4 h-4", restaurantsLoading ? "animate-spin" : "text-emerald-500")} />
-                        System Health Diagnostic
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-4 text-xs">
-                        <div className="flex items-center gap-1.5">
-                          <div className={cn("w-2 h-2 rounded-full", user ? "bg-green-500" : "bg-red-500")} />
-                          <span className="text-muted-foreground">Auth:</span>
-                          <span className="font-medium">{user ? "Connected" : "Disconnected"}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <div className={cn("w-2 h-2 rounded-full", restaurant ? "bg-green-500" : "bg-yellow-500")} />
-                          <span className="text-muted-foreground">Database:</span>
-                          <span className="font-medium">{restaurant ? "Accessible" : "Wait..."}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-2 h-2 rounded-full bg-blue-500" />
-                          <span className="text-muted-foreground">Role:</span>
-                          <span className="font-medium uppercase">{role || "None"}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 ml-auto">
-                          <span className="text-muted-foreground">Version:</span>
-                          <span className="font-mono opacity-50">v2.4.1-prod</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <RevenueChart orders={orders} currencySymbol={currencySymbol} days={7} />
-                    <RevenueTrends orders={orders} currencySymbol={currencySymbol} days={7} />
-                  </div>
-                  <CustomerBehaviorPanel restaurantId={restaurantId} />
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2">
-                      <OrdersTable
-                        orders={orders}
-                        currencySymbol={currencySymbol}
-                        onViewAll={() => setActiveTab("orders")}
-                        limit={5}
-                        showFilters={false}
-                      />
-                    </div>
-                    <div className="space-y-6">
-                      <TableSessionTimers restaurantId={restaurantId} />
-                      <Card className="border-0 shadow-md">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg font-semibold">
-                            Popular Items
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-2 gap-3">
-                            {menuItems?.slice(0, 2).map((item, index) => (
-                              <MenuPreviewCard
-                                key={item.id}
-                                id={item.id}
-                                name={item.name}
-                                price={item.price}
-                                imageUrl={item.image_url}
-                                isVegetarian={item.is_vegetarian}
-                                currencySymbol={currencySymbol}
-                                index={index}
-                              />
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                </motion.div>
+                <OverviewTab
+                  orders={orders}
+                  currencySymbol={currencySymbol}
+                  user={user}
+                  restaurant={restaurant}
+                  role={role}
+                  restaurantId={restaurantId}
+                  menuItems={menuItems}
+                  onViewAllOrders={() => setActiveTab("orders")}
+                  restaurantsLoading={restaurantsLoading}
+                />
               )}
 
               {activeTab === "menu" && (
-                <motion.div
-                  key="menu"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-6"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                        <UtensilsCrossed className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold tracking-tight">Menu Management</h2>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                          <p className="text-sm text-muted-foreground">Connected to Supabase Realtime</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 rounded-xl px-6">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Item
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                          <DialogHeader>
-                            <DialogTitle>Add Menu Item</DialogTitle>
-                            <DialogDescription>Create a new dish for your menu.</DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="space-y-2">
-                              <Label>Item Name</Label>
-                              <Input
-                                placeholder="e.g., Butter Chicken"
-                                value={newItem.name}
-                                onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label>Price ({currencySymbol})</Label>
-                                <Input
-                                  type="number"
-                                  placeholder="299"
-                                  value={newItem.price}
-                                  onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Prep Time (min)</Label>
-                                <Input
-                                  type="number"
-                                  placeholder="15"
-                                  value={newItem.prep_time_minutes}
-                                  onChange={(e) => setNewItem({ ...newItem, prep_time_minutes: e.target.value })}
-                                />
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Category</Label>
-                              <Select
-                                value={newItem.category}
-                                onValueChange={(v) => setNewItem({ ...newItem, category: v })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select Category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {categories.map((cat) => (
-                                    <SelectItem key={cat.id} value={cat.name}>
-                                      {cat.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <Label>Image</Label>
-                                  {newItem.name && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="h-7 text-[10px] gap-1 text-primary hover:text-primary"
-                                      onClick={async () => {
-                                        toast({ title: "Generating image...", description: "AI is creating a photo for " + newItem.name });
-                                        const url = await generateFoodImage(newItem.name, newItem.description || "", restaurantId);
-                                        setNewItem({ ...newItem, image_url: url });
-                                        toast({ title: "Image ready!" });
-                                      }}
-                                    >
-                                      <Sparkles className="w-3 h-3" />
-                                      AI Generate
-                                    </Button>
-                                  )}
-                                </div>
-                              <ImageUpload
-                                currentImageUrl={newItem.image_url}
-                                onImageUploaded={(url) => setNewItem({ ...newItem, image_url: url })}
-                                restaurantId={restaurantId}
-                                folder="menu"
-                              />
-                            </div>
-                            <div className="flex items-center gap-2 pt-2">
-                              <Switch
-                                checked={newItem.is_vegetarian}
-                                onCheckedChange={(v) => setNewItem({ ...newItem, is_vegetarian: v })}
-                              />
-                              <Label>Vegetarian Dish</Label>
-                            </div>
-                            <Button 
-                              className="w-full mt-4 h-11 rounded-xl" 
-                              onClick={handleAddItem}
-                              disabled={createMenuItem.isPending}
-                            >
-                              {createMenuItem.isPending ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              ) : (
-                                <Save className="w-4 h-4 mr-2" />
-                              )}
-                              Publish to Menu
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      <MenuOCRImporter restaurantId={restaurantId} />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div className="lg:col-span-3 space-y-6">
-                      <CategoryManager restaurantId={restaurantId} />
-                      
-                      <Card className="border-0 shadow-xl bg-gradient-to-br from-primary/5 to-transparent">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Menu Health</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm">Total Items</span>
-                            <span className="font-bold">{menuItems.length}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm">Active Items</span>
-                            <span className="font-bold text-green-500">{menuItems.filter(i => i.is_available).length}</span>
-                          </div>
-                          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                            <div 
-                              className="bg-primary h-full transition-all duration-500" 
-                              style={{ width: `${(menuItems.filter(i => i.is_available).length / (menuItems.length || 1)) * 100}%` }}
-                            />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <div className="lg:col-span-9 space-y-6">
-                      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-sm">
-                        <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar max-w-full sm:max-w-[60%]">
-                          <Button
-                            variant={selectedAdminCategory === "All" ? "default" : "ghost"}
-                            size="sm"
-                            className="rounded-full px-4"
-                            onClick={() => setSelectedAdminCategory("All")}
-                          >
-                            All
-                          </Button>
-                          {categories.map(cat => (
-                            <Button
-                              key={cat.id}
-                              variant={selectedAdminCategory === cat.name ? "default" : "ghost"}
-                              size="sm"
-                              className="rounded-full px-4 whitespace-nowrap"
-                              onClick={() => setSelectedAdminCategory(cat.name)}
-                            >
-                              {cat.name}
-                            </Button>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-2">
-                           <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-primary hover:bg-primary/10 rounded-full"
-                            onClick={() => {
-                              toast({ title: "Enriching items...", description: "AI is generating descriptions and images." });
-                              bulkEnrichMenu(restaurantId, menuItems).then(() => {
-                                toast({ title: "Menu Enriched!", description: "All items now have AI content." });
-                                queryClient.invalidateQueries({ queryKey: ["menu_items", restaurantId] });
-                              });
-                            }}
-                          >
-                            <Sparkles className="w-4 h-4 mr-2" />
-                            AI Enrich
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="rounded-full"
-                            onClick={() => {
-                              const blob = new Blob([JSON.stringify(menuItems, null, 2)], { type: 'application/json' });
-                              const url = URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `menu_backup_${new Date().toISOString().split('T')[0]}.json`;
-                              a.click();
-                              URL.revokeObjectURL(url);
-                            }}
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                        <AnimatePresence mode="popLayout">
-                          {filteredMenuItems.map((item, index) => (
-                            <motion.div
-                              key={item.id}
-                              layout
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.9 }}
-                              transition={{ duration: 0.2, delay: index * 0.05 }}
-                              className="group relative"
-                            >
-                              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-3xl -m-1 group-hover:m-0 transition-all duration-300" />
-                              <div className="relative bg-white/60 backdrop-blur-sm border border-white/40 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
-                                <MenuPreviewCard
-                                  id={item.id}
-                                  name={item.name}
-                                  description={item.description}
-                                  price={item.price}
-                                  imageUrl={item.image_url}
-                                  isVegetarian={item.is_vegetarian}
-                                  currencySymbol={currencySymbol}
-                                  index={index}
-                                />
-                                <div className="p-4 flex items-center justify-between border-t border-black/5 bg-white/20">
-                                  <div className="flex items-center gap-2">
-                                    <Switch
-                                      checked={item.is_available}
-                                      onCheckedChange={() =>
-                                        handleToggleAvailability(item.id, item.is_available ?? true)
-                                      }
-                                      className="data-[state=checked]:bg-green-500"
-                                    />
-                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                      {item.is_available ? 'Live' : 'Hidden'}
-                                    </span>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      variant="secondary"
-                                      size="icon"
-                                      className="w-8 h-8 rounded-full bg-white shadow-sm hover:scale-110 transition-transform"
-                                      onClick={() => setEditingItem(item as any)}
-                                    >
-                                      <Edit2 className="w-3.5 h-3.5" />
-                                    </Button>
-                                    <Button
-                                      variant="destructive"
-                                      size="icon"
-                                      className="w-8 h-8 rounded-full shadow-sm hover:scale-110 transition-transform"
-                                      onClick={() => handleDeleteItem(item.id)}
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                              {!item.is_available && (
-                                <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] rounded-2xl flex items-center justify-center pointer-events-none">
-                                  <Badge className="bg-white/90 text-slate-900 hover:bg-white border-0 shadow-lg px-3 py-1">
-                                    Offline
-                                  </Badge>
-                                </div>
-                              )}
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  </div>
-
-                  {editingItem && (
-                    <EditMenuItemDialog
-                      open={!!editingItem}
-                      onOpenChange={(open) => !open && setEditingItem(null)}
-                      item={editingItem}
-                      categories={categories}
-                      restaurantId={restaurantId}
-                    />
-                  )}
-                </motion.div>
+                <MenuTab
+                  restaurantId={restaurantId}
+                  menuItems={menuItems}
+                  categories={categories}
+                  currencySymbol={currencySymbol}
+                />
               )}
 
               {activeTab === "orders" && (

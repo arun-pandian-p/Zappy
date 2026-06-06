@@ -17,12 +17,14 @@ type Restaurant = Tables<"restaurants">;
 
 interface MonthlyTrendChartProps {
   restaurants: Restaurant[];
+  orders?: any[];
   currencySymbol?: string;
   months?: number;
 }
 
 export function MonthlyTrendChart({ 
   restaurants, 
+  orders,
   currencySymbol = "₹", 
   months = 6 
 }: MonthlyTrendChartProps) {
@@ -42,20 +44,28 @@ export function MonthlyTrendChart({
         return new Date(r.created_at) <= monthEnd;
       }).length;
       
-      // Calculate revenue based on tier distribution
-      const activeInMonth = restaurants.filter((r) => {
-        if (!r.created_at) return false;
-        const createdAt = new Date(r.created_at);
-        return createdAt <= monthEnd && r.is_active;
-      });
-      
-      const revenue = activeInMonth.reduce((sum, r) => {
-        switch (r.subscription_tier) {
-          case "pro": return sum + 999;
-          case "enterprise": return sum + 2999;
-          default: return sum;
-        }
-      }, 0);
+      // Calculate revenue based on tier distribution or actual order revenue
+      const revenue = orders
+        ? orders
+            .filter((o) => {
+              if (o.status !== 'completed' || !o.created_at) return false;
+              const orderDate = new Date(o.created_at);
+              return orderDate >= monthStart && orderDate <= monthEnd;
+            })
+            .reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
+        : restaurants
+            .filter((r) => {
+              if (!r.created_at) return false;
+              const createdAt = new Date(r.created_at);
+              return createdAt <= monthEnd && r.is_active;
+            })
+            .reduce((sum, r) => {
+              switch (r.subscription_tier) {
+                case "pro": return sum + 999;
+                case "enterprise": return sum + 2999;
+                default: return sum;
+              }
+            }, 0);
       
       data.push({
         month: monthLabel,

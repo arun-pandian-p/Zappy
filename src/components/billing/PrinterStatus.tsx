@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bluetooth, Usb, Printer, Unplug, AlertCircle, Loader2 } from "lucide-react";
+import { Bluetooth, Usb, Printer, Unplug, AlertCircle, Loader2, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -126,6 +126,27 @@ export function PrinterStatus({ restaurantId }: PrinterStatusProps) {
                   N/A
                 </span>
               )}
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={async () => {
+                const ip = prompt("Enter WiFi printer IP address:", "192.168.1.100");
+                if (ip) {
+                  await printer.connectWiFi(ip);
+                }
+              }}
+              disabled={printer.isConnecting}
+            >
+              <Wifi className="w-4 h-4 mr-2 text-orange-500" />
+              Connect WiFi Printer
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={printer.connectWindowPrint}
+              disabled={printer.isConnecting}
+            >
+              <Printer className="w-4 h-4 mr-2 text-primary" />
+              Connect Browser Print
             </DropdownMenuItem>
           </>
         )}

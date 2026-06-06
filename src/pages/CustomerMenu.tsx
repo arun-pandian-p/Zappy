@@ -11,7 +11,7 @@ function cacheBustUrl(url: string | null | undefined): string | undefined {
     return url;
   }
 }
-import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List, MessageSquare } from 'lucide-react';
@@ -27,6 +27,9 @@ import { useRestaurantDetails } from '@/hooks/useRestaurant';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useCustomerOrders } from '@/hooks/useCustomerOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
+import { useFeedbackStats } from '@/hooks/useFeedback';
+import { useRecentOrders, addRecentOrderId } from '@/hooks/useRecentOrders';
+import { checkRateLimit, RATE_LIMITS, getRemainingCooldown } from '@/utils/rateLimiter';
 
 import { useTableByNumber, useTables } from '@/hooks/useTables';
 import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
@@ -238,14 +241,155 @@ const CustomerMenu = () => {
   // Resolve table number to table UUID
   const { data: tableData, isLoading: tableLoading } = useTableByNumber(restaurantId, dynamicTableId || undefined);
   const resolvedTableId = tableData?.id;
+  const isDataLoading = restaurantLoading || menuLoading || (dynamicTableId && tableLoading);
 
   // Fetch customer orders for this table (with realtime)
   const { data: customerOrders = [] } = useCustomerOrders(restaurantId, resolvedTableId);
+
+  // Fetch feedback stats
+  const { data: feedbackStats } = useFeedbackStats(restaurantId || undefined);
+
+  // Fetch recent orders stored in localStorage
+  const { data: recentOrdersData = [], refreshIds: refreshRecentOrderIds } = useRecentOrders(restaurantId || undefined);
+
+  // Fetch notification log for Alerts Tab
+  const { data: tabNotifications = [] } = useQuery({
+    queryKey: ['notifications-tab-history', restaurantId, resolvedTableId],
+    queryFn: async () => {
+      if (!restaurantId) return [];
+      let query = supabase
+        .from('customer_events')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .like('event_type', 'notification_%')
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      if (resolvedTableId) {
+        query = query.eq('table_id', resolvedTableId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!restaurantId,
+    refetchInterval: 10000,
+  });
+
+  // Unified display orders for this customer (merges table and device localStorage orders)
+  const displayOrders = useMemo(() => {
+    const merged = [...customerOrders];
+    recentOrdersData.forEach((ro) => {
+      if (!merged.some((co) => co.id === ro.id)) {
+        merged.push(ro);
+      }
+    });
+    return merged.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  }, [customerOrders, recentOrdersData]);
 
 
   // Mutations
   const createOrder = useCreateOrder();
   const createWaiterCall = useCreateWaiterCall();
+
+  // Fetch active table session for the table
+  const { data: activeSession, refetch: refetchActiveSession } = useQuery({
+    queryKey: ['active-table-session', restaurantId, resolvedTableId],
+    queryFn: async () => {
+      if (!restaurantId || !resolvedTableId) return null;
+      const { data, error } = await supabase
+        .from('table_sessions')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .eq('table_id', resolvedTableId)
+        .neq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) {
+        console.error('Error fetching table session:', error);
+        return null;
+      }
+      return data && data.length > 0 ? data[0] : null;
+    },
+    enabled: !!restaurantId && !!resolvedTableId,
+    staleTime: 5000,
+  });
+
+  const createTableSession = useMutation({
+    mutationFn: async () => {
+      if (!restaurantId || !resolvedTableId) return null;
+      const { data, error } = await supabase
+        .from('table_sessions')
+        .insert({
+          restaurant_id: restaurantId,
+          table_id: resolvedTableId,
+          status: 'seated',
+          seated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-table-session', restaurantId, resolvedTableId] });
+    }
+  });
+
+  // Table Session Validation & Auto-creation/stale check
+  useEffect(() => {
+    if (!restaurantId || !resolvedTableId || isDataLoading) return;
+
+    const validateSession = async () => {
+      if (activeSession === null && !createTableSession.isPending) {
+        console.log('No active table session found, creating one...');
+        createTableSession.mutate();
+        return;
+      }
+
+      if (activeSession) {
+        const seatedTime = new Date(activeSession.seated_at || '').getTime();
+        const FOUR_HOURS = 4 * 60 * 60 * 1000;
+        
+        // If the session is older than 4 hours, mark completed and create a new one
+        if (Date.now() - seatedTime > FOUR_HOURS) {
+          console.log('Active table session is older than 4 hours, completing it and starting new one...');
+          await supabase
+            .from('table_sessions')
+            .update({ status: 'completed', completed_at: new Date().toISOString() })
+            .eq('id', activeSession.id);
+          
+          refetchActiveSession();
+          return;
+        }
+
+        // If the session is associated with an order, check if that order is completed/cancelled.
+        // If it is, this session is stale (customer already ate and left/billed).
+        if (activeSession.order_id) {
+          const { data: orderData } = await supabase
+            .from('orders')
+            .select('status')
+            .eq('id', activeSession.order_id)
+            .single();
+
+          if (orderData && (orderData.status === 'completed' || orderData.status === 'cancelled')) {
+            console.log('Order associated with table session is completed/cancelled. Completing session...');
+            await supabase
+              .from('table_sessions')
+              .update({ status: 'completed', completed_at: new Date().toISOString() })
+              .eq('id', activeSession.id);
+            
+            refetchActiveSession();
+          }
+        }
+      }
+    };
+
+    validateSession();
+  }, [restaurantId, resolvedTableId, isDataLoading, activeSession]);
 
   // Cart store
   const { 
@@ -373,10 +517,10 @@ const CustomerMenu = () => {
 
   // Find active order (including served so we can track the transition)
   const activeOrder = useMemo(() => {
-    return customerOrders.find(
+    return displayOrders.find(
       (o) => o.status !== "completed" && o.status !== "cancelled"
     );
-  }, [customerOrders]);
+  }, [displayOrders]);
 
   // ===== Upgraded Realtime Sound & Immersive Haptic Order Notification System =====
   const prevOrderStatusRef = useRef<string | null>(null);
@@ -451,6 +595,32 @@ const CustomerMenu = () => {
 
     prevOrderStatusRef.current = currentStatus;
   }, [activeOrder?.status, restaurantId, dynamicTableId, tableNumber]);
+
+  // Trigger review modal when an order changes status to completed
+  useEffect(() => {
+    if (displayOrders.length === 0) return;
+
+    displayOrders.forEach((order) => {
+      const prevStatus = prevOrderStatusesRef.current[order.id];
+      const currentStatus = order.status;
+
+      if (prevStatus && prevStatus !== 'completed' && currentStatus === 'completed') {
+        console.log(`[Review Trigger] Order ${order.id} status changed to completed! Triggering review modal...`);
+        setReviewOrderId(order.id);
+        setReviewImmediate(true);
+      }
+
+      // Update ref with current status
+      prevOrderStatusesRef.current[order.id] = currentStatus;
+    });
+
+    // Populate initial statuses for newly loaded orders so we only trigger on transitions
+    displayOrders.forEach((order) => {
+      if (!prevOrderStatusesRef.current[order.id]) {
+        prevOrderStatusesRef.current[order.id] = order.status;
+      }
+    });
+  }, [displayOrders]);
 
 
   const estimatedPrepTime = useMemo(() => {
@@ -548,6 +718,17 @@ const CustomerMenu = () => {
       return;
     }
 
+    // Rate Limit Check
+    if (!checkRateLimit(`order_submit_${restaurantId}_${resolvedTableId}`, RATE_LIMITS.ORDER_SUBMIT.maxAttempts, RATE_LIMITS.ORDER_SUBMIT.windowMs)) {
+      const cooldown = getRemainingCooldown(`order_submit_${restaurantId}_${resolvedTableId}`);
+      toast({
+        title: 'Too many requests',
+        description: `Please wait ${cooldown}s before placing another order.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const subtotal = cartPricing.subtotal;
     const taxAmount = cartPricing.tax;
     const serviceCharge = (cartPricing.subtotal - cartPricing.totalDiscount) * (serviceChargeRate / 100);
@@ -564,7 +745,7 @@ const CustomerMenu = () => {
     }
 
     try {
-      await createOrder.mutateAsync({
+      const result = await createOrder.mutateAsync({
         order: {
           restaurant_id: restaurantId,
           table_id: resolvedTableId,
@@ -587,6 +768,26 @@ const CustomerMenu = () => {
         description: 'Your order has been sent to the kitchen.',
       });
 
+      // Save order to localStorage
+      if (result?.id) {
+        addRecentOrderId(result.id);
+        refreshRecentOrderIds();
+
+        // Update table session with order details
+        if (activeSession) {
+          await supabase
+            .from('table_sessions')
+            .update({
+              order_id: result.id,
+              status: 'ordered',
+              order_placed_at: new Date().toISOString()
+            })
+            .eq('id', activeSession.id);
+          
+          refetchActiveSession();
+        }
+      }
+
       clearCart();
       setCurrentView('orders');
     } catch (err: any) {
@@ -604,6 +805,17 @@ const CustomerMenu = () => {
       toast({
         title: 'Missing information',
         description: 'Please scan the QR code at your table.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Rate Limit Check
+    if (!checkRateLimit(`waiter_call_${restaurantId}_${resolvedTableId}`, RATE_LIMITS.WAITER_CALL.maxAttempts, RATE_LIMITS.WAITER_CALL.windowMs)) {
+      const cooldown = getRemainingCooldown(`waiter_call_${restaurantId}_${resolvedTableId}`);
+      toast({
+        title: 'Too many requests',
+        description: `Please wait ${cooldown}s before calling the waiter again.`,
         variant: 'destructive',
       });
       return;
@@ -630,21 +842,45 @@ const CustomerMenu = () => {
   };
 
 
-  const isDataLoading = restaurantLoading || menuLoading || (dynamicTableId && tableLoading);
   const isInvalidTable = dynamicTableId && !tableLoading && (!tableData || tableData.active === false);
 
   if (isInvalidTable) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="p-6 text-center">
-            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
-            <h2 className="text-lg font-semibold mb-2">Invalid or Inactive Table</h2>
-            <p className="text-muted-foreground mb-4">
-              This table is not valid or has been deactivated. Please ask the restaurant staff for assistance.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-zinc-150 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="max-w-md w-full"
+        >
+          <Card className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-[0_16px_48px_rgba(0,0,0,0.08)] rounded-3xl overflow-hidden">
+            <CardContent className="p-8 text-center space-y-6">
+              <div className="relative w-20 h-20 mx-auto">
+                <motion.div
+                  animate={{ scale: [1, 1.08, 1], rotate: [0, 5, -5, 0] }}
+                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                  className="w-full h-full rounded-2xl bg-destructive/10 dark:bg-destructive/20 flex items-center justify-center text-destructive"
+                >
+                  <AlertCircle className="w-10 h-10" />
+                </motion.div>
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full animate-ping" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">Invalid or Inactive Table</h2>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  This table is not valid or has been deactivated. Please ask the restaurant staff for assistance or try scanning the QR code again.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full rounded-2xl h-12 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 font-bold"
+                onClick={() => setDynamicTableId('')}
+              >
+                Change Table
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   }
@@ -652,16 +888,33 @@ const CustomerMenu = () => {
   // Error state
   if (!restaurantId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="p-6 text-center">
-            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
-            <h2 className="text-lg font-semibold mb-2">Invalid QR Code</h2>
-            <p className="text-muted-foreground mb-4">
-              Please scan a valid QR code at your table to view the menu.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-zinc-150 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="max-w-md w-full"
+        >
+          <Card className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-[0_16px_48px_rgba(0,0,0,0.08)] rounded-3xl overflow-hidden">
+            <CardContent className="p-8 text-center space-y-6">
+              <div className="relative w-20 h-20 mx-auto">
+                <motion.div
+                  animate={{ scale: [1, 1.05, 1], y: [0, -4, 0] }}
+                  transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                  className="w-full h-full rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400"
+                >
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
+                </motion.div>
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">Invalid QR Code</h2>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Please scan a valid QR code at your table to view the menu and start ordering.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   }
@@ -702,7 +955,14 @@ const CustomerMenu = () => {
           />
         )}
         <h2 className="text-2xl font-bold">{restaurant?.name}</h2>
-        <p className="text-muted-foreground mt-1 text-sm">{restaurant?.description || 'Welcome!'}</p>
+        {feedbackStats && feedbackStats.total > 0 && (
+          <div className="flex items-center justify-center gap-1.5 mt-1.5 text-amber-500 font-bold text-sm">
+            <span>★</span>
+            <span>{feedbackStats.avgRating.toFixed(1)}</span>
+            <span className="text-muted-foreground dark:text-zinc-500 font-normal text-xs">({feedbackStats.total} reviews)</span>
+          </div>
+        )}
+        <p className="text-muted-foreground mt-2 text-sm">{restaurant?.description || 'Welcome!'}</p>
         {tableNumber && (
           <Badge variant="secondary" className="mt-3">Table {tableNumber}</Badge>
         )}
@@ -872,9 +1132,25 @@ const CustomerMenu = () => {
       )}
 
       {!menuLoading && filteredItems.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          No items found
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-16 px-4 bg-zinc-50/50 dark:bg-zinc-900/30 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl"
+        >
+          <Search className="w-10 h-10 mx-auto text-zinc-400 dark:text-zinc-600 mb-3" />
+          <h3 className="text-base font-extrabold text-zinc-900 dark:text-zinc-50 mb-1">No items found</h3>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
+            We couldn't find any items matching "{searchQuery}" in this category. Try adjusting your search query or category filter.
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+            className="mt-4 text-xs font-bold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300"
+          >
+            Clear Filters
+          </Button>
+        </motion.div>
       )}
       </div>
     </div>
@@ -1038,7 +1314,7 @@ const CustomerMenu = () => {
         </div>
       )}
 
-      {customerOrders.length === 0 ? (
+      {displayOrders.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
             <ClipboardList className="w-8 h-8 text-muted-foreground" />
@@ -1050,13 +1326,13 @@ const CustomerMenu = () => {
           <Button
             variant="outline"
             className="mt-4"
-            onClick={() => setCurrentView('menu')}
+            onClick={() => setCurrentView('search')}
           >
             Back to Menu
           </Button>
         </div>
       ) : (
-        customerOrders.map((order) => (
+        displayOrders.map((order) => (
           <Card key={order.id} className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
@@ -1088,17 +1364,6 @@ const CustomerMenu = () => {
                   {currencySymbol}{Number(order.total_amount || 0).toFixed(2)}
                 </span>
               </div>
-              {order.status === 'served' && (
-                <Button
-                  size="sm"
-                  className="w-full mt-3 gap-2"
-                  variant="outline"
-                  onClick={() => { setReviewImmediate(true); setReviewOrderId(order.id); }}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Rate Your Experience ⭐
-                </Button>
-              )}
             </CardContent>
           </Card>
         ))
@@ -1116,33 +1381,24 @@ const CustomerMenu = () => {
       {restaurant && (
         <p className="text-sm text-muted-foreground">{restaurant.name}</p>
       )}
+      {restaurantId && (
+        <Button
+          className="mt-4 gap-2"
+          variant="outline"
+          onClick={() => {
+            const params = new URLSearchParams({ r: restaurantId });
+            if (resolvedTableId) params.set('table', resolvedTableId);
+            navigate(`/feedback?${params.toString()}`);
+          }}
+        >
+          <MessageSquare className="w-4 h-4" />
+          Write a Review
+        </Button>
+      )}
     </div>
   );
 
-  // Fetch notification log for Alerts Tab
-  const { data: tabNotifications = [] } = useQuery({
-    queryKey: ['notifications-tab-history', restaurantId, resolvedTableId],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      let query = supabase
-        .from('customer_events')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .like('event_type', 'notification_%')
-        .order('created_at', { ascending: false })
-        .limit(30);
 
-      if (resolvedTableId) {
-        query = query.eq('table_id', resolvedTableId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!restaurantId,
-    refetchInterval: 10000,
-  });
 
   const renderNotifications = () => (
     <div className="space-y-4">
@@ -1248,6 +1504,8 @@ const CustomerMenu = () => {
         restaurantId={restaurantId || undefined}
         tableId={resolvedTableId || undefined}
         notificationCount={tabNotifications.length}
+        avgRating={feedbackStats?.avgRating}
+        totalReviews={feedbackStats?.total}
       />
 
       {/* Content */}
@@ -1305,11 +1563,11 @@ const CustomerMenu = () => {
           currentView={currentView}
           onViewChange={setCurrentView}
           cartCount={getTotalItems()}
-          orderCount={customerOrders.filter(o => o.status !== 'completed').length}
+          orderCount={displayOrders.filter(o => o.status !== 'completed').length}
         />
       )}
 
-      {/* Post-Order Review Prompt — triggers when order is served */}
+      {/* Post-Order Review Prompt — triggers when order is completed */}
       {reviewOrderId && restaurantId && (
         <PostOrderReviewPrompt
           restaurantId={restaurantId}
@@ -1317,6 +1575,8 @@ const CustomerMenu = () => {
           tableId={resolvedTableId}
           googleReviewUrl={restaurant?.google_review_url}
           delayMs={reviewImmediate ? 0 : 5000}
+          immediate={reviewImmediate}
+          onClose={() => setReviewOrderId(null)}
         />
       )}
 

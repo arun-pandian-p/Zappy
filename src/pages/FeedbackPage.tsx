@@ -19,6 +19,8 @@ const FeedbackPage = () => {
   const restaurantId = searchParams.get('r');
   const tableId = searchParams.get('table');
   const orderId = searchParams.get('order');
+  const isUuid = (value: string | null) =>
+    !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -28,6 +30,7 @@ const FeedbackPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [showGoogleRedirect, setShowGoogleRedirect] = useState(false);
   const [restaurant, setRestaurant] = useState<{ name: string; google_review_url: string | null } | null>(null);
+  const [resolvedTableId, setResolvedTableId] = useState<string | null>(isUuid(tableId) ? tableId : null);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -47,6 +50,24 @@ const FeedbackPage = () => {
     fetchRestaurant();
   }, [restaurantId]);
 
+  useEffect(() => {
+    const resolveTable = async () => {
+      if (!restaurantId || !tableId || isUuid(tableId)) return;
+
+      const { data } = await supabase
+        .from('tables')
+        .select('id')
+        .eq('restaurant_id', restaurantId)
+        .eq('table_number', tableId)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      setResolvedTableId(data?.id ?? null);
+    };
+
+    resolveTable();
+  }, [restaurantId, tableId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -59,13 +80,22 @@ const FeedbackPage = () => {
       return;
     }
 
+    if (!restaurantId) {
+      toast({
+        title: 'Missing restaurant',
+        description: 'Open the review link from the restaurant menu.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       // Save feedback to database
       const { error } = await supabase.from('feedback').insert({
         restaurant_id: restaurantId,
-        table_id: tableId || null,
+        table_id: resolvedTableId,
         order_id: orderId || null,
         rating,
         comment: comment || null,

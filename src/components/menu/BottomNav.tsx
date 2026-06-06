@@ -26,7 +26,12 @@ export function BottomNav({
   notificationCount = 0,
 }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-4 right-4 mx-auto max-w-[420px] h-[64px] z-50 bg-white/75 dark:bg-zinc-950/75 border border-zinc-200/40 dark:border-zinc-800/40 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.02)] p-1.5 backdrop-blur-2xl select-none">
+    <motion.nav
+      initial={{ y: 80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+      className="fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-4 right-4 mx-auto max-w-[420px] h-[64px] z-50 bg-white/75 dark:bg-zinc-950/75 border border-zinc-200/40 dark:border-zinc-800/40 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.02)] p-1.5 backdrop-blur-2xl select-none"
+    >
       <div className="w-full h-full px-1">
         <div className="flex justify-between items-center h-full relative">
           {navItems.map(({ view, icon: Icon, label }) => {
@@ -52,9 +57,13 @@ export function BottomNav({
                     />
                   )}
 
-                  <div className={isActive ? "text-emerald-600 dark:text-emerald-400 scale-105" : "text-zinc-500 dark:text-zinc-400"}>
+                  <motion.div
+                    animate={isActive ? { scale: [1, 1.15, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                    className={isActive ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-500 dark:text-zinc-400"}
+                  >
                     <Icon className={`w-[18px] h-[18px] mb-0.5 transition-transform duration-200 ${isActive ? "stroke-[2.5]" : "stroke-2"}`} />
-                  </div>
+                  </motion.div>
                   
                   {/* Glow Badge */}
                   {badgeCount > 0 && (
@@ -72,6 +81,6 @@ export function BottomNav({
           })}
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
