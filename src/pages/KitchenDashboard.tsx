@@ -152,6 +152,7 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
       case 'preparing': return 'bg-info/10 text-info border-info/20';
       case 'ready': return 'bg-success/10 text-success border-success/20';
       case 'served': return 'bg-primary/10 text-primary border-primary/20';
+      case 'billed': return 'bg-muted/50 text-muted-foreground border-muted/30 opacity-60';
       default: return 'bg-muted text-muted-foreground';
     }
   };

@@ -2216,6 +2216,20 @@ export type Database = {
         Args: { _restaurant_id: string }
         Returns: boolean
       }
+      complete_billing_transaction: {
+        Args: {
+          p_order_id: string
+          p_payment_method: string
+          p_discount_amount: number
+          p_total_amount: number
+          p_customer_name?: string | null
+          p_customer_phone?: string | null
+          p_notes?: string | null
+          p_invoice_number?: string | null
+          p_user_id?: string | null
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role:
@@ -2231,6 +2245,7 @@ export type Database = {
         | "preparing"
         | "ready"
         | "served"
+        | "billed"
         | "completed"
         | "cancelled"
       payment_status: "pending" | "paid" | "refunded"
@@ -2376,6 +2391,7 @@ export const Constants = {
         "preparing",
         "ready",
         "served",
+        "billed",
         "completed",
         "cancelled",
       ],
