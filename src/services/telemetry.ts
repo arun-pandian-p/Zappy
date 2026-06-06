@@ -1,18 +1,35 @@
-import { WebTracerProvider } from "@opentelemetry/sdk-trace-web";
-import { SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { trace, type Tracer } from "@opentelemetry/api";
 
-// Export traces to Arize Phoenix OTLP receiver
-const exporter = new OTLPTraceExporter({
-  url: "http://localhost:6006/v1/traces",
-});
+let tracer: Tracer;
 
-// Configure provider with span processors passed into constructor for SDK v2.x
-const provider = new WebTracerProvider({
-  spanProcessors: [new SimpleSpanProcessor(exporter)]
-});
+try {
+  // Only initialize OTLP exporter if endpoint is configured and we're in dev
+  const otlpEndpoint = import.meta.env.VITE_OTLP_ENDPOINT;
+  const isDev = import.meta.env.DEV;
 
-provider.register();
+  if (otlpEndpoint || isDev) {
+    // Lazy dynamic import to avoid crashing in production if modules mismatch
+    const { WebTracerProvider } = await import("@opentelemetry/sdk-trace-web");
+    const { SimpleSpanProcessor } = await import("@opentelemetry/sdk-trace-base");
+    const { OTLPTraceExporter } = await import("@opentelemetry/exporter-trace-otlp-http");
 
-export const tracer: Tracer = trace.getTracer("ocr-pipeline");
+    const exporter = new OTLPTraceExporter({
+      url: otlpEndpoint || "http://localhost:6006/v1/traces",
+    });
+
+    const provider = new WebTracerProvider({
+      spanProcessors: [new SimpleSpanProcessor(exporter)],
+    });
+
+    provider.register();
+    tracer = trace.getTracer("zappy-platform");
+  } else {
+    // No-op tracer in production without OTLP endpoint
+    tracer = trace.getTracer("zappy-platform");
+  }
+} catch (err) {
+  console.warn("[Telemetry] Failed to initialize OpenTelemetry, using no-op tracer:", err);
+  tracer = trace.getTracer("zappy-platform");
+}
+
+export { tracer };

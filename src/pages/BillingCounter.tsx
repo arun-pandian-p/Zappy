@@ -28,6 +28,7 @@ import { useTables } from '@/hooks/useTables';
 import DiscountButtons from '@/components/billing/DiscountButtons';
 import SplitPaymentPanel from '@/components/billing/SplitPaymentPanel';
 import { format } from 'date-fns';
+import { useAtomicBilling } from '@/hooks/useAtomicBilling';
 
 import { useAuth } from '@/hooks/useAuth';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
@@ -57,13 +58,14 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   const { data: tables = [] } = useTables(restaurantId);
   const { data: allOrders = [], isLoading: ordersLoading, refetch: refetchOrders } = useOrders(
     restaurantId,
-    ['ready', 'served', 'completed']
+    ['ready', 'served', 'billed', 'completed']
   );
   const { data: todayInvoices = [] } = useTodayInvoices(restaurantId);
   const { data: invoiceStats } = useInvoiceStats(restaurantId);
 
   const updatePayment = useUpdateOrderPayment();
   const createInvoice = useCreateInvoice();
+  const { completeBilling, completeBillingFallback, offlineQueueCount, processOfflineQueue } = useAtomicBilling(restaurantId);
 
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'upi' | 'card' | 'wallet' | 'split'>('cash');
@@ -124,45 +126,28 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
     if (!selectedOrder || !restaurantId) return;
 
     setIsProcessing(true);
+
+    const splitNote = selectedPaymentMethod === 'split'
+      ? `Split: Cash ₹${splitAmounts.cash} + UPI ₹${splitAmounts.upi} + Card ₹${splitAmounts.card}`
+      : undefined;
+
     try {
-      await updatePayment.mutateAsync({
-        id: selectedOrder.id,
+      // Attempt atomic billing transaction (single DB call)
+      await completeBilling.mutateAsync({
+        orderId: selectedOrder.id,
         paymentMethod: selectedPaymentMethod,
-        paymentStatus: 'paid',
-      });
-
-      const invoiceItems = selectedOrder.order_items?.map(item => ({
-        id: item.id,
-        name: item.name,
-        quantity: item.quantity,
-        price: Number(item.price),
-        total: Number(item.price) * item.quantity,
-      })) || [];
-
-      const splitNote = selectedPaymentMethod === 'split'
-        ? `Split: Cash ₹${splitAmounts.cash} + UPI ₹${splitAmounts.upi} + Card ₹${splitAmounts.card}`
-        : undefined;
-
-      await createInvoice.mutateAsync({
-        restaurant_id: restaurantId,
-        order_id: selectedOrder.id,
-        invoice_number: generateInvoiceNumber(restaurantId),
-        subtotal: Number(selectedOrder.subtotal) || 0,
-        tax_amount: Number(selectedOrder.tax_amount) || 0,
-        service_charge: Number(selectedOrder.service_charge) || 0,
-        discount_amount: discountAmount,
-        total_amount: adjustedTotal,
-        payment_method: selectedPaymentMethod,
-        items: invoiceItems,
-        customer_name: selectedOrder.customer_name || undefined,
-        customer_phone: selectedOrder.customer_phone || undefined,
-        notes: splitNote,
+        discountAmount: discountAmount,
+        totalAmount: adjustedTotal,
+        customerName: selectedOrder.customer_name || null,
+        customerPhone: selectedOrder.customer_phone || null,
+        notes: splitNote || null,
+        invoiceNumber: generateInvoiceNumber(restaurantId),
       });
 
       if (!isMuted) playSound();
 
       toast({
-        title: 'Payment Completed',
+        title: '✅ Payment Completed',
         description: `Order #${selectedOrder.order_number} paid via ${selectedPaymentMethod}. Total: ${currencySymbol}${adjustedTotal.toFixed(2)}`,
       });
 
@@ -171,11 +156,84 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
       setSelectedOrder(null);
       setSelectedDiscount(0);
     } catch (err) {
-      toast({
-        title: 'Payment Failed',
-        description: 'Failed to process payment. Please try again.',
-        variant: 'destructive',
-      });
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+
+      // Handle specific error types
+      if (errorMsg.includes('DUPLICATE_BILLING')) {
+        toast({
+          title: '⚠️ Already Billed',
+          description: 'This order has already been billed. Check the history tab.',
+          variant: 'destructive',
+        });
+      } else if (errorMsg.includes('ORDER_LOCKED')) {
+        toast({
+          title: '🔒 Order Locked',
+          description: 'Another staff member is processing this order.',
+          variant: 'destructive',
+        });
+      } else if (errorMsg.includes('ORDER_CLOSED')) {
+        toast({
+          title: '⚠️ Order Closed',
+          description: 'This order is already completed or cancelled.',
+          variant: 'destructive',
+        });
+      } else if (errorMsg.includes('OFFLINE_QUEUED')) {
+        toast({
+          title: '📡 Queued Offline',
+          description: 'Payment saved locally. Will sync when connection resumes.',
+        });
+      } else if (errorMsg.includes('could not find the function') || errorMsg.includes('function') ) {
+        // RPC not deployed yet — fallback to two-step approach
+        try {
+          const invoiceItems = selectedOrder.order_items?.map(item => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: Number(item.price),
+            total: Number(item.price) * item.quantity,
+          })) || [];
+
+          await completeBillingFallback.mutateAsync({
+            orderId: selectedOrder.id,
+            paymentMethod: selectedPaymentMethod,
+            discountAmount: discountAmount,
+            totalAmount: adjustedTotal,
+            customerName: selectedOrder.customer_name || null,
+            customerPhone: selectedOrder.customer_phone || null,
+            notes: splitNote || null,
+            invoiceNumber: generateInvoiceNumber(restaurantId),
+            restaurantId,
+            subtotal: Number(selectedOrder.subtotal) || 0,
+            taxAmount: Number(selectedOrder.tax_amount) || 0,
+            serviceCharge: Number(selectedOrder.service_charge) || 0,
+            items: invoiceItems,
+          });
+
+          if (!isMuted) playSound();
+
+          toast({
+            title: '✅ Payment Completed',
+            description: `Order #${selectedOrder.order_number} paid via ${selectedPaymentMethod}. Total: ${currencySymbol}${adjustedTotal.toFixed(2)}`,
+          });
+
+          setOrderToPrint(selectedOrder);
+          setShowReceiptPreview(true);
+          setSelectedOrder(null);
+          setSelectedDiscount(0);
+        } catch (fallbackErr) {
+          toast({
+            title: 'Payment Failed',
+            description: 'Failed to process payment. Please try again.',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        toast({
+          title: 'Payment Failed',
+          description: errorMsg || 'Failed to process payment. Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsProcessing(false);
     }
