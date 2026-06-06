@@ -4,7 +4,7 @@ import webpush from "npm:web-push"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") || "";
+const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") || "BF3B3qJqYQ3z4Y4uWw3c1k9m_4Wn4S-6z3mD3J6X-X3Y4z3mD3J6X-X3Y4z3mD3J6X-X3Y4z3mD3J6X";
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") || "";
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:support@zappy.ind.in";
 
@@ -94,7 +94,7 @@ serve(async (req) => {
           }
 
           const response = await webpush.sendNotification(pushSubscription, pushPayload);
-          
+
           // Log success in logs table
           await supabaseAdmin.from('notification_logs').insert({
             queue_id: record.id,
@@ -105,7 +105,7 @@ serve(async (req) => {
           return { subscriptionId: sub.id, status: 'success' };
         } catch (err: any) {
           console.error(`Error sending push notification to sub ${sub.id}:`, err);
-          
+
           // Delete subscription if expired/unreachable (Gone 410 or NotFound 404)
           if (err.statusCode === 410 || err.statusCode === 404) {
             await supabaseAdmin.from('notification_subscriptions').delete().eq('id', sub.id);
