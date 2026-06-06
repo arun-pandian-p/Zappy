@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { CategoryManager } from "@/components/admin/CategoryManager";
-import { MenuOCRImporter } from "@/components/admin/MenuOCRImporter";
+import BulkMenuImporter from "@/components/admin/BulkMenuImporter";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { MenuPreviewCard } from "@/components/admin/MenuPreviewCard";
 import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
@@ -310,7 +310,7 @@ export function MenuTab({
               </div>
             </DialogContent>
           </Dialog>
-          <MenuOCRImporter restaurantId={restaurantId} />
+          <BulkMenuImporter restaurantId={restaurantId} />
         </div>
       </div>
 
