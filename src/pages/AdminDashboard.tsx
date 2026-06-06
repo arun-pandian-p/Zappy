@@ -15,6 +15,7 @@ import {
   QrCode,
   Package,
   Sparkles,
+  ClipboardList,
   Lock as LockIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
