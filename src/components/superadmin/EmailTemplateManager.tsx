@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 
@@ -50,8 +50,11 @@ export function EmailTemplateManager() {
                   <DialogTrigger asChild>
                     <Button size="sm" variant="outline"><Eye className="w-4 h-4 mr-1" />Preview</Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader><DialogTitle>Preview: {t.template_name}</DialogTitle></DialogHeader>
+                  <DialogContent className="max-w-3xl" aria-describedby="email-preview-desc">
+                    <DialogHeader>
+                      <DialogTitle>Preview: {t.template_name}</DialogTitle>
+                      <DialogDescription id="email-preview-desc">Previewing the email template.</DialogDescription>
+                    </DialogHeader>
                     <div className="border rounded p-4" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t.body_html, {
                       ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'p', 'a', 'strong', 'em', 'br', 'div', 'span', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'img', 'hr'],
                       ALLOWED_ATTR: ['href', 'class', 'style', 'target', 'src', 'alt', 'width', 'height'],

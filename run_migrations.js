@@ -45,8 +45,7 @@ async function tryConnectAndMigrate() {
   try {
     const migrationsDir = 'supabase/migrations';
     const files = [
-      '20260605010000_ai_menu_enrichment_schema.sql',
-      '20260605020000_fix_review_rls_for_customers.sql'
+      '20260606000000_workforce_management.sql'
     ];
 
     for (const file of files) {

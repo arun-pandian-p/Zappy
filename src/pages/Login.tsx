@@ -17,6 +17,7 @@ const Login = () => {
   const { signIn, user, role, loading: authLoading, getRouteForRole } = useAuth();
 
   const [email, setEmail] = useState('');
+  const [restaurantSlug, setRestaurantSlug] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,11 +32,22 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password) {
-      toast({ title: 'Missing fields', description: 'Please enter both email and password.', variant: 'destructive' });
+      toast({ title: 'Missing fields', description: 'Please enter your email/username and password.', variant: 'destructive' });
       return;
     }
     setLoading(true);
-    const { error } = await signIn(email.trim(), password);
+
+    let loginEmail = email.trim();
+    if (!loginEmail.includes('@')) {
+      if (!restaurantSlug.trim()) {
+        toast({ title: 'Missing Restaurant Slug', description: 'Please enter your restaurant slug when logging in with a username.', variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+      loginEmail = `${loginEmail.toLowerCase()}@${restaurantSlug.trim().toLowerCase()}.zappy.local`;
+    }
+
+    const { error } = await signIn(loginEmail, password);
     if (error) {
       const isNetworkError = error.message === 'Failed to fetch' || error.message?.includes('NetworkError');
       toast({
@@ -112,24 +124,37 @@ const Login = () => {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-3.5">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</label>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 ml-1">Email or Username</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Mail className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
-                  type="email"
-                  placeholder="you@example.com"
+                  type="text"
+                  placeholder="admin@zappy.com or arun_waiter"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                  autoComplete="email"
-                  className="pl-10 h-11 rounded-lg border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus-visible:ring-emerald-500 focus-visible:border-emerald-500" />
-                
+                  className="pl-10 h-11 bg-slate-50 border-slate-200"
+                />
               </div>
             </div>
 
-            <div className="space-y-1.5">
+            {!email.includes('@') && email.length > 0 && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 ml-1">Restaurant Code / Slug</label>
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="e.g. the-food-place"
+                    value={restaurantSlug}
+                    onChange={(e) => setRestaurantSlug(e.target.value)}
+                    className="h-11 bg-slate-50 border-slate-200"
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            <div className="space-y-2">
               <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />

@@ -15,8 +15,10 @@ import { parseMenuFromText, parseMenuFromCSV, type ParsedMenuItem } from "./menu
 import { tracer } from "./telemetry";
 import { SpanStatusCode } from "@opentelemetry/api";
 
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+
 // Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 // ============================================================
 // FILE TYPE DETECTION

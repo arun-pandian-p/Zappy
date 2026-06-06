@@ -201,7 +201,7 @@ export function MenuTab({
                 Add Item
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px]" aria-describedby="add-category-description">
               <DialogHeader>
                 <DialogTitle>Add Menu Item</DialogTitle>
                 <DialogDescription>Create a new dish for your menu.</DialogDescription>

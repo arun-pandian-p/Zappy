@@ -22,6 +22,7 @@ import FeedbackPage from "./pages/FeedbackPage";
 import NotFound from "./pages/NotFound";
 import UserGuide from "./pages/UserGuide";
 import RequestQuote from "./pages/RequestQuote";
+import QRRedirect from "./pages/QRRedirect";
 import RoleGuard from "./components/auth/RoleGuard";
 import { ImpersonationBanner } from "./components/superadmin/ImpersonationBanner";
 
@@ -62,6 +63,7 @@ const App = () => (
           <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/guide" element={<UserGuide />} />
           <Route path="/request-quote" element={<RequestQuote />} />
+          <Route path="/r/:id" element={<QRRedirect />} />
 
           {/* Staff routes — role-guarded */}
           <Route path="/kitchen" element={

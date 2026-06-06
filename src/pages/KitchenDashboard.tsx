@@ -20,6 +20,10 @@ import { LogOut } from 'lucide-react';
 import { KitchenStationFilter } from '@/components/admin/KitchenStationFilter';
 import { KitchenTVMode } from '@/components/admin/KitchenTVMode';
 import { KitchenOrderCard } from '@/components/admin/KitchenOrderCard';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { WorkforceDashboard } from '@/components/admin/WorkforceDashboard';
+import { WaiterManagement } from '@/components/admin/WaiterManagement';
+import { ShiftLogs } from '@/components/admin/ShiftLogs';
 
 interface KitchenDashboardProps {
   embedded?: boolean;
@@ -324,61 +328,84 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
         </AnimatePresence>
       )}
 
-      {/* Main Content - 4 columns */}
+      {/* Main Content */}
       <main className={`${isTvMode ? 'w-full max-w-full px-6 py-4 flex-1' : 'container mx-auto px-4 py-6'}`}>
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="space-y-4">
-                <div className="h-6 bg-muted rounded animate-pulse w-32" />
-                <Card className="border-dashed">
-                  <CardContent className="py-8">
-                    <div className="h-20 bg-muted rounded animate-pulse" />
-                  </CardContent>
-                </Card>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {columns.map((col) => (
-              <div key={col.title}>
-                <div className="flex items-center gap-2 mb-4 border-b pb-2">
-                  <motion.div
-                    className={`w-3 h-3 rounded-full ${col.color}`}
-                    animate={col.animate ? { scale: [1, 1.2, 1], opacity: [1, 0.7, 1] } : col.spin ? { rotate: 360 } : {}}
-                    transition={col.animate ? { duration: 1.5, repeat: Infinity } : col.spin ? { duration: 2, repeat: Infinity, ease: 'linear' } : {}}
-                  />
-                  <h2 className={`font-bold ${isTvMode ? 'text-lg' : 'text-base'}`}>{col.title} ({col.orders.length})</h2>
-                </div>
-                <div className="space-y-4 mt-4">
-                  <AnimatePresence mode="popLayout">
-                    {col.orders.map((order) => (
-                      <KitchenOrderCard
-                        key={order.id}
-                        order={order}
-                        showActions={col.action}
-                        isUpdating={isUpdating}
-                        onStartPrep={handleStartPrep}
-                        onMarkReady={handleMarkReady}
-                        onMarkServed={handleMarkServed}
-                        onCancelClick={(id, num) => setCancelOrder({ id, number: num })}
-                        isTvMode={isTvMode}
-                      />
-                    ))}
-                  </AnimatePresence>
-                  {col.orders.length === 0 && (
+        <Tabs defaultValue="kitchen" className="w-full space-y-4">
+          <TabsList>
+            <TabsTrigger value="kitchen">Kitchen Display</TabsTrigger>
+            <TabsTrigger value="workforce">Workforce</TabsTrigger>
+            <TabsTrigger value="waiters">Waiters</TabsTrigger>
+            <TabsTrigger value="shifts">Shift Logs</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="kitchen" className="m-0">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="space-y-4">
+                    <div className="h-6 bg-muted rounded animate-pulse w-32" />
                     <Card className="border-dashed">
-                      <CardContent className="py-8 text-center text-muted-foreground text-sm">
-                        No {col.title.toLowerCase()} orders
+                      <CardContent className="py-8">
+                        <div className="h-20 bg-muted rounded animate-pulse" />
                       </CardContent>
                     </Card>
-                  )}
-                </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {columns.map((col) => (
+                  <div key={col.title}>
+                    <div className="flex items-center gap-2 mb-4 border-b pb-2">
+                      <motion.div
+                        className={`w-3 h-3 rounded-full ${col.color}`}
+                        animate={col.animate ? { scale: [1, 1.2, 1], opacity: [1, 0.7, 1] } : col.spin ? { rotate: 360 } : {}}
+                        transition={col.animate ? { duration: 1.5, repeat: Infinity } : col.spin ? { duration: 2, repeat: Infinity, ease: 'linear' } : {}}
+                      />
+                      <h2 className={`font-bold ${isTvMode ? 'text-lg' : 'text-base'}`}>{col.title} ({col.orders.length})</h2>
+                    </div>
+                    <div className="space-y-4 mt-4">
+                      <AnimatePresence mode="popLayout">
+                        {col.orders.map((order) => (
+                          <KitchenOrderCard
+                            key={order.id}
+                            order={order}
+                            showActions={col.action}
+                            isUpdating={isUpdating}
+                            onStartPrep={handleStartPrep}
+                            onMarkReady={handleMarkReady}
+                            onMarkServed={handleMarkServed}
+                            onCancelClick={(id, num) => setCancelOrder({ id, number: num })}
+                            isTvMode={isTvMode}
+                          />
+                        ))}
+                      </AnimatePresence>
+                      {col.orders.length === 0 && (
+                        <Card className="border-dashed">
+                          <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                            No {col.title.toLowerCase()} orders
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="workforce">
+            {restaurantId ? <WorkforceDashboard restaurantId={restaurantId} /> : <p>Loading...</p>}
+          </TabsContent>
+
+          <TabsContent value="waiters">
+            {restaurantId ? <WaiterManagement restaurantId={restaurantId} /> : <p>Loading...</p>}
+          </TabsContent>
+
+          <TabsContent value="shifts">
+            {restaurantId ? <ShiftLogs restaurantId={restaurantId} /> : <p>Loading...</p>}
+          </TabsContent>
+        </Tabs>
       </main>
       {/* Cancel Order Dialog */}
       {cancelOrder && (

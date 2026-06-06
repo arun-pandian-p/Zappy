@@ -60,8 +60,7 @@ import { format } from "date-fns";
 import { getAppOrigin } from "@/utils/url";
 
 const DEFAULT_BASE_URL = getAppOrigin();
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://copkzrwvpqfjpsyyyqdy.supabase.co';
-const REDIRECT_BASE = `${SUPABASE_URL}/functions/v1/qr-redirect`;
+const REDIRECT_BASE = `${DEFAULT_BASE_URL}/r`;
 
 // QR Style Presets
 const QR_COLOR_PRESETS = [
@@ -286,7 +285,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
 
   const getQRValue = (qr: QRCode) => {
     if (qr.qr_type === "dynamic") {
-      return `${REDIRECT_BASE}?id=${qr.id}`;
+      return `${REDIRECT_BASE}/${qr.id}`;
     }
     if (qr.target_url?.startsWith('/')) {
       return `${BASE_URL}${qr.target_url}`;
