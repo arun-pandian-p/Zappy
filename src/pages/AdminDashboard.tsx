@@ -17,6 +17,9 @@ import {
   Sparkles,
   ClipboardList,
   Loader2,
+  BarChart3,
+  Megaphone,
+  Ticket,
   Lock as LockIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
