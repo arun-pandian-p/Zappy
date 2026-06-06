@@ -7,6 +7,14 @@ interface CategorySliderProps {
   onSelectCategory: (category: string) => void;
 }
 
+// Special prepended discovery categories mapped to emojis
+const DISCOVERY_FILTERS = [
+  { id: 'trending', name: 'Trending', icon: '🔥' },
+  { id: 'chef_special', name: 'Chef Special', icon: '👨‍🍳' },
+  { id: 'healthy', name: 'Healthy', icon: '🥗' },
+  { id: 'spicy', name: 'Spicy', icon: '🌶️' },
+];
+
 export function CategorySlider({
   categories,
   selectedCategory,
@@ -14,7 +22,7 @@ export function CategorySlider({
 }: CategorySliderProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Helper to map category to an emoji icon as a fallback
+  // Helper to map category to an emoji icon
   const getCategoryIcon = (cat: string) => {
     const l = cat.toLowerCase();
     if (l === "all") return "⊞";
@@ -36,7 +44,7 @@ export function CategorySlider({
     return "🍽️";
   };
 
-  // Scroll selected category into view
+  // Scroll selected button into view
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
@@ -63,13 +71,20 @@ export function CategorySlider({
     }
   }, [selectedCategory]);
 
+  // Combine Discovery Filters and Restaurant Categories
+  const allBubbles = [
+    { id: 'all', name: 'All', image_url: null, isDiscovery: true, icon: '⊞' },
+    ...DISCOVERY_FILTERS.map(df => ({ id: df.id, name: df.name, image_url: null, isDiscovery: true, icon: df.icon })),
+    ...categories.filter(c => c.name !== 'All').map(c => ({ id: c.id, name: c.name, image_url: c.image_url, isDiscovery: false, icon: null }))
+  ];
+
   return (
     <div
       ref={scrollRef}
-      className="flex gap-2 overflow-x-auto scrollbar-hide py-2 -mx-4 px-4"
+      className="flex gap-2 overflow-x-auto scrollbar-hide py-2 -mx-4 px-4 select-none"
       style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
     >
-      {categories.map((cat) => {
+      {allBubbles.map((cat) => {
         const isActive = selectedCategory === cat.name;
 
         return (
@@ -80,48 +95,36 @@ export function CategorySlider({
             className="flex-shrink-0"
           >
             <motion.button
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => onSelectCategory(cat.name)}
-              className="flex flex-col items-center gap-1.5 transition-all outline-none"
+              className={`relative flex items-center gap-1.5 py-1.5 px-3.5 rounded-full transition-all text-[11px] font-extrabold tracking-tight whitespace-nowrap outline-none border ${
+                isActive
+                  ? "bg-emerald-600 text-white border-emerald-600 shadow-[0_4px_12px_rgba(5,150,105,0.2)] dark:bg-emerald-500 dark:border-emerald-500 dark:shadow-[0_4px_12px_rgba(16,185,129,0.15)]"
+                  : "bg-white/85 dark:bg-zinc-900/60 text-zinc-600 dark:text-zinc-405 border-zinc-200/50 dark:border-zinc-800/50 backdrop-blur-md hover:border-zinc-300 dark:hover:border-zinc-700"
+              }`}
             >
-              <motion.div
-                animate={isActive ? { scale: 1.08, y: -2 } : { scale: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 18 }}
-                className={`relative w-16 h-16 rounded-full flex items-center justify-center bg-white dark:bg-zinc-900 shadow-sm border transition-all overflow-hidden ${
-                  isActive
-                    ? "border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/30 shadow-[0_4px_12px_rgba(16,185,129,0.15)] ring-2 ring-emerald-500/20"
-                    : "border-zinc-200/60 dark:border-zinc-800/60 hover:border-emerald-500/30"
-                }`}
-              >
-                {isActive && (
-                  <motion.span
-                    layoutId="activeMorphIndicator"
-                    className="absolute inset-0 rounded-full bg-emerald-500/10 -z-10"
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  />
-                )}
-                {cat.image_url ? (
-                  <img
-                    src={cat.image_url}
-                    alt={cat.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <span className="text-2xl">{getCategoryIcon(cat.name)}</span>
-                )}
-              </motion.div>
-              <span
-                className={`text-[10px] font-bold tracking-tight whitespace-nowrap ${
-                  isActive
-                    ? "text-emerald-600 dark:text-emerald-400 font-extrabold"
-                    : "text-zinc-500 dark:text-zinc-400"
-                }`}
-              >
-                {cat.name}
-              </span>
+              {isActive && (
+                <motion.span
+                  layoutId="activeCategoryIndicator"
+                  className="absolute inset-0 rounded-full bg-emerald-600/5 dark:bg-emerald-500/5 -z-10"
+                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                />
+              )}
+              {cat.image_url ? (
+                <img
+                  src={cat.image_url}
+                  alt=""
+                  className="w-4 h-4 rounded-full object-cover shrink-0 border border-black/5"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                <span className="text-sm leading-none shrink-0">
+                  {cat.icon || getCategoryIcon(cat.name)}
+                </span>
+              )}
+              <span className="leading-none">{cat.name}</span>
             </motion.button>
           </motion.div>
         );

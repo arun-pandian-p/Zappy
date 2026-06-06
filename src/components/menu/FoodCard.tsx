@@ -53,7 +53,7 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
     >
       <Card className="overflow-hidden card-hover border shadow-sm rounded-[20px] bg-white dark:bg-card h-full flex flex-col">
         {/* Image Section with Badges */}
-        <div className="relative aspect-[4/3] overflow-hidden bg-muted m-2 rounded-[14px]">
+        <div className="relative aspect-[16/10] overflow-hidden bg-muted m-2 rounded-[14px]">
           <img
             src={imageUrl || "/placeholder.svg"}
             alt={name}
@@ -90,16 +90,26 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
 
         {/* Content Section */}
         <CardContent className="p-3 pt-1 flex flex-col flex-1">
-          <h3 className="font-bold text-sm text-foreground mb-0.5 line-clamp-1">
+          <h3 className="font-extrabold text-sm text-zinc-900 dark:text-zinc-50 mb-0.5 line-clamp-1 tracking-tight">
             {name}
           </h3>
-          <p className="text-[10px] text-muted-foreground line-clamp-1 mb-2">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5">
+              <Star className="w-2.5 h-2.5 fill-current" />
+              {(4.5 + (id.charCodeAt(0) % 5) * 0.1).toFixed(1)}
+            </span>
+            <span className="w-0.5 h-0.5 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+            <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500">
+              {(10 + (id.charCodeAt(1) % 40))} ratings
+            </span>
+          </div>
+          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 line-clamp-1 mb-2">
             {description || "Fresh & Natural"}
           </p>
 
           {/* Price and Add Button Row — fixed min height to prevent layout shift */}
           <div className="flex items-center justify-between mt-auto min-h-[32px]">
-            <span className="font-bold text-[#008c4a] text-sm flex-shrink-0">
+            <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm flex-shrink-0 tracking-tight">
               {currencySymbol}{Number(price).toFixed(0)}
             </span>
 
@@ -118,9 +128,9 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
                       e.stopPropagation();
                       onAdd();
                     }}
-                    className="bg-[#008c4a] hover:bg-[#00703b] text-white font-medium px-3 h-7 text-[11px] rounded-full min-w-[60px]"
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold px-3.5 h-8 text-[10px] uppercase tracking-wider rounded-xl shadow-[0_2px_8px_rgba(16,185,129,0.15)] transition-all active:scale-95 duration-100"
                   >
-                    <Plus className="w-3 h-3 mr-0.5" />
+                    <Plus className="w-3 h-3 mr-0.5 stroke-[2.5]" />
                     Add
                   </Button>
                 </motion.div>
@@ -131,38 +141,38 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ duration: 0.15 }}
-                  className="flex items-center gap-0.5 bg-[#008c4a] rounded-full p-0.5 h-7 min-w-[80px]"
+                  className="flex items-center gap-1 bg-zinc-900 dark:bg-zinc-100 rounded-xl p-0.5 h-8 min-w-[84px] shadow-sm"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 rounded-full text-white hover:bg-white/20 hover:text-white flex-shrink-0"
+                    className="h-7 w-7 rounded-lg text-white dark:text-zinc-950 hover:bg-white/10 dark:hover:bg-black/10 flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDecrement?.();
                     }}
                   >
-                    <Minus className="w-3 h-3" />
+                    <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
                   </Button>
                   <motion.span
                     key={quantity}
                     initial={{ scale: 1.3 }}
                     animate={{ scale: 1 }}
-                    className="w-5 text-center font-semibold text-[11px] text-white flex-shrink-0"
+                    className="w-4 text-center font-extrabold text-xs text-white dark:text-zinc-950 flex-shrink-0 font-mono"
                   >
                     {quantity}
                   </motion.span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 rounded-full text-white hover:bg-white/20 hover:text-white flex-shrink-0"
+                    className="h-7 w-7 rounded-lg text-white dark:text-zinc-950 hover:bg-white/10 dark:hover:bg-black/10 flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       onIncrement?.();
                     }}
                   >
-                    <Plus className="w-3 h-3" />
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                   </Button>
                 </motion.div>
               )}

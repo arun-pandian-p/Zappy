@@ -35,3 +35,6 @@ scratch/
 
 # Generated state files
 scripts/db_state.json
+
+# Local MCP Configurations (contains secrets)
+.mcp.json

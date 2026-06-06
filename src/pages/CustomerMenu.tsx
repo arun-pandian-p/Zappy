@@ -55,8 +55,10 @@ import { ItemDetailsDialog } from '@/components/menu/ItemDetailsDialog';
 import { MenuGridSkeleton, MenuListSkeleton } from '@/components/menu/MenuSkeletons';
 import { notificationService, type NotificationType } from '@/services/notificationService';
 import { NotificationBar } from '@/components/menu/NotificationBar';
+import { WaiterCallFAB } from '@/components/menu/WaiterCallFAB';
+import { Bell } from 'lucide-react';
 
-type ViewType = 'home' | 'menu' | 'cart' | 'orders' | 'profile';
+type ViewType = 'home' | 'search' | 'cart' | 'orders' | 'profile' | 'notifications';
 
 const CustomerMenu = () => {
   const navigate = useNavigate();
@@ -122,7 +124,7 @@ const CustomerMenu = () => {
     type: NotificationType;
   } | null>(null);
 
-  const [currentView, setCurrentView] = useState<ViewType>('menu');
+  const [currentView, setCurrentView] = useState<ViewType>('search');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedItemForDetails, setSelectedItemForDetails] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -339,7 +341,24 @@ const CustomerMenu = () => {
   // Filter items
   const filteredItems = useMemo(() => {
     return availableMenuItems.filter((item) => {
-      const matchesCategory = selectedCategory === 'All' || item.category?.name === selectedCategory;
+      const matchesCategory = (() => {
+        if (selectedCategory === 'All') return true;
+        if (selectedCategory === 'Trending') return item.is_popular === true;
+        if (selectedCategory === 'Chef Special') {
+          return item.is_popular === true || 
+                 (item.tags && item.tags.some(t => t.toLowerCase().includes('chef') || t.toLowerCase().includes('special')));
+        }
+        if (selectedCategory === 'Healthy') {
+          return item.is_vegetarian === true || 
+                 item.is_vegan === true || 
+                 (item.tags && item.tags.some(t => t.toLowerCase().includes('healthy') || t.toLowerCase().includes('diet')));
+        }
+        if (selectedCategory === 'Spicy') {
+          return item.spicy_level !== undefined && item.spicy_level !== null && item.spicy_level > 0;
+        }
+        return item.category?.name === selectedCategory;
+      })();
+
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
@@ -1100,6 +1119,74 @@ const CustomerMenu = () => {
     </div>
   );
 
+  // Fetch notification log for Alerts Tab
+  const { data: tabNotifications = [] } = useQuery({
+    queryKey: ['notifications-tab-history', restaurantId, resolvedTableId],
+    queryFn: async () => {
+      if (!restaurantId) return [];
+      let query = supabase
+        .from('customer_events')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .like('event_type', 'notification_%')
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      if (resolvedTableId) {
+        query = query.eq('table_id', resolvedTableId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!restaurantId,
+    refetchInterval: 10000,
+  });
+
+  const renderNotifications = () => (
+    <div className="space-y-4">
+      <h3 className="font-extrabold text-xl tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">Notification History</h3>
+      {tabNotifications.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground">
+          <Bell className="w-10 h-10 mx-auto mb-3 opacity-30 stroke-1" />
+          <p className="text-sm font-semibold">No notifications yet</p>
+          <p className="text-xs mt-1">Alerts regarding your orders will appear here.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {tabNotifications.map((item: any) => {
+            const data = item.event_data || {};
+            const isReady = item.event_type === 'notification_ready';
+            const isPreparing = item.event_type === 'notification_preparing';
+            const isDelivered = item.event_type === 'notification_delivered';
+
+            return (
+              <Card key={item.id} className="overflow-hidden border-zinc-150 dark:border-zinc-900/60 shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
+                <CardContent className="p-4 flex gap-3.5 items-start">
+                  <div className={`p-2 rounded-xl shrink-0 ${
+                    isReady ? 'bg-emerald-500/10 text-emerald-500' :
+                    isPreparing ? 'bg-amber-500/10 text-amber-500' :
+                    isDelivered ? 'bg-sky-500/10 text-sky-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                  }`}>
+                    <Bell className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="font-bold text-sm text-zinc-900 dark:text-zinc-50 truncate">{data.title || 'Alert'}</span>
+                      <span className="text-[10px] text-zinc-400 font-medium">{new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal">{data.message || ''}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
   // Use splash branding (fast) or restaurant data (complete) for the splash screen
   const splashName = restaurant?.name || splashBranding?.name || 'Restaurant';
   const splashLogo = cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url);
@@ -1154,14 +1241,13 @@ const CustomerMenu = () => {
       <CustomerTopBar
         restaurantName={restaurant?.name || splashBranding?.name || 'Restaurant'}
         logoUrl={cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url)}
-        bannerImageUrl={cacheBustUrl(restaurant?.banner_image_url || restaurant?.cover_image_url)}
         tableNumber={tableNumber || 'Select Table'}
-        cartCount={getTotalItems()}
-        onCallWaiter={handleCallWaiter}
-        onCartClick={() => dynamicTableId && setCurrentView('cart')}
-        isCallingWaiter={createWaiterCall.isPending}
+        onSearchClick={() => setCurrentView('search')}
         primaryColor={primaryColor}
         branding={brandingConfig}
+        restaurantId={restaurantId || undefined}
+        tableId={resolvedTableId || undefined}
+        notificationCount={tabNotifications.length}
       />
 
       {/* Content */}
@@ -1175,9 +1261,10 @@ const CustomerMenu = () => {
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
             {currentView === 'home' && renderHome()}
-            {currentView === 'menu' && renderMenu()}
+            {currentView === 'search' && renderMenu()}
             {dynamicTableId && currentView === 'cart' && renderCart()}
             {dynamicTableId && currentView === 'orders' && renderOrders()}
+            {currentView === 'notifications' && renderNotifications()}
             {currentView === 'profile' && renderProfile()}
             {!dynamicTableId && (currentView === 'cart' || currentView === 'orders') && (
               <div className="text-center py-12 text-muted-foreground">
@@ -1193,7 +1280,7 @@ const CustomerMenu = () => {
       </main>
 
       {/* Floating Cart Bar (menu view only, when table selected) */}
-      {dynamicTableId && currentView === 'menu' && (
+      {dynamicTableId && currentView === 'search' && (
         <FloatingCartBar
           itemCount={getTotalItems()}
           totalPrice={cartPricing.finalTotal + (cartPricing.subtotal - cartPricing.totalDiscount) * (serviceChargeRate / 100)}
@@ -1202,6 +1289,15 @@ const CustomerMenu = () => {
         />
       )}
 
+
+      {/* Floating Waiter FAB */}
+      {restaurantId && resolvedTableId && (
+        <WaiterCallFAB
+          restaurantId={restaurantId}
+          tableId={resolvedTableId}
+          tableNumber={tableNumber || ''}
+        />
+      )}
 
       {/* Bottom Navigation — Always fixed and visible at the bottom of the viewport once loaded */}
       {!selectedItemForDetails && (

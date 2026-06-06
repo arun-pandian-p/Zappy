@@ -7,6 +7,8 @@ import { detectCuisine } from "./recommendations/cuisineDetector";
 import { FOOD_NODES, EXPLICIT_EDGES } from "./recommendations/foodGraph";
 import { generateItemDescription } from "./ocrService";
 import { syncImageToSupabase } from "./storageService";
+import { tracer } from "./telemetry";
+import { SpanStatusCode } from "@opentelemetry/api";
 
 export interface EnrichedMenuData {
   shortDescription: string;
@@ -47,61 +49,83 @@ export function getQueryVariations(dishName: string): string[] {
  * Searches Unsplash and falls back to Pollinations AI image generator.
  */
 export async function discoverFoodImage(dishName: string, accessKey?: string): Promise<{ url: string; confidence: number; qualityScore: number }> {
-  console.log(`[Image Discovery] Searching images for: ${dishName}`);
-  const key = accessKey || import.meta.env.VITE_UNSPLASH_ACCESS_KEY || "";
-  const query = encodeURIComponent(dishName);
+  return tracer.startActiveSpan("discoverFoodImage", async (span) => {
+    span.setAttribute("llm.prompt_template.template", "{{dishName}}, professional food photography, 4k, delicious, macro shot, isolated background, styled plate");
+    span.setAttribute("llm.prompt_template.variables", JSON.stringify({ dishName }));
+    span.setAttribute("llm.prompt_template.version", "1.0.0");
 
-  let candidateUrl = "";
-  let confidence = 85;
-  let qualityScore = 90;
-
-  if (key) {
     try {
-      const response = await fetch(
-        `https://api.unsplash.com/search/photos?query=${query}&per_page=5&client_id=${key}`
-      );
-      const data = await response.json();
-      const results = data.results || [];
-      
-      for (const photo of results) {
-        const altText = (photo.alt_description || photo.description || "").toLowerCase();
-        
-        // FEATURE 5: AI FOOD RECOGNITION / VALIDATION
-        const isValid = validateFoodImage(dishName, altText);
-        if (!isValid) {
-          console.warn(`[Image Validation] Rejected image showing mismatched dish for ${dishName}: ${altText}`);
-          continue;
-        }
+      console.log(`[Image Discovery] Searching images for: ${dishName}`);
+      const key = accessKey || import.meta.env.VITE_UNSPLASH_ACCESS_KEY || "";
+      const query = encodeURIComponent(dishName);
 
-        // FEATURE 6: AI IMAGE QUALITY SCORE
-        const score = computeImageQualityScore(photo);
-        if (score < 80) {
-          console.warn(`[Image Quality] Rejected low quality image for ${dishName} (Score: ${score}/100)`);
-          continue;
-        }
+      let candidateUrl = "";
+      let confidence = 85;
+      let qualityScore = 90;
 
-        // Found a highly relevant, professional photo
-        candidateUrl = photo.urls.regular;
-        confidence = Math.round(90 + Math.random() * 8);
-        qualityScore = score;
-        break;
+      if (key) {
+        try {
+          const response = await fetch(
+            `https://api.unsplash.com/search/photos?query=${query}&per_page=5&client_id=${key}`
+          );
+          const data = await response.json();
+          const results = data.results || [];
+          
+          for (const photo of results) {
+            const altText = (photo.alt_description || photo.description || "").toLowerCase();
+            
+            // FEATURE 5: AI FOOD RECOGNITION / VALIDATION
+            const isValid = validateFoodImage(dishName, altText);
+            if (!isValid) {
+              console.warn(`[Image Validation] Rejected image showing mismatched dish for ${dishName}: ${altText}`);
+              continue;
+            }
+
+            // FEATURE 6: AI IMAGE QUALITY SCORE
+            const score = computeImageQualityScore(photo);
+            if (score < 80) {
+              console.warn(`[Image Quality] Rejected low quality image for ${dishName} (Score: ${score}/100)`);
+              continue;
+            }
+
+            // Found a highly relevant, professional photo
+            candidateUrl = photo.urls.regular;
+            confidence = Math.round(90 + Math.random() * 8);
+            qualityScore = score;
+            break;
+          }
+        } catch (err) {
+          console.error("[Image Discovery] Unsplash API search failed, falling back...", err);
+        }
       }
-    } catch (err) {
-      console.error("[Image Discovery] Unsplash API search failed, falling back...", err);
+
+      // Fallback to high-quality AI photo generation
+      if (!candidateUrl) {
+        console.log(`[Image Discovery] Sourcing via AI photo generator for: ${dishName}`);
+        const enhancedPrompt = `${dishName}, professional food photography, 4k, delicious, macro shot, isolated background, styled plate`;
+        const aiPrompt = encodeURIComponent(enhancedPrompt);
+        candidateUrl = `https://image.pollinations.ai/prompt/${aiPrompt}?width=800&height=600&nologo=true&seed=${Math.floor(Math.random() * 1000)}`;
+        confidence = 98; // AI-generated specifically for this dish
+        qualityScore = 95;
+      }
+
+      span.setAttribute("llm.prompts", `${dishName}, professional food photography, 4k, delicious, macro shot, isolated background, styled plate`);
+      const promptTokens = Math.round(dishName.length / 4) + 15; // + length of template text approx
+      const completionTokens = Math.round(candidateUrl.length / 4);
+      span.setAttribute("llm.token_count.prompt", promptTokens);
+      span.setAttribute("llm.token_count.completion", completionTokens);
+      span.setAttribute("llm.token_count.total", promptTokens + completionTokens);
+      span.setStatus({ code: SpanStatusCode.OK });
+
+      return { url: candidateUrl, confidence, qualityScore };
+    } catch (err: any) {
+      span.recordException(err);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+      throw err;
+    } finally {
+      span.end();
     }
-  }
-
-  // Fallback to high-quality AI photo generation
-  if (!candidateUrl) {
-    console.log(`[Image Discovery] Sourcing via AI photo generator for: ${dishName}`);
-    const enhancedPrompt = `${dishName}, professional food photography, 4k, delicious, macro shot, isolated background, styled plate`;
-    const aiPrompt = encodeURIComponent(enhancedPrompt);
-    candidateUrl = `https://image.pollinations.ai/prompt/${aiPrompt}?width=800&height=600&nologo=true&seed=${Math.floor(Math.random() * 1000)}`;
-    confidence = 98; // AI-generated specifically for this dish
-    qualityScore = 95;
-  }
-
-  return { url: candidateUrl, confidence, qualityScore };
+  });
 }
 
 // -----------------------------------------------------------------
@@ -154,14 +178,37 @@ export function computeImageQualityScore(photo: any): number {
 // FEATURE 7: AI DISH DESCRIPTION GENERATOR
 // -----------------------------------------------------------------
 export function generateDishDescriptions(dishName: string, category: string): { short: string; medium: string; seo: string } {
-  const name = dishName.trim();
-  const cuisine = detectCuisine(name)[0] || "traditional";
+  return tracer.startActiveSpan("generateDishDescriptions", (span) => {
+    span.setAttribute("llm.prompt_template.template", "Generate descriptions for {{dishName}} under category {{category}}");
+    span.setAttribute("llm.prompt_template.variables", JSON.stringify({ dishName, category }));
+    span.setAttribute("llm.prompt_template.version", "1.0.0");
 
-  const short = `Delicious ${name} — a classic ${cuisine} specialty.`;
-  const medium = `Traditional ${name} made with fresh ingredients, spices, and served hot. A perfect choice for ${category.toLowerCase()}.`;
-  const seo = `Authentic ${name} from our kitchen. Experience classic ${cuisine} flavors cooked to perfection. Order online now for fast table delivery!`;
+    try {
+      const name = dishName.trim();
+      const cuisine = detectCuisine(name)[0] || "traditional";
 
-  return { short, medium, seo };
+      const short = `Delicious ${name} — a classic ${cuisine} specialty.`;
+      const medium = `Traditional ${name} made with fresh ingredients, spices, and served hot. A perfect choice for ${category.toLowerCase()}.`;
+      const seo = `Authentic ${name} from our kitchen. Experience classic ${cuisine} flavors cooked to perfection. Order online now for fast table delivery!`;
+
+      const totalCompletion = short + medium + seo;
+      const promptTokens = Math.round((name.length + category.length) / 4);
+      const completionTokens = Math.round(totalCompletion.length / 4);
+      
+      span.setAttribute("llm.token_count.prompt", promptTokens);
+      span.setAttribute("llm.token_count.completion", completionTokens);
+      span.setAttribute("llm.token_count.total", promptTokens + completionTokens);
+      span.setStatus({ code: SpanStatusCode.OK });
+
+      return { short, medium, seo };
+    } catch (err: any) {
+      span.recordException(err);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+      throw err;
+    } finally {
+      span.end();
+    }
+  });
 }
 
 // -----------------------------------------------------------------

@@ -12,6 +12,8 @@ import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { cleanOCRText } from "./textCleaner";
 import { parseMenuFromText, parseMenuFromCSV, type ParsedMenuItem } from "./menuParser";
+import { tracer } from "./telemetry";
+import { SpanStatusCode } from "@opentelemetry/api";
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -62,21 +64,42 @@ async function ocrImage(
   languageCode: string = "eng",
   onProgress?: (p: OCRProgress) => void
 ): Promise<string> {
-  console.log(`[OCR] Starting Tesseract.js OCR on image with language: ${languageCode}...`);
+  return tracer.startActiveSpan("ocrImage", async (span) => {
+    span.setAttribute("language.code", languageCode);
+    if (imageSource instanceof File) {
+      span.setAttribute("image.name", imageSource.name);
+      span.setAttribute("image.size", imageSource.size);
+    } else {
+      span.setAttribute("image.source_type", "base64/url");
+    }
 
-  const result = await Tesseract.recognize(imageSource, languageCode, {
-    logger: (m) => {
-      if (m.status && m.progress !== undefined) {
-        onProgress?.({
-          status: m.status,
-          progress: Math.round(m.progress * 100),
-        });
-      }
-    },
+    try {
+      console.log(`[OCR] Starting Tesseract.js OCR on image with language: ${languageCode}...`);
+
+      const result = await Tesseract.recognize(imageSource, languageCode, {
+        logger: (m) => {
+          if (m.status && m.progress !== undefined) {
+            onProgress?.({
+              status: m.status,
+              progress: Math.round(m.progress * 100),
+            });
+          }
+        },
+      });
+
+      console.log(`[OCR] Tesseract extracted ${result.data.text.length} chars, confidence: ${result.data.confidence}%`);
+      span.setAttribute("ocr.confidence", result.data.confidence);
+      span.setAttribute("ocr.text_length", result.data.text.length);
+      span.setStatus({ code: SpanStatusCode.OK });
+      return result.data.text;
+    } catch (err: any) {
+      span.recordException(err);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+      throw err;
+    } finally {
+      span.end();
+    }
   });
-
-  console.log(`[OCR] Tesseract extracted ${result.data.text.length} chars, confidence: ${result.data.confidence}%`);
-  return result.data.text;
 }
 
 // ============================================================
@@ -93,71 +116,92 @@ async function extractPDFText(
   languageCode: string = "eng",
   onProgress?: (p: OCRProgress) => void
 ): Promise<string> {
-  console.log("[OCR] Extracting text from PDF...");
+  return tracer.startActiveSpan("extractPDFText", async (span) => {
+    span.setAttribute("file.name", file.name);
+    span.setAttribute("file.size", file.size);
+    span.setAttribute("language.code", languageCode);
 
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  const totalPages = pdf.numPages;
-  let fullText = "";
-  let hasTextLayer = false;
+    try {
+      console.log("[OCR] Extracting text from PDF...");
 
-  // First pass: try to extract text layer
-  for (let i = 1; i <= totalPages; i++) {
-    onProgress?.({
-      status: `Extracting text from page ${i}/${totalPages}`,
-      progress: Math.round((i / totalPages) * 50),
-    });
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const totalPages = pdf.numPages;
+      span.setAttribute("pdf.total_pages", totalPages);
+      let fullText = "";
+      let hasTextLayer = false;
 
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items
-      .map((item: any) => item.str)
-      .join(" ");
+      // First pass: try to extract text layer
+      for (let i = 1; i <= totalPages; i++) {
+        onProgress?.({
+          status: `Extracting text from page ${i}/${totalPages}`,
+          progress: Math.round((i / totalPages) * 50),
+        });
 
-    if (pageText.trim().length > 20) {
-      hasTextLayer = true;
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+
+        if (pageText.trim().length > 20) {
+          hasTextLayer = true;
+        }
+        fullText += pageText + "\n";
+      }
+
+      span.setAttribute("pdf.has_text_layer", hasTextLayer);
+
+      // If text layer found, return it
+      if (hasTextLayer && fullText.trim().length > 50) {
+        console.log(`[OCR] PDF has text layer — extracted ${fullText.length} chars from ${totalPages} pages`);
+        span.setAttribute("pdf.text_length", fullText.length);
+        span.setStatus({ code: SpanStatusCode.OK });
+        return fullText;
+      }
+
+      // Scanned PDF — fall back to Tesseract OCR on rendered pages
+      console.log("[OCR] PDF appears scanned — falling back to Tesseract OCR...");
+      fullText = "";
+
+      for (let i = 1; i <= totalPages; i++) {
+        onProgress?.({
+          status: `OCR scanning page ${i}/${totalPages}`,
+          progress: 50 + Math.round((i / totalPages) * 50),
+        });
+
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 2.0 }); // Higher scale = better OCR
+
+        // Render page to canvas
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext("2d")!;
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        // OCR the rendered canvas
+        const dataUrl = canvas.toDataURL("image/png");
+        const pageOCRText = await ocrImage(dataUrl, languageCode);
+        fullText += pageOCRText + "\n";
+
+        // Cleanup
+        canvas.remove();
+      }
+
+      console.log(`[OCR] Tesseract OCR extracted ${fullText.length} chars from ${totalPages} scanned pages`);
+      span.setAttribute("pdf.text_length", fullText.length);
+      span.setStatus({ code: SpanStatusCode.OK });
+      return fullText;
+    } catch (err: any) {
+      span.recordException(err);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+      throw err;
+    } finally {
+      span.end();
     }
-    fullText += pageText + "\n";
-  }
-
-  // If text layer found, return it
-  if (hasTextLayer && fullText.trim().length > 50) {
-    console.log(`[OCR] PDF has text layer — extracted ${fullText.length} chars from ${totalPages} pages`);
-    return fullText;
-  }
-
-  // Scanned PDF — fall back to Tesseract OCR on rendered pages
-  console.log("[OCR] PDF appears scanned — falling back to Tesseract OCR...");
-  fullText = "";
-
-  for (let i = 1; i <= totalPages; i++) {
-    onProgress?.({
-      status: `OCR scanning page ${i}/${totalPages}`,
-      progress: 50 + Math.round((i / totalPages) * 50),
-    });
-
-    const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 2.0 }); // Higher scale = better OCR
-
-    // Render page to canvas
-    const canvas = document.createElement("canvas");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    const ctx = canvas.getContext("2d")!;
-
-    await page.render({ canvasContext: ctx, viewport }).promise;
-
-    // OCR the rendered canvas
-    const dataUrl = canvas.toDataURL("image/png");
-    const pageOCRText = await ocrImage(dataUrl, languageCode);
-    fullText += pageOCRText + "\n";
-
-    // Cleanup
-    canvas.remove();
-  }
-
-  console.log(`[OCR] Tesseract OCR extracted ${fullText.length} chars from ${totalPages} scanned pages`);
-  return fullText;
+  });
 }
 
 // ============================================================
@@ -165,10 +209,26 @@ async function extractPDFText(
 // ============================================================
 
 async function extractExcelText(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const workbook = XLSX.read(arrayBuffer);
-  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-  return XLSX.utils.sheet_to_csv(firstSheet);
+  return tracer.startActiveSpan("extractExcelText", async (span) => {
+    span.setAttribute("file.name", file.name);
+    span.setAttribute("file.size", file.size);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer);
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const csv = XLSX.utils.sheet_to_csv(firstSheet);
+      span.setAttribute("excel.sheet_count", workbook.SheetNames.length);
+      span.setAttribute("excel.text_length", csv.length);
+      span.setStatus({ code: SpanStatusCode.OK });
+      return csv;
+    } catch (err: any) {
+      span.recordException(err);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+      throw err;
+    } finally {
+      span.end();
+    }
+  });
 }
 
 // ============================================================
@@ -176,12 +236,27 @@ async function extractExcelText(file: File): Promise<string> {
 // ============================================================
 
 async function extractWordText(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const result = await mammoth.convertToHtml({ arrayBuffer });
-  // Strip HTML tags to get plain text
-  const tmp = document.createElement("div");
-  tmp.innerHTML = result.value;
-  return tmp.textContent || tmp.innerText || "";
+  return tracer.startActiveSpan("extractWordText", async (span) => {
+    span.setAttribute("file.name", file.name);
+    span.setAttribute("file.size", file.size);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+      // Strip HTML tags to get plain text
+      const tmp = document.createElement("div");
+      tmp.innerHTML = result.value;
+      const text = tmp.textContent || tmp.innerText || "";
+      span.setAttribute("word.text_length", text.length);
+      span.setStatus({ code: SpanStatusCode.OK });
+      return text;
+    } catch (err: any) {
+      span.recordException(err);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+      throw err;
+    } finally {
+      span.end();
+    }
+  });
 }
 
 // ============================================================
@@ -202,82 +277,101 @@ export async function processMenuFile(
   options?: OCROptions,
   onProgress?: (p: OCRProgress) => void
 ): Promise<ParsedMenuItem[]> {
-  const fileType = detectFileType(file);
-  const engine = options?.ocrEngine || "tesseract";
-  const lang = options?.languageCode || "eng";
+  return tracer.startActiveSpan("processMenuFile", async (span) => {
+    const fileType = detectFileType(file);
+    const engine = options?.ocrEngine || "tesseract";
+    const lang = options?.languageCode || "eng";
 
-  console.log(`[OCR] Processing file: ${file.name} (type: ${fileType}, engine: ${engine}, language: ${lang})`);
+    span.setAttribute("file.name", file.name);
+    span.setAttribute("file.type", fileType);
+    span.setAttribute("file.size", file.size);
+    span.setAttribute("ocr.engine", engine);
+    span.setAttribute("ocr.language", lang);
 
-  // Validate file
-  if (file.size > 50 * 1024 * 1024) {
-    throw new Error("File too large (max 50MB)");
-  }
+    try {
+      console.log(`[OCR] Processing file: ${file.name} (type: ${fileType}, engine: ${engine}, language: ${lang})`);
 
-  // Handle simulation progress for non-local engines
-  if (engine === "surya" || engine === "paddle" || engine === "easy") {
-    const engineName = engine === "surya" ? "Surya OCR" : engine === "paddle" ? "PaddleOCR" : "EasyOCR";
-    const steps = [
-      { status: `${engineName}: Initializing layout model weights...`, progress: 15 },
-      { status: `${engineName}: Detecting text segments & columns...`, progress: 35 },
-      { status: `${engineName}: Reconstructing multi-lingual reading order...`, progress: 55 },
-      { status: `${engineName}: Finalizing layout-aware OCR extraction...`, progress: 75 },
-    ];
-    for (const step of steps) {
-      onProgress?.(step);
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Validate file
+      if (file.size > 50 * 1024 * 1024) {
+        throw new Error("File too large (max 50MB)");
+      }
+
+      // Handle simulation progress for non-local engines
+      if (engine === "surya" || engine === "paddle" || engine === "easy") {
+        const engineName = engine === "surya" ? "Surya OCR" : engine === "paddle" ? "PaddleOCR" : "EasyOCR";
+        const steps = [
+          { status: `${engineName}: Initializing layout model weights...`, progress: 15 },
+          { status: `${engineName}: Detecting text segments & columns...`, progress: 35 },
+          { status: `${engineName}: Reconstructing multi-lingual reading order...`, progress: 55 },
+          { status: `${engineName}: Finalizing layout-aware OCR extraction...`, progress: 75 },
+        ];
+        for (const step of steps) {
+          onProgress?.(step);
+          await new Promise((resolve) => setTimeout(resolve, 600));
+        }
+      }
+
+      let rawText = "";
+
+      switch (fileType) {
+        case "image":
+          onProgress?.({ status: "Running OCR on image...", progress: 80 });
+          rawText = await ocrImage(file, lang, onProgress);
+          break;
+
+        case "pdf":
+          onProgress?.({ status: "Extracting text from PDF...", progress: 80 });
+          rawText = await extractPDFText(file, lang, onProgress);
+          break;
+
+        case "csv":
+          onProgress?.({ status: "Reading CSV file...", progress: 50 });
+          rawText = await file.text();
+          break;
+
+        case "excel":
+          onProgress?.({ status: "Parsing Excel file...", progress: 50 });
+          rawText = await extractExcelText(file);
+          break;
+
+        case "word":
+          onProgress?.({ status: "Parsing Word document...", progress: 50 });
+          rawText = await extractWordText(file);
+          break;
+
+        default:
+          throw new Error(`Unsupported file format: ${file.name}`);
+      }
+
+      onProgress?.({ status: "Parsing menu items...", progress: 80 });
+
+      // Clean the text
+      const cleanedText = cleanOCRText(rawText);
+      console.log(`[OCR] Cleaned text (${cleanedText.length} chars):`, cleanedText.substring(0, 500));
+      span.setAttribute("ocr.cleaned_text_length", cleanedText.length);
+
+      // Parse based on format
+      let items: ParsedMenuItem[];
+      if (fileType === "csv" || fileType === "excel") {
+        items = parseMenuFromCSV(cleanedText);
+      } else {
+        items = parseMenuFromText(cleanedText);
+      }
+
+      onProgress?.({ status: "Complete", progress: 100 });
+      console.log(`[OCR] Extracted ${items.length} menu items from ${file.name}`);
+      span.setAttribute("ocr.items_extracted", items.length);
+      span.setStatus({ code: SpanStatusCode.OK });
+
+      return items;
+    } catch (err: any) {
+      span.recordException(err);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+      throw err;
+    } finally {
+      span.end();
     }
-  }
-
-  let rawText = "";
-
-  switch (fileType) {
-    case "image":
-      onProgress?.({ status: "Running OCR on image...", progress: 80 });
-      rawText = await ocrImage(file, lang, onProgress);
-      break;
-
-    case "pdf":
-      onProgress?.({ status: "Extracting text from PDF...", progress: 80 });
-      rawText = await extractPDFText(file, lang, onProgress);
-      break;
-
-    case "csv":
-      onProgress?.({ status: "Reading CSV file...", progress: 50 });
-      rawText = await file.text();
-      break;
-
-    case "excel":
-      onProgress?.({ status: "Parsing Excel file...", progress: 50 });
-      rawText = await extractExcelText(file);
-      break;
-
-    case "word":
-      onProgress?.({ status: "Parsing Word document...", progress: 50 });
-      rawText = await extractWordText(file);
-      break;
-
-    default:
-      throw new Error(`Unsupported file format: ${file.name}`);
-  }
-
-  onProgress?.({ status: "Parsing menu items...", progress: 80 });
-
-  // Clean the text
-  const cleanedText = cleanOCRText(rawText);
-  console.log(`[OCR] Cleaned text (${cleanedText.length} chars):`, cleanedText.substring(0, 500));
-
-  // Parse based on format
-  let items: ParsedMenuItem[];
-  if (fileType === "csv" || fileType === "excel") {
-    items = parseMenuFromCSV(cleanedText);
-  } else {
-    items = parseMenuFromText(cleanedText);
-  }
-
-  onProgress?.({ status: "Complete", progress: 100 });
-  console.log(`[OCR] Extracted ${items.length} menu items from ${file.name}`);
-
-  return items;
+  });
 }
 
 /**
