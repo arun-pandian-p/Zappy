@@ -16,6 +16,7 @@ import {
   Package,
   Sparkles,
   ClipboardList,
+  Loader2,
   Lock as LockIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
