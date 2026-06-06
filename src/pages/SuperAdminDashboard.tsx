@@ -80,9 +80,11 @@ const SuperAdminDashboard = () => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_profiles' }, () => {
         queryClient.invalidateQueries({ queryKey: ['staff-members'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-accounts'] });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, () => {
         queryClient.invalidateQueries({ queryKey: ['staff-members'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-accounts'] });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'system_logs' }, () => {
         queryClient.invalidateQueries({ queryKey: ['system-logs'] });

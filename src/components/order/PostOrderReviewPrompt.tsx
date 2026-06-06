@@ -65,6 +65,7 @@ export const PostOrderReviewPrompt = ({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // Already shown/dismissed — do not re-open
     if (localStorage.getItem(storageKey) === 'true' || sessionStorage.getItem(`reviewed_${orderId}`) === 'true') {
       return;
     }
@@ -74,13 +75,14 @@ export const PostOrderReviewPrompt = ({
       return;
     }
 
+    // Delay then open — DO NOT set localStorage here; only set on close/submit
     const timer = setTimeout(() => {
-      localStorage.setItem(storageKey, 'true');
       setIsOpen(true);
     }, delayMs);
 
     return () => clearTimeout(timer);
-  }, [orderId, restaurantId, delayMs, storageKey, step, immediate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId, delayMs, immediate]);
 
   const quickChips = overallRating >= 4 
     ? ["Delicious!", "Fast Service", "Friendly Staff", "Great Ambiance"]

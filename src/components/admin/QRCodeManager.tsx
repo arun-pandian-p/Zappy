@@ -56,7 +56,8 @@ import { format } from "date-fns";
 import { getAppOrigin } from "@/utils/url";
 
 const DEFAULT_BASE_URL = getAppOrigin();
-const REDIRECT_BASE = `${import.meta.env.VITE_SUPABASE_URL || "https://copkzrwvpqfjpsyyyqdy.supabase.co"}/functions/v1/qr-redirect`;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://copkzrwvpqfjpsyyyqdy.supabase.co';
+const REDIRECT_BASE = `${SUPABASE_URL}/functions/v1/qr-redirect`;
 
 interface QRCodeManagerProps {
   restaurantId: string;
@@ -226,13 +227,20 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
     if (qr.qr_type === "dynamic") {
       return `${REDIRECT_BASE}?id=${qr.id}`;
     }
-    
-    // Ensure static QR codes have absolute URLs
+    // Ensure static QR codes always have absolute URLs
     if (qr.target_url?.startsWith('/')) {
       return `${BASE_URL}${qr.target_url}`;
     }
-    
-    return qr.target_url;
+    return qr.target_url || BASE_URL;
+  };
+
+  /** Always returns an absolute URL for browser navigation (open button). */
+  const getOpenUrl = (qr: QRCode) => {
+    // For dynamic: go through the redirect edge function (same as QR scan)
+    if (qr.qr_type === "dynamic") return `${REDIRECT_BASE}?id=${qr.id}`;
+    // For static: resolve to absolute
+    if (qr.target_url?.startsWith('http')) return qr.target_url;
+    return `${BASE_URL}${qr.target_url || ''}`;
   };
 
   const handleDownload = (qr: QRCode) => {
@@ -294,7 +302,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
         <TableCell className="text-sm text-muted-foreground">{format(new Date(qr.created_at), "MMM d, yyyy")}</TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end gap-1">
-            <Button variant="ghost" size="icon" onClick={() => window.open(qr.target_url.startsWith('http') ? qr.target_url : `${BASE_URL}${qr.target_url}`, '_blank')} title="Open customer menu"><ExternalLink className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => window.open(getOpenUrl(qr), '_blank')} title="Open customer menu"><ExternalLink className="w-4 h-4" /></Button>
             <Button variant="ghost" size="icon" onClick={() => handleCopyUrl(qr)} title="Copy URL"><Copy className="w-4 h-4" /></Button>
             <Button variant="ghost" size="icon" onClick={() => handleDownload(qr)} title="Download PNG"><Download className="w-4 h-4" /></Button>
             {!(meta.is_base_qr) && (
@@ -457,7 +465,7 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
                   Target: {baseQR.target_url}
                 </p>
                 <div className="flex gap-2 flex-wrap">
-                  <Button variant="outline" size="sm" onClick={() => window.open(baseQR.target_url.startsWith('http') ? baseQR.target_url : `${BASE_URL}${baseQR.target_url}`, '_blank')}>
+                  <Button variant="outline" size="sm" onClick={() => window.open(getOpenUrl(baseQR), '_blank')}>
                     <ExternalLink className="w-4 h-4 mr-1" /> Open
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => handleDownload(baseQR)}>

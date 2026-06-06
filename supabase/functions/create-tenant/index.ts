@@ -218,7 +218,7 @@ serve(async (req) => {
         email: admin_email,
         username: generatedUsername,
         password: passwordToReturn,
-        login_url: "/admin/login",
+        login_url: `${Deno.env.get("PUBLIC_APP_URL") || "https://www.zappy.ind.in"}/admin/login`,
       },
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
