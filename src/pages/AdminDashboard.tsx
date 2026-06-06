@@ -45,7 +45,7 @@ import { PlatformAdsReadOnly } from "@/components/admin/PlatformAdsReadOnly";
 import { PreviewTabContent } from "@/components/admin/PreviewTabContent";
 import { OverviewTab } from "@/components/admin/OverviewTab";
 import { MenuTab } from "@/components/admin/MenuTab";
-import { QRCodeManager } from "@/components/admin/QRCodeManager";
+import { QRCenter } from "@/pages/QRCenter";
 import { QRScanAnalytics } from "@/components/analytics/QRScanAnalytics";
 import { useRestaurants, useRestaurantDetails } from "@/hooks/useRestaurant";
 import { useMenuItems, useCategories } from "@/hooks/useMenuItems";
@@ -451,16 +451,16 @@ const AdminDashboard = () => {
                 <PreviewTabContent customerPreviewUrl={customerPreviewUrl} restaurantId={restaurantId} externalRefreshKey={previewRefreshKey} />
               )}
 
-              {activeTab === "qr-manager" && (
+              {activeTab === "qr" && (
                 <motion.div
-                  key="qr-manager"
+                  key="qr"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                   className="space-y-8"
                 >
-                  <QRCodeManager restaurantId={restaurantId} />
+                  <QRCenter restaurantId={restaurantId} />
                   <QRScanAnalytics restaurantId={restaurantId} />
                 </motion.div>
               )}
