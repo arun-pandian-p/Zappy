@@ -37,13 +37,18 @@ export const analyticsService = {
     metadata = {},
     revenueAmount = 0
   }: {
-    campaignId: string;
+    campaignId?: string | null;
     eventType: CampaignEventType;
     tenantId?: string | null;
     metadata?: Record<string, any>;
     revenueAmount?: number;
   }): Promise<void> {
-    if (!campaignId) return;
+    // Validate campaignId: only accept valid UUIDs, otherwise treat as null
+    const isUuid = (val: any) => typeof val === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(val);
+    if (campaignId && !isUuid(campaignId)) {
+      console.warn('[Analytics Service] Ignoring non-UUID campaignId:', campaignId);
+      campaignId = null;
+    }
 
     const sessionId = getSessionId();
     const dedupKey = `${campaignId}_${eventType}`;
@@ -68,20 +73,20 @@ export const analyticsService = {
 
     try {
       // Async database event recording
-      const { error } = await supabase
-        .from('campaign_events')
-        .insert({
-          campaign_id: campaignId,
-          event_type: eventType,
-          tenant_id: tenantId || null,
-          session_id: sessionId,
-          metadata: {
-            ...metadata,
-            timestamp: new Date().toISOString(),
-            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
-          },
-          revenue_amount: revenueAmount
-        });
+      const payload = {
+        campaign_id: campaignId || null,
+        event_type: eventType,
+        tenant_id: tenantId || null,
+        session_id: sessionId,
+        metadata: {
+          ...metadata,
+          timestamp: new Date().toISOString(),
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
+        },
+        revenue_amount: revenueAmount
+      };
+
+      const { error } = await supabase.from('campaign_events').insert(payload as any);
 
       if (error) {
         console.warn('[Analytics Service] Failed to record event:', error.message);

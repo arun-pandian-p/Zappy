@@ -169,31 +169,40 @@ export function useDeleteAd() {
 export function useTrackAdImpression() {
   return useMutation({
     mutationFn: async (adId: string) => {
-      const { data: ad } = await supabase
+      const isUuid = (val: any) => typeof val === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(val);
+      if (!isUuid(adId)) throw new Error('Invalid ad id');
+
+      const { data: ad, error: adError } = await supabase
         .from("ads")
         .select("impressions, restaurant_id")
         .eq("id", adId)
         .single();
-      
-      await supabase
+      if (adError) throw adError;
+
+      const { error: updateError } = await supabase
         .from("ads")
         .update({ impressions: (ad?.impressions || 0) + 1 })
         .eq("id", adId);
+      if (updateError) throw updateError;
 
       // Save to promotions_analytics
       const sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('zappy_analytics_session') || 'unknown' : 'server';
-      await supabase
-        .from("promotions_analytics" as any)
-        .insert({
-          restaurant_id: ad?.restaurant_id || null,
-          promotion_id: adId,
-          event_type: 'impression',
-          session_id: sessionId
-        });
+      try {
+        await supabase
+          .from("promotions_analytics" as any)
+          .insert({
+            restaurant_id: ad?.restaurant_id || null,
+            promotion_id: isUuid(adId) ? adId : null,
+            event_type: 'impression',
+            session_id: sessionId
+          });
+      } catch (paErr) {
+        console.warn('Failed to insert promotions_analytics:', paErr);
+      }
 
       // Async database event recording via analyticsService
       await analyticsService.trackEvent({
-        campaignId: adId,
+        campaignId: isUuid(adId) ? adId : undefined,
         eventType: 'impression',
         tenantId: ad?.restaurant_id
       });
@@ -204,31 +213,40 @@ export function useTrackAdImpression() {
 export function useTrackAdClick() {
   return useMutation({
     mutationFn: async (adId: string) => {
-      const { data: ad } = await supabase
+      const isUuid = (val: any) => typeof val === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(val);
+      if (!isUuid(adId)) throw new Error('Invalid ad id');
+
+      const { data: ad, error: adError } = await supabase
         .from("ads")
         .select("clicks, restaurant_id")
         .eq("id", adId)
         .single();
-      
-      await supabase
+      if (adError) throw adError;
+
+      const { error: updateError } = await supabase
         .from("ads")
         .update({ clicks: (ad?.clicks || 0) + 1 })
         .eq("id", adId);
+      if (updateError) throw updateError;
 
       // Save to promotions_analytics
       const sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('zappy_analytics_session') || 'unknown' : 'server';
-      await supabase
-        .from("promotions_analytics" as any)
-        .insert({
-          restaurant_id: ad?.restaurant_id || null,
-          promotion_id: adId,
-          event_type: 'click',
-          session_id: sessionId
-        });
+      try {
+        await supabase
+          .from("promotions_analytics" as any)
+          .insert({
+            restaurant_id: ad?.restaurant_id || null,
+            promotion_id: isUuid(adId) ? adId : null,
+            event_type: 'click',
+            session_id: sessionId
+          });
+      } catch (paErr) {
+        console.warn('Failed to insert promotions_analytics:', paErr);
+      }
 
       // Async database event recording via analyticsService
       await analyticsService.trackEvent({
-        campaignId: adId,
+        campaignId: isUuid(adId) ? adId : undefined,
         eventType: 'click',
         tenantId: ad?.restaurant_id
       });
