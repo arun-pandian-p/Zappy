@@ -172,10 +172,10 @@ export function useCreateOrder() {
         tenantId: data.restaurant_id,
         metadata: {
           orderId: data.id,
-          orderTotal: (data as any).total_price,
+          orderTotal: data.total_amount,
           discountAmount: (data as any).discount_amount || 0
         },
-        revenueAmount: Number((data as any).total_price) || 0
+        revenueAmount: Number(data.total_amount) || 0
       });
 
       // Track coupon redemption if code exists
@@ -185,7 +185,7 @@ export function useCreateOrder() {
           campaignId: null,
           orderId: data.id,
           discountAmount: Number((data as any).discount_amount) || 0,
-          orderTotal: Number((data as any).total_price) || 0,
+          orderTotal: Number(data.total_amount) || 0,
           tenantId: data.restaurant_id
         });
       }

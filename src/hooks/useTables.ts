@@ -18,7 +18,7 @@ export function useTableByNumber(restaurantId?: string, tableNumber?: string) {
         .from("tables")
         .select("*")
         .eq("restaurant_id", restaurantId)
-        .eq("table_number", tableNumber)
+        .ilike("table_number", tableNumber)
         .single();
 
       if (error) {

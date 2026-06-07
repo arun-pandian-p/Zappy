@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/integrations/supabase/functions';
 
 interface CreateHotelFormProps {
   onSuccess: () => void;
@@ -179,7 +180,7 @@ export function CreateHotelForm({ onSuccess, onCancel }: CreateHotelFormProps) {
         kitchen_screens: form.kitchen_screens,
         printer_count: form.printer_count,
       };
-      const response = await supabase.functions.invoke('create-tenant', { body });
+      const response = await invokeFunction('create-tenant', { body });
       if (response.error) {
         const detail = response.data?.error || response.error.message;
         throw new Error(detail);

@@ -50,6 +50,8 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { ShiftLogs } from './ShiftLogs';
+import { invokeFunction } from '@/integrations/supabase/functions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -174,7 +176,7 @@ const UserManagement = ({ restaurantIdOverride }: UserManagementProps = {}) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const response = await supabase.functions.invoke('manage-staff', {
+      const response = await invokeFunction('manage-staff', {
         body: {
           action: 'create',
           email: data.email,
@@ -247,7 +249,7 @@ const UserManagement = ({ restaurantIdOverride }: UserManagementProps = {}) => {
   // Delete staff via secure edge function
   const deleteStaffMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const response = await supabase.functions.invoke('manage-staff', {
+      const response = await invokeFunction('manage-staff', {
         body: { action: 'delete', user_id: userId },
       });
 
@@ -563,6 +565,13 @@ const UserManagement = ({ restaurantIdOverride }: UserManagementProps = {}) => {
         )}
       </CardContent>
     </Card>
+
+    {/* Shift logs section */}
+    {effectiveRestaurantId && (
+      <div className="mt-8">
+        <ShiftLogs restaurantId={effectiveRestaurantId} />
+      </div>
+    )}
   );
 };
 

@@ -90,10 +90,10 @@ const WaiterCallReasonRenderer = ({ reason }: { reason: string | null }) => {
                 </div>
               </div>
             </DialogTrigger>
-            <DialogContent className="max-w-xl">
+            <DialogContent className="max-w-xl" aria-describedby="waiter-photo-desc">
               <DialogHeader>
                 <DialogTitle>Photo Attachment</DialogTitle>
-                <DialogDescription>
+                <DialogDescription id="waiter-photo-desc">
                   Customer uploaded photo for assistance.
                 </DialogDescription>
               </DialogHeader>

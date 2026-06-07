@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSuperAdminProfile } from '@/hooks/useSuperAdminProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/integrations/supabase/functions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const EMOJI_AVATARS = ['👨‍💼', '👩‍💼', '🧑‍💻', '👨‍🍳', '🦸', '🧙', '🎭', '🤖'];
@@ -29,7 +30,7 @@ function useTeamMembers() {
   const query = useQuery({
     queryKey: ['super-admin-team'],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('manage-super-admins', {
+      const { data, error } = await invokeFunction('manage-super-admins', {
         body: { action: 'list' }
       });
       if (error) throw error;
@@ -40,7 +41,7 @@ function useTeamMembers() {
 
   const addMember = useMutation({
     mutationFn: async ({ email, name, password }: {email: string;name?: string;password?: string;}) => {
-      const { data, error } = await supabase.functions.invoke('manage-super-admins', {
+      const { data, error } = await invokeFunction('manage-super-admins', {
         body: { action: 'add', email, name, password }
       });
       if (error) throw error;
@@ -52,7 +53,7 @@ function useTeamMembers() {
 
   const removeMember = useMutation({
     mutationFn: async (user_id: string) => {
-      const { data, error } = await supabase.functions.invoke('manage-super-admins', {
+      const { data, error } = await invokeFunction('manage-super-admins', {
         body: { action: 'remove', user_id }
       });
       if (error) throw error;

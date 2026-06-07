@@ -13,9 +13,10 @@ interface AdvancedQRBuilderProps {
   onSave: (qrConfig: any) => void;
   isSaving: boolean;
   initialValues?: any;
+  tables?: any[];
 }
 
-export function AdvancedQRBuilder({ onSave, isSaving, initialValues }: AdvancedQRBuilderProps) {
+export function AdvancedQRBuilder({ onSave, isSaving, initialValues, tables = [] }: AdvancedQRBuilderProps) {
   const [config, setConfig] = useState({
     qr_name: initialValues?.qr_name || "",
     target_url: initialValues?.target_url || "",
@@ -25,6 +26,8 @@ export function AdvancedQRBuilder({ onSave, isSaving, initialValues }: AdvancedQ
     logo_url: initialValues?.logo_url || "",
     logo_excavate: initialValues?.logo_excavate ?? true,
     logo_size: initialValues?.logo_size || 0.2, // 20% of QR
+    qr_type_selection: initialValues?.qr_type_selection || "custom",
+    table_number: initialValues?.table_number || "",
   });
 
   const updateConfig = (key: string, value: any) => {
@@ -65,26 +68,74 @@ export function AdvancedQRBuilder({ onSave, isSaving, initialValues }: AdvancedQ
           <div className="mt-6 border rounded-2xl p-6 bg-white dark:bg-zinc-950 shadow-sm">
             <TabsContent value="content" className="space-y-4 m-0 outline-none">
               <div className="space-y-2">
-                <Label>QR Code Name</Label>
-                <Input
-                  placeholder="e.g., Table 5, Main Door, Summer Campaign"
-                  value={config.qr_name}
-                  onChange={(e) => updateConfig("qr_name", e.target.value)}
-                  className="bg-zinc-50 dark:bg-zinc-900 rounded-xl"
-                />
+                <Label>QR Code Type</Label>
+                <Select 
+                  value={config.qr_type_selection} 
+                  onValueChange={(val) => {
+                    updateConfig("qr_type_selection", val);
+                    if (val === "table") {
+                      updateConfig("target_url", "");
+                    }
+                  }}
+                >
+                  <SelectTrigger className="bg-zinc-50 dark:bg-zinc-900 rounded-xl">
+                    <SelectValue placeholder="Select QR Type" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="custom">Custom Link / Campaign QR</SelectItem>
+                    <SelectItem value="table">Table Ordering QR</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Target URL / Content</Label>
-                <Input
-                  placeholder="https://example.com"
-                  value={config.target_url}
-                  onChange={(e) => updateConfig("target_url", e.target.value)}
-                  className="bg-zinc-50 dark:bg-zinc-900 rounded-xl font-mono text-sm"
-                />
-                <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5">
-                  Leave blank to use the default restaurant menu.
-                </p>
-              </div>
+
+              {config.qr_type_selection === "table" ? (
+                <div className="space-y-2">
+                  <Label>Assigned Table</Label>
+                  <Select 
+                    value={config.table_number} 
+                    onValueChange={(val) => {
+                      updateConfig("table_number", val);
+                      updateConfig("qr_name", `Table ${val}`);
+                    }}
+                  >
+                    <SelectTrigger className="bg-zinc-50 dark:bg-zinc-900 rounded-xl">
+                      <SelectValue placeholder="Select Table" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {tables.map((table) => (
+                        <SelectItem key={table.id} value={table.table_number}>
+                          Table {table.table_number}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>QR Code Name</Label>
+                  <Input
+                    placeholder="e.g., Table 5, Main Door, Summer Campaign"
+                    value={config.qr_name}
+                    onChange={(e) => updateConfig("qr_name", e.target.value)}
+                    className="bg-zinc-50 dark:bg-zinc-900 rounded-xl"
+                  />
+                </div>
+              )}
+
+              {config.qr_type_selection !== "table" && (
+                <div className="space-y-2">
+                  <Label>Target URL / Content</Label>
+                  <Input
+                    placeholder="https://example.com"
+                    value={config.target_url}
+                    onChange={(e) => updateConfig("target_url", e.target.value)}
+                    className="bg-zinc-50 dark:bg-zinc-900 rounded-xl font-mono text-sm"
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5">
+                    Leave blank to use the default restaurant menu.
+                  </p>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="colors" className="space-y-6 m-0 outline-none">

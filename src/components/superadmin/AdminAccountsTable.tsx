@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/integrations/supabase/functions';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -124,8 +125,7 @@ const AdminAccountsTable = () => {
     }
     setCreating(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const response = await supabase.functions.invoke('manage-staff', {
+      const response = await invokeFunction('manage-staff', {
         body: {
           action: 'create',
           email: newUser.email,
@@ -134,7 +134,6 @@ const AdminAccountsTable = () => {
           role: newUser.role,
           restaurant_id: newUser.restaurant_id || undefined,
         },
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       });
 
       if (response.error || response.data?.error) {

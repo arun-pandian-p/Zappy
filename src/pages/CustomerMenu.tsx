@@ -454,12 +454,22 @@ const CustomerMenu = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'offers', filter: `restaurant_id=eq.${restaurantId}` },
-        () => { queryClient.invalidateQueries({ queryKey: ['offers'] }); }
+        () => { queryClient.invalidateQueries({ queryKey: ['enterprise_promotions', restaurantId] }); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'enterprise_promotions', filter: `restaurant_id=eq.${restaurantId}` },
+        () => { queryClient.invalidateQueries({ queryKey: ['enterprise_promotions', restaurantId] }); }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'menu_items', filter: `restaurant_id=eq.${restaurantId}` },
-        () => { queryClient.invalidateQueries({ queryKey: ['menuItems', restaurantId] }); }
+        () => { queryClient.invalidateQueries({ queryKey: ['menu_items', restaurantId] }); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'categories', filter: `restaurant_id=eq.${restaurantId}` },
+        () => { queryClient.invalidateQueries({ queryKey: ['categories', restaurantId] }); }
       )
       .subscribe();
 

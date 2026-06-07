@@ -54,12 +54,17 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
 
   const handleSaveQR = async (config: any) => {
     try {
+      let computedTarget = config.target_url;
+      if (config.qr_type_selection === "table") {
+        computedTarget = `/menu?r=${restaurantId}&table=${config.table_number}`;
+      }
+
       if (editingQR) {
         await updateQR.mutateAsync({
           id: editingQR.id,
           tenantId: restaurantId,
           qr_name: config.qr_name,
-          target_url: config.target_url,
+          target_url: computedTarget,
           metadata: {
             ...((editingQR.metadata as any) || {}),
             fg_color: config.fg_color,
@@ -67,7 +72,9 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
             logo_url: config.logo_url,
             logo_excavate: config.logo_excavate,
             error_level: config.error_level,
-            logo_size: config.logo_size
+            logo_size: config.logo_size,
+            qr_type_selection: config.qr_type_selection,
+            table_number: config.table_number,
           }
         });
         toast({ title: "Success", description: "QR Code updated successfully!" });
@@ -76,7 +83,7 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
         await createQR.mutateAsync({
           tenant_id: restaurantId,
           qr_name: config.qr_name,
-          target_url: config.target_url,
+          target_url: computedTarget,
           qr_type: "dynamic",
           metadata: {
             fg_color: config.fg_color,
@@ -84,7 +91,9 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
             logo_url: config.logo_url,
             logo_excavate: config.logo_excavate,
             error_level: config.error_level,
-            logo_size: config.logo_size
+            logo_size: config.logo_size,
+            qr_type_selection: config.qr_type_selection,
+            table_number: config.table_number,
           }
         });
         toast({ title: "Success", description: "QR Code created successfully!" });
@@ -146,6 +155,7 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
             <AdvancedQRBuilder 
               onSave={handleSaveQR} 
               isSaving={createQR.isPending || updateQR.isPending} 
+              tables={tables}
               initialValues={editingQR ? {
                 qr_name: editingQR.qr_name,
                 target_url: editingQR.target_url,
@@ -155,6 +165,8 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
                 logo_url: (editingQR.metadata as any)?.logo_url,
                 logo_excavate: (editingQR.metadata as any)?.logo_excavate,
                 logo_size: (editingQR.metadata as any)?.logo_size,
+                qr_type_selection: (editingQR.metadata as any)?.qr_type_selection || "custom",
+                table_number: (editingQR.metadata as any)?.table_number,
               } : undefined}
             />
           </CardContent>

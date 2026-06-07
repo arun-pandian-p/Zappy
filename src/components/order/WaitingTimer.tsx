@@ -33,15 +33,22 @@ export function WaitingTimer({
   // Tick every second from order creation time
   useEffect(() => {
     if (!createdAtMs) return;
-    
+
+    // Only run timer while order is in active preparing states
+    const activeStatuses = new Set(['pending', 'confirmed', 'preparing']);
     const calculateElapsed = () => {
       setElapsedSeconds(Math.max(0, Math.floor((Date.now() - createdAtMs) / 1000)));
     };
 
+    // Start or stop based on status
     calculateElapsed();
-    const interval = setInterval(calculateElapsed, 1000);
-    return () => clearInterval(interval);
-  }, [createdAtMs]);
+    if (activeStatuses.has(order.status || '')) {
+      const interval = setInterval(calculateElapsed, 1000);
+      return () => clearInterval(interval);
+    }
+    // If not active, ensure elapsed is final value (no interval)
+    return;
+  }, [createdAtMs, order.status]);
 
   // Format seconds to MM:SS
   const formatTime = (seconds: number) => {

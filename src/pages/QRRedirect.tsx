@@ -30,13 +30,15 @@ export default function QRRedirect() {
           return;
         }
 
-        // Parse target URL
+        // Parse target URL and resolve table mappings
         let targetUrl = qrCode.target_url;
+        const metadata = qrCode.metadata as any;
+        const tableNum = metadata?.table_number || metadata?.table_id || qrCode.qr_name;
+
         if (!targetUrl) {
           targetUrl = `/menu?r=${qrCode.tenant_id}`;
-          const metadata = qrCode.metadata as any;
-          if (metadata?.table_number) {
-            targetUrl += `&table=${metadata.table_number}`;
+          if (tableNum) {
+            targetUrl += `&table=${tableNum}`;
           }
         }
 
@@ -106,8 +108,10 @@ export default function QRRedirect() {
           });
         }
 
-        // Increment scan count on qr_codes
-        supabase.rpc('increment_qr_scans', { qr_id: qrCode.id }).then(() => {});
+        // Increment scan count on qr_codes using correct RPC
+        supabase.rpc('increment_scan_count', { qr_code_id: qrCode.id }).then(({ error: rpcError }) => {
+          if (rpcError) console.error("RPC scan count increment failed:", rpcError);
+        });
 
         // Wait a tiny bit to ensure events are dispatched before redirecting
         setTimeout(() => {

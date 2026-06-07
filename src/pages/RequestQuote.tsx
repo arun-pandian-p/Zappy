@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/integrations/supabase/functions';
 import { toast } from '@/hooks/use-toast';
 import { ZappyLogo } from '@/components/branding/ZappyLogo';
 
@@ -78,7 +79,7 @@ const RequestQuote = () => {
     } else {
       setSubmitted(true);
       // Send WhatsApp + Email notification (fire and forget)
-      supabase.functions.invoke('notify-quote', {
+      invokeFunction('notify-quote', {
         body: {
           name: form.name,
           email: form.email,
