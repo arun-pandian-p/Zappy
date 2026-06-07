@@ -33,7 +33,9 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
       await deleteQR.mutateAsync({ id: qr.id, tenantId: restaurantId });
       toast({ title: "Success", description: "QR Code deactivated successfully!" });
     } catch (e) {
-      toast({ title: "Error", description: "Failed to delete QR code", variant: "destructive" });
+      const msg = e instanceof Error ? e.message : JSON.stringify(e);
+      console.error('Failed to delete QR code:', e);
+      toast({ title: "Error", description: msg || "Failed to delete QR code", variant: "destructive" });
     }
   };
 

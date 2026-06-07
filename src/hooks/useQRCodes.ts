@@ -95,11 +95,14 @@ export function useDeleteQRCode() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, tenantId }: { id: string; tenantId: string }) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("qr_codes" as any)
         .update({ is_active: false })
-        .eq("id", id);
-      if (error) throw error;
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw new Error(error.message || JSON.stringify(error));
+      return data;
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["qr_codes", vars.tenantId] });
