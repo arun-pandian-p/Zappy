@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQRCodes, useCreateQRCode, type QRCode } from "@/hooks/useQRCodes";
+import { useQRCodes, useCreateQRCode, useDeleteQRCode, type QRCode } from "@/hooks/useQRCodes";
 import { useRestaurantDetails } from "@/hooks/useRestaurant";
 import { useTables } from "@/hooks/useTables";
 import { getAppOrigin } from "@/utils/url";
@@ -21,7 +21,18 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
   const { data: restaurant } = useRestaurantDetails(restaurantId);
   const { data: tables = [] } = useTables(restaurantId);
   const createQR = useCreateQRCode();
+  const deleteQR = useDeleteQRCode();
   const { toast } = useToast();
+
+  const handleDeleteQR = async (qr: QRCode) => {
+    if (!confirm(`Are you sure you want to deactivate/delete "${qr.qr_name}"?`)) return;
+    try {
+      await deleteQR.mutateAsync({ id: qr.id, tenantId: restaurantId });
+      toast({ title: "Success", description: "QR Code deactivated successfully!" });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to delete QR code", variant: "destructive" });
+    }
+  };
 
   const [showBuilder, setShowBuilder] = useState(false);
 
@@ -174,6 +185,17 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
                       Copy Link
                     </Button>
                   </div>
+                  {!(meta.is_base_qr) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full rounded-xl gap-2 h-9 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 mt-2"
+                      onClick={() => handleDeleteQR(qr)}
+                      disabled={deleteQR.isPending}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Delete QR
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );
