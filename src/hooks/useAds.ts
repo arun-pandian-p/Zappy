@@ -157,10 +157,19 @@ export function useDeleteAd() {
         .delete()
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return id;
     },
-    onSuccess: () => {
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ["ads"] });
+      const previous = queryClient.getQueryData<Ad[]>(["ads"]);
+      queryClient.setQueryData(["ads"], (old) => (old || []).filter(a => a.id !== id));
+      return { previous };
+    },
+    onError: (err, id, context: any) => {
+      if (context?.previous) queryClient.setQueryData(["ads"], context.previous);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["ads"] });
     },
   });

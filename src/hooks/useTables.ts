@@ -150,11 +150,22 @@ export function useDeleteTable() {
         .delete()
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
       return { id, restaurantId };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["tables", data.restaurantId] });
+    onMutate: async ({ id, restaurantId }) => {
+      await queryClient.cancelQueries({ queryKey: ["tables", restaurantId] });
+      const previous = queryClient.getQueryData<any[]>(["tables", restaurantId]);
+      queryClient.setQueryData(["tables", restaurantId], (old: any[] | undefined) => (old || []).filter(t => t.id !== id));
+      return { previous };
+    },
+    onError: (err, vars, context: any) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["tables", vars.restaurantId], context.previous);
+      }
+    },
+    onSettled: (_, __, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["tables", vars.restaurantId] });
     },
   });
 }

@@ -104,7 +104,21 @@ export function useDeleteQRCode() {
       if (error) throw new Error(error.message || JSON.stringify(error));
       return data;
     },
-    onSuccess: (_, vars) => {
+    // Optimistic update: remove/deactivate QR locally for snappy UX
+    onMutate: async (vars) => {
+      await queryClient.cancelQueries({ queryKey: ["qr_codes", vars.tenantId] });
+      const previous = queryClient.getQueryData<QRCode[]>(["qr_codes", vars.tenantId]);
+      queryClient.setQueryData<QRCode[] | undefined>(["qr_codes", vars.tenantId], (old) =>
+        (old || []).map((q) => (q.id === vars.id ? { ...q, is_active: false } : q))
+      );
+      return { previous };
+    },
+    onError: (err, vars, context: any) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["qr_codes", vars.tenantId], context.previous);
+      }
+    },
+    onSettled: (_, __, vars) => {
       queryClient.invalidateQueries({ queryKey: ["qr_codes", vars.tenantId] });
     },
   });
