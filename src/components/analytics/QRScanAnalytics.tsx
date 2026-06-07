@@ -34,7 +34,13 @@ export function QRScanAnalytics({ restaurantId }: QRScanAnalyticsProps) {
     for (let i = days - 1; i >= 0; i--) {
       const day = startOfDay(subDays(new Date(), i));
       const dayStr = format(day, "yyyy-MM-dd");
-      const count = scans.filter(s => format(new Date(s.scanned_at), "yyyy-MM-dd") === dayStr).length;
+      const count = scans.filter(s => {
+        try {
+          return s.scanned_at ? format(new Date(s.scanned_at), "yyyy-MM-dd") === dayStr : false;
+        } catch (e) {
+          return false;
+        }
+      }).length;
       result.push({ date: format(day, "MMM d"), scans: count });
     }
     return result;
@@ -62,14 +68,26 @@ export function QRScanAnalytics({ restaurantId }: QRScanAnalyticsProps) {
   const hourlyData = useMemo(() => {
     const hours = Array.from({ length: 24 }, (_, i) => ({ hour: `${i}:00`, scans: 0 }));
     scans.forEach(s => {
-      const h = new Date(s.scanned_at).getHours();
-      hours[h].scans++;
+      try {
+        if (s.scanned_at) {
+          const h = new Date(s.scanned_at).getHours();
+          if (hours[h]) {
+            hours[h].scans++;
+          }
+        }
+      } catch (e) {}
     });
     return hours;
   }, [scans]);
 
   const totalScans = scans.length;
-  const todayScans = scans.filter(s => format(new Date(s.scanned_at), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")).length;
+  const todayScans = scans.filter(s => {
+    try {
+      return s.scanned_at ? format(new Date(s.scanned_at), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd") : false;
+    } catch (e) {
+      return false;
+    }
+  }).length;
 
   return (
     <motion.div

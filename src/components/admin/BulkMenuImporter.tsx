@@ -8,7 +8,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { FileUp, Loader2, Save, Trash2, Upload, Files } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { extractMenuFromFile, ParsedMenuItem, OCRProgress } from "@/services/ocr/ocrService";
+import { processMenuFile, OCRProgress } from "@/services/ocrService";
+import type { ParsedMenuItem as ExtractedMenuItem } from "@/services/menuParser";
+
+interface ParsedMenuItem {
+  name: string;
+  price: number;
+  category: string;
+  description: string;
+  is_available: boolean;
+  is_veg: boolean;
+}
 
 interface BulkMenuImporterProps {
   restaurantId: string;
@@ -37,21 +47,27 @@ export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: B
     setProgressValue(0);
 
     try {
-      const items = await extractMenuFromFile(file, (p: OCRProgress) => {
-        let msg = p.message;
-        if (p.pagesTotal && p.pagesCurrent) {
-           msg += ` (Page ${p.pagesCurrent}/${p.pagesTotal})`;
+      const items = await processMenuFile(
+        file,
+        { ocrEngine: "tesseract", languageCode: "eng" },
+        (p: OCRProgress) => {
+          setProgressStatus(p.status);
+          setProgressValue(p.progress);
         }
-        setProgressStatus(msg);
-        setProgressValue(p.percent);
-      });
+      );
 
       setExtractedItems((prev) => {
-        // Simple deduplication based on names to avoid adding same thing multiple times
         const newItems = [...prev];
         for (const item of items) {
           if (!newItems.find((i) => i.name.toLowerCase() === item.name.toLowerCase())) {
-            newItems.push(item);
+            newItems.push({
+              name: item.name,
+              price: item.price,
+              category: item.category,
+              description: item.description || "",
+              is_available: true,
+              is_veg: item.isVegetarian !== undefined ? item.isVegetarian : true,
+            });
           }
         }
         return newItems;
@@ -162,8 +178,20 @@ export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: B
             Menu Importer (OCR)
           </DialogTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Extracts text from PDF, JPG, PNG, DOCX, CSV. Automatically recognizes categories and prices.
+            Extracts text from PDF, JPG, PNG, DOCX, CSV, Excel. Automatically recognizes categories and prices.
           </p>
+          <div className="flex gap-2.5 mt-2">
+            <Button variant="outline" size="sm" asChild className="h-8 text-xs font-semibold rounded-lg border-primary/20 hover:bg-primary/5">
+              <a href="/samples/menu_template.xlsx" download="menu_template.xlsx">
+                📥 Download Excel Template
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild className="h-8 text-xs font-semibold rounded-lg border-primary/20 hover:bg-primary/5">
+              <a href="/samples/menu_template.csv" download="menu_template.csv">
+                📥 Download CSV Template
+              </a>
+            </Button>
+          </div>
         </DialogHeader>
 
         {!extractedItems.length && !isProcessing ? (
@@ -181,7 +209,7 @@ export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: B
               <div className="text-center">
                 <p className="font-semibold text-lg">Upload Menu Files</p>
                 <p className="text-sm text-muted-foreground">
-                  Drag & drop or click · JPG, PNG, PDF, Word, CSV
+                  Drag & drop or click · JPG, PNG, PDF, Word, Excel, CSV
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Select multiple files for bulk processing
@@ -192,7 +220,7 @@ export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: B
                 className="hidden"
                 id="menu-ocr-upload"
                 onChange={handleFileUpload}
-                accept="image/*,.pdf,.doc,.docx,.csv,.txt"
+                accept="image/*,.pdf,.doc,.docx,.csv,.txt,.xls,.xlsx"
                 multiple
               />
               <Button asChild>

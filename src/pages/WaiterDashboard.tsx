@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Bell, Search, Volume2, VolumeX, ArrowLeft, CheckCircle2, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
+import { Users, Bell, Search, Volume2, VolumeX, ArrowLeft, CheckCircle2, AlertCircle, RefreshCw, Loader2, Play, Eye } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,12 +14,106 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRestaurantDetails } from '@/hooks/useRestaurant';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { LogOut } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+
+const VoicePlayer = ({ url }: { url: string }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio(url);
+    const handleEnded = () => setIsPlaying(false);
+    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => setIsPlaying(true);
+
+    audioRef.current.addEventListener('ended', handleEnded);
+    audioRef.current.addEventListener('pause', handlePause);
+    audioRef.current.addEventListener('play', handlePlay);
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('ended', handleEnded);
+        audioRef.current.removeEventListener('pause', handlePause);
+        audioRef.current.removeEventListener('play', handlePlay);
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [url]);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(() => {});
+    }
+  };
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={togglePlay}
+      className="flex items-center gap-1.5 rounded-xl mt-1 py-1 h-8 bg-background border-warning/30 hover:bg-warning/10 text-xs font-semibold"
+    >
+      {isPlaying ? <VolumeX className="w-3.5 h-3.5 text-warning" /> : <Play className="w-3.5 h-3.5 text-warning fill-warning" />}
+      <span>{isPlaying ? 'Pause Request' : 'Play Voice Request'}</span>
+    </Button>
+  );
+};
+
+const WaiterCallReasonRenderer = ({ reason }: { reason: string | null }) => {
+  if (!reason) return <p className="text-sm mb-3">Assistance requested</p>;
+  
+  try {
+    const parsed = JSON.parse(reason);
+    if (parsed.type === 'voice' && parsed.url) {
+      return (
+        <div className="space-y-1.5 mb-3" onClick={(e) => e.stopPropagation()}>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">🎤 Voice Note Request</p>
+          <VoicePlayer url={parsed.url} />
+        </div>
+      );
+    }
+    if (parsed.type === 'image' && parsed.url) {
+      return (
+        <div className="space-y-1.5 mb-3" onClick={(e) => e.stopPropagation()}>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">📷 Photo Attachment</p>
+          <Dialog>
+            <DialogTrigger asChild>
+              <div className="relative group w-20 h-20 rounded-xl overflow-hidden border cursor-pointer bg-muted">
+                <img src={parsed.url} alt="Dispute" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Eye className="w-4 h-4 text-white" />
+                </div>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-xl">
+              <DialogHeader>
+                <DialogTitle>Photo Attachment</DialogTitle>
+                <DialogDescription>
+                  Customer uploaded photo for assistance.
+                </DialogDescription>
+              </DialogHeader>
+              <img src={parsed.url} alt="Full Size" className="w-full h-auto rounded-lg max-h-[60vh] object-contain mx-auto" />
+            </DialogContent>
+          </Dialog>
+        </div>
+      );
+    }
+    return <p className="text-sm mb-3">{parsed.label || reason}</p>;
+  } catch {
+    return <p className="text-sm mb-3">{reason}</p>;
+  }
+};
 
 const WaiterDashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { restaurantId: authRestaurantId, signOut } = useAuth();
+  const { user, restaurantId: authRestaurantId, signOut } = useAuth();
 
   const urlRestaurantId = searchParams.get('r');
   const restaurantId = authRestaurantId || urlRestaurantId || undefined;
@@ -65,7 +159,7 @@ const WaiterDashboard = () => {
 
   const handleAcknowledgeCall = (callId: string) => {
     acknowledgeMutation.mutate(
-      { id: callId, userId: 'waiter' },
+      { id: callId, userId: user?.id || '' },
       {
         onSuccess: () => toast({ title: 'Call Acknowledged', description: 'The customer has been notified.' }),
         onError: () => toast({ title: 'Error', description: 'Failed to acknowledge call.', variant: 'destructive' }),
@@ -198,7 +292,7 @@ const WaiterDashboard = () => {
                                   {getTimeAgo(call.created_at)}
                                 </span>
                               </div>
-                              <p className="text-sm mb-3">{call.reason || 'Assistance requested'}</p>
+                              <WaiterCallReasonRenderer reason={call.reason} />
                               <div className="flex gap-2">
                                 <Button
                                   size="sm"

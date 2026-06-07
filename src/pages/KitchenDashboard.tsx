@@ -1,16 +1,110 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell, RefreshCw, AlertCircle, UtensilsCrossed, XCircle } from 'lucide-react';
+import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell, RefreshCw, AlertCircle, UtensilsCrossed, XCircle, Eye } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useSound, SOUNDS } from '@/hooks/useSound';
 import { useOrders, useKitchenOrderActions, type OrderWithItems } from '@/hooks/useOrders';
-import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
+import { usePendingWaiterCalls, useAcknowledgeWaiterCall, useResolveWaiterCall } from '@/hooks/useWaiterCalls';
 import { useRestaurantDetails } from '@/hooks/useRestaurant';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+
+const VoicePlayer = ({ url }: { url: string }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio(url);
+    const handleEnded = () => setIsPlaying(false);
+    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => setIsPlaying(true);
+
+    audioRef.current.addEventListener('ended', handleEnded);
+    audioRef.current.addEventListener('pause', handlePause);
+    audioRef.current.addEventListener('play', handlePlay);
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('ended', handleEnded);
+        audioRef.current.removeEventListener('pause', handlePause);
+        audioRef.current.removeEventListener('play', handlePlay);
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [url]);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(() => {});
+    }
+  };
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={togglePlay}
+      className="flex items-center gap-1.5 rounded-xl mt-1 py-1 h-8 bg-background border-warning/30 hover:bg-warning/10 text-xs font-semibold"
+    >
+      {isPlaying ? <VolumeX className="w-3.5 h-3.5 text-warning" /> : <Play className="w-3.5 h-3.5 text-warning fill-warning" />}
+      <span>{isPlaying ? 'Pause Request' : 'Play Voice Request'}</span>
+    </Button>
+  );
+};
+
+const WaiterCallReasonRenderer = ({ reason }: { reason: string | null }) => {
+  if (!reason) return <p className="text-sm mb-3">Assistance requested</p>;
+  
+  try {
+    const parsed = JSON.parse(reason);
+    if (parsed.type === 'voice' && parsed.url) {
+      return (
+        <div className="space-y-1.5 mb-3" onClick={(e) => e.stopPropagation()}>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">🎤 Voice Note Request</p>
+          <VoicePlayer url={parsed.url} />
+        </div>
+      );
+    }
+    if (parsed.type === 'image' && parsed.url) {
+      return (
+        <div className="space-y-1.5 mb-3" onClick={(e) => e.stopPropagation()}>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">📷 Photo Attachment</p>
+          <Dialog>
+            <DialogTrigger asChild>
+              <div className="relative group w-20 h-20 rounded-xl overflow-hidden border cursor-pointer bg-muted">
+                <img src={parsed.url} alt="Dispute" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Eye className="w-4 h-4 text-white" />
+                </div>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-xl">
+              <DialogHeader>
+                <DialogTitle>Photo Attachment</DialogTitle>
+                <DialogDescription>
+                  Customer uploaded photo for assistance.
+                </DialogDescription>
+              </DialogHeader>
+              <img src={parsed.url} alt="Full Size" className="w-full h-auto rounded-lg max-h-[60vh] object-contain mx-auto" />
+            </DialogContent>
+          </Dialog>
+        </div>
+      );
+    }
+    return <p className="text-sm mb-3">{parsed.label || reason}</p>;
+  } catch {
+    return <p className="text-sm mb-3">{reason}</p>;
+  }
+};
 
 import { usePrinter } from '@/hooks/usePrinter';
 import { CancelOrderDialog } from '@/components/admin/CancelOrderDialog';
@@ -33,7 +127,7 @@ interface KitchenDashboardProps {
 const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: KitchenDashboardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { restaurantId: authRestaurantId, signOut } = useAuth();
+  const { user, restaurantId: authRestaurantId, signOut } = useAuth();
   
   const urlRestaurantId = searchParams.get('r');
   const restaurantId = propRestaurantId || authRestaurantId || urlRestaurantId || undefined;
@@ -65,6 +159,30 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   // KDS UI State
   const [isTvMode, setIsTvMode] = useState(false);
   const [activeStation, setActiveStation] = useState<string>('all');
+  const [isCallsDialogOpen, setIsCallsDialogOpen] = useState(false);
+
+  const acknowledgeMutation = useAcknowledgeWaiterCall();
+  const resolveMutation = useResolveWaiterCall();
+
+  const handleAcknowledgeCall = (callId: string) => {
+    acknowledgeMutation.mutate(
+      { id: callId, userId: user?.id || '' },
+      {
+        onSuccess: () => toast({ title: 'Call Acknowledged', description: 'The customer has been notified.' }),
+        onError: () => toast({ title: 'Error', description: 'Failed to acknowledge call.', variant: 'destructive' }),
+      }
+    );
+  };
+
+  const handleResolveCall = (callId: string) => {
+    resolveMutation.mutate(
+      { id: callId },
+      {
+        onSuccess: () => toast({ title: 'Call Resolved', description: 'The call has been marked as resolved.' }),
+        onError: () => toast({ title: 'Error', description: 'Failed to resolve call.', variant: 'destructive' }),
+      }
+    );
+  };
 
   // Extract all unique stations dynamically from orders
   const availableStations = useMemo(() => {
@@ -305,28 +423,91 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
         </header>
       )}
 
-      {/* Waiter Calls Alert - hidden when embedded */}
-      {!embedded && (
-        <AnimatePresence>
-          {waiterCallsCount > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-warning/10 border-b border-warning/20 px-4 py-2"
-            >
-              <div className="container mx-auto flex items-center gap-2 text-warning">
+      {/* Waiter Calls Alert - Visible even when embedded in admin panel */}
+      <AnimatePresence>
+        {waiterCallsCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            onClick={() => setIsCallsDialogOpen(true)}
+            className="bg-warning/10 border-b border-warning/20 px-4 py-2.5 cursor-pointer hover:bg-warning/20 transition-colors"
+          >
+            <div className={`${embedded ? 'px-2' : 'container mx-auto'} flex items-center justify-between text-warning`}>
+              <div className="flex items-center gap-2">
                 <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }}>
                   <Bell className="w-4 h-4" />
                 </motion.div>
-                <span className="text-sm font-medium">
+                <span className="text-sm font-semibold">
                   {waiterCallsCount} waiter call{waiterCallsCount > 1 ? 's' : ''} pending
                 </span>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
+              <span className="text-xs font-bold underline flex items-center gap-1">
+                View Details & Respond &rarr;
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Waiter Calls Detail Dialog */}
+      <Dialog open={isCallsDialogOpen} onOpenChange={setIsCallsDialogOpen}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" aria-describedby="waiter-calls-desc">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-warning font-bold">
+              <Bell className="w-5 h-5 text-warning" />
+              Active Waiter Calls
+            </DialogTitle>
+            <DialogDescription id="waiter-calls-desc">
+              Respond to client requests and mark them as acknowledged or resolved.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {waiterCalls.map((call) => (
+              <Card key={call.id} className="border-warning/30 bg-warning/5">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <Badge variant="outline" className="font-bold border-warning/40 text-warning bg-warning/10">
+                      Table {call.table?.table_number || 'Unknown'}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      {getTimeAgo(call.created_at)}
+                    </span>
+                  </div>
+                  <WaiterCallReasonRenderer reason={call.reason} />
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 rounded-xl h-9 border-warning/30"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAcknowledgeCall(call.id);
+                      }}
+                      disabled={acknowledgeMutation.isPending}
+                    >
+                      <AlertCircle className="w-4 h-4 mr-1.5" />
+                      Acknowledge
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1 rounded-xl h-9 bg-success hover:bg-success/90 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResolveCall(call.id);
+                      }}
+                      disabled={resolveMutation.isPending}
+                    >
+                      <Check className="w-4 h-4 mr-1.5" />
+                      Resolve
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Main Content */}
       <main className={`${isTvMode ? 'w-full max-w-full px-6 py-4 flex-1' : 'container mx-auto px-4 py-6'}`}>

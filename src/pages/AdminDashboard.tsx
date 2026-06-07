@@ -451,7 +451,7 @@ const AdminDashboard = () => {
                 <PreviewTabContent customerPreviewUrl={customerPreviewUrl} restaurantId={restaurantId} externalRefreshKey={previewRefreshKey} />
               )}
 
-              {activeTab === "qr" && (
+              {activeTab === "qr-manager" && (
                 <motion.div
                   key="qr"
                   initial={{ opacity: 0, y: 10 }}

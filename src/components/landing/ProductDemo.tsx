@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ZappyLogo } from '@/components/branding/ZappyLogo';
 
-const DEMO_RESTAURANT_ID = 'b8b1bc0d-ed79-4ed4-a53c-6acccce6efa9';
+const DEMO_RESTAURANT_ID = '00000000-0000-0000-0000-000000000001';
 
 function useDemoMenu() {
   return useQuery({

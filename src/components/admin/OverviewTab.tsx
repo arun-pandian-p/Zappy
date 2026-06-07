@@ -75,24 +75,12 @@ export function OverviewTab({
           </div>
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RevenueChart orders={orders} currencySymbol={currencySymbol} days={7} />
-        <RevenueTrends orders={orders} currencySymbol={currencySymbol} days={7} />
-      </div>
-      <CustomerBehaviorPanel restaurantId={restaurantId} />
+      {/* Active Table Sessions & Popular Items first */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <OrdersTable
-            orders={orders}
-            currencySymbol={currencySymbol}
-            onViewAll={onViewAllOrders}
-            limit={5}
-            showFilters={false}
-          />
+          <TableSessionTimers restaurantId={restaurantId} />
         </div>
         <div className="space-y-6">
-          <TableSessionTimers restaurantId={restaurantId} />
           <Card className="border-0 shadow-md">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-semibold">
@@ -118,6 +106,26 @@ export function OverviewTab({
           </Card>
         </div>
       </div>
+
+      {/* Recent Orders table */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-3">
+          <OrdersTable
+            orders={orders}
+            currencySymbol={currencySymbol}
+            onViewAll={onViewAllOrders}
+            limit={5}
+            showFilters={false}
+          />
+        </div>
+      </div>
+
+      {/* Visualizations last */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RevenueChart orders={orders} currencySymbol={currencySymbol} days={7} />
+        <RevenueTrends orders={orders} currencySymbol={currencySymbol} days={7} />
+      </div>
+      <CustomerBehaviorPanel restaurantId={restaurantId} />
     </motion.div>
   );
 }

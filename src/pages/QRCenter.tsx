@@ -150,7 +150,15 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
                     {qr.target_url || "Auto-redirects to menu"}
                   </p>
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-4">
-                    <span>{format(new Date(qr.created_at), "MMM d, yyyy")}</span>
+                    <span>
+                      {(() => {
+                        try {
+                          return qr.created_at ? format(new Date(qr.created_at), "MMM d, yyyy") : "N/A";
+                        } catch (e) {
+                          return "N/A";
+                        }
+                      })()}
+                    </span>
                     <span className="font-medium bg-muted px-2 py-0.5 rounded-full">{qr.scan_count || 0} scans</span>
                   </div>
                   
