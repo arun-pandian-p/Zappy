@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQRCodes, useCreateQRCode, useDeleteQRCode, type QRCode } from "@/hooks/useQRCodes";
+import { useQRCodes, useCreateQRCode, useUpdateQRCode, useDeleteQRCode, type QRCode } from "@/hooks/useQRCodes";
 import { useRestaurantDetails } from "@/hooks/useRestaurant";
 import { useTables } from "@/hooks/useTables";
 import { getAppOrigin } from "@/utils/url";
@@ -21,8 +21,11 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
   const { data: restaurant } = useRestaurantDetails(restaurantId);
   const { data: tables = [] } = useTables(restaurantId);
   const createQR = useCreateQRCode();
+  const updateQR = useUpdateQRCode();
   const deleteQR = useDeleteQRCode();
   const { toast } = useToast();
+
+  const [editingQR, setEditingQR] = useState<QRCode | null>(null);
 
   const handleDeleteQR = async (qr: QRCode) => {
     if (!confirm(`Are you sure you want to deactivate/delete "${qr.qr_name}"?`)) return;
@@ -51,24 +54,44 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
 
   const handleSaveQR = async (config: any) => {
     try {
-      await createQR.mutateAsync({
-        tenant_id: restaurantId,
-        qr_name: config.qr_name,
-        target_url: config.target_url,
-        qr_type: "dynamic",
-        metadata: {
-          fg_color: config.fg_color,
-          bg_color: config.bg_color,
-          logo_url: config.logo_url,
-          logo_excavate: config.logo_excavate,
-          error_level: config.error_level,
-          logo_size: config.logo_size
-        }
-      });
-      toast({ title: "Success", description: "QR Code created successfully!" });
-      setShowBuilder(false);
+      if (editingQR) {
+        await updateQR.mutateAsync({
+          id: editingQR.id,
+          tenantId: restaurantId,
+          qr_name: config.qr_name,
+          target_url: config.target_url,
+          metadata: {
+            ...((editingQR.metadata as any) || {}),
+            fg_color: config.fg_color,
+            bg_color: config.bg_color,
+            logo_url: config.logo_url,
+            logo_excavate: config.logo_excavate,
+            error_level: config.error_level,
+            logo_size: config.logo_size
+          }
+        });
+        toast({ title: "Success", description: "QR Code updated successfully!" });
+        setEditingQR(null);
+      } else {
+        await createQR.mutateAsync({
+          tenant_id: restaurantId,
+          qr_name: config.qr_name,
+          target_url: config.target_url,
+          qr_type: "dynamic",
+          metadata: {
+            fg_color: config.fg_color,
+            bg_color: config.bg_color,
+            logo_url: config.logo_url,
+            logo_excavate: config.logo_excavate,
+            error_level: config.error_level,
+            logo_size: config.logo_size
+          }
+        });
+        toast({ title: "Success", description: "QR Code created successfully!" });
+        setShowBuilder(false);
+      }
     } catch (e) {
-      toast({ title: "Error", description: "Failed to create QR code", variant: "destructive" });
+      toast({ title: "Error", description: editingQR ? "Failed to update QR code" : "Failed to create QR code", variant: "destructive" });
     }
   };
 
@@ -106,21 +129,34 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Enterprise QR Center</h2>
           <p className="text-muted-foreground text-sm">Build, customize, and manage smart dynamic QR codes.</p>
         </div>
-        {!showBuilder && (
+        {!showBuilder && !editingQR && (
           <Button onClick={() => setShowBuilder(true)} className="rounded-xl shadow-md gap-2 h-10">
             <Plus className="w-4 h-4" /> Create New QR
           </Button>
         )}
       </div>
 
-      {showBuilder ? (
+      {showBuilder || editingQR ? (
         <Card className="border-0 shadow-lg rounded-3xl overflow-hidden">
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-6 border-b pb-4">
-              <h3 className="text-lg font-bold">QR Code Builder</h3>
-              <Button variant="ghost" size="sm" onClick={() => setShowBuilder(false)}>Cancel</Button>
+              <h3 className="text-lg font-bold">{editingQR ? "Customize QR Code" : "QR Code Builder"}</h3>
+              <Button variant="ghost" size="sm" onClick={() => { setShowBuilder(false); setEditingQR(null); }}>Cancel</Button>
             </div>
-            <AdvancedQRBuilder onSave={handleSaveQR} isSaving={createQR.isPending} />
+            <AdvancedQRBuilder 
+              onSave={handleSaveQR} 
+              isSaving={createQR.isPending || updateQR.isPending} 
+              initialValues={editingQR ? {
+                qr_name: editingQR.qr_name,
+                target_url: editingQR.target_url,
+                fg_color: (editingQR.metadata as any)?.fg_color,
+                bg_color: (editingQR.metadata as any)?.bg_color,
+                error_level: (editingQR.metadata as any)?.error_level,
+                logo_url: (editingQR.metadata as any)?.logo_url,
+                logo_excavate: (editingQR.metadata as any)?.logo_excavate,
+                logo_size: (editingQR.metadata as any)?.logo_size,
+              } : undefined}
+            />
           </CardContent>
         </Card>
       ) : (
@@ -185,17 +221,29 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
                       Copy Link
                     </Button>
                   </div>
-                  {!(meta.is_base_qr) && (
+                  <div className="grid grid-cols-2 gap-2 mt-2">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="w-full rounded-xl gap-2 h-9 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 mt-2"
-                      onClick={() => handleDeleteQR(qr)}
-                      disabled={deleteQR.isPending}
+                      className="w-full rounded-xl gap-1.5 h-9 text-xs"
+                      onClick={() => setEditingQR(qr)}
                     >
-                      <Trash2 className="w-3.5 h-3.5" /> Delete QR
+                      Customize
                     </Button>
-                  )}
+                    {!(meta.is_base_qr) ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full rounded-xl gap-1.5 h-9 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteQR(qr)}
+                        disabled={deleteQR.isPending}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </Button>
+                    ) : (
+                      <div />
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             );
