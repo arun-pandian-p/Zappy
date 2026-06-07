@@ -110,6 +110,20 @@ serve(async (req) => {
         is_active: true,
       });
 
+      // Log action for realtime/system log subscribers
+      try {
+        await adminClient.from("system_logs").insert({
+          actor_id: caller.id,
+          actor_email: caller.email,
+          action: "create_staff",
+          entity_type: "user",
+          entity_id: newUser.user.id,
+          details: { email, role, restaurant_id: restaurantId, created_by: caller.email },
+        });
+      } catch (e) {
+        console.warn('Failed to insert system log for create_staff', e);
+      }
+
       return new Response(JSON.stringify({ success: true, user_id: newUser.user.id }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -139,6 +153,20 @@ serve(async (req) => {
       await adminClient.from("user_roles").delete().eq("user_id", user_id);
       await adminClient.from("staff_profiles").delete().eq("user_id", user_id);
       await adminClient.auth.admin.deleteUser(user_id);
+
+      // Log deletion for realtime/system log subscribers
+      try {
+        await adminClient.from("system_logs").insert({
+          actor_id: caller.id,
+          actor_email: caller.email,
+          action: "delete_staff",
+          entity_type: "user",
+          entity_id: user_id,
+          details: { removed_by: caller.email },
+        });
+      } catch (e) {
+        console.warn('Failed to insert system log for delete_staff', e);
+      }
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

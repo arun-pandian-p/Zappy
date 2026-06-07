@@ -16,7 +16,7 @@ async function fetchPromotions(restaurantId: string): Promise<EnterprisePromotio
         console.warn('enterprise_promotions table not found, falling back to offers');
         return fetchLegacyOffers(restaurantId);
       }
-      throw error;
+      throw new Error(error.message || JSON.stringify(error));
     }
     return (data || []) as EnterprisePromotion[];
   } catch (err: any) {
@@ -33,7 +33,7 @@ async function fetchLegacyOffers(restaurantId: string): Promise<EnterprisePromot
     .select("*")
     .eq("restaurant_id", restaurantId);
   
-  if (error) throw error;
+  if (error) throw new Error(error.message || JSON.stringify(error));
   
   // Transform legacy offers to enterprise format
   return (data || []).map((o: any) => ({
@@ -101,7 +101,7 @@ export function useCreateEnterprisePromotion() {
           .insert(promo as any)
           .select()
           .single();
-        if (error) throw error;
+        if (error) throw new Error(error.message || JSON.stringify(error));
         return data as EnterprisePromotion;
       } catch (err: any) {
         if (err.code === '42P01' || err.message?.includes('Could not find the table')) {
@@ -117,7 +117,7 @@ export function useCreateEnterprisePromotion() {
             is_active: promo.status === 'active',
           };
           const { data, error } = await supabase.from("offers" as any).insert(legacy).select().single();
-          if (error) throw error;
+          if (error) throw new Error(error.message || JSON.stringify(error));
           return data;
         }
         throw err;
@@ -141,7 +141,7 @@ export function useUpdateEnterprisePromotion() {
           .eq("id", id)
           .select()
           .single();
-        if (error) throw error;
+        if (error) throw new Error(error.message || JSON.stringify(error));
         return data as EnterprisePromotion;
       } catch (err: any) {
         if (err.code === '42P01' || err.message?.includes('Could not find the table')) {
@@ -180,7 +180,7 @@ export function useDeleteOffer() {
       } catch (err: any) {
         if (err.code === '42P01' || err.message?.includes('Could not find the table')) {
           const { error } = await supabase.from("offers" as any).delete().eq("id", id);
-          if (error) throw error;
+          if (error) throw new Error(error.message || JSON.stringify(error));
         }
         throw err;
       }

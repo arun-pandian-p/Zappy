@@ -49,7 +49,7 @@ export function useTrackEvent() {
         event_data: (eventData || {}) as unknown as import("@/integrations/supabase/types").Json,
       }]);
 
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
     },
   });
 }
