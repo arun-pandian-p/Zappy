@@ -257,14 +257,18 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
   const handleDeleteTable = async (table: Table) => {
     if (!confirm(`Delete table ${table.table_number}? Its QR code will be deactivated.`)) return;
     try {
-      await deleteTable.mutateAsync({ id: table.id, restaurantId });
+      console.log('UI_DELETE_CLICK', { component: 'QRCodeManager', handler: 'handleDeleteTable', tableId: table.id, restaurantId });
+      const dtRes = await deleteTable.mutateAsync({ id: table.id, restaurantId });
+      console.log('UI_DELETE_TABLE_RESULT', { tableId: table.id, dtRes });
 
       // Deactivate matching QR code
       const matchingQR = activeQRCodes.find(
         (q) => (q.metadata as any)?.table_id === table.id
       );
       if (matchingQR) {
-        await deleteQR.mutateAsync({ id: matchingQR.id, tenantId: restaurantId });
+        console.log('UI_DELETE_TRIGGER_QR', { matchingQRId: matchingQR.id, restaurantId });
+        const qrRes = await deleteQR.mutateAsync({ id: matchingQR.id, tenantId: restaurantId });
+        console.log('UI_DELETE_QR_RESULT', { matchingQRId: matchingQR.id, qrRes });
       }
 
       toast({ title: "Table Deleted", description: `Table ${table.table_number} removed.` });
@@ -276,7 +280,9 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
   const handleDeleteQR = async (qr: QRCode) => {
     if (!confirm(`Deactivate "${qr.qr_name}"?`)) return;
     try {
-      await deleteQR.mutateAsync({ id: qr.id, tenantId: restaurantId });
+      console.log('UI_DELETE_CLICK', { component: 'QRCodeManager', handler: 'handleDeleteQR', qrId: qr.id, restaurantId });
+      const res = await deleteQR.mutateAsync({ id: qr.id, tenantId: restaurantId });
+      console.log('UI_DELETE_RESPONSE', { component: 'QRCodeManager', handler: 'handleDeleteQR', res });
       toast({ title: "QR Deactivated", description: `${qr.qr_name} has been deactivated.` });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });

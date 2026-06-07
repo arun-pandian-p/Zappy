@@ -30,7 +30,9 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
   const handleDeleteQR = async (qr: QRCode) => {
     if (!confirm(`Are you sure you want to deactivate/delete "${qr.qr_name}"?`)) return;
     try {
-      await deleteQR.mutateAsync({ id: qr.id, tenantId: restaurantId });
+      console.log('UI_DELETE_CLICK', { component: 'QRCenter', handler: 'handleDeleteQR', qrId: qr.id, restaurantId });
+      const res = await deleteQR.mutateAsync({ id: qr.id, tenantId: restaurantId });
+      console.log('UI_DELETE_RESPONSE', { component: 'QRCenter', handler: 'handleDeleteQR', res });
       toast({ title: "Success", description: "QR Code deactivated successfully!" });
     } catch (e) {
       const msg = e instanceof Error ? e.message : JSON.stringify(e);

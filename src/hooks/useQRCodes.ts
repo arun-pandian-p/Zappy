@@ -96,6 +96,7 @@ export function useDeleteQRCode() {
   return useMutation({
     mutationFn: async ({ id, tenantId }: { id: string; tenantId: string }) => {
       // Prefer server-side deactivation via Edge Function to avoid RLS mismatches
+      console.log('DELETE_START', { id, tenantId });
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const fnUrl = `${SUPABASE_URL.replace(/\/$/, "")}/functions/v1/manage-qr`;
       const { data: sessionData } = await supabase.auth.getSession();
@@ -111,7 +112,9 @@ export function useDeleteQRCode() {
       });
 
       const payload = await res.json().catch(() => ({}));
+      console.log('DELETE_RESULT', { status: res.status, ok: res.ok, payload });
       if (!res.ok) {
+        console.error('DELETE_ERROR', { status: res.status, payload });
         throw new Error(payload?.error || `Failed to deactivate QR (status ${res.status})`);
       }
       return payload;
