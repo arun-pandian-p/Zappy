@@ -33,8 +33,11 @@ export default function QRRedirect() {
         // Parse target URL
         let targetUrl = qrCode.target_url;
         if (!targetUrl) {
-          setError("No target URL configured for this QR code.");
-          return;
+          targetUrl = `/menu?r=${qrCode.tenant_id}`;
+          const metadata = qrCode.metadata as any;
+          if (metadata?.table_number) {
+            targetUrl += `&table=${metadata.table_number}`;
+          }
         }
 
         // Get device info
