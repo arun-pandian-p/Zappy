@@ -7,6 +7,7 @@ import {
   BarChart3,
   QrCode,
   CheckCircle2,
+  Shield,
 } from "lucide-react";
 
 const roles = [
@@ -56,6 +57,21 @@ const roles = [
     ],
   },
   {
+    id: "admin",
+    label: "Admin Panel",
+    icon: Shield,
+    title: "Admin Control Center",
+    desc: "Manage users, customize settings, set permissions, and view system logs.",
+    items: [
+      "Active Staff",
+      "8 Members",
+      "Menu OCR Sync",
+      "Success (1.2s)",
+      "Printer Status",
+      "Online",
+    ],
+  },
+  {
     id: "analytics",
     label: "Analytics",
     icon: BarChart3,
@@ -83,7 +99,7 @@ const SparklineMini = () => (
     <path
       d="M0 18 Q8 16 16 14 T32 10 T48 12 T64 6 T80 4"
       fill="none"
-      stroke="rgba(110,231,183,0.7)"
+      stroke="rgba(96,165,250,0.7)"
       strokeWidth="1.5"
       strokeLinecap="round"
     />
@@ -114,14 +130,14 @@ export default function DashboardCarousel() {
       ref={sectionRef}
       id="dashboards"
       className="relative py-20 md:py-28 overflow-hidden"
-      style={{ background: "#fdfcf8" }}
+      style={{ background: "#fbfcfc" }}
     >
-      {/* Subtle warm gradient backdrop */}
+      {/* Subtle blue gradient backdrop */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(16,185,129,0.04) 0%, transparent 70%)",
+            "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(37,99,235,0.03) 0%, transparent 70%)",
         }}
       />
 
@@ -136,16 +152,16 @@ export default function DashboardCarousel() {
         >
           <div className="inline-flex items-center gap-2 mb-4">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
             </span>
-            <span className="text-xs font-semibold tracking-widest uppercase text-emerald-600">
+            <span className="text-xs font-semibold tracking-widest uppercase text-blue-600">
               Role-Based Views
             </span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-3 tracking-tight">
             Powerful{" "}
-            <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
               Dashboards
             </span>
           </h2>
@@ -162,7 +178,7 @@ export default function DashboardCarousel() {
               : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="inline-flex flex-wrap justify-center gap-1 bg-[#0a2e2e] rounded-full p-1.5 shadow-lg shadow-emerald-900/20">
+          <div className="inline-flex flex-wrap justify-center gap-1 bg-[#0B1220] rounded-full p-1.5 shadow-lg shadow-blue-900/10 border border-slate-800/80">
             {roles.map((role) => {
               const Icon = role.icon;
               const isActive = active === role.id;
@@ -170,26 +186,26 @@ export default function DashboardCarousel() {
                 <button
                   key={role.id}
                   onClick={() => setActive(role.id)}
-                  className="relative flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  className="relative flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                   style={
                     isActive
                       ? {
                           background:
-                            "linear-gradient(135deg, #6ee7b7 0%, #34d399 100%)",
-                          color: "#0a2e2e",
-                          boxShadow: "0 0 24px rgba(110,231,183,0.5)",
+                            "linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)",
+                          color: "#ffffff",
+                          boxShadow: "0 0 24px rgba(37,99,235,0.4)",
                         }
-                      : { color: "rgba(167,243,208,0.55)" }
+                      : { color: "rgba(191,219,254,0.55)" }
                   }
                   onMouseEnter={(e) => {
                     if (!isActive)
                       (e.currentTarget as HTMLButtonElement).style.color =
-                        "rgba(167,243,208,0.9)";
+                        "rgba(191,219,254,0.9)";
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive)
                       (e.currentTarget as HTMLButtonElement).style.color =
-                        "rgba(167,243,208,0.55)";
+                        "rgba(191,219,254,0.55)";
                   }}
                 >
                   <Icon size={16} />
@@ -237,7 +253,7 @@ export default function DashboardCarousel() {
                     className="flex items-center gap-3 text-slate-700"
                   >
                     <CheckCircle2
-                      className="text-emerald-500 shrink-0"
+                      className="text-blue-500 shrink-0"
                       size={20}
                     />
                     <span className="text-sm sm:text-base">{feat}</span>
@@ -254,26 +270,26 @@ export default function DashboardCarousel() {
               className="absolute inset-0 rounded-3xl blur-3xl pointer-events-none"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(16,185,129,0.08) 0%, transparent 60%)",
+                  "linear-gradient(135deg, rgba(37,99,235,0.08) 0%, transparent 60%)",
               }}
             />
 
             <div
-              className="relative rounded-3xl p-5 sm:p-6 shadow-2xl overflow-hidden min-h-[340px]"
-              style={{ background: "#0a2e2e" }}
+              className="relative rounded-3xl p-5 sm:p-6 shadow-2xl overflow-hidden min-h-[340px] border border-slate-800/80"
+              style={{ background: "#0B1220" }}
             >
               {/* Orbit rings */}
               <div
                 className="absolute -right-16 -bottom-16 w-64 h-64 rounded-full pointer-events-none"
-                style={{ border: "1px solid rgba(52,211,153,0.15)" }}
+                style={{ border: "1px solid rgba(37,99,235,0.15)" }}
               />
               <div
                 className="absolute -right-8 -bottom-8 w-44 h-44 rounded-full pointer-events-none"
-                style={{ border: "1px solid rgba(52,211,153,0.08)" }}
+                style={{ border: "1px solid rgba(37,99,235,0.08)" }}
               />
               <div
                 className="absolute -left-10 -top-10 w-32 h-32 rounded-full pointer-events-none"
-                style={{ border: "1px solid rgba(52,211,153,0.06)" }}
+                style={{ border: "1px solid rgba(37,99,235,0.06)" }}
               />
 
               {/* Header bar */}
@@ -283,10 +299,10 @@ export default function DashboardCarousel() {
                     className="w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{
                       background:
-                        "linear-gradient(135deg, #6ee7b7 0%, #34d399 100%)",
+                        "linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)",
                     }}
                   >
-                    <QrCode size={15} color="#0a2e2e" strokeWidth={2.5} />
+                    <QrCode size={15} color="#ffffff" strokeWidth={2.5} />
                   </div>
                   <span className="text-white font-semibold text-sm tracking-wide">
                     Zappy
@@ -297,13 +313,13 @@ export default function DashboardCarousel() {
                   <span
                     className="text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1.5"
                     style={{
-                      background: "rgba(52,211,153,0.15)",
-                      color: "#6ee7b7",
+                      background: "rgba(37,99,235,0.15)",
+                      color: "#60a5fa",
                     }}
                   >
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-400" />
                     </span>
                     Live
                   </span>
@@ -322,7 +338,7 @@ export default function DashboardCarousel() {
                 >
                   <span
                     className="text-[10px] font-semibold tracking-[0.15em] uppercase"
-                    style={{ color: "rgba(167,243,208,0.4)" }}
+                    style={{ color: "rgba(191,219,254,0.4)" }}
                   >
                     {activeRole.title}
                   </span>
@@ -362,7 +378,7 @@ export default function DashboardCarousel() {
                       >
                         <span
                           className="text-sm"
-                          style={{ color: "rgba(167,243,208,0.6)" }}
+                          style={{ color: "rgba(191,219,254,0.6)" }}
                         >
                           {item}
                         </span>
@@ -380,7 +396,7 @@ export default function DashboardCarousel() {
                 className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
                 style={{
                   background:
-                    "linear-gradient(to top, #0a2e2e 0%, transparent 100%)",
+                    "linear-gradient(to top, #0B1220 0%, transparent 100%)",
                 }}
               />
             </div>

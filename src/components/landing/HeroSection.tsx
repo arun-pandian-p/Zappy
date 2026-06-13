@@ -2,7 +2,6 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRef, useEffect } from 'react';
-import zappyHeroLogo from '@/assets/zappy-hero-logo-light.png';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -11,18 +10,20 @@ interface HeroSectionProps {
 }
 
 const stats = [
-{ value: '10K+', label: 'Orders Processed' },
-{ value: '\n', label: 'Restaurants' },
-{ value: '99.9%', label: 'Uptime' }];
-
+  { value: '100+', label: 'Restaurants' },
+  { value: '99.9%', label: 'Uptime' },
+  { value: '24/7', label: 'Support' },
+  { value: 'AI', label: 'Powered' }
+];
 
 const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
-  const subtitle = cms?.subtitle || 'Transform your restaurant operations with intelligent digital ordering, real-time kitchen sync, and powerful analytics.';
-  const ctaText = cms?.cta_text || 'Get Started Free';
+  const headline = cms?.headline || 'One Platform. Every Restaurant Operation.';
+  const subtitle = cms?.subtitle || 'Manage menus, orders, billing, kitchen workflows, analytics, and customer experiences from one unified Restaurant Operating System.';
+  const ctaText = cms?.cta_text || 'Start Free';
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
-  const videoScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
+  const videoScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
   const videoOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.3]);
 
   useEffect(() => {
@@ -60,28 +61,36 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
       />
 
       {/* Content */}
-      <div className="relative z-10 flex-1 flex items-center container mx-auto px-4 pt-24 pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
+      <div className="relative z-10 flex-1 flex items-center container mx-auto px-6 pt-28 pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center w-full">
           
           {/* Left: Logo + Text + CTAs */}
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:col-span-6">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
               className="mb-6">
               
-              <div className="flex justify-center md:justify-start">
-                <img alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain" src="/zappy-uploads/53e47e43-08ad-46f9-a01e-426fd946553a.png" />
+              <div className="flex justify-center lg:justify-start">
+                <img alt="ZAPPY" className="h-10 w-auto object-contain" src="/zappy-uploads/53e47e43-08ad-46f9-a01e-426fd946553a.png" />
               </div>
             </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-black text-primary-foreground tracking-tight mb-6 leading-tight max-w-xl">
+              One Platform. <br />
+              <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Every Restaurant Operation.</span>
+            </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.6 }}
-              className="text-lg md:text-xl text-primary-foreground/60 max-w-md mb-8 leading-relaxed">
-              
+              className="text-lg md:text-xl text-primary-foreground/60 max-w-lg mb-10 leading-relaxed">
               {subtitle}
             </motion.p>
 
@@ -89,13 +98,12 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.6 }}
-              className="flex flex-col sm:flex-row items-center lg:items-start gap-4">
+              className="flex flex-col sm:flex-row items-center lg:items-start gap-4 w-full sm:w-auto">
               
               <Button
                 size="lg"
                 className="w-full sm:w-auto px-10 py-7 text-lg rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_40px_hsl(var(--primary)/0.4)] group font-bold"
                 onClick={onGetStarted}>
-                
                 <Zap className="w-5 h-5 mr-2" />
                 {ctaText}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -104,61 +112,87 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
                 size="lg"
                 className="w-full sm:w-auto px-10 py-7 text-lg rounded-full bg-primary-foreground text-foreground hover:bg-primary-foreground/90 font-semibold shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                 onClick={onScanDemo}>
-                
-                View Live Demo
+                Book Demo
               </Button>
             </motion.div>
 
-            {/* Stats */}
+            {/* Stats / Trust Bar */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2, duration: 0.7 }}
-              className="mt-12">
+              transition={{ delay: 1.0, duration: 0.7 }}
+              className="mt-12 w-full">
               
-              <div className="flex items-center gap-8 md:gap-12">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mx-auto lg:mx-0">
                 {stats.map((stat, i) =>
-                <div key={stat.label} className="text-center lg:text-left">
+                  <div key={stat.label} className="text-center lg:text-left">
                     <motion.p
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.4 + i * 0.15, duration: 0.5, type: 'spring' }}
-                    className="text-2xl md:text-3xl font-black text-primary-foreground">
-                    
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 1.2 + i * 0.15, duration: 0.5, type: 'spring' }}
+                      className="text-2xl md:text-3xl font-black text-primary-foreground">
                       {stat.value}
                     </motion.p>
-                    <p className="text-xs md:text-sm text-primary-foreground/40 mt-1">{stat.label}</p>
+                    <p className="text-xs md:text-sm text-primary-foreground/40 mt-1 font-semibold tracking-wide uppercase">{stat.label}</p>
                   </div>
                 )}
               </div>
             </motion.div>
           </div>
 
-          {/* Right: Video */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 aspect-video"
-            style={{ scale: videoScale, opacity: videoOpacity }}>
-            
-            <video
-              ref={videoRef}
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              onEnded={(e) => {
-                const video = e.currentTarget;
-                video.currentTime = 0;
-                video.play().catch(() => {});
-              }}
-              className="w-full h-full object-cover"
-              src="/videos/brand-identity-2.mp4" />
-            
-          </motion.div>
+          {/* Right: Video Container */}
+          <div className="relative w-full aspect-video lg:col-span-6 flex items-center justify-center">
+            {/* Soft ambient glow behind the SVG */}
+            <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full scale-75 -z-10" />
 
+            {/* Z-shaped SVG decoration */}
+            <svg
+              className="absolute -inset-8 w-[calc(100%+64px)] h-[calc(100%+64px)] opacity-30 select-none pointer-events-none -z-10 text-primary/40"
+              viewBox="0 0 100 100"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <motion.path
+                d="M 15 15 L 85 15 L 15 85 L 85 85"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 3, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }}
+              />
+              <circle cx="15" cy="15" r="1.5" fill="currentColor" />
+              <circle cx="85" cy="15" r="1.5" fill="currentColor" />
+              <circle cx="15" cy="85" r="1.5" fill="currentColor" />
+              <circle cx="85" cy="85" r="1.5" fill="currentColor" />
+            </svg>
+
+            {/* Video */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 aspect-video w-full"
+              style={{ scale: videoScale, opacity: videoOpacity }}>
+              
+              <video
+                ref={videoRef}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                onEnded={(e) => {
+                  const video = e.currentTarget;
+                  video.currentTime = 0;
+                  video.play().catch(() => {});
+                }}
+                className="w-full h-full object-cover"
+                src="/videos/brand-identity-2.mp4" />
+              
+            </motion.div>
+          </div>
 
         </div>
       </div>
@@ -167,7 +201,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2, duration: 1 }}
+        transition={{ delay: 1.8, duration: 1 }}
         className="relative z-10 pb-8 flex justify-center">
         
         <motion.div
@@ -177,8 +211,8 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
           <ChevronDown className="w-6 h-6 text-primary-foreground/30" />
         </motion.div>
       </motion.div>
-    </section>);
-
+    </section>
+  );
 };
 
 export default HeroSection;

@@ -1,28 +1,31 @@
 import React from 'react';
 import { SEO } from '@/components/seo/SEO';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import MarketingLayout from '@/components/landing/MarketingLayout';
 
 export default function MenuOCR() {
+  const navigate = useNavigate();
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "AI Restaurant Menu OCR | Zappy",
     "description": "Digitize your physical restaurant menus instantly with Zappy's AI OCR technology.",
-    "url": "https://zappy.ind.in/menu-ocr"
+    "url": "https://www.zappy.ind.in/menu-ocr"
   };
 
   return (
-    <>
+    <MarketingLayout>
       <SEO 
         title="AI Restaurant Menu OCR | Digitize Physical Menus Instantly - Zappy"
         description="Transform printed menus and PDFs into digital, editable QR menus in seconds using Zappy's advanced AI Optical Character Recognition (OCR)."
-        canonical="https://zappy.ind.in/menu-ocr"
+        canonical="https://www.zappy.ind.in/menu-ocr"
         keywords="menu OCR, digitize restaurant menu, AI menu scanner, PDF to digital menu, restaurant technology, automated menu creation"
         schema={schema}
       />
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+      <div className="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50 py-16">
         {/* Hero Section */}
-        <section className="pt-24 pb-12 md:pt-32 md:pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <section className="pb-12 pt-8 md:pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl tracking-tight font-extrabold sm:text-5xl md:text-6xl mb-6">
             <span className="block">Transform Physical Menus into</span>
             <span className="block text-primary">Digital Experiences with AI OCR</span>
@@ -31,8 +34,8 @@ export default function MenuOCR() {
             Stop typing out your menu manually. Simply upload a PDF or take a picture of your physical menu, and Zappy's AI will instantly digitize it into a beautiful QR ordering system.
           </p>
           <div className="flex justify-center gap-4">
-            <Button size="lg" className="w-full sm:w-auto">Start Scanning Free</Button>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">View Demo</Button>
+            <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate('/login')}>Start Scanning Free</Button>
+            <Button size="lg" variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/order?slug=arun&table=T1&demo=true')}>View Demo</Button>
           </div>
         </section>
 
@@ -82,6 +85,6 @@ export default function MenuOCR() {
           </p>
         </section>
       </div>
-    </>
+    </MarketingLayout>
   );
 }

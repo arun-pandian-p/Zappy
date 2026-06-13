@@ -11,8 +11,8 @@ interface CTABannerProps {
 const animatedWords = ['Restaurant', 'Café', 'Cloud Kitchen', 'Food Court', 'Bar & Lounge'];
 
 const CTABanner = ({ onGetStarted, cms }: CTABannerProps) => {
-  const subtitle = cms?.subtitle || 'Join hundreds of restaurants already using ZAPPY QR MANAGEMENT';
-  const ctaText = cms?.cta_text || 'Get Started Free';
+  const subtitle = cms?.subtitle || 'Join 100+ restaurants running on the ZAPPY Restaurant OS';
+  const ctaText = cms?.cta_text || 'Start Free';
   const [wordIndex, setWordIndex] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });

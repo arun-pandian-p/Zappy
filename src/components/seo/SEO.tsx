@@ -12,11 +12,11 @@ interface SEOProps {
 }
 
 export const SEO: React.FC<SEOProps> = ({
-  title = "Zappy | AI Restaurant Menu Management Platform",
-  description = "Manage restaurant menus, digitize PDFs with AI OCR, generate food images, and streamline restaurant operations with Zappy.",
-  canonical = "https://zappy.ind.in",
-  keywords = "restaurant software, menu management software, AI menu OCR, digital menu platform, restaurant SaaS, food menu management",
-  ogImage = "/og-image.png",
+  title = "Zappy | The Restaurant Operating System",
+  description = "One platform for menus, orders, billing, kitchen workflows, analytics, and customer experiences. The complete Restaurant Operating System.",
+  canonical = "https://www.zappy.ind.in",
+  keywords = "restaurant operating system, restaurant software, QR ordering, kitchen display system, restaurant billing, restaurant analytics, digital menu platform",
+  ogImage = "https://www.zappy.ind.in/og-image.png",
   schema,
   noindex = false
 }) => {
