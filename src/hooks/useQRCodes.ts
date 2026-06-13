@@ -115,13 +115,9 @@ export function useDeleteQRCode() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, tenantId }: { id: string; tenantId: string }) => {
-      // Prefer server-side deactivation via Edge Function to avoid RLS mismatches
+      // Use official Supabase client to call the Edge Function — this automatically adds the apikey and auth headers, preventing CORS errors
       console.log('DELETE_START', { id, tenantId });
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-      const fnUrl = `${SUPABASE_URL.replace(/\/$/, "")}/functions/v1/manage-qr`;
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      // Log current user id for debugging
+      
       try {
         const { data: userData } = await supabase.auth.getUser();
         console.log('USER_ID', userData?.user?.id);
@@ -129,26 +125,17 @@ export function useDeleteQRCode() {
         console.warn('USER_ID_UNAVAILABLE', e);
       }
 
-      const res = await fetch(fnUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ action: "deactivate", id }),
+      const { data, error } = await supabase.functions.invoke('manage-qr', {
+        body: { action: 'deactivate', id }
       });
 
-      const payload = await res.json().catch(() => ({}));
-      console.log('DELETE_RESPONSE', { status: res.status, ok: res.ok, payload });
-      if (!res.ok) {
-        console.error('DELETE_ERROR', { status: res.status, payload });
-        // Surface more helpful error for common cases
-        if (res.status === 404) throw new Error('manage-qr function not found (404)');
-        if (res.status === 401) throw new Error('Unauthorized (401) — check session');
-        if (res.status === 403) throw new Error('Forbidden (403) — RLS or role issue');
-        throw new Error(payload?.error || `Failed to deactivate QR (status ${res.status})`);
+      console.log('DELETE_RESPONSE', { data, error });
+      if (error) {
+        console.error('DELETE_ERROR', error);
+        throw new Error(error.message || 'Failed to deactivate QR code');
       }
-      return payload;
+
+      return data;
     },
     // Optimistic update: remove/deactivate QR locally for snappy UX
     onMutate: async (vars) => {
