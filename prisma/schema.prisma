@@ -1279,6 +1279,7 @@ model orders {
   locked_by            String?              @db.Uuid
   locked_at            DateTime?            @db.Timestamptz(6)
   version              Int                  @default(1)
+  idempotency_key      String?              @unique @db.Uuid
   enterprise_reviews   enterprise_reviews[]
   feedback             feedback[]
   invoices             invoices?

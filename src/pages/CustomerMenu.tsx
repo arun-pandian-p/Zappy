@@ -71,14 +71,18 @@ const CustomerMenu = () => {
   const tableId = searchParams.get('table') || '';
   const isDemoMode = searchParams.get('demo') === 'true';
 
+  // UUID validation to prevent database query crashes on malformed input
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const initialResolvedId = restaurantIdParam && UUID_REGEX.test(restaurantIdParam) ? restaurantIdParam : '';
+
   // Slug-based tenant resolution — also fetch basic branding for splash
-  const [resolvedRestaurantId, setResolvedRestaurantId] = useState(restaurantIdParam);
+  const [resolvedRestaurantId, setResolvedRestaurantId] = useState(initialResolvedId);
   const [splashBranding, setSplashBranding] = useState<{
     name: string; logo_url: string | null; primary_color: string | null;
   } | null>(null);
   
   useEffect(() => {
-    const idToUse = restaurantIdParam || undefined;
+    const idToUse = restaurantIdParam && UUID_REGEX.test(restaurantIdParam) ? restaurantIdParam : undefined;
     const query = slug && !restaurantIdParam
       ? supabase.from('restaurants_public').select('id, name, logo_url, primary_color').eq('slug', slug).eq('is_active', true).single()
       : idToUse
@@ -86,11 +90,17 @@ const CustomerMenu = () => {
       : null;
 
     if (query) {
-      query.then(({ data }) => {
+      query.then(({ data, error }) => {
+        if (error) {
+          console.error("Error fetching splash branding:", error);
+          return;
+        }
         if (data) {
           if (!restaurantIdParam) setResolvedRestaurantId(data.id);
           setSplashBranding({ name: data.name, logo_url: data.logo_url, primary_color: data.primary_color });
         }
+      }).catch(err => {
+        console.error("Failed to query restaurants_public:", err);
       });
     }
   }, [slug, restaurantIdParam]);
@@ -119,6 +129,11 @@ const CustomerMenu = () => {
   const isPreviewMode = false;
   const showTablePicker = !dynamicTableId && !!restaurantId;
   const { toast } = useToast();
+
+  // Cart session idempotency key and submission states to prevent double orders
+  const [orderSessionId, setOrderSessionId] = useState(() => crypto.randomUUID());
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+
 
   const [activeNotification, setActiveNotification] = useState<{
     id: string;
@@ -425,6 +440,30 @@ const CustomerMenu = () => {
     }
   }, [selectedCategory, restaurantId]);
 
+  // Log organic QR scans to database analytics
+  const hasLoggedScanRef = useRef(false);
+  useEffect(() => {
+    if (restaurantId && resolvedTableId && !hasLoggedScanRef.current) {
+      hasLoggedScanRef.current = true;
+      const userAgent = navigator.userAgent;
+      
+      supabase
+        .from('qr_scan_logs')
+        .insert({
+          restaurant_id: restaurantId,
+          table_id: resolvedTableId,
+          user_agent: userAgent
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error('Failed to log scan analytics:', error);
+          } else {
+            console.log('Organic QR scan logged successfully for table:', resolvedTableId);
+          }
+        });
+    }
+  }, [restaurantId, resolvedTableId]);
+
   const handleTableSelect = (tableNumber: string) => {
     setDynamicTableId(tableNumber);
     // Persist to localStorage for session survival
@@ -710,6 +749,8 @@ const CustomerMenu = () => {
   }, [cartItems, offers, taxRate]);
 
   const handlePlaceOrder = async () => {
+    if (isSubmittingOrder || createOrder.isPending) return;
+
     if (cartItems.length === 0) {
       toast({
         title: 'Cart is empty',
@@ -739,6 +780,8 @@ const CustomerMenu = () => {
       return;
     }
 
+    setIsSubmittingOrder(true);
+
     const subtotal = cartPricing.subtotal;
     const taxAmount = cartPricing.tax;
     const serviceCharge = (cartPricing.subtotal - cartPricing.totalDiscount) * (serviceChargeRate / 100);
@@ -751,6 +794,7 @@ const CustomerMenu = () => {
       });
       clearCart();
       setCurrentView('menu');
+      setIsSubmittingOrder(false);
       return;
     }
 
@@ -764,6 +808,7 @@ const CustomerMenu = () => {
           service_charge: serviceCharge,
           total_amount: total,
           status: 'pending',
+          idempotency_key: orderSessionId,
         },
         items: cartItems.map(item => ({
           name: item.name,
@@ -798,6 +843,8 @@ const CustomerMenu = () => {
         }
       }
 
+      // Generate a new idempotency key for the next order
+      setOrderSessionId(crypto.randomUUID());
       clearCart();
       setCurrentView('orders');
     } catch (err: any) {
@@ -807,7 +854,10 @@ const CustomerMenu = () => {
         description: err?.message || 'Failed to place order. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setIsSubmittingOrder(false);
     }
+
   };
 
   const handleCallWaiter = async () => {
@@ -852,7 +902,7 @@ const CustomerMenu = () => {
   };
 
 
-  const isInvalidTable = dynamicTableId && !tableLoading && (!tableData || tableData.active === false);
+  const isInvalidTable = dynamicTableId && !tableLoading && (!tableData || tableData.is_active === false);
 
   if (isInvalidTable) {
     return (
@@ -1294,9 +1344,9 @@ const CustomerMenu = () => {
             className="w-full bg-success hover:bg-success/90"
             size="lg"
             onClick={handlePlaceOrder}
-            disabled={createOrder.isPending}
+            disabled={isSubmittingOrder || createOrder.isPending}
           >
-            {createOrder.isPending ? (
+            {isSubmittingOrder || createOrder.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Placing Order...

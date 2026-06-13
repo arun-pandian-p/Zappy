@@ -195,7 +195,7 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
                       id={`qr-svg-${qr.id}`}
                       value={getQRValue(qr)}
                       size={100}
-                      level={meta.error_level || "M"}
+                      level={meta.error_level || (meta.logo_url ? "H" : "M")}
                       fgColor={meta.fg_color || "#000000"}
                       bgColor="transparent"
                       includeMargin={false}

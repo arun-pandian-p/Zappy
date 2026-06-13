@@ -17,6 +17,13 @@ export default function QRRedirect() {
         return;
       }
 
+      // Validate UUID format to prevent database query crashes on malformed route params
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!UUID_REGEX.test(id)) {
+        setError("This QR code reference is invalid.");
+        return;
+      }
+
       try {
         // Fetch the QR code from the database
         const { data: qrCode, error: fetchError } = await supabase
