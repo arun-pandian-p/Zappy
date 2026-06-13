@@ -29,6 +29,9 @@ import {
   CalendarClock,
   BarChart3,
   Star,
+  UtensilsCrossed,
+  QrCode,
+  Eye,
 } from "lucide-react";
 import {
   Sidebar,
@@ -55,6 +58,9 @@ interface NavItem {
 
 const allNavItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
+  { title: "Preview Site", icon: Eye, value: "preview" },
+  { title: "Menu", icon: UtensilsCrossed, value: "menu" },
+  { title: "QR Manager", icon: QrCode, value: "qr-manager" },
   { title: "Orders", icon: ClipboardList, value: "orders" },
   { title: "Tables", icon: Grid3X3, value: "tables" },
   { title: "Waiters", icon: Users, value: "waiters" },

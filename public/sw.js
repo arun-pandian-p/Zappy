@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zappy-cache-v1';
+const CACHE_NAME = 'zappy-cache-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -30,7 +30,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Stale-while-revalidate caching strategy
+// Stale-while-revalidate caching strategy, except Network-First for index.html/documents
 self.addEventListener('fetch', (event) => {
   // Only intercept local GET requests and avoid API calls
   if (
@@ -40,6 +40,32 @@ self.addEventListener('fetch', (event) => {
     event.request.url.includes('127.0.0.1') ||
     event.request.url.includes('/admin')
   ) {
+    return;
+  }
+
+  // Network-First for HTML/document requests to prevent serving stale index.html pointing to deleted chunks
+  const isHtmlRequest = 
+    event.request.headers.get('accept')?.includes('text/html') || 
+    event.request.url === self.location.origin ||
+    event.request.url === self.location.origin + '/' ||
+    event.request.url.endsWith('.html');
+
+  if (isHtmlRequest) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
+    );
     return;
   }
 
