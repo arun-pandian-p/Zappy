@@ -139,7 +139,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
-            className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 aspect-video"
+            className="relative overflow-hidden aspect-video flex items-center justify-center mix-blend-screen"
             style={{ scale: videoScale, opacity: videoOpacity }}>
             
             <video
@@ -154,8 +154,8 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
                 video.currentTime = 0;
                 video.play().catch(() => {});
               }}
-              className="w-full h-full object-cover"
-              src="/videos/brand-identity-2.mp4" />
+              className="w-full h-full object-contain pointer-events-none mix-blend-screen"
+              src="/videos/zappy-logo-animated.mp4" />
             
           </motion.div>
 
