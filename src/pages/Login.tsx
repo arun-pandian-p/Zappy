@@ -86,7 +86,7 @@ const Login = () => {
         
         <div className="text-center space-y-3 max-w-sm">
           <motion.img
-            src="/lovable-uploads/zappy-logo-white.png"
+            src="/zappy-uploads/zappy-logo-white.png"
             alt="ZAPPY - Scan, Order, Eat, Repeat"
             className="h-[140px] w-auto object-contain mx-auto"
             initial={{ opacity: 0, scale: 0.9 }}

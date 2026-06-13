@@ -71,7 +71,9 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               transition={{ delay: 0.2, duration: 0.7, type: 'spring' }}
               className="mb-6">
               
-              <img alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain" src="/lovable-uploads/53e47e43-08ad-46f9-a01e-426fd946553a.png" />
+              <div className="flex justify-center md:justify-start">
+                <img alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain" src="/zappy-uploads/53e47e43-08ad-46f9-a01e-426fd946553a.png" />
+              </div>
             </motion.div>
 
             <motion.p
