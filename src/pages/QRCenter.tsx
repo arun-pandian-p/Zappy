@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useQRCodes, useCreateQRCode, useUpdateQRCode, useDeleteQRCode, type QRCode } from "@/hooks/useQRCodes";
 import { useRestaurantDetails } from "@/hooks/useRestaurant";
-import { useTables } from "@/hooks/useTables";
+import { useTables, useCreateTable, useDeleteTable } from "@/hooks/useTables";
 import { getAppOrigin } from "@/utils/url";
 import { AdvancedQRBuilder } from "@/components/admin/qr/AdvancedQRBuilder";
 import { QRPrintCenter } from "@/components/admin/qr/QRPrintCenter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Download, Trash2, QrCode as QrCodeIcon, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus, Download, Trash2, QrCode as QrCodeIcon, Loader2, Grid3X3, X, ExternalLink } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -23,6 +25,12 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
   const createQR = useCreateQRCode();
   const updateQR = useUpdateQRCode();
   const deleteQR = useDeleteQRCode();
+  
+  const createTable = useCreateTable();
+  const deleteTable = useDeleteTable();
+  const [newTableNumber, setNewTableNumber] = useState("");
+  const [newTableCapacity, setNewTableCapacity] = useState("4");
+  
   const { toast } = useToast();
 
   const [editingQR, setEditingQR] = useState<QRCode | null>(null);
@@ -38,6 +46,62 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
       const msg = e instanceof Error ? e.message : JSON.stringify(e);
       console.error('Failed to delete QR code:', e);
       toast({ title: "Error", description: msg || "Failed to delete QR code", variant: "destructive" });
+    }
+  };
+
+  const handleAddTable = async () => {
+    if (!newTableNumber.trim()) {
+      toast({ title: "Enter table number", description: "Table number is required.", variant: "destructive" });
+      return;
+    }
+    try {
+      const table = await createTable.mutateAsync({
+        restaurant_id: restaurantId,
+        table_number: newTableNumber.trim(),
+        capacity: parseInt(newTableCapacity) || 4,
+        status: "available",
+      });
+
+      // Auto-create QR code for this table
+      await createQR.mutateAsync({
+        tenant_id: restaurantId,
+        qr_name: `Table ${newTableNumber.trim()}`,
+        target_url: `/order?r=${restaurantId}&table=${newTableNumber.trim()}`,
+        qr_type: "dynamic",
+        metadata: {
+          table_id: table.id,
+          table_number: newTableNumber.trim(),
+        },
+      });
+
+      toast({ title: "Table Added", description: `Table ${newTableNumber} created with tracked QR code.` });
+      setNewTableNumber("");
+      setNewTableCapacity("4");
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleDeleteTable = async (table: any) => {
+    if (!confirm(`Delete table ${table.table_number}? Its QR code will be deactivated.`)) return;
+    try {
+      console.log('UI_DELETE_CLICK', { component: 'QRCenter', handler: 'handleDeleteTable', tableId: table.id, restaurantId });
+      const dtRes = await deleteTable.mutateAsync({ id: table.id, restaurantId });
+      console.log('UI_DELETE_TABLE_RESULT', { tableId: table.id, dtRes });
+
+      // Deactivate matching QR code
+      const matchingQR = qrCodes.find(
+        (q) => (q.metadata as any)?.table_id === table.id
+      );
+      if (matchingQR) {
+        console.log('UI_DELETE_TRIGGER_QR', { matchingQRId: matchingQR.id, restaurantId });
+        const qrRes = await deleteQR.mutateAsync({ id: matchingQR.id, tenantId: restaurantId });
+        console.log('UI_DELETE_QR_RESULT', { matchingQRId: matchingQR.id, qrRes });
+      }
+
+      toast({ title: "Table Deleted", description: `Table ${table.table_number} removed.` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
@@ -182,7 +246,7 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
             <div className="col-span-full py-12 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
-          ) : qrCodes.map((qr) => {
+          ) : qrCodes.filter((qr) => qr.is_active !== false).map((qr) => {
             const meta = (qr.metadata as any) || {};
             return (
               <Card key={qr.id} className="group overflow-hidden rounded-3xl border-0 shadow-md hover:shadow-xl transition-all hover:-translate-y-1 bg-white dark:bg-zinc-950">
@@ -266,6 +330,87 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
             );
           })}
         </div>
+      )}
+
+      {!showBuilder && !editingQR && !isLoading && (
+        <Card className="border-0 shadow-lg rounded-3xl overflow-hidden bg-white dark:bg-zinc-950">
+          <CardHeader className="pb-3 border-b">
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <Grid3X3 className="w-5 h-5 text-primary" />
+              Table Management
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Add tables to auto-generate tracked QR codes. Each table gets its own dynamic QR.
+            </p>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row items-end gap-3 max-w-md">
+              <div className="space-y-1 flex-1 w-full">
+                <Label className="text-xs font-semibold">Table Number</Label>
+                <Input
+                  value={newTableNumber}
+                  onChange={(e) => setNewTableNumber(e.target.value)}
+                  placeholder="e.g. 1, 2, T3"
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="space-y-1 w-full sm:w-24">
+                <Label className="text-xs font-semibold">Capacity</Label>
+                <Input
+                  type="number"
+                  value={newTableCapacity}
+                  onChange={(e) => setNewTableCapacity(e.target.value)}
+                  min="1"
+                  max="20"
+                  className="rounded-xl"
+                />
+              </div>
+              <Button onClick={handleAddTable} disabled={createTable.isPending} className="rounded-xl gap-2 h-10 w-full sm:w-auto">
+                {createTable.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                Add Table
+              </Button>
+            </div>
+
+            {tables.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 pt-2">
+                {tables.map((table) => {
+                  const menuUrl = `/order?r=${restaurantId}&table=${table.table_number}`;
+                  return (
+                    <div
+                      key={table.id}
+                      className="relative group p-4 rounded-2xl border bg-slate-50 dark:bg-zinc-900/50 hover:border-primary/50 transition-all text-center space-y-3"
+                    >
+                      <div>
+                        <span className="font-bold text-base block text-slate-800 dark:text-slate-100">Table {table.table_number}</span>
+                        <span className="text-xs text-muted-foreground block">{table.capacity} seats</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs h-8 rounded-xl gap-1"
+                        onClick={() => window.open(menuUrl, '_blank')}
+                      >
+                        <ExternalLink className="w-3 h-3" /> Test Menu
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                        onClick={() => handleDeleteTable(table)}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-6 text-sm border border-dashed rounded-2xl">
+                No tables configured yet. Add one above to get started.
+              </p>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {!showBuilder && !isLoading && (

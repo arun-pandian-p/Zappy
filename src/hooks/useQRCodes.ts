@@ -115,19 +115,14 @@ export function useDeleteQRCode() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, tenantId }: { id: string; tenantId: string }) => {
-      // Use official Supabase client to call the Edge Function — this automatically adds the apikey and auth headers, preventing CORS errors
       console.log('DELETE_START', { id, tenantId });
       
-      try {
-        const { data: userData } = await supabase.auth.getUser();
-        console.log('USER_ID', userData?.user?.id);
-      } catch (e) {
-        console.warn('USER_ID_UNAVAILABLE', e);
-      }
-
-      const { data, error } = await supabase.functions.invoke('manage-qr', {
-        body: { action: 'deactivate', id }
-      });
+      const { data, error } = await supabase
+        .from("qr_codes" as any)
+        .update({ is_active: false })
+        .eq("id", id)
+        .select()
+        .single();
 
       console.log('DELETE_RESPONSE', { data, error });
       if (error) {
@@ -135,7 +130,7 @@ export function useDeleteQRCode() {
         throw new Error(error.message || 'Failed to deactivate QR code');
       }
 
-      return data;
+      return data as unknown as QRCode;
     },
     // Optimistic update: remove/deactivate QR locally for snappy UX
     onMutate: async (vars) => {
