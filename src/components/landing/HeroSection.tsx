@@ -72,14 +72,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               className="mb-6">
               
               <div className="flex justify-center md:justify-start">
-                <video 
-                  autoPlay 
-                  loop 
-                  muted 
-                  playsInline 
-                  className="h-24 sm:h-32 md:h-40 lg:h-48 w-auto object-contain mix-blend-screen pointer-events-none" 
-                  src="/videos/zappy-logo-animated.mp4" 
-                />
+                <img alt="ZAPPY" className="h-20 sm:h-28 md:h-36 lg:h-44 w-auto object-contain" src="/zappy-uploads/53e47e43-08ad-46f9-a01e-426fd946553a.png" />
               </div>
             </motion.div>
 
