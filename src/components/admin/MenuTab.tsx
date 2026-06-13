@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { CategoryManager } from "@/components/admin/CategoryManager";
-import BulkMenuImporter from "@/components/admin/BulkMenuImporter";
+import { MenuOCRImporter } from "@/components/admin/MenuOCRImporter";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { MenuPreviewCard } from "@/components/admin/MenuPreviewCard";
 import { EditMenuItemDialog } from "@/components/admin/EditMenuItemDialog";
@@ -46,6 +46,8 @@ import {
   type Category,
 } from "@/hooks/useMenuItems";
 import { bulkEnrichMenu, generateFoodImage } from "@/services/imageGenService";
+import { useRestaurantDetails } from "@/hooks/useRestaurant";
+import { FoodGraphReasoning } from "./FoodGraphReasoning";
 
 interface MenuTabProps {
   restaurantId: string;
@@ -64,6 +66,9 @@ export function MenuTab({
   const queryClient = useQueryClient();
   const [selectedAdminCategory, setSelectedAdminCategory] = useState("All");
   const [editingItem, setEditingItem] = useState<(MenuItem & { category?: Pick<Category, "id" | "name"> | null }) | null>(null);
+
+  const { data: restaurant } = useRestaurantDetails(restaurantId);
+  const subscriptionTier = restaurant?.subscription_tier || "free";
 
   const [newItem, setNewItem] = useState({
     name: "",
@@ -310,7 +315,7 @@ export function MenuTab({
               </div>
             </DialogContent>
           </Dialog>
-          <BulkMenuImporter restaurantId={restaurantId} />
+          <MenuOCRImporter restaurantId={restaurantId} />
         </div>
       </div>
 
@@ -469,6 +474,21 @@ export function MenuTab({
           </div>
         </div>
       </div>
+
+      {subscriptionTier === "enterprise" && (
+        <div className="border-t pt-8 mt-12">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">AI Recommendations & Food Graph</h3>
+              <p className="text-xs text-muted-foreground">Culinary reasoning & seasonal food pairings advisor.</p>
+            </div>
+          </div>
+          <FoodGraphReasoning restaurantId={restaurantId} menuItems={menuItems} />
+        </div>
+      )}
 
       {editingItem && (
         <EditMenuItemDialog

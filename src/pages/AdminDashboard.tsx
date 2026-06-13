@@ -21,6 +21,11 @@ import {
   Megaphone,
   Ticket,
   Lock as LockIcon,
+  Grid3X3,
+  Heart,
+  CalendarClock,
+  AlertCircle,
+  WifiOff,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -57,6 +62,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFeatureGate, type FeatureKey, type LockReason } from "@/hooks/useFeatureGate";
 import { FeatureLockedModal } from "@/components/admin/FeatureLockedModal";
 import { useQueryClient } from "@tanstack/react-query";
+import { TableManagement } from "@/components/admin/TableManagement";
+import { WaiterManagementPanel } from "@/components/admin/WaiterManagementPanel";
+import { CustomerManagement } from "@/components/admin/CustomerManagement";
+import { SalesAnalytics } from "@/components/admin/SalesAnalytics";
+import { StaffManagement } from "@/components/admin/StaffManagement";
+import { ReportsPanel } from "@/components/admin/ReportsPanel";
 
 /** Append cache-busting param to storage URLs */
 function cacheBustUrl(url: string | null | undefined): string | null {
@@ -75,17 +86,18 @@ const DEMO_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
 
 const mainTabs = [
   { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { value: "menu", label: "Menu", icon: UtensilsCrossed },
   { value: "orders", label: "Orders", icon: ClipboardList },
+  { value: "tables", label: "Tables", icon: Grid3X3 },
+  { value: "waiters", label: "Waiters", icon: Users },
   { value: "kitchen", label: "Kitchen", icon: ChefHat },
   { value: "billing", label: "Billing", icon: Receipt },
-  { value: "marketing", label: "Marketing", icon: Sparkles },
-  { value: "reviews", label: "Reviews", icon: Star },
-  { value: "users", label: "Users", icon: Users },
   { value: "inventory", label: "Inventory", icon: Package },
-  { value: "exports", label: "Exports", icon: FileSpreadsheet },
-  { value: "qr-manager", label: "QR Manager", icon: QrCode },
-  { value: "preview", label: "Preview Site", icon: Eye },
+  { value: "marketing", label: "Marketing", icon: Sparkles },
+  { value: "customers", label: "Customers", icon: Heart },
+  { value: "analytics", label: "Analytics", icon: BarChart3 },
+  { value: "staff", label: "Staff", icon: CalendarClock },
+  { value: "reports", label: "Reports", icon: FileSpreadsheet },
+  { value: "reviews", label: "Reputation", icon: Star },
   { value: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -98,6 +110,26 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [previewRefreshKey, setPreviewRefreshKey] = useState(0);
   const { user, role, restaurantId: authRestaurantId, loading: authLoading } = useAuth();
+  
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [wsStatus, setWsStatus] = useState<"connected" | "disconnected">("connected");
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      toast({ title: "Back Online", description: "Your internet connection has been restored." });
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast({ title: "Connection Lost", description: "You are currently working offline.", variant: "destructive" });
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [toast]);
 
   useEffect(() => {
     if (activeTab === "preview") {
@@ -187,7 +219,13 @@ const AdminDashboard = () => {
           toast({ title: "New Order!", description: "A new order has been placed." });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          setWsStatus("connected");
+        } else if (status === "CLOSED" || status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          setWsStatus("disconnected");
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -221,32 +259,21 @@ const AdminDashboard = () => {
             logoUrl={cacheBustUrl(restaurant?.logo_url)}
           />
 
-          <div className="border-b bg-card overflow-x-auto">
-            <div className="px-6">
-              <Tabs value={activeTab} onValueChange={handleTabChange}>
-                <TabsList className="h-12 bg-transparent border-0 p-0 gap-4 flex-wrap">
-                  {mainTabs.map((tab) => {
-                    const reason = isLocked(tab.value as FeatureKey);
-                    const locked = !!reason;
-                    return (
-                      <TabsTrigger
-                        key={tab.value}
-                        value={tab.value}
-                        className={cn(
-                          "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 px-0",
-                          locked && "opacity-50"
-                        )}
-                      >
-                        <tab.icon className="w-4 h-4 mr-2" />
-                        {tab.label}
-                        {locked && <LockIcon className="w-3 h-3 ml-1 opacity-60" />}
-                      </TabsTrigger>
-                    );
-                  })}
-                </TabsList>
-              </Tabs>
+          {!isOnline && (
+            <div className="bg-destructive text-destructive-foreground px-6 py-2 flex items-center gap-2 text-xs font-semibold animate-pulse">
+              <WifiOff className="w-4 h-4 shrink-0" />
+              <span>🔌 You are currently working offline. Real-time updates and active syncing are suspended until connection returns.</span>
             </div>
-          </div>
+          )}
+
+          {isOnline && wsStatus === "disconnected" && (
+            <div className="bg-amber-500 text-white px-6 py-2 flex items-center gap-2 text-xs font-semibold">
+              <AlertCircle className="w-4 h-4 shrink-0 animate-bounce" />
+              <span>⚠️ Real-time connection interrupted. Attempting to re-establish live WebSocket listener channel...</span>
+            </div>
+          )}
+
+
 
           <main className="p-6">
             <AnimatePresence mode="wait">
@@ -285,6 +312,30 @@ const AdminDashboard = () => {
                     restaurantId={restaurantId} 
                     currencySymbol={currencySymbol}
                   />
+                </motion.div>
+              )}
+
+              {activeTab === "tables" && (
+                <motion.div
+                  key="tables"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <TableManagement restaurantId={restaurantId} />
+                </motion.div>
+              )}
+
+              {activeTab === "waiters" && (
+                <motion.div
+                  key="waiters"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <WaiterManagementPanel restaurantId={restaurantId} />
                 </motion.div>
               )}
 
@@ -355,47 +406,13 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold tracking-tight">Marketing Center</h2>
-                      <p className="text-sm text-muted-foreground">Manage your campaigns, ads, coupons, and track conversion ROI.</p>
+                      <p className="text-sm text-muted-foreground">Manage your custom banner advertisements and promotional spaces.</p>
                     </div>
                   </div>
 
-                  <Tabs defaultValue="analytics" className="w-full space-y-6">
-                    <TabsList className="bg-muted/50 p-1 rounded-xl w-fit flex flex-wrap gap-1">
-                      <TabsTrigger value="analytics" className="rounded-lg px-4 py-2 gap-2 text-xs font-semibold">
-                        <BarChart3 className="w-4 h-4" />
-                        Campaign Analytics
-                      </TabsTrigger>
-                      <TabsTrigger value="promotions" className="rounded-lg px-4 py-2 gap-2 text-xs font-semibold">
-                        <Megaphone className="w-4 h-4" />
-                        Promotions
-                      </TabsTrigger>
-                      <TabsTrigger value="coupons" className="rounded-lg px-4 py-2 gap-2 text-xs font-semibold">
-                        <Ticket className="w-4 h-4" />
-                        Coupons & Offers
-                      </TabsTrigger>
-                      <TabsTrigger value="ads" className="rounded-lg px-4 py-2 gap-2 text-xs font-semibold">
-                        <Sparkles className="w-4 h-4" />
-                        Banner Ads Manager
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="analytics" className="space-y-6 outline-none">
-                      <MarketingAnalyticsDashboard restaurantId={restaurantId} />
-                    </TabsContent>
-
-                    <TabsContent value="promotions" className="space-y-6 outline-none">
-                      <OffersManager restaurantId={restaurantId} />
-                      <PlatformAdsReadOnly restaurantId={restaurantId} />
-                    </TabsContent>
-
-                    <TabsContent value="coupons" className="outline-none">
-                      <CouponManager restaurantId={restaurantId} />
-                    </TabsContent>
-
-                    <TabsContent value="ads" className="outline-none">
-                      <AdsManager restaurantId={restaurantId} />
-                    </TabsContent>
-                  </Tabs>
+                  <div className="space-y-6">
+                    <AdsManager restaurantId={restaurantId} />
+                  </div>
                 </motion.div>
               )}
 
@@ -444,6 +461,54 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <InventoryManager restaurantId={restaurantId} />
+                </motion.div>
+              )}
+
+              {activeTab === "customers" && (
+                <motion.div
+                  key="customers"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <CustomerManagement restaurantId={restaurantId} />
+                </motion.div>
+              )}
+
+              {activeTab === "analytics" && (
+                <motion.div
+                  key="analytics"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <SalesAnalytics restaurantId={restaurantId} />
+                </motion.div>
+              )}
+
+              {activeTab === "staff" && (
+                <motion.div
+                  key="staff"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <StaffManagement restaurantId={restaurantId} />
+                </motion.div>
+              )}
+
+              {activeTab === "reports" && (
+                <motion.div
+                  key="reports"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ReportsPanel restaurantId={restaurantId} />
                 </motion.div>
               )}
 

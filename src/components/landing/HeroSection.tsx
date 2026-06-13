@@ -1,11 +1,12 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Zap, ChevronDown } from 'lucide-react';
+import { ArrowRight, Zap, ChevronDown, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRef, useEffect } from 'react';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
-  onScanDemo: () => void;
+  onBookDemo: () => void;
+  onWatchTour: () => void;
   cms?: Record<string, any>;
 }
 
@@ -16,10 +17,10 @@ const stats = [
   { value: 'AI', label: 'Powered' }
 ];
 
-const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
-  const headline = cms?.headline || 'One Platform. Every Restaurant Operation.';
-  const subtitle = cms?.subtitle || 'Manage menus, orders, billing, kitchen workflows, analytics, and customer experiences from one unified Restaurant Operating System.';
-  const ctaText = cms?.cta_text || 'Start Free';
+const HeroSection = ({ onGetStarted, onBookDemo, onWatchTour, cms }: HeroSectionProps) => {
+  const headline = cms?.headline || 'Run Your Entire Restaurant from One Dashboard';
+  const subtitle = cms?.subtitle || 'Orders, Tables, Kitchen, Staff, Inventory, Billing, Analytics and Marketing — all powered by ZAPPY.';
+  const ctaText = cms?.cta_text || 'Start Free Trial';
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
@@ -82,8 +83,7 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.6 }}
               className="text-4xl sm:text-5xl lg:text-6xl font-black text-primary-foreground tracking-tight mb-6 leading-tight max-w-xl">
-              One Platform. <br />
-              <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Every Restaurant Operation.</span>
+              <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">{headline}</span>
             </motion.h1>
 
             <motion.p
@@ -98,21 +98,29 @@ const HeroSection = ({ onGetStarted, onScanDemo, cms }: HeroSectionProps) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.6 }}
-              className="flex flex-col sm:flex-row items-center lg:items-start gap-4 w-full sm:w-auto">
+              className="flex flex-col sm:flex-row flex-wrap items-center lg:items-start gap-3 w-full sm:w-auto">
               
               <Button
                 size="lg"
-                className="w-full sm:w-auto px-10 py-7 text-lg rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_40px_hsl(var(--primary)/0.4)] group font-bold"
+                className="w-full sm:w-auto px-6 py-6 text-base rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_30px_hsl(var(--primary)/0.3)] group font-bold"
                 onClick={onGetStarted}>
-                <Zap className="w-5 h-5 mr-2" />
+                <Zap className="w-4.5 h-4.5 mr-1.5" />
                 {ctaText}
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-1.5 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button
                 size="lg"
-                className="w-full sm:w-auto px-10 py-7 text-lg rounded-full bg-primary-foreground text-foreground hover:bg-primary-foreground/90 font-semibold shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-                onClick={onScanDemo}>
+                className="w-full sm:w-auto px-6 py-6 text-base rounded-full bg-primary-foreground text-foreground hover:bg-primary-foreground/90 font-semibold"
+                onClick={onBookDemo}>
                 Book Demo
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto px-6 py-6 text-base rounded-full border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-foreground font-semibold"
+                onClick={onWatchTour}>
+                <Play className="w-4 h-4 mr-1.5 fill-current" />
+                Watch Tour
               </Button>
             </motion.div>
 

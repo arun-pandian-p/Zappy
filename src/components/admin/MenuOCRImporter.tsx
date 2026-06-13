@@ -69,7 +69,7 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
     try {
       const items = await processMenuFile(
         file,
-        { ocrEngine, languageCode },
+        { ocrEngine, languageCode, restaurantId },
         (p: OCRProgress) => {
           setProgressStatus(p.status);
           setProgressValue(p.progress);
@@ -103,7 +103,7 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
       setIsProcessing(false);
       setProgressValue(100);
     }
-  }, [toast, ocrEngine, languageCode]);
+  }, [toast, ocrEngine, languageCode, restaurantId]);
 
   // Bulk file handler
   const handleBulkFiles = useCallback(async (files: File[]) => {
@@ -113,7 +113,8 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
 
     const results = await processMenuFilesBatch(
       files,
-      { ocrEngine, languageCode },
+      { ocrEngine, languageCode, restaurantId },
+
       (idx, result) => {
         setBatchResults(prev => {
           const newResults = [...prev];
@@ -153,7 +154,7 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
       title: "Batch Processing Complete",
       description: `${successCount} files processed, ${allItems.length} items extracted${failCount > 0 ? `, ${failCount} files failed` : ""}.`,
     });
-  }, [toast, ocrEngine, languageCode]);
+  }, [toast, ocrEngine, languageCode, restaurantId]);
 
   // File input handler
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

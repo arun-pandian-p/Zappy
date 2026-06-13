@@ -1,31 +1,45 @@
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogIn, Menu, X } from 'lucide-react';
+import { LogIn, Menu, X, Play, Loader2, Send, CheckCircle2 } from 'lucide-react';
 import { ZappyLogo } from '@/components/branding/ZappyLogo';
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import ScrollProgress from '@/components/landing/ScrollProgress';
 import HeroSection from '@/components/landing/HeroSection';
-import BrandStrip from '@/components/landing/BrandStrip';
 import FeaturesSection from '@/components/landing/FeaturesSection';
-import ProductDemo from '@/components/landing/ProductDemo';
 import HowItWorks from '@/components/landing/HowItWorks';
 import DashboardCarousel from '@/components/landing/DashboardCarousel';
 import LiveDashboardTeaser from '@/components/landing/LiveDashboardTeaser';
-import IntegrationsCloud from '@/components/landing/IntegrationsCloud';
 import PricingSection from '@/components/landing/PricingSection';
-import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import FAQSection from '@/components/landing/FAQSection';
 import CTABanner from '@/components/landing/CTABanner';
 import Footer from '@/components/landing/Footer';
-import TrustCounters from '@/components/landing/TrustCounters';
 import ParallaxSection from '@/components/landing/ParallaxSection';
 import { useLandingCMS } from '@/hooks/useLandingCMS';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { invokeFunction } from '@/integrations/supabase/functions';
+import { toast } from '@/hooks/use-toast';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showFloatingButton, setShowFloatingButton] = useState(false);
+  const [bookDemoOpen, setBookDemoOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+  const [demoSubmitting, setDemoSubmitting] = useState(false);
+  const [demoSubmitted, setDemoSubmitted] = useState(false);
+
+  const [demoForm, setDemoForm] = useState({
+    name: '',
+    restaurantName: '',
+    phone: '',
+    email: '',
+    branches: '1',
+    city: ''
+  });
+
   const { sections } = useLandingCMS();
 
   // Build a map of section_key -> content for easy access
@@ -40,10 +54,58 @@ const LandingPage = () => {
   const isVisible = (key: string) => cms[key]?.visible !== false;
 
   const handleGetStarted = () => navigate('/login');
-  const handleScanDemo = () => navigate('/order?slug=arun&table=T1&demo=true');
   const handleSelectPlan = (plan: string) => {
     console.log('Selected plan:', plan);
     navigate('/login');
+  };
+
+  const handleBookDemoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!demoForm.name || !demoForm.email || !demoForm.restaurantName) {
+      toast({ title: 'Please fill in Name, Restaurant, and Email', variant: 'destructive' });
+      return;
+    }
+    setDemoSubmitting(true);
+
+    try {
+      const { error } = await invokeFunction('notify-quote', {
+        body: {
+          name: demoForm.name,
+          email: demoForm.email,
+          phone: demoForm.phone || null,
+          restaurant_name: demoForm.restaurantName,
+          city: demoForm.city || null,
+          num_tables: 0,
+          current_system: 'demo_request',
+          features_needed: [`Branches: ${demoForm.branches}`],
+          message: `Demo request from Zappy landing page. City: ${demoForm.city}, Branches: ${demoForm.branches}.`,
+          is_demo_request: true,
+          branches: demoForm.branches
+        }
+      });
+
+      if (error) throw error;
+
+      setDemoSubmitted(true);
+      toast({ title: 'Request Submitted!', description: 'We will contact you shortly.' });
+      setDemoForm({
+        name: '',
+        restaurantName: '',
+        phone: '',
+        email: '',
+        branches: '1',
+        city: ''
+      });
+      setTimeout(() => {
+        setBookDemoOpen(false);
+        setDemoSubmitted(false);
+      }, 3000);
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: 'Submission failed', description: err.message || 'Something went wrong.', variant: 'destructive' });
+    } finally {
+      setDemoSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -97,7 +159,8 @@ const LandingPage = () => {
                 <LogIn className="w-4 h-4 mr-2" />
                 Login
               </Button>
-              <Button onClick={handleGetStarted}>Get Started</Button>
+              <Button onClick={() => setBookDemoOpen(true)}>Book Demo</Button>
+              <Button variant="outline" onClick={handleGetStarted}>Start Free Trial</Button>
             </div>
 
             <Button
@@ -130,7 +193,8 @@ const LandingPage = () => {
                 )}
                 <div className="pt-4 border-t flex flex-col gap-2">
                   <Button variant="outline" onClick={() => navigate('/login')}>Login</Button>
-                  <Button onClick={handleGetStarted}>Get Started</Button>
+                  <Button onClick={() => { setMobileMenuOpen(false); setBookDemoOpen(true); }}>Book Demo</Button>
+                  <Button onClick={handleGetStarted}>Start Free Trial</Button>
                 </div>
               </div>
             </motion.div>
@@ -142,18 +206,20 @@ const LandingPage = () => {
       <main className="pt-16">
         {/* 1. Hero */}
         {isVisible('hero') &&
-          <HeroSection onGetStarted={handleGetStarted} onScanDemo={handleScanDemo} cms={cms.hero?.content} />
+          <HeroSection 
+            onGetStarted={handleGetStarted} 
+            onBookDemo={() => setBookDemoOpen(true)} 
+            onWatchTour={() => setTourOpen(true)}
+            cms={cms.hero?.content} 
+          />
         }
 
-        {/* 2. Brand strip */}
-        <BrandStrip />
-
-        {/* 3. Live Dashboard Teaser */}
+        {/* 2. Live Dashboard Teaser */}
         <ParallaxSection yOffset={30} fadeIn>
           <LiveDashboardTeaser />
         </ParallaxSection>
 
-        {/* 4. Features */}
+        {/* 3. Features */}
         {isVisible('features') &&
           <ParallaxSection yOffset={35} fadeIn>
             <div id="features">
@@ -162,12 +228,7 @@ const LandingPage = () => {
           </ParallaxSection>
         }
 
-        {/* 5. Product Demo */}
-        <ParallaxSection yOffset={25} fadeIn scaleUp>
-          <ProductDemo />
-        </ParallaxSection>
-
-        {/* 6. How it works */}
+        {/* 4. How it works */}
         {isVisible('how_it_works') &&
           <ParallaxSection yOffset={30} fadeIn>
             <div id="how-it-works">
@@ -176,29 +237,12 @@ const LandingPage = () => {
           </ParallaxSection>
         }
 
-        {/* 7. Dashboard Carousel */}
+        {/* 5. Dashboard Carousel */}
         <ParallaxSection yOffset={20} fadeIn>
           <DashboardCarousel />
         </ParallaxSection>
-        
-        {/* 8. Integrations Cloud */}
-        <ParallaxSection yOffset={25} fadeIn>
-          <IntegrationsCloud />
-        </ParallaxSection>
 
-        {/* 9. Testimonials */}
-        {isVisible('testimonials') &&
-          <ParallaxSection yOffset={20} fadeIn>
-            <TestimonialsSection cms={cms.testimonials?.content} />
-          </ParallaxSection>
-        }
-
-        {/* 10. Trust Counters */}
-        <ParallaxSection yOffset={20} fadeIn>
-          <TrustCounters />
-        </ParallaxSection>
-
-        {/* 11. Pricing */}
+        {/* 6. Pricing */}
         {isVisible('pricing') &&
           <ParallaxSection yOffset={30} fadeIn>
             <div id="pricing">
@@ -207,20 +251,20 @@ const LandingPage = () => {
           </ParallaxSection>
         }
 
-        {/* 12. FAQ */}
+        {/* 7. FAQ */}
         <ParallaxSection yOffset={20} fadeIn>
           <div id="faq">
             <FAQSection />
           </div>
         </ParallaxSection>
 
-        {/* 13. CTA Banner */}
+        {/* 8. CTA Banner */}
         {isVisible('cta_banner') &&
           <CTABanner onGetStarted={handleGetStarted} cms={cms.cta_banner?.content} />
         }
       </main>
 
-      {/* 14. Footer */}
+      {/* 9. Footer */}
       {isVisible('footer') && <Footer cms={cms.footer?.content} />}
 
       {/* Floating Book Demo button */}
@@ -233,7 +277,7 @@ const LandingPage = () => {
             className="fixed bottom-6 right-6 z-40"
           >
             <Button
-              onClick={handleScanDemo}
+              onClick={() => setBookDemoOpen(true)}
               size="lg"
               className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 px-6 py-6"
             >
@@ -242,6 +286,128 @@ const LandingPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Book Demo Modal */}
+      <Dialog open={bookDemoOpen} onOpenChange={setBookDemoOpen}>
+        <DialogContent className="max-w-md rounded-3xl" aria-describedby="demo-desc">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900">Book ZAPPY Demo</DialogTitle>
+            <DialogDescription id="demo-desc">
+              Request a live interactive product tour and demo with our restaurant solution specialist.
+            </DialogDescription>
+          </DialogHeader>
+
+          {demoSubmitted ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+              <CheckCircle2 className="w-16 h-16 text-green-500 animate-bounce" />
+              <h3 className="text-lg font-bold text-slate-800">Request Received!</h3>
+              <p className="text-sm text-muted-foreground">We'll reach out to schedule your tour shortly.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleBookDemoSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="demo-name" className="text-xs font-semibold">Your Name *</Label>
+                <Input
+                  id="demo-name"
+                  placeholder="John Doe"
+                  value={demoForm.name}
+                  onChange={(e) => setDemoForm({ ...demoForm, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="demo-rest" className="text-xs font-semibold">Restaurant Name *</Label>
+                <Input
+                  id="demo-rest"
+                  placeholder="Bella Italia Bistro"
+                  value={demoForm.restaurantName}
+                  onChange={(e) => setDemoForm({ ...demoForm, restaurantName: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="demo-phone" className="text-xs font-semibold">Phone *</Label>
+                  <Input
+                    id="demo-phone"
+                    placeholder="+91 98765 43210"
+                    value={demoForm.phone}
+                    onChange={(e) => setDemoForm({ ...demoForm, phone: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="demo-email" className="text-xs font-semibold">Email *</Label>
+                  <Input
+                    id="demo-email"
+                    type="email"
+                    placeholder="john@restaurant.com"
+                    value={demoForm.email}
+                    onChange={(e) => setDemoForm({ ...demoForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="demo-branches" className="text-xs font-semibold">Number of Branches</Label>
+                  <Input
+                    id="demo-branches"
+                    type="number"
+                    min="1"
+                    placeholder="1"
+                    value={demoForm.branches}
+                    onChange={(e) => setDemoForm({ ...demoForm, branches: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="demo-city" className="text-xs font-semibold">City *</Label>
+                  <Input
+                    id="demo-city"
+                    placeholder="Mumbai"
+                    value={demoForm.city}
+                    onChange={(e) => setDemoForm({ ...demoForm, city: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" disabled={demoSubmitting} className="w-full rounded-2xl h-11 font-bold gap-2">
+                {demoSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Submit Demo Request
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Watch Tour Modal */}
+      <Dialog open={tourOpen} onOpenChange={setTourOpen}>
+        <DialogContent className="max-w-3xl rounded-3xl overflow-hidden p-0 border-0 bg-black" aria-describedby="tour-desc">
+          <DialogHeader className="p-4 bg-zinc-900 flex flex-row items-center justify-between text-white border-b border-zinc-800">
+            <div>
+              <DialogTitle className="text-base font-bold">ZAPPY Product Tour</DialogTitle>
+              <DialogDescription id="tour-desc" className="text-xs text-zinc-400">
+                A brief overview of our integrated Restaurant OS.
+              </DialogDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setTourOpen(false)} className="text-white hover:bg-zinc-800">
+              <X className="w-4 h-4" />
+            </Button>
+          </DialogHeader>
+          <div className="aspect-video w-full">
+            <video
+              src="/videos/brand-identity-2.mp4"
+              controls
+              autoPlay
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

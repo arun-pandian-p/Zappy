@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,14 +8,97 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Star, MessageSquare, AlertCircle, CheckCircle2,
-  TrendingUp, Ticket, Brain, RefreshCw, Smartphone, Globe
+  TrendingUp, Ticket, Brain, RefreshCw, Smartphone, Globe, Sparkles, Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { executeOpenAIChatCall } from '@/services/openaiService';
 
 export const ReputationManager = ({ restaurantId }: { restaurantId: string }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'all' | 'needs_attention' | 'recovered' | 'positive'>('all');
+
+  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
+  const [insightsReport, setInsightsReport] = useState<string | null>(null);
+  const [showInsights, setShowInsights] = useState(false);
+
+  // Load cached insights on mount
+  useEffect(() => {
+    const cached = localStorage.getItem(`zappy_weekly_insights_${restaurantId}`);
+    if (cached) {
+      setInsightsReport(cached);
+      setShowInsights(true);
+    }
+  }, [restaurantId]);
+
+  const { data: restaurant } = useQuery({
+    queryKey: ['restaurant_details_reputation', restaurantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('subscription_tier')
+        .eq('id', restaurantId)
+        .single();
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const subscriptionTier = restaurant?.subscription_tier || 'free';
+  const isEnterprise = subscriptionTier === 'enterprise';
+
+  const generateWeeklyInsights = async () => {
+    if (reviews.length === 0) {
+      toast({
+        title: "No Data Available",
+        description: "Requires at least one customer review to run insights summary.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGeneratingInsights(true);
+    try {
+      const recentReviews = reviews.slice(0, 15).map((r: any) => ({
+        rating: r.overall_rating,
+        comment: r.comment || "",
+        sentiment: r.review_ai_insights?.[0]?.sentiment || "neutral",
+        categories: r.review_ai_insights?.[0]?.complaint_categories || [],
+      }));
+
+      const systemPrompt = `You are a high-end restaurant consultant and operations analyst. 
+Analyze the recent feedback data and write a clean, structured weekly report.
+Identify recurring patterns, systemic operations failures, and actionable fixes.
+Use professional tone and markdown bullet lists. Keep it brief.`;
+
+      const userPrompt = `Recent customer feedback logs:
+${JSON.stringify(recentReviews, null, 2)}`;
+
+      const report = await executeOpenAIChatCall(
+        restaurantId,
+        "superadmin_ai_insights",
+        [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ]
+      );
+
+      if (report) {
+        setInsightsReport(report);
+        localStorage.setItem(`zappy_weekly_insights_${restaurantId}`, report);
+        setShowInsights(true);
+        toast({ title: "Insights Generated", description: "Weekly executive summary is ready." });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Generation Failed",
+        description: err.message || "Failed to compile weekly report.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingInsights(false);
+    }
+  };
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ['enterprise_reviews', restaurantId],
@@ -164,10 +247,49 @@ export const ReputationManager = ({ restaurantId }: { restaurantId: string }) =>
           <h2 className="text-3xl font-bold tracking-tight">Reputation Center</h2>
           <p className="text-muted-foreground mt-1">AI-powered sentiment analysis and customer recovery.</p>
         </div>
-        <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['enterprise_reviews', restaurantId] })}>
-          <RefreshCw className="w-4 h-4 mr-2" /> Refresh
-        </Button>
+        <div className="flex gap-2">
+          {isEnterprise && (
+            <Button 
+              className="gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl shadow-md hover:scale-105 transition-transform"
+              onClick={generateWeeklyInsights}
+              disabled={isGeneratingInsights}
+            >
+              {isGeneratingInsights ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
+              AI Weekly Insights
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['enterprise_reviews', restaurantId] })}>
+            <RefreshCw className="w-4 h-4 mr-2" /> Refresh
+          </Button>
+        </div>
       </div>
+
+      {/* Weekly AI Insights Report Card (Enterprise-only) */}
+      {isEnterprise && insightsReport && showInsights && (
+        <Card className="border-indigo-150 bg-gradient-to-br from-indigo-50/50 to-transparent dark:from-indigo-950/20">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-indigo-950 dark:text-indigo-100 flex items-center gap-2">
+                <Brain className="w-5 h-5 text-indigo-600" />
+                AI Weekly Operations Insights
+              </CardTitle>
+              <CardDescription>Generated weekly executive summary based on restaurant complaints & feedback trends</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setShowInsights(false)}>
+              Dismiss
+            </Button>
+          </CardHeader>
+          <CardContent className="prose dark:prose-invert max-w-none text-sm space-y-2 text-slate-800 dark:text-slate-200">
+            <div className="p-4 rounded-xl border border-indigo-100 bg-white/50 dark:bg-black/20 leading-relaxed whitespace-pre-line">
+              {insightsReport}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

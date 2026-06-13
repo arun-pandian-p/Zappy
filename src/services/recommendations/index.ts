@@ -34,7 +34,19 @@ export function getCartRecommendations(
     weather: "normal" // Could be wired up to an API
   };
 
-  return scoreRecommendations(items, context, availableItems, dbPairings);
+  let activePairings = dbPairings;
+  if (!activePairings && typeof window !== "undefined") {
+    const cached = localStorage.getItem("zappy_approved_pairings");
+    if (cached) {
+      try {
+        activePairings = JSON.parse(cached);
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  return scoreRecommendations(items, context, availableItems, activePairings);
 }
 
 // Export intelligent sub-systems for future UI expansion

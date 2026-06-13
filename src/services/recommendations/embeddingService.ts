@@ -147,3 +147,43 @@ export const NODE_EMBEDDINGS: Record<string, Vector> = {};
 Object.entries(FOOD_NODES).forEach(([key, node]) => {
   NODE_EMBEDDINGS[key] = generateEmbedding(node);
 });
+
+/**
+ * Fetch dense OpenAI embeddings (text-embedding-3-small) with local vector caching.
+ * Gated by tier eligibility and cost tracking limits.
+ */
+export async function getOpenAIEmbedding(text: string, restaurantId: string): Promise<Vector> {
+  const normalizedText = text.trim().toLowerCase();
+  const cacheKey = `zappy_openai_emb_${normalizedText.replace(/\s+/g, "_")}`;
+  
+  // Try local cache first
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    try {
+      const arr: number[] = JSON.parse(cached);
+      const vec: Vector = new Map();
+      arr.forEach((v, i) => vec.set(`dim:${i}`, v));
+      return vec;
+    } catch {
+      // ignore parsing errors and re-query
+    }
+  }
+
+  // Import dynamically/statically to fetch OpenAI embeddings
+  const { executeOpenAIEmbeddingCall } = await import("../openaiService");
+  const embeddings = await executeOpenAIEmbeddingCall(restaurantId, [text]);
+  const embedding = embeddings[0];
+
+  if (embedding) {
+    // Cache the dense array representation
+    localStorage.setItem(cacheKey, JSON.stringify(embedding));
+    
+    // Convert dense array into compatible Vector Map
+    const vec: Vector = new Map();
+    embedding.forEach((v, i) => vec.set(`dim:${i}`, v));
+    return vec;
+  }
+
+  throw new Error("Failed to retrieve embedding from OpenAI API.");
+}
+

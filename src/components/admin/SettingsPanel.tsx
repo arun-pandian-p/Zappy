@@ -52,6 +52,7 @@ import { getAppOrigin } from "@/utils/url";
 import { sanitize } from "@/utils/sanitize";
 
 
+
 interface SettingsPanelProps {
   restaurantId: string;
 }
@@ -989,6 +990,8 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
       </motion.div>
 
       {/* Profile & Avatar */}
+
+
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

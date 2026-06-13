@@ -14,6 +14,7 @@ import { cleanOCRText } from "./textCleaner";
 import { parseMenuFromText, parseMenuFromCSV, type ParsedMenuItem } from "./menuParser";
 import { tracer } from "./telemetry";
 import { SpanStatusCode } from "@opentelemetry/api";
+import { executeOpenAIVisionCall } from "./openaiService";
 
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
@@ -272,6 +273,7 @@ async function extractWordText(file: File): Promise<string> {
 export interface OCROptions {
   ocrEngine?: "paddle" | "surya" | "tesseract" | "easy";
   languageCode?: string;
+  restaurantId?: string;
 }
 
 export async function processMenuFile(
@@ -358,6 +360,83 @@ export async function processMenuFile(
         items = parseMenuFromCSV(cleanedText);
       } else {
         items = parseMenuFromText(cleanedText);
+      }
+
+      // Calculate completeness & fallback to OpenAI Vision if needed
+      const totalLines = cleanedText.split("\n").filter(l => l.trim().length > 5).length;
+      const parsedCount = items.length;
+      const completeness = totalLines > 0 ? (parsedCount / totalLines) : 0;
+      
+      const needsVisionFallback = (completeness < 0.3 || items.length === 0) && (fileType === "image" || fileType === "pdf");
+      const restaurantId = options?.restaurantId || "00000000-0000-0000-0000-000000000001";
+
+      if (needsVisionFallback) {
+        try {
+          console.log(`[OCR] Low local completeness (${completeness.toFixed(2)}) or no items found. Triggering OpenAI Vision Fallback...`);
+          onProgress?.({ status: "Low local confidence. Running AI Vision Fallback...", progress: 85 });
+          
+          const imagesList: string[] = [];
+          if (fileType === "image") {
+            const base64Image = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            imagesList.push(base64Image);
+          } else if (fileType === "pdf") {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const totalPages = Math.min(pdf.numPages, 3); // Max 3 pages
+            for (let i = 1; i <= totalPages; i++) {
+              const page = await pdf.getPage(i);
+              const viewport = page.getViewport({ scale: 1.5 });
+              const canvas = document.createElement("canvas");
+              canvas.width = viewport.width;
+              canvas.height = viewport.height;
+              const ctx = canvas.getContext("2d")!;
+              await page.render({ canvasContext: ctx, viewport }).promise;
+              imagesList.push(canvas.toDataURL("image/jpeg", 0.8));
+              canvas.remove();
+            }
+          }
+
+          if (imagesList.length > 0) {
+            const promptText = `Analyze the restaurant menu image(s) and extract all menu items.
+You must return a JSON object containing a single key "items" with an array of objects matching this TypeScript type:
+interface ParsedMenuItem {
+  name: string;
+  price: number;
+  category: string;
+  description: string;
+  confidence: number; // between 0 and 100, representing your extraction confidence
+  isVegetarian: boolean;
+  isVegan: boolean;
+  isJain: boolean;
+  isGlutenFree: boolean;
+}
+Do not add markdown backticks or extra text, just raw JSON.`;
+
+            const aiResponse = await executeOpenAIVisionCall(restaurantId, "ocr_menu_import_fallback", imagesList, promptText);
+            const parsed = JSON.parse(aiResponse);
+            if (parsed && Array.isArray(parsed.items) && parsed.items.length > 0) {
+              items = parsed.items.map((i: any) => ({
+                name: i.name,
+                price: Number(i.price) || 0,
+                category: i.category || "Main Course",
+                description: i.description || "",
+                confidence: i.confidence || 90,
+                isVegetarian: !!i.isVegetarian,
+                isVegan: !!i.isVegan,
+                isJain: !!i.isJain,
+                isGlutenFree: !!i.isGlutenFree,
+              }));
+              console.log(`[OCR] OpenAI Vision Fallback successfully extracted ${items.length} items.`);
+            }
+          }
+        } catch (aiErr) {
+          console.warn("[OCR] OpenAI Vision fallback failed, using local OCR results.", aiErr);
+        }
       }
 
       onProgress?.({ status: "Complete", progress: 100 });
