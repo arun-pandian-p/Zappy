@@ -12,7 +12,8 @@ import { WaiterManagement } from "./WaiterManagement";
 import { ShiftLogs } from "./ShiftLogs";
 import { 
   Clock, Calendar, CheckSquare, Users, Timer, 
-  MapPin, ShieldAlert, Plus, Loader2, Award, History 
+  MapPin, ShieldAlert, Plus, Loader2, Award, History,
+  RefreshCw, Play
 } from "lucide-react";
 import { format } from "date-fns";
 
