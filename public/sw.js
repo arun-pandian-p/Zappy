@@ -33,7 +33,12 @@ self.addEventListener('activate', (event) => {
 // Stale-while-revalidate caching strategy
 self.addEventListener('fetch', (event) => {
   // Only intercept local GET requests and avoid API calls
-  if (event.request.method !== 'GET' || event.request.url.includes('supabase.co')) {
+  if (
+    event.request.method !== 'GET' || 
+    event.request.url.includes('supabase.co') ||
+    event.request.url.includes('localhost') ||
+    event.request.url.includes('127.0.0.1')
+  ) {
     return;
   }
 
