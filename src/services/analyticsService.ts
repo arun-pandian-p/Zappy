@@ -73,8 +73,13 @@ export const analyticsService = {
 
     try {
       // Async database event recording
+      // The database requires campaign_id to be a valid non-null UUID.
+      if (!campaignId) {
+        return;
+      }
+      
       const payload = {
-        campaign_id: campaignId || null,
+        campaign_id: campaignId,
         event_type: eventType,
         tenant_id: tenantId || null,
         session_id: sessionId,

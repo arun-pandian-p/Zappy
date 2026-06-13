@@ -37,7 +37,8 @@ self.addEventListener('fetch', (event) => {
     event.request.method !== 'GET' || 
     event.request.url.includes('supabase.co') ||
     event.request.url.includes('localhost') ||
-    event.request.url.includes('127.0.0.1')
+    event.request.url.includes('127.0.0.1') ||
+    event.request.url.includes('/admin')
   ) {
     return;
   }

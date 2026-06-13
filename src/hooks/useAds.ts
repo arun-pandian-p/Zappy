@@ -183,16 +183,10 @@ export function useTrackAdImpression() {
 
       const { data: ad, error: adError } = await supabase
         .from("ads")
-        .select("impressions, restaurant_id")
+        .select("restaurant_id")
         .eq("id", adId)
         .single();
       if (adError) throw adError;
-
-      const { error: updateError } = await supabase
-        .from("ads")
-        .update({ impressions: (ad?.impressions || 0) + 1 })
-        .eq("id", adId);
-      if (updateError) throw updateError;
 
       // Save to promotions_analytics
       const sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('zappy_analytics_session') || 'unknown' : 'server';
@@ -227,16 +221,10 @@ export function useTrackAdClick() {
 
       const { data: ad, error: adError } = await supabase
         .from("ads")
-        .select("clicks, restaurant_id")
+        .select("restaurant_id")
         .eq("id", adId)
         .single();
       if (adError) throw adError;
-
-      const { error: updateError } = await supabase
-        .from("ads")
-        .update({ clicks: (ad?.clicks || 0) + 1 })
-        .eq("id", adId);
-      if (updateError) throw updateError;
 
       // Save to promotions_analytics
       const sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('zappy_analytics_session') || 'unknown' : 'server';
