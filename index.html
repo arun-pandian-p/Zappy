@@ -2,21 +2,89 @@
 <html lang="en">
   <head>
     <script>
-      if (typeof window !== "undefined" && !window.location.hostname.includes("localhost")) {
-        let redirected = false;
-        let targetUrl = window.location.href;
-        if (window.location.protocol === "http:") {
-          targetUrl = targetUrl.replace("http:", "https:");
-          redirected = true;
+      (function() {
+        // Redirection logic
+        if (typeof window !== "undefined" && !window.location.hostname.includes("localhost")) {
+          var redirected = false;
+          var targetUrl = window.location.href;
+          if (window.location.protocol === "http:") {
+            targetUrl = targetUrl.replace("http:", "https:");
+            redirected = true;
+          }
+          if (window.location.hostname === "zappy.ind.in") {
+            targetUrl = targetUrl.replace("zappy.ind.in", "www.zappy.ind.in");
+            redirected = true;
+          }
+          if (redirected) {
+            window.location.replace(targetUrl);
+            return;
+          }
         }
-        if (window.location.hostname === "zappy.ind.in") {
-          targetUrl = targetUrl.replace("zappy.ind.in", "www.zappy.ind.in");
-          redirected = true;
+
+        // Failsafe for cached script chunk loading errors (e.g. MIME type or 404 errors)
+        function clearCachesAndReload() {
+          var lastReload = sessionStorage.getItem('zappy_failsafe_reload');
+          var now = Date.now();
+          if (lastReload && (now - parseInt(lastReload) < 10000)) {
+            console.error('Failsafe triggered too recently, skipping reload to prevent loop.');
+            return;
+          }
+          sessionStorage.setItem('zappy_failsafe_reload', now);
+          console.warn("Zappy Failsafe triggered: clearing service workers and cache storage...");
+          
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              var unregisterPromises = [];
+              for (var i = 0; i < regs.length; i++) {
+                unregisterPromises.push(regs[i].unregister());
+              }
+              Promise.all(unregisterPromises).then(function() {
+                evictCachesAndReload();
+              }).catch(function() {
+                evictCachesAndReload();
+              });
+            });
+          } else {
+            evictCachesAndReload();
+          }
         }
-        if (redirected) {
-          window.location.replace(targetUrl);
+
+        function evictCachesAndReload() {
+          if (window.caches) {
+            caches.keys().then(function(keys) {
+              Promise.all(keys.map(function(k) { return caches.delete(k); })).then(function() {
+                window.location.reload(true);
+              }).catch(function() {
+                window.location.reload(true);
+              });
+            });
+          } else {
+            window.location.reload(true);
+          }
         }
-      }
+
+        // Catch resource load errors (scripts, stylesheets failing to fetch)
+        window.addEventListener('error', function(e) {
+          var target = e.target;
+          if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
+            var url = target.src || target.href;
+            if (url && (url.indexOf('/assets/') > -1 || url.indexOf('index-') > -1)) {
+              clearCachesAndReload();
+            }
+          }
+        }, true);
+
+        // Catch runtime errors related to failed module parsing (e.g. text/html MIME type errors)
+        window.addEventListener('error', function(e) {
+          var msg = e.message || '';
+          if (msg.indexOf('Expected a JavaScript-or-Wasm') > -1 || 
+              msg.indexOf('MIME type') > -1 || 
+              msg.indexOf('Unexpected token') > -1 ||
+              msg.indexOf('SyntaxError') > -1) {
+            clearCachesAndReload();
+          }
+        });
+      })();
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
