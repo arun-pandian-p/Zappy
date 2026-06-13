@@ -6,17 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Palette, Image as ImageIcon, Sparkles, Check, ChevronDown, Eye } from "lucide-react";
+import { Loader2, Palette, Image as ImageIcon, Sparkles, Check, ChevronDown, Eye, Trash2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface AdvancedQRBuilderProps {
   onSave: (qrConfig: any) => void;
+  onDelete?: () => void;
   isSaving: boolean;
   initialValues?: any;
   tables?: any[];
 }
 
-export function AdvancedQRBuilder({ onSave, isSaving, initialValues, tables = [] }: AdvancedQRBuilderProps) {
+export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, tables = [] }: AdvancedQRBuilderProps) {
   const [config, setConfig] = useState({
     qr_name: initialValues?.qr_name || "",
     target_url: initialValues?.target_url || "",
@@ -309,6 +310,17 @@ export function AdvancedQRBuilder({ onSave, isSaving, initialValues, tables = []
                 </>
               )}
             </Button>
+            {onDelete && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-xl h-11 border-destructive text-destructive hover:bg-destructive/10"
+                onClick={onDelete}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete QR
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

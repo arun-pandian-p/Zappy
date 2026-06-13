@@ -321,8 +321,9 @@ const UserManagement = ({ restaurantIdOverride }: UserManagementProps = {}) => {
   }
 
   return (
-    <Card className="border-0 shadow-md">
-      <CardHeader>
+    <>
+      <Card className="border-0 shadow-md">
+        <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2">
@@ -566,12 +567,13 @@ const UserManagement = ({ restaurantIdOverride }: UserManagementProps = {}) => {
       </CardContent>
     </Card>
 
-    {/* Shift logs section */}
-    {effectiveRestaurantId && (
-      <div className="mt-8">
-        <ShiftLogs restaurantId={effectiveRestaurantId} />
-      </div>
-    )}
+      {/* Shift logs section */}
+      {effectiveRestaurantId && (
+        <div className="mt-8">
+          <ShiftLogs restaurantId={effectiveRestaurantId} />
+        </div>
+      )}
+    </>
   );
 };
 

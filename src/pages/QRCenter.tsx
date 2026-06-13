@@ -157,8 +157,9 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
               <Button variant="ghost" size="sm" onClick={() => { setShowBuilder(false); setEditingQR(null); }}>Cancel</Button>
             </div>
             <AdvancedQRBuilder 
-              onSave={handleSaveQR} 
-              isSaving={createQR.isPending || updateQR.isPending} 
+              onSave={handleSaveQR}
+              onDelete={editingQR ? () => handleDeleteQR(editingQR) : undefined}
+              isSaving={createQR.isPending || updateQR.isPending}
               tables={tables}
               initialValues={editingQR ? {
                 qr_name: editingQR.qr_name,

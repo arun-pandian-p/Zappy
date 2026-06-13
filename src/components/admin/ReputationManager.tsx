@@ -52,16 +52,39 @@ export const ReputationManager = ({ restaurantId }: { restaurantId: string }) =>
   const { data: ratingAggregate } = useQuery({
     queryKey: ['restaurant_rating_aggregate', restaurantId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('mv_restaurant_ratings' as any)
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .maybeSingle();
-      if (error) {
-        console.error('Error fetching rating aggregate:', error);
+      try {
+        const { data, error } = await supabase
+          .from('mv_restaurant_ratings' as any)
+          .select('*')
+          .eq('restaurant_id', restaurantId)
+          .maybeSingle();
+        if (error) {
+          // If the materialized view/table is missing, fallback to live aggregation
+          if (error.code === 'PGRST205' || (error.message || '').includes('Could not find the table')) {
+            console.warn('mv_restaurant_ratings missing, falling back to live aggregation');
+            const { data: live, error: liveErr } = await supabase
+              .from('enterprise_reviews' as any)
+              .select('overall_rating')
+              .eq('restaurant_id', restaurantId);
+            if (liveErr) {
+              console.error('Fallback aggregation failed:', liveErr);
+              return null;
+            }
+            const ratings = (live || []).map((r: any) => Number(r.overall_rating)).filter(Boolean);
+            const avg = ratings.length ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) : null;
+            return {
+              average_rating: avg,
+              total_reviews: ratings.length,
+            } as any;
+          }
+          console.error('Error fetching rating aggregate:', error);
+          return null;
+        }
+        return data;
+      } catch (err: any) {
+        console.error('Unexpected error fetching rating aggregate:', err);
         return null;
       }
-      return data;
     },
     enabled: !!restaurantId,
   });

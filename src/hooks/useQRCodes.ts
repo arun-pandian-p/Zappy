@@ -28,7 +28,9 @@ export interface ScanAnalytic {
 }
 
 export function useQRCodes(restaurantId: string) {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ["qr_codes", restaurantId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,6 +43,23 @@ export function useQRCodes(restaurantId: string) {
     },
     enabled: !!restaurantId,
   });
+
+  // Realtime subscription to keep UI in sync when QR codes change (server-side updates)
+  useEffect(() => {
+    if (!restaurantId) return;
+    const channel = supabase.channel(`qr_codes:${restaurantId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qr_codes', filter: `tenant_id=eq.${restaurantId}` }, (payload) => {
+        console.log('RT_EVENT_qr_codes', { restaurantId, payload });
+        queryClient.invalidateQueries({ queryKey: ["qr_codes", restaurantId] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [restaurantId, queryClient]);
+
+  return query;
 }
 
 export function useCreateQRCode() {
@@ -101,6 +120,13 @@ export function useDeleteQRCode() {
       const fnUrl = `${SUPABASE_URL.replace(/\/$/, "")}/functions/v1/manage-qr`;
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
+      // Log current user id for debugging
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        console.log('USER_ID', userData?.user?.id);
+      } catch (e) {
+        console.warn('USER_ID_UNAVAILABLE', e);
+      }
 
       const res = await fetch(fnUrl, {
         method: "POST",
@@ -112,9 +138,13 @@ export function useDeleteQRCode() {
       });
 
       const payload = await res.json().catch(() => ({}));
-      console.log('DELETE_RESULT', { status: res.status, ok: res.ok, payload });
+      console.log('DELETE_RESPONSE', { status: res.status, ok: res.ok, payload });
       if (!res.ok) {
         console.error('DELETE_ERROR', { status: res.status, payload });
+        // Surface more helpful error for common cases
+        if (res.status === 404) throw new Error('manage-qr function not found (404)');
+        if (res.status === 401) throw new Error('Unauthorized (401) — check session');
+        if (res.status === 403) throw new Error('Forbidden (403) — RLS or role issue');
         throw new Error(payload?.error || `Failed to deactivate QR (status ${res.status})`);
       }
       return payload;

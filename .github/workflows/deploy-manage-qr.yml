@@ -1,0 +1,41 @@
+name: Deploy manage-qr
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy manage-qr
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-action@v1
+        with:
+          version: latest
+
+      - name: Deploy manage-qr function
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          supabase login --no-localstore --token "$SUPABASE_ACCESS_TOKEN"
+          supabase functions deploy manage-qr --project-ref "$SUPABASE_PROJECT_REF" --no-verify
+
+      - name: Smoke test manage-qr
+        if: always()
+        env:
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SMOKE_TEST_ACCESS_TOKEN: ${{ secrets.SMOKE_TEST_ACCESS_TOKEN }}
+        run: |
+          URL="https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/manage-qr"
+          echo "POST $URL"
+          curl -i -sS -X POST "$URL" \
+            -H "Authorization: Bearer $SMOKE_TEST_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"action":"noop"}' || echo "Smoke test returned non-zero exit code"
