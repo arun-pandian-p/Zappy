@@ -41,8 +41,8 @@ function QRPreviewCard({
     width: 1024,
     height: 1024,
     type: "svg",
-    margin: 10,
-    imageOptions: { crossOrigin: "anonymous", margin: 10 }
+    margin: 40,
+    imageOptions: { crossOrigin: "anonymous", margin: 20 }
   }));
 
   useEffect(() => {
@@ -59,7 +59,7 @@ function QRPreviewCard({
           ]
         } : undefined
       },
-      backgroundOptions: { color: "transparent" },
+      backgroundOptions: { color: "#FFFFFF" },
       cornersSquareOptions: { 
         type: (meta.corners_square_type || "extra-rounded") as CornerSquareType, 
         color: meta.fg_color || "#000" 
@@ -74,7 +74,7 @@ function QRPreviewCard({
         margin: meta.logo_excavate ?? true ? 10 : 0,
         imageSize: meta.logo_size || 0.4
       },
-      qrOptions: { errorCorrectionLevel: (meta.error_level || "H") as any }
+      qrOptions: { errorCorrectionLevel: "H" }
     });
 
     if (qrRef.current) {
