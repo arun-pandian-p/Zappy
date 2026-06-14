@@ -129,7 +129,8 @@ ${JSON.stringify(recentReviews, null, 2)}`;
         if (err.code === '42P01' || err.message?.includes('Could not find the table')) return []; // Fallback if table doesn't exist yet
         throw err;
       }
-    }
+    },
+    enabled: !!restaurantId,
   });
 
   const { data: ratingAggregate } = useQuery({
@@ -142,18 +143,31 @@ ${JSON.stringify(recentReviews, null, 2)}`;
           .eq('restaurant_id', restaurantId)
           .maybeSingle();
         if (error) {
-          // If the materialized view/table is missing, fallback to live aggregation
-          if (error.code === 'PGRST205' || (error.message || '').includes('Could not find the table')) {
-            console.warn('mv_restaurant_ratings missing, falling back to live aggregation');
+          // If the materialized view/table is missing, fallback to live aggregation from feedback table
+          if (error.code === 'PGRST205' || (error.message || '').includes('Could not find the table') || error.code === '42P01') {
+            console.warn('mv_restaurant_ratings missing, falling back to feedback table live aggregation');
             const { data: live, error: liveErr } = await supabase
-              .from('enterprise_reviews' as any)
-              .select('overall_rating')
+              .from('feedback')
+              .select('rating')
               .eq('restaurant_id', restaurantId);
             if (liveErr) {
-              console.error('Fallback aggregation failed:', liveErr);
-              return null;
+              console.error('Fallback feedback aggregation failed, trying enterprise_reviews:', liveErr);
+              const { data: entReviews, error: entErr } = await supabase
+                .from('enterprise_reviews' as any)
+                .select('overall_rating')
+                .eq('restaurant_id', restaurantId);
+              if (entErr) {
+                console.error('Secondary fallback failed:', entErr);
+                return null;
+              }
+              const ratings = (entReviews || []).map((r: any) => Number(r.overall_rating)).filter(Boolean);
+              const avg = ratings.length ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) : null;
+              return {
+                average_rating: avg,
+                total_reviews: ratings.length,
+              } as any;
             }
-            const ratings = (live || []).map((r: any) => Number(r.overall_rating)).filter(Boolean);
+            const ratings = (live || []).map((r: any) => Number(r.rating)).filter(Boolean);
             const avg = ratings.length ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) : null;
             return {
               average_rating: avg,

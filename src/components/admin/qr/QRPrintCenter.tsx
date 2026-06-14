@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Printer, Loader2, Download, Table2 } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
 import { getAppOrigin } from "@/utils/url";
 import { useToast } from "@/hooks/use-toast";
 

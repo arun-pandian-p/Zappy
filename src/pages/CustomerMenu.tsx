@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useMenuItems, useCategories, type MenuItem } from '@/hooks/useMenuItems';
 import { useRestaurantDetails } from '@/hooks/useRestaurant';
@@ -429,6 +430,38 @@ const CustomerMenu = () => {
     }
   }, [dynamicTableId, setTableNumber]);
 
+  // Device Recognition & Customer Profile
+  const [customerName, setCustomerName] = useState(() => {
+    try {
+      const saved = localStorage.getItem('zappy_customer_profile');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.name || '';
+      }
+    } catch {}
+    return '';
+  });
+
+  const [customerPhone, setCustomerPhone] = useState(() => {
+    try {
+      const saved = localStorage.getItem('zappy_customer_profile');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.phone || '';
+      }
+    } catch {}
+    return '';
+  });
+
+  useEffect(() => {
+    // Generate device/customer identifier if not exists
+    let deviceId = localStorage.getItem('zappy_device_id');
+    if (!deviceId) {
+      deviceId = crypto.randomUUID();
+      localStorage.setItem('zappy_device_id', deviceId);
+    }
+  }, []);
+
   // Track category views in analytics
   useEffect(() => {
     if (selectedCategory && restaurantId) {
@@ -809,6 +842,8 @@ const CustomerMenu = () => {
           total_amount: total,
           status: 'pending',
           idempotency_key: orderSessionId,
+          customer_name: customerName.trim() || null,
+          customer_phone: customerPhone.trim() || null,
         },
         items: cartItems.map(item => ({
           name: item.name,
@@ -822,6 +857,15 @@ const CustomerMenu = () => {
         title: 'Order Placed!',
         description: 'Your order has been sent to the kitchen.',
       });
+
+      // Save customer profile to localStorage for device recognition next visit
+      if (customerName.trim() || customerPhone.trim()) {
+        const deviceId = localStorage.getItem('zappy_device_id') || crypto.randomUUID();
+        localStorage.setItem(
+          'zappy_customer_profile',
+          JSON.stringify({ name: customerName.trim(), phone: customerPhone.trim(), deviceId })
+        );
+      }
 
       // Save order to localStorage
       if (result?.id) {
@@ -1305,6 +1349,33 @@ const CustomerMenu = () => {
             }}
             currencySymbol={currencySymbol}
           />
+
+          {/* Customer Details */}
+          <div className="space-y-3 bg-card p-4 border rounded-2xl">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Your Details</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="customer-name" className="text-xs font-semibold">Name</Label>
+                <Input
+                  id="customer-name"
+                  placeholder="Your Name"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="h-9 rounded-xl text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="customer-phone" className="text-xs font-semibold">Phone Number</Label>
+                <Input
+                  id="customer-phone"
+                  placeholder="Optional"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="h-9 rounded-xl text-xs"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Order Summary */}
           <Card className="bg-primary/5 border-primary/20">

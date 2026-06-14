@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQRCodes, useCreateQRCode, useUpdateQRCode, useDeleteQRCode, type QRCode } from "@/hooks/useQRCodes";
 import { useRestaurantDetails } from "@/hooks/useRestaurant";
 import { useTables, useCreateTable, useDeleteTable } from "@/hooks/useTables";
@@ -9,13 +9,208 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Download, Trash2, QrCode as QrCodeIcon, Loader2, Grid3X3, X, ExternalLink } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
+import { Plus, Download, Trash2, QrCode as QrCodeIcon, Loader2, Grid3X3, X, ExternalLink, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
+import QRCodeStyling, { DotType, CornerSquareType, CornerDotType } from "qr-code-styling";
 
 interface QRCenterProps {
   restaurantId: string;
+}
+
+// Sub-component to manage the individual QRCodeStyling instance for each list item
+function QRPreviewCard({ 
+  qr, 
+  getQRValue, 
+  onCustomize, 
+  onDelete, 
+  isDeleting, 
+  toast 
+}: { 
+  qr: QRCode; 
+  getQRValue: (qr: QRCode) => string;
+  onCustomize: (qr: QRCode) => void;
+  onDelete: (qr: QRCode) => void;
+  isDeleting: boolean;
+  toast: any;
+}) {
+  const meta = (qr.metadata as any) || {};
+  const qrRef = useRef<HTMLDivElement>(null);
+  const [qrCode] = useState(() => new QRCodeStyling({
+    width: 1024,
+    height: 1024,
+    type: "svg",
+    margin: 10,
+    imageOptions: { crossOrigin: "anonymous", margin: 10 }
+  }));
+
+  useEffect(() => {
+    qrCode.update({
+      data: getQRValue(qr),
+      dotsOptions: {
+        type: (meta.dots_type || (meta.qr_style === "dots" ? "dots" : "rounded")) as DotType,
+        color: !meta.use_gradient ? meta.fg_color || "#000" : undefined,
+        gradient: meta.use_gradient ? {
+          type: "linear",
+          colorStops: [
+            { offset: 0, color: meta.fg_color || "#000" },
+            { offset: 1, color: meta.gradient_color || "#f00" }
+          ]
+        } : undefined
+      },
+      backgroundOptions: { color: "transparent" },
+      cornersSquareOptions: { 
+        type: (meta.corners_square_type || "extra-rounded") as CornerSquareType, 
+        color: meta.fg_color || "#000" 
+      },
+      cornersDotOptions: { 
+        type: (meta.corners_dot_type || "dot") as CornerDotType, 
+        color: meta.fg_color || "#000" 
+      },
+      image: meta.logo_url || undefined,
+      imageOptions: {
+        crossOrigin: "anonymous",
+        margin: meta.logo_excavate ?? true ? 10 : 0,
+        imageSize: meta.logo_size || 0.4
+      },
+      qrOptions: { errorCorrectionLevel: (meta.error_level || "H") as any }
+    });
+
+    if (qrRef.current) {
+      qrRef.current.innerHTML = "";
+      qrCode.append(qrRef.current);
+      const svg = qrRef.current.querySelector("svg");
+      if (svg) {
+        svg.style.width = "100%";
+        svg.style.height = "auto";
+        svg.style.maxWidth = "120px";
+      }
+    }
+  }, [qr, qrCode, getQRValue, meta]);
+
+  const downloadQR = async (ext: "png" | "svg") => {
+    try {
+      await qrCode.download({ extension: ext, name: `zappy-qr-${qr.qr_name.replace(/\\s+/g, '-').toLowerCase()}` });
+      toast({ title: "Success", description: `Downloaded QR code as ${ext.toUpperCase()}` });
+    } catch (e) {
+      console.error("Export error", e);
+      toast({ title: "Error", description: `Failed to download ${ext.toUpperCase()}`, variant: "destructive" });
+    }
+  };
+
+  const downloadPDF = async () => {
+    try {
+      const rawSvg = await qrCode.getRawData("svg");
+      if (!rawSvg) throw new Error("Could not get SVG data");
+      
+      const svgData = new XMLSerializer().serializeToString(rawSvg as Node);
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          ctx.fillStyle = meta.bg_color || "#FFFFFF";
+          ctx.fillRect(0, 0, 1024, 1024);
+          ctx.drawImage(img, 0, 0, 1024, 1024);
+          
+          const imgData = canvas.toDataURL("image/png");
+          const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4"
+          });
+          
+          pdf.setFontSize(22);
+          pdf.text(qr.qr_name || "QR Code", 105, 30, { align: "center" });
+          pdf.addImage(imgData, 'PNG', 55, 50, 100, 100);
+          
+          pdf.setFontSize(12);
+          pdf.text("Scan me!", 105, 160, { align: "center" });
+          
+          pdf.save(`zappy-qr-${qr.qr_name.replace(/\\s+/g, '-').toLowerCase()}.pdf`);
+        } catch (e) {
+          console.error("PDF generation error:", e);
+          toast({ title: "Error", description: "Failed to generate PDF.", variant: "destructive" });
+        }
+      };
+      img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Error", description: "Failed to generate PDF", variant: "destructive" });
+    }
+  };
+
+  return (
+    <Card className="group overflow-hidden rounded-3xl border-0 shadow-md hover:shadow-xl transition-all hover:-translate-y-1 bg-white dark:bg-zinc-950">
+      <div 
+        className="h-40 flex items-center justify-center relative border-b"
+        style={{ backgroundColor: meta.bg_color || "#FFFFFF" }}
+      >
+        <div className="p-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 flex items-center justify-center" style={{ width: 136, height: 136 }}>
+          <div ref={qrRef} className="flex items-center justify-center" />
+        </div>
+      </div>
+      <CardContent className="p-5">
+        <h4 className="font-bold text-base mb-1 truncate" title={qr.qr_name}>{qr.qr_name}</h4>
+        <p className="text-xs text-muted-foreground font-mono truncate mb-4" title={qr.target_url}>
+          {qr.target_url || "Auto-redirects to menu"}
+        </p>
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-4">
+          <span>
+            {(() => {
+              try {
+                return qr.created_at ? format(new Date(qr.created_at), "MMM d, yyyy") : "N/A";
+              } catch (e) {
+                return "N/A";
+              }
+            })()}
+          </span>
+          <span className="font-medium bg-muted px-2 py-0.5 rounded-full">{qr.scan_count || 0} scans</span>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-2">
+          <Button variant="outline" size="sm" className="w-full rounded-xl gap-1 h-9 text-[10px]" onClick={() => downloadQR("png")}>
+            <Download className="w-3 h-3" /> PNG
+          </Button>
+          <Button variant="outline" size="sm" className="w-full rounded-xl gap-1 h-9 text-[10px]" onClick={downloadPDF}>
+            <Download className="w-3 h-3" /> PDF
+          </Button>
+          <Button variant="outline" size="sm" className="w-full rounded-xl gap-1 h-9 text-[10px]" onClick={() => downloadQR("svg")}>
+            <Download className="w-3 h-3" /> SVG
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full rounded-xl gap-1.5 h-9 text-xs"
+            onClick={() => onCustomize(qr)}
+          >
+            Customize
+          </Button>
+          {!(meta.is_base_qr) ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full rounded-xl gap-1.5 h-9 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={() => onDelete(qr)}
+              disabled={isDeleting}
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Delete
+            </Button>
+          ) : (
+            <div />
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function QRCenter({ restaurantId }: QRCenterProps) {
@@ -32,19 +227,15 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
   const [newTableCapacity, setNewTableCapacity] = useState("4");
   
   const { toast } = useToast();
-
   const [editingQR, setEditingQR] = useState<QRCode | null>(null);
 
   const handleDeleteQR = async (qr: QRCode) => {
     if (!confirm(`Are you sure you want to deactivate/delete "${qr.qr_name}"?`)) return;
     try {
-      console.log('UI_DELETE_CLICK', { component: 'QRCenter', handler: 'handleDeleteQR', qrId: qr.id, restaurantId });
-      const res = await deleteQR.mutateAsync({ id: qr.id, tenantId: restaurantId });
-      console.log('UI_DELETE_RESPONSE', { component: 'QRCenter', handler: 'handleDeleteQR', res });
+      await deleteQR.mutateAsync({ id: qr.id, tenantId: restaurantId });
       toast({ title: "Success", description: "QR Code deactivated successfully!" });
     } catch (e) {
       const msg = e instanceof Error ? e.message : JSON.stringify(e);
-      console.error('Failed to delete QR code:', e);
       toast({ title: "Error", description: msg || "Failed to delete QR code", variant: "destructive" });
     }
   };
@@ -62,7 +253,6 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
         status: "available",
       });
 
-      // Auto-create QR code for this table
       await createQR.mutateAsync({
         tenant_id: restaurantId,
         qr_name: `Table ${newTableNumber.trim()}`,
@@ -85,20 +275,13 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
   const handleDeleteTable = async (table: any) => {
     if (!confirm(`Delete table ${table.table_number}? Its QR code will be deactivated.`)) return;
     try {
-      console.log('UI_DELETE_CLICK', { component: 'QRCenter', handler: 'handleDeleteTable', tableId: table.id, restaurantId });
-      const dtRes = await deleteTable.mutateAsync({ id: table.id, restaurantId });
-      console.log('UI_DELETE_TABLE_RESULT', { tableId: table.id, dtRes });
-
-      // Deactivate matching QR code
+      await deleteTable.mutateAsync({ id: table.id, restaurantId });
       const matchingQR = qrCodes.find(
         (q) => (q.metadata as any)?.table_id === table.id
       );
       if (matchingQR) {
-        console.log('UI_DELETE_TRIGGER_QR', { matchingQRId: matchingQR.id, restaurantId });
-        const qrRes = await deleteQR.mutateAsync({ id: matchingQR.id, tenantId: restaurantId });
-        console.log('UI_DELETE_QR_RESULT', { matchingQRId: matchingQR.id, qrRes });
+        await deleteQR.mutateAsync({ id: matchingQR.id, tenantId: restaurantId });
       }
-
       toast({ title: "Table Deleted", description: `Table ${table.table_number} removed.` });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -135,14 +318,7 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
           target_url: computedTarget,
           metadata: {
             ...((editingQR.metadata as any) || {}),
-            fg_color: config.fg_color,
-            bg_color: config.bg_color,
-            logo_url: config.logo_url,
-            logo_excavate: config.logo_excavate,
-            error_level: config.error_level,
-            logo_size: config.logo_size,
-            qr_type_selection: config.qr_type_selection,
-            table_number: config.table_number,
+            ...config
           }
         });
         toast({ title: "Success", description: "QR Code updated successfully!" });
@@ -153,16 +329,7 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
           qr_name: config.qr_name,
           target_url: computedTarget,
           qr_type: "dynamic",
-          metadata: {
-            fg_color: config.fg_color,
-            bg_color: config.bg_color,
-            logo_url: config.logo_url,
-            logo_excavate: config.logo_excavate,
-            error_level: config.error_level,
-            logo_size: config.logo_size,
-            qr_type_selection: config.qr_type_selection,
-            table_number: config.table_number,
-          }
+          metadata: config
         });
         toast({ title: "Success", description: "QR Code created successfully!" });
         setShowBuilder(false);
@@ -170,33 +337,6 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
     } catch (e) {
       toast({ title: "Error", description: editingQR ? "Failed to update QR code" : "Failed to create QR code", variant: "destructive" });
     }
-  };
-
-  const downloadQR = (qr: QRCode, size = 1024) => {
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Use a temporary SVG element to render the exact design, then convert to canvas to export PNG
-    // For now, simpler download logic:
-    const svgEl = document.getElementById(`qr-svg-${qr.id}`);
-    if (!svgEl) return;
-    
-    const svgData = new XMLSerializer().serializeToString(svgEl);
-    const img = new Image();
-    img.onload = () => {
-      ctx.fillStyle = (qr.metadata as any)?.bg_color || "#FFFFFF";
-      ctx.fillRect(0, 0, size, size);
-      ctx.drawImage(img, 0, 0, size, size);
-      
-      const a = document.createElement("a");
-      a.download = `zappy-qr-${qr.qr_name.replace(/\s+/g, '-').toLowerCase()}.png`;
-      a.href = canvas.toDataURL("image/png");
-      a.click();
-    };
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   };
 
   return (
@@ -226,16 +366,9 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
               isSaving={createQR.isPending || updateQR.isPending}
               tables={tables}
               initialValues={editingQR ? {
+                ...((editingQR.metadata as any) || {}),
                 qr_name: editingQR.qr_name,
                 target_url: editingQR.target_url,
-                fg_color: (editingQR.metadata as any)?.fg_color,
-                bg_color: (editingQR.metadata as any)?.bg_color,
-                error_level: (editingQR.metadata as any)?.error_level,
-                logo_url: (editingQR.metadata as any)?.logo_url,
-                logo_excavate: (editingQR.metadata as any)?.logo_excavate,
-                logo_size: (editingQR.metadata as any)?.logo_size,
-                qr_type_selection: (editingQR.metadata as any)?.qr_type_selection || "custom",
-                table_number: (editingQR.metadata as any)?.table_number,
               } : undefined}
             />
           </CardContent>
@@ -246,89 +379,17 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
             <div className="col-span-full py-12 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
-          ) : qrCodes.filter((qr) => qr.is_active !== false).map((qr) => {
-            const meta = (qr.metadata as any) || {};
-            return (
-              <Card key={qr.id} className="group overflow-hidden rounded-3xl border-0 shadow-md hover:shadow-xl transition-all hover:-translate-y-1 bg-white dark:bg-zinc-950">
-                <div 
-                  className="h-40 flex items-center justify-center relative border-b"
-                  style={{ backgroundColor: meta.bg_color || "#FFFFFF" }}
-                >
-                  <div className="p-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5">
-                    <QRCodeSVG
-                      id={`qr-svg-${qr.id}`}
-                      value={getQRValue(qr)}
-                      size={100}
-                      level={meta.error_level || (meta.logo_url ? "H" : "M")}
-                      fgColor={meta.fg_color || "#000000"}
-                      bgColor="transparent"
-                      includeMargin={false}
-                      imageSettings={meta.logo_url ? {
-                        src: meta.logo_url,
-                        height: 100 * (meta.logo_size || 0.2),
-                        width: 100 * (meta.logo_size || 0.2),
-                        excavate: meta.logo_excavate ?? true,
-                      } : undefined}
-                    />
-                  </div>
-                </div>
-                <CardContent className="p-5">
-                  <h4 className="font-bold text-base mb-1 truncate" title={qr.qr_name}>{qr.qr_name}</h4>
-                  <p className="text-xs text-muted-foreground font-mono truncate mb-4" title={qr.target_url}>
-                    {qr.target_url || "Auto-redirects to menu"}
-                  </p>
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-4">
-                    <span>
-                      {(() => {
-                        try {
-                          return qr.created_at ? format(new Date(qr.created_at), "MMM d, yyyy") : "N/A";
-                        } catch (e) {
-                          return "N/A";
-                        }
-                      })()}
-                    </span>
-                    <span className="font-medium bg-muted px-2 py-0.5 rounded-full">{qr.scan_count || 0} scans</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm" className="w-full rounded-xl gap-2 h-9 text-xs" onClick={() => downloadQR(qr)}>
-                      <Download className="w-3.5 h-3.5" /> Download
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full rounded-xl gap-2 h-9 text-xs" onClick={() => {
-                        const url = getQRValue(qr);
-                        navigator.clipboard.writeText(url);
-                        toast({ title: "Copied!", description: "Link copied to clipboard" });
-                    }}>
-                      Copy Link
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full rounded-xl gap-1.5 h-9 text-xs"
-                      onClick={() => setEditingQR(qr)}
-                    >
-                      Customize
-                    </Button>
-                    {!(meta.is_base_qr) ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full rounded-xl gap-1.5 h-9 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleDeleteQR(qr)}
-                        disabled={deleteQR.isPending}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Delete
-                      </Button>
-                    ) : (
-                      <div />
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          ) : qrCodes.filter((qr) => qr.is_active !== false).map((qr) => (
+            <QRPreviewCard 
+              key={qr.id}
+              qr={qr}
+              getQRValue={getQRValue}
+              onCustomize={setEditingQR}
+              onDelete={handleDeleteQR}
+              isDeleting={deleteQR.isPending}
+              toast={toast}
+            />
+          ))}
         </div>
       )}
 

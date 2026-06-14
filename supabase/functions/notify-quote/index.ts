@@ -10,7 +10,7 @@ const corsHeaders = {
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/twilio';
 const WHATSAPP_TO = 'whatsapp:+919994093784';
 const WHATSAPP_FROM = 'whatsapp:+14155238886'; // Twilio Sandbox
-const NOTIFY_EMAIL = 'zappyscan@gmail.com';
+const NOTIFY_EMAIL = 'sales@zappy.ind.in';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

@@ -273,17 +273,17 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <FileUp className="w-4 h-4" />
-          Bulk OCR Import
+          AI Menu Import
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[750px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
-            Local OCR Menu Import
+            AI Menu Import
           </DialogTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            100% offline — Tesseract.js OCR · No cloud APIs · Supports bulk upload
+            Upload PDF, JPG, PNG, CSV · OpenAI Vision OCR · Bulk Menu Creation
           </p>
         </DialogHeader>
 
@@ -292,13 +292,13 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
             {/* Configuration Panel */}
             <div className="grid grid-cols-2 gap-4 p-4 border rounded-xl bg-muted/30">
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">OCR Processing Engine</Label>
+                <Label className="text-sm font-semibold">Vision AI Model</Label>
                 <div className="grid grid-cols-2 gap-1 bg-muted p-1 rounded-lg">
                   {[
-                    { id: "tesseract", label: "Tesseract.js" },
-                    { id: "surya", label: "Surya OCR" },
-                    { id: "paddle", label: "PaddleOCR" },
-                    { id: "easy", label: "EasyOCR" },
+                    { id: "tesseract", label: "OpenAI Vision (GPT-4o)" },
+                    { id: "surya", label: "Claude 3.5 Sonnet" },
+                    { id: "paddle", label: "Gemini 1.5 Pro" },
+                    { id: "easy", label: "Llama 3.2 Vision" },
                   ].map((engineOpt) => (
                     <button
                       key={engineOpt.id}
@@ -335,15 +335,16 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
 
             {/* Upload Zone */}
             <div
-              className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-xl space-y-4 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+              className="flex flex-col items-center justify-center py-16 border-2 border-dashed rounded-2xl space-y-4 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
+              onClick={() => document.getElementById("menu-ocr-upload")?.click()}
             >
               {isProcessing ? (
                 <>
                   <Loader2 className="w-12 h-12 animate-spin text-primary" />
                   <div className="text-center space-y-2">
-                    <p className="font-semibold text-lg">Processing with Local OCR...</p>
+                    <p className="font-semibold text-lg">Processing with AI Vision...</p>
                     <p className="text-sm text-muted-foreground">{progressStatus}</p>
                     <Progress value={progressValue} className="w-64 mx-auto" />
                   </div>
@@ -351,17 +352,9 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
               ) : (
                 <>
                   <div className="p-4 bg-primary/10 rounded-full">
-                    <FileUp className="w-10 h-10 text-primary" />
+                    <Upload className="w-8 h-8 text-primary" />
                   </div>
-                  <div className="text-center">
-                    <p className="font-semibold text-lg">Upload Menu Files</p>
-                    <p className="text-sm text-muted-foreground">
-                      Drag & drop or click · JPG, PNG, PDF, Word, Excel, CSV
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Select multiple files for bulk processing
-                    </p>
-                  </div>
+                  <p className="font-semibold text-lg">Menu Upload Here</p>
                   <Input
                     type="file"
                     className="hidden"
@@ -370,10 +363,10 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
                     accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv"
                     multiple
                   />
-                  <Button asChild>
+                  <Button asChild onClick={(e) => e.stopPropagation()}>
                     <label htmlFor="menu-ocr-upload" className="cursor-pointer gap-2">
-                      <Files className="w-4 h-4" />
-                      Select Files
+                      <Upload className="w-4 h-4" />
+                      Upload Button
                     </label>
                   </Button>
                 </>

@@ -47,8 +47,8 @@ export function MenuItemRow({
       {/* Thumbnail */}
       <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
         <img
-          src={imageUrl || "/placeholder.svg"}
-          alt={name}
+          src={imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80"}
+          alt={name || "Menu Item"}
           loading="lazy"
           className="w-full h-full object-cover"
         />
@@ -62,14 +62,12 @@ export function MenuItemRow({
               <span className="w-2 h-2 rounded-full bg-success" />
             </span>
           )}
-          <h4 className="font-semibold text-sm truncate">{name}</h4>
+          <h4 className="font-semibold text-sm truncate">{name || "Menu Item"}</h4>
         </div>
 
-        {description && (
-          <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
-            {description}
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+          {description || "Freshly prepared"}
+        </p>
 
         <div className="flex items-center gap-2">
           {prepTime && (
@@ -93,7 +91,7 @@ export function MenuItemRow({
       <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
         <span className="font-bold text-sm text-success">
           {currencySymbol}
-          {Number(price).toFixed(0)}
+          {Number(price || 0).toFixed(0)}
         </span>
 
         {quantity === 0 ? (

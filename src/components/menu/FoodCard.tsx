@@ -55,10 +55,11 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
         {/* Image Section with Badges */}
         <div className="relative aspect-[16/10] overflow-hidden bg-muted m-2 rounded-[14px]">
           <img
-            src={imageUrl || "/placeholder.svg"}
-            alt={name}
+            src={imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80"}
+            alt={name || "Menu Item"}
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80"; }}
           />
           
           {/* Badge - Top Left */}
@@ -91,7 +92,7 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
         {/* Content Section */}
         <CardContent className="p-3 pt-1 flex flex-col flex-1">
           <h3 className="font-extrabold text-sm text-zinc-900 dark:text-zinc-50 mb-0.5 line-clamp-1 tracking-tight">
-            {name}
+            {name || "Menu Item"}
           </h3>
           <div className="flex items-center gap-1.5 mb-2">
             <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5">
@@ -104,13 +105,13 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
             </span>
           </div>
           <p className="text-[10px] text-zinc-500 dark:text-zinc-400 line-clamp-1 mb-2">
-            {description || "Fresh & Natural"}
+            {description || "Freshly prepared"}
           </p>
 
           {/* Price and Add Button Row — fixed min height to prevent layout shift */}
           <div className="flex items-center justify-between mt-auto min-h-[32px]">
             <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm flex-shrink-0 tracking-tight">
-              {currencySymbol}{Number(price).toFixed(0)}
+              {currencySymbol}{Number(price || 0).toFixed(0)}
             </span>
 
             <AnimatePresence mode="wait" initial={false}>

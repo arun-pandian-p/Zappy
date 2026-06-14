@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WaiterManagement } from "./WaiterManagement";
 import { ShiftLogs } from "./ShiftLogs";
+import { logActivity } from "@/services/auditLogger";
 import { 
   Clock, Calendar, CheckSquare, Users, Timer, 
   MapPin, ShieldAlert, Plus, Loader2, Award, History,
@@ -138,7 +140,7 @@ export function StaffManagement({ restaurantId }: StaffManagementProps) {
       const end = new Date(endISO).getTime();
       const diffHrs = (end - start) / 3600000;
 
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from("employee_shifts")
         .insert({
           restaurant_id: restaurantId,
@@ -147,7 +149,9 @@ export function StaffManagement({ restaurantId }: StaffManagementProps) {
           scheduled_start: startISO,
           scheduled_end: endISO,
           expected_hours: diffHrs > 0 ? diffHrs : 8
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -155,6 +159,19 @@ export function StaffManagement({ restaurantId }: StaffManagementProps) {
       setIsCreatingShift(false);
       setSelectedEmpForShift("");
       loadData();
+      
+      logActivity({
+        restaurantId,
+        action: "Schedule Shift",
+        tableName: "employee_shifts",
+        recordId: data?.id,
+        newValues: {
+          employee_id: selectedEmpForShift,
+          shift_name: shiftName,
+          scheduled_start: startISO,
+          scheduled_end: endISO
+        }
+      });
     } catch (err: any) {
       toast({ title: "Failed to create shift", description: err.message, variant: "destructive" });
       setIsCreatingShift(false);
@@ -183,19 +200,33 @@ export function StaffManagement({ restaurantId }: StaffManagementProps) {
       if (empError) throw empError;
 
       // Insert attendance entry
-      const { error: attError } = await supabase
+      const { error: attError, data: attData } = await supabase
         .from("employee_attendance")
         .insert({
           restaurant_id: restaurantId,
           employee_id: selectedEmpForClock,
           login_time: new Date().toISOString()
-        });
+        })
+        .select()
+        .single();
 
       if (attError) throw attError;
 
       toast({ title: "Successful Clock-In", description: "Employee clocked in via GPS simulator." });
       setSelectedEmpForClock("");
       loadData();
+
+      logActivity({
+        restaurantId,
+        action: "Clock In",
+        tableName: "employee_attendance",
+        recordId: attData?.id,
+        newValues: {
+          employee_id: selectedEmpForClock,
+          login_time: new Date().toISOString(),
+          gps_verified: gpsVerified
+        }
+      });
     } catch (err: any) {
       toast({ title: "Clock-In Failed", description: err.message, variant: "destructive" });
     } finally {
@@ -217,17 +248,31 @@ export function StaffManagement({ restaurantId }: StaffManagementProps) {
         .eq("id", attendance.employee_id);
 
       // Update attendance entry
-      await supabase
+      const { data: updatedAtt } = await supabase
         .from("employee_attendance")
         .update({
           logout_time: new Date().toISOString(),
           total_worked_minutes: worked,
           overtime_minutes: worked > 480 ? worked - 480 : 0
         })
-        .eq("id", attendance.id);
+        .eq("id", attendance.id)
+        .select()
+        .single();
 
       toast({ title: "Clocked Out", description: `Clocked out successfully. Duration: ${Math.round(worked / 60)} hrs.` });
       loadData();
+
+      logActivity({
+        restaurantId,
+        action: "Clock Out",
+        tableName: "employee_attendance",
+        recordId: attendance.id,
+        newValues: {
+          logout_time: new Date().toISOString(),
+          total_worked_minutes: worked,
+          overtime_minutes: worked > 480 ? worked - 480 : 0
+        }
+      });
     } catch (err: any) {
       toast({ title: "Clock-Out Failed", description: err.message, variant: "destructive" });
     }

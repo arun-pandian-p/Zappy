@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTables, useCreateTable, useUpdateTable, useDeleteTable } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
 import { supabase } from "@/integrations/supabase/client";
+import { logActivity } from "@/services/auditLogger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,12 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedTableForAssign, setSelectedTableForAssign] = useState<any | null>(null);
   const [selectedWaiterForAssign, setSelectedWaiterForAssign] = useState("");
+
+  const [reservationsMap, setReservationsMap] = useState<Record<string, { time: string; name: string }>>({});
+  const [reserveModalOpen, setReserveModalOpen] = useState(false);
+  const [selectedTableForReserve, setSelectedTableForReserve] = useState<any | null>(null);
+  const [reservationTime, setReservationTime] = useState("");
+  const [reservationName, setReservationName] = useState("");
 
   // Load waiters and assignments
   useEffect(() => {
@@ -82,11 +89,20 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
     if (savedMerges) {
       setMergedTables(JSON.parse(savedMerges));
     }
+    const savedReservations = localStorage.getItem(`zappy_reservations_${restaurantId}`);
+    if (savedReservations) {
+      setReservationsMap(JSON.parse(savedReservations));
+    }
   }, [restaurantId]);
 
   const saveSections = (newMap: Record<string, string>) => {
     setSectionsMap(newMap);
     localStorage.setItem(`zappy_sections_${restaurantId}`, JSON.stringify(newMap));
+  };
+
+  const saveReservations = (newMap: Record<string, { time: string; name: string }>) => {
+    setReservationsMap(newMap);
+    localStorage.setItem(`zappy_reservations_${restaurantId}`, JSON.stringify(newMap));
   };
 
   const handleAddTable = async () => {
@@ -106,6 +122,14 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
       const updatedSections = { ...sectionsMap, [table.id]: newSection };
       saveSections(updatedSections);
 
+      logActivity({
+        restaurantId,
+        action: `Created table ${newTableNumber.trim()}`,
+        tableName: "tables",
+        recordId: table.id,
+        newValues: { table_number: newTableNumber.trim(), capacity: parseInt(newCapacity) || 4, section: newSection }
+      });
+
       toast({ title: "Table Created", description: `Table ${newTableNumber} has been added.` });
       setNewTableNumber("");
       setNewCapacity("4");
@@ -115,14 +139,78 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
   };
 
   const handleStatusChange = async (tableId: string, newStatus: string) => {
+    if (newStatus === "reserved") {
+      const table = tables.find(t => t.id === tableId);
+      setSelectedTableForReserve(table);
+      const currentRes = reservationsMap[tableId] || { time: "", name: "" };
+      setReservationTime(currentRes.time);
+      setReservationName(currentRes.name);
+      setReserveModalOpen(true);
+      return;
+    }
+
     try {
       await updateTable.mutateAsync({
         id: tableId,
         updates: { status: newStatus }
       });
+      if (reservationsMap[tableId]) {
+        const updated = { ...reservationsMap };
+        delete updated[tableId];
+        saveReservations(updated);
+      }
+      
+      const table = tables.find(t => t.id === tableId);
+      logActivity({
+        restaurantId,
+        action: `Changed table ${table?.table_number || tableId} status to ${newStatus}`,
+        tableName: "tables",
+        recordId: tableId,
+        newValues: { status: newStatus }
+      });
+
       toast({ title: "Table Updated", description: `Table status changed to ${newStatus}.` });
     } catch (e: any) {
       toast({ title: "Update Failed", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleReserveSubmit = async () => {
+    if (!selectedTableForReserve) return;
+    if (!reservationTime.trim()) {
+      toast({ title: "Reservation time required", variant: "destructive" });
+      return;
+    }
+    try {
+      await updateTable.mutateAsync({
+        id: selectedTableForReserve.id,
+        updates: { status: "reserved" }
+      });
+      
+      const updated = {
+        ...reservationsMap,
+        [selectedTableForReserve.id]: {
+          time: reservationTime.trim(),
+          name: reservationName.trim() || "Guest"
+        }
+      };
+      saveReservations(updated);
+
+      logActivity({
+        restaurantId,
+        action: `Reserved table ${selectedTableForReserve.table_number}`,
+        tableName: "tables",
+        recordId: selectedTableForReserve.id,
+        newValues: { status: "reserved", time: reservationTime.trim(), name: reservationName.trim() }
+      });
+      
+      toast({
+        title: "Table Reserved",
+        description: `Table ${selectedTableForReserve.table_number} reserved at ${reservationTime} for ${reservationName || "Guest"}.`
+      });
+      setReserveModalOpen(false);
+    } catch (e: any) {
+      toast({ title: "Failed to reserve table", description: e.message, variant: "destructive" });
     }
   };
 
@@ -130,6 +218,15 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
     if (!confirm(`Delete table ${table.table_number}?`)) return;
     try {
       await deleteTable.mutateAsync({ id: table.id, restaurantId });
+
+      logActivity({
+        restaurantId,
+        action: `Deleted table ${table.table_number}`,
+        tableName: "tables",
+        recordId: table.id,
+        oldValues: table
+      });
+
       toast({ title: "Table Deleted" });
       setSelectedTableIds(prev => prev.filter(id => id !== table.id));
     } catch (e: any) {
@@ -178,6 +275,13 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
       handleStatusChange(id, "occupied");
     });
 
+    logActivity({
+      restaurantId,
+      action: `Merged tables into ${mergeName}`,
+      tableName: "tables",
+      newValues: { merged_table_numbers: tableNumbers }
+    });
+
     setSelectedTableIds([]);
     toast({ title: "Tables Merged", description: `Merged into ${mergeName}` });
   };
@@ -194,6 +298,13 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
     // Reset status back to available
     merge.tableIds.forEach(id => {
       handleStatusChange(id, "available");
+    });
+
+    logActivity({
+      restaurantId,
+      action: `Split merged table ${merge.name}`,
+      tableName: "tables",
+      oldValues: { split_tables: merge.name }
     });
 
     toast({ title: "Tables Split", description: `Split merged table ${merge.name}` });
@@ -235,11 +346,28 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
 
         if (error) throw error;
         setAssignments(prev => ({ ...prev, [tableId]: waiter.full_name }));
+
+        logActivity({
+          restaurantId,
+          action: `Assigned waiter ${waiter.full_name} to Table ${selectedTableForAssign.table_number}`,
+          tableName: "employee_assignments",
+          recordId: tableId,
+          newValues: { waiter: waiter.full_name, table: selectedTableForAssign.table_number }
+        });
+
         toast({ title: "Waiter Assigned", description: `${waiter.full_name} assigned to Table ${selectedTableForAssign.table_number}` });
       } else {
         const updated = { ...assignments };
         delete updated[tableId];
         setAssignments(updated);
+
+        logActivity({
+          restaurantId,
+          action: `Unassigned waiter from Table ${selectedTableForAssign.table_number}`,
+          tableName: "employee_assignments",
+          recordId: tableId
+        });
+
         toast({ title: "Waiter Unassigned" });
       }
 
@@ -419,6 +547,18 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
                               </div>
                             )}
 
+                            {/* Card Reservation Info */}
+                            {table.status === "reserved" && reservationsMap[table.id] && (
+                              <div className="border-t pt-2 mt-2">
+                                <div className="flex justify-between text-xs font-semibold text-slate-800 dark:text-slate-200 bg-amber-50/50 dark:bg-amber-950/20 p-1.5 rounded-lg border border-amber-100 dark:border-amber-900/50">
+                                  <span>Res: {reservationsMap[table.id].time}</span>
+                                  <span className="text-muted-foreground truncate max-w-[80px]" title={reservationsMap[table.id].name}>
+                                    👤 {reservationsMap[table.id].name}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
                             {/* Card Footer Actions */}
                             <div className="flex items-center justify-between gap-1 mt-3 pt-2 border-t" onClick={e => e.stopPropagation()}>
                               <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[100px]" title={waiterName}>
@@ -566,6 +706,41 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
             </div>
             <Button onClick={handleAssignWaiterSubmit} className="w-full rounded-2xl h-11 font-bold mt-2">
               Apply Assignment
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Table Reservation Modal */}
+      <Dialog open={reserveModalOpen} onOpenChange={setReserveModalOpen}>
+        <DialogContent className="max-w-sm rounded-3xl" aria-describedby="reserve-desc">
+          <DialogHeader>
+            <DialogTitle>Reserve Table</DialogTitle>
+            <DialogDescription id="reserve-desc">
+              Enter reservation time and customer name for Table {selectedTableForReserve?.table_number}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold">Reservation Time</Label>
+              <Input
+                type="time"
+                value={reservationTime}
+                onChange={e => setReservationTime(e.target.value)}
+                className="rounded-xl"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold">Customer Name (Optional)</Label>
+              <Input
+                placeholder="Guest Name"
+                value={reservationName}
+                onChange={e => setReservationName(e.target.value)}
+                className="rounded-xl"
+              />
+            </div>
+            <Button onClick={handleReserveSubmit} className="w-full rounded-2xl h-11 font-bold mt-2">
+              Apply Reservation
             </Button>
           </div>
         </DialogContent>

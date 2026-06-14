@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useInventoryItems, useCreateInventoryItem, useUpdateInventoryStock, useDeleteInventoryItem } from "@/hooks/useInventory";
+import { useRestaurantDetails } from "@/hooks/useRestaurant";
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, Loader2, Package, AlertTriangle, CheckCircle2,
@@ -54,6 +55,7 @@ interface PurchaseOrder {
 
 export function InventoryManager({ restaurantId }: InventoryManagerProps) {
   const { toast } = useToast();
+  const { data: restaurant } = useRestaurantDetails(restaurantId);
   const { data: items = [], isLoading } = useInventoryItems(restaurantId);
   const createItem = useCreateInventoryItem();
   const updateStock = useUpdateInventoryStock();

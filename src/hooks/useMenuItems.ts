@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { logActivity } from "@/services/auditLogger";
 
 export type MenuItem = Tables<"menu_items"> & {
   category?: Pick<Category, "id" | "name" | "display_order"> | null;
@@ -123,6 +124,13 @@ export function useCreateMenuItem() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
+      logActivity({
+        restaurantId: data.restaurant_id,
+        action: "Create Menu Item",
+        tableName: "menu_items",
+        recordId: data.id,
+        newValues: data
+      });
     },
   });
 }
@@ -144,6 +152,13 @@ export function useUpdateMenuItem() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
+      logActivity({
+        restaurantId: data.restaurant_id,
+        action: "Update Menu Item",
+        tableName: "menu_items",
+        recordId: data.id,
+        newValues: data
+      });
     },
   });
 }
@@ -163,6 +178,12 @@ export function useDeleteMenuItem() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurantId] });
+      logActivity({
+        restaurantId: data.restaurantId,
+        action: "Delete Menu Item",
+        tableName: "menu_items",
+        recordId: data.id
+      });
     },
   });
 }
@@ -184,6 +205,13 @@ export function useToggleMenuItemAvailability() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
+      logActivity({
+        restaurantId: data.restaurant_id,
+        action: "Toggle Menu Item Availability",
+        tableName: "menu_items",
+        recordId: data.id,
+        newValues: { is_available: data.is_available }
+      });
     },
   });
 }

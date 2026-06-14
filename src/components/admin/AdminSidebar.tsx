@@ -58,21 +58,19 @@ interface NavItem {
 
 const allNavItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
-  { title: "Preview Site", icon: Eye, value: "preview" },
-  { title: "Menu", icon: UtensilsCrossed, value: "menu" },
-  { title: "QR Manager", icon: QrCode, value: "qr-manager" },
   { title: "Orders", icon: ClipboardList, value: "orders" },
   { title: "Tables", icon: Grid3X3, value: "tables" },
-  { title: "Waiters", icon: Users, value: "waiters" },
+  { title: "QR Manager", icon: QrCode, value: "qr-manager" },
+  { title: "Menu", icon: UtensilsCrossed, value: "menu" },
   { title: "Kitchen", icon: ChefHat, value: "kitchen" },
   { title: "Billing", icon: Receipt, value: "billing" },
   { title: "Inventory", icon: Package, value: "inventory" },
-  { title: "Marketing", icon: Sparkles, value: "marketing" },
-  { title: "Customers", icon: Heart, value: "customers" },
-  { title: "Analytics", icon: BarChart3, value: "analytics" },
+  { title: "Waiters", icon: Users, value: "waiters" },
   { title: "Staff", icon: CalendarClock, value: "staff" },
+  { title: "Analytics", icon: BarChart3, value: "analytics" },
   { title: "Reports", icon: FileSpreadsheet, value: "reports" },
-  { title: "Reputation", icon: Star, value: "reviews" },
+  { title: "Marketing", icon: Sparkles, value: "marketing" },
+  { title: "Customer Reviews", icon: Star, value: "reviews" },
   { title: "Settings", icon: Settings, value: "settings" },
 ];
 

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useTables } from '@/hooks/useTables';
-import { useOrders } from '@/hooks/useOrders';
+import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { usePendingWaiterCalls, useAcknowledgeWaiterCall, useResolveWaiterCall } from '@/hooks/useWaiterCalls';
 import { useAuth } from '@/hooks/useAuth';
 import { useRestaurantDetails } from '@/hooks/useRestaurant';
@@ -130,6 +130,7 @@ const WaiterDashboard = () => {
 
   const acknowledgeMutation = useAcknowledgeWaiterCall();
   const resolveMutation = useResolveWaiterCall();
+  const updateOrderStatusMutation = useUpdateOrderStatus();
 
   const [isMuted, setIsMuted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -370,10 +371,22 @@ const WaiterDashboard = () => {
                                 </Badge>
                                 <p className="text-xs text-muted-foreground capitalize">{status}</p>
                                 {tableOrder && (
-                                  <div className="mt-2 pt-2 border-t">
-                                    <p className="text-xs font-medium">
-                                      ₹{Number(tableOrder.total_amount || 0).toFixed(0)}
+                                  <div className="mt-2 pt-2 border-t space-y-2">
+                                    <p className="text-xs font-semibold">
+                                      ₹{Number(tableOrder.total_amount || 0).toFixed(0)} · <span className="uppercase text-indigo-600 dark:text-indigo-400 font-bold">{tableOrder.status}</span>
                                     </p>
+                                    {tableOrder.status === 'ready' && (
+                                      <Button
+                                        size="sm"
+                                        className="w-full h-7 text-[10px] bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          updateOrderStatusMutation.mutate({ id: tableOrder.id, status: 'served' });
+                                        }}
+                                      >
+                                        Mark Served
+                                      </Button>
+                                    )}
                                   </div>
                                 )}
                               </CardContent>

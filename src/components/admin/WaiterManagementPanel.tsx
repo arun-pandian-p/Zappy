@@ -22,6 +22,8 @@ export function WaiterManagementPanel({ restaurantId }: WaiterManagementPanelPro
   const { data: tables = [] } = useTables(restaurantId);
   const [waiters, setWaiters] = useState<any[]>([]);
   const [activeAssignments, setActiveAssignments] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [shifts, setShifts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modals state
@@ -31,6 +33,10 @@ export function WaiterManagementPanel({ restaurantId }: WaiterManagementPanelPro
   const [selectedTable, setSelectedTable] = useState("");
   const [transferTargetWaiter, setTransferTargetWaiter] = useState("");
   const [selectedAssignmentForTransfer, setSelectedAssignmentForTransfer] = useState<any | null>(null);
+
+  // Tables loading state for Assign modal
+  const [availableTables, setAvailableTables] = useState<any[]>([]);
+  const [loadingTables, setLoadingTables] = useState(false);
 
   useEffect(() => {
     loadWaitersData();
@@ -58,8 +64,29 @@ export function WaiterManagementPanel({ restaurantId }: WaiterManagementPanelPro
 
       if (assignErr) throw assignErr;
 
+      // Load active orders
+      const { data: ordersData, error: ordersErr } = await supabase
+        .from("orders")
+        .select("id, table_id, total_amount, status, order_number")
+        .eq("restaurant_id", restaurantId)
+        .neq("status", "completed")
+        .neq("status", "cancelled");
+
+      if (ordersErr) throw ordersErr;
+
+      // Load latest shifts
+      const { data: shiftData, error: shiftErr } = await supabase
+        .from("employee_shifts")
+        .select("*")
+        .eq("restaurant_id", restaurantId)
+        .order("scheduled_start", { ascending: false });
+
+      if (shiftErr) throw shiftErr;
+
       setWaiters(empData || []);
       setActiveAssignments(assignData || []);
+      setOrders(ordersData || []);
+      setShifts(shiftData || []);
     } catch (e: any) {
       toast({ title: "Load Error", description: e.message || "Failed to load waiters", variant: "destructive" });
     } finally {
@@ -123,6 +150,28 @@ export function WaiterManagementPanel({ restaurantId }: WaiterManagementPanelPro
       loadWaitersData();
     } catch (e: any) {
       toast({ title: "Status Update Failed", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const loadAvailableTables = async () => {
+    setLoadingTables(true);
+    try {
+      const { data, error } = await supabase
+        .from("tables")
+        .select("*")
+        .eq("restaurant_id", restaurantId)
+        .order("table_number");
+
+      if (error) throw error;
+      
+      const assignedTableIds = new Set(activeAssignments.map(a => a.table_id));
+      const unassigned = (data || []).filter(t => !assignedTableIds.has(t.id));
+      setAvailableTables(unassigned);
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: "Failed to load tables", description: err.message, variant: "destructive" });
+    } finally {
+      setLoadingTables(false);
     }
   };
 
@@ -197,15 +246,46 @@ export function WaiterManagementPanel({ restaurantId }: WaiterManagementPanelPro
       .map(as => as.tables?.table_number || "");
   };
 
+  // Get active orders for a waiter
+  const getWaiterActiveOrders = (waiterId: string) => {
+    const tableIds = activeAssignments
+      .filter(as => as.employee_id === waiterId)
+      .map(as => as.table_id);
+    
+    return orders.filter(o => tableIds.includes(o.table_id));
+  };
+
+  // Serve order action
+  const handleServeOrder = async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: "served" })
+        .eq("id", orderId);
+        
+      if (error) throw error;
+      toast({ title: "Order Served", description: "Order marked as served." });
+      loadWaitersData();
+    } catch (e: any) {
+      toast({ title: "Failed to update order", description: e.message, variant: "destructive" });
+    }
+  };
+
+  // Get waiter's active shift from employee_shifts
+  const getWaiterShift = (waiterId: string) => {
+    const waiterShift = shifts.find(s => s.employee_id === waiterId);
+    return waiterShift ? waiterShift.shift_name : "No Shift";
+  };
+
   // Generate mock performance metrics for presentation
   const getPerformanceMetrics = (waiterId: string) => {
     // Generate deterministic mock stats based on waiter id hash
     const seed = waiterId.charCodeAt(0) + waiterId.charCodeAt(2) || 10;
     const rating = (4.0 + (seed % 10) / 10).toFixed(1);
-    const orders = 15 + (seed % 20);
+    const ordersCount = 15 + (seed % 20);
     const upsell = 800 + (seed % 15) * 100;
-    const shift = seed % 3 === 0 ? "Morning" : seed % 3 === 1 ? "Afternoon" : "Night";
-    return { rating, orders, upsell, shift };
+    const shift = getWaiterShift(waiterId);
+    return { rating, orders: ordersCount, upsell, shift };
   };
 
   return (
@@ -248,6 +328,9 @@ export function WaiterManagementPanel({ restaurantId }: WaiterManagementPanelPro
                     <div>
                       <h3 className="font-bold text-slate-900 dark:text-white">{waiter.full_name}</h3>
                       <span className="text-xs text-muted-foreground">ID: W-{waiter.username.toUpperCase()}</span>
+                      {waiter.phone && (
+                        <div className="text-[10px] text-muted-foreground mt-0.5">📱 {waiter.phone}</div>
+                      )}
                     </div>
                   </div>
                   <Badge className={`border-0 rounded-full text-[10px] font-bold ${
@@ -305,6 +388,42 @@ export function WaiterManagementPanel({ restaurantId }: WaiterManagementPanelPro
                     </div>
                   </div>
 
+                  {/* Active Orders List */}
+                  <div className="space-y-1.5 border-t pt-3">
+                    <span className="text-xs text-muted-foreground font-semibold flex items-center gap-1.5">
+                      <Receipt className="w-3.5 h-3.5 text-blue-500" /> Active Orders ({getWaiterActiveOrders(waiter.id).length})
+                    </span>
+                    <div className="space-y-1 pt-1">
+                      {getWaiterActiveOrders(waiter.id).length === 0 ? (
+                        <span className="text-xs text-muted-foreground italic">No active orders</span>
+                      ) : (
+                        getWaiterActiveOrders(waiter.id).map(order => {
+                          const tableNum = tables.find(t => t.id === order.table_id)?.table_number || "T";
+                          return (
+                            <div key={order.id} className="flex justify-between items-center bg-slate-50 dark:bg-zinc-900/50 p-2 border rounded-xl text-[11px]">
+                              <div>
+                                <span className="font-bold text-slate-800 dark:text-zinc-200">#{order.order_number || order.id.substring(0,4)}</span>
+                                <span className="text-muted-foreground ml-1">(Table {tableNum})</span>
+                                <div className="text-[10px] text-slate-500 mt-0.5">
+                                  ₹{Number(order.total_amount).toFixed(0)} · <span className="uppercase text-blue-500 font-medium">{order.status}</span>
+                                </div>
+                              </div>
+                              {order.status === "ready" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleServeOrder(order.id)}
+                                  className="bg-green-600 hover:bg-green-700 text-white rounded-lg h-6 px-2 text-[10px] font-bold"
+                                >
+                                  Serve
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
                   <div className="border-t pt-4 flex gap-2">
                     <Button 
                       size="sm" 
@@ -321,6 +440,7 @@ export function WaiterManagementPanel({ restaurantId }: WaiterManagementPanelPro
                       onClick={() => {
                         setSelectedWaiter(waiter);
                         setTableModalOpen(true);
+                        loadAvailableTables();
                       }} 
                       className="flex-1 rounded-xl h-9 font-bold text-xs gap-1.5"
                     >
@@ -347,14 +467,18 @@ export function WaiterManagementPanel({ restaurantId }: WaiterManagementPanelPro
           <div className="space-y-4 pt-2">
             <div className="space-y-1">
               <Label className="text-xs font-semibold">Select Table Number</Label>
-              <Select value={selectedTable} onValueChange={setSelectedTable}>
+              <Select value={selectedTable} onValueChange={setSelectedTable} disabled={loadingTables}>
                 <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="Select a table..." />
+                  <SelectValue placeholder={loadingTables ? "Loading tables..." : "Select a table..."} />
                 </SelectTrigger>
                 <SelectContent>
-                  {tables.map(table => (
-                    <SelectItem key={table.id} value={table.id}>Table {table.table_number} ({table.capacity} seats)</SelectItem>
-                  ))}
+                  {availableTables.length === 0 && !loadingTables ? (
+                    <SelectItem value="empty" disabled>No active tables found</SelectItem>
+                  ) : (
+                    availableTables.map(table => (
+                      <SelectItem key={table.id} value={table.id}>Table {table.table_number} ({table.capacity} seats)</SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

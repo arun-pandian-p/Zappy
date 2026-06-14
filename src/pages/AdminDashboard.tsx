@@ -88,16 +88,16 @@ const mainTabs = [
   { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { value: "orders", label: "Orders", icon: ClipboardList },
   { value: "tables", label: "Tables", icon: Grid3X3 },
-  { value: "waiters", label: "Waiters", icon: Users },
+  { value: "qr-manager", label: "QR Manager", icon: QrCode },
+  { value: "menu", label: "Menu", icon: UtensilsCrossed },
   { value: "kitchen", label: "Kitchen", icon: ChefHat },
   { value: "billing", label: "Billing", icon: Receipt },
   { value: "inventory", label: "Inventory", icon: Package },
-  { value: "marketing", label: "Marketing", icon: Sparkles },
-  { value: "customers", label: "Customers", icon: Heart },
-  { value: "analytics", label: "Analytics", icon: BarChart3 },
+  { value: "waiters", label: "Waiters", icon: Users },
   { value: "staff", label: "Staff", icon: CalendarClock },
+  { value: "analytics", label: "Analytics", icon: BarChart3 },
   { value: "reports", label: "Reports", icon: FileSpreadsheet },
-  { value: "reviews", label: "Reputation", icon: Star },
+  { value: "marketing", label: "Marketing", icon: Sparkles },
   { value: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -324,6 +324,18 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <TableManagement restaurantId={restaurantId} />
+                </motion.div>
+              )}
+
+              {activeTab === "qr-manager" && (
+                <motion.div
+                  key="qr-manager"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <QRCenter restaurantId={restaurantId} />
                 </motion.div>
               )}
 

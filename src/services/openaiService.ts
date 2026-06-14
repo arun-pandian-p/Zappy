@@ -19,6 +19,12 @@ export interface OpenAIModelConfig {
     ocr_menu_import_fallback: OpenAIFeatureConfig;
     food_graph_reasoning: OpenAIFeatureConfig;
     superadmin_ai_insights: OpenAIFeatureConfig;
+    menu_description: OpenAIFeatureConfig;
+    menu_assistant: OpenAIFeatureConfig;
+    dish_image_generation: OpenAIFeatureConfig;
+    sales_summary: OpenAIFeatureConfig;
+    moderation: OpenAIFeatureConfig;
+    translation: OpenAIFeatureConfig;
     menu_embeddings: {
       model: string;
       dimensions: number;
@@ -31,7 +37,7 @@ export interface OpenAIModelConfig {
 }
 
 const DEFAULT_CONFIG: OpenAIModelConfig = {
-  version: "1.0",
+  version: "2.0",
   default_base_url: "https://api.openai.com/v1",
   features: {
     review_sentiment_analysis: {
@@ -49,24 +55,60 @@ const DEFAULT_CONFIG: OpenAIModelConfig = {
       tier_required: "pro"
     },
     ocr_menu_import_fallback: {
-      model: "gpt-4.1-mini",
+      model: "gpt-5.4-mini",
       supports_vision: true,
       max_tokens: 4000,
       temperature: 0.1,
       tier_required: "basic"
     },
     food_graph_reasoning: {
-      model: "o4-mini",
+      model: "gpt-5.4-nano",
       max_tokens: 500,
       temperature: 0.3,
       tier_required: "enterprise"
     },
     superadmin_ai_insights: {
-      model: "gpt-5.4-mini",
+      model: "gpt-5.4-nano",
       max_tokens: 2000,
       temperature: 0.4,
       tier_required: "enterprise",
       use_batch_api: true
+    },
+    menu_description: {
+      model: "gpt-5.5-mini",
+      max_tokens: 300,
+      temperature: 0.5,
+      tier_required: "free"
+    },
+    menu_assistant: {
+      model: "gpt-5.5-mini",
+      max_tokens: 500,
+      temperature: 0.7,
+      tier_required: "basic"
+    },
+    dish_image_generation: {
+      model: "gpt-image-1",
+      max_tokens: 1000,
+      temperature: 0.8,
+      tier_required: "pro"
+    },
+    sales_summary: {
+      model: "gpt-5.4-nano",
+      max_tokens: 1500,
+      temperature: 0.2,
+      tier_required: "enterprise"
+    },
+    moderation: {
+      model: "omni-moderation-latest",
+      max_tokens: 100,
+      temperature: 0.0,
+      tier_required: "free"
+    },
+    translation: {
+      model: "gpt-5.4-nano",
+      max_tokens: 1000,
+      temperature: 0.1,
+      tier_required: "basic"
     },
     menu_embeddings: {
       model: "text-embedding-3-small",
@@ -76,7 +118,7 @@ const DEFAULT_CONFIG: OpenAIModelConfig = {
   },
   rate_limit_strategy: "queue_with_batch_fallback",
   cost_tracking: true,
-  monthly_hard_cap_usd: 10.0
+  monthly_hard_cap_usd: 8.0
 };
 
 // Key to store config in localStorage/Supabase
@@ -125,7 +167,10 @@ function calculateEstimatedCost(model: string, promptTokens: number, completionT
   let outputRate = 0.60;
 
   const m = model.toLowerCase();
-  if (m.includes("gpt-5.4-mini")) {
+  if (m.includes("gpt-5.5-mini")) {
+    inputRate = 0.50;
+    outputRate = 2.00;
+  } else if (m.includes("gpt-5.4-mini")) {
     inputRate = 0.75;
     outputRate = 4.50;
   } else if (m.includes("gpt-4.1-nano") || m.includes("gpt-5.4-nano")) {
@@ -161,7 +206,13 @@ function mapModelToRealOpenAIModel(customModelName: string): string {
   if (m.includes("text-embedding-3-small")) {
     return "text-embedding-3-small";
   }
-  if (m.includes("gpt-5.4") && !m.includes("mini") && !m.includes("nano")) {
+  if (m.includes("gpt-image-1")) {
+    return "gpt-image-1";
+  }
+  if (m.includes("omni-moderation")) {
+    return "text-moderation-latest";
+  }
+  if (m.includes("gpt-5.5") || m.includes("gpt-5.4") && !m.includes("mini") && !m.includes("nano")) {
     return "gpt-4o";
   }
   // All other chat/vision fallbacks map to cheap & efficient gpt-4o-mini
@@ -403,3 +454,67 @@ export async function executeOpenAIEmbeddingCall(
 
   return embeddings;
 }
+
+export async function executeOpenAIImageCall(
+  restaurantId: string,
+  prompt: string,
+  quality: "low" | "medium"
+): Promise<string> {
+  const config = getOpenAIConfig(restaurantId);
+  const currentCost = getMonthlyCost(restaurantId);
+  if (currentCost >= config.monthly_hard_cap_usd) {
+    throw new Error("Monthly AI budget exceeded");
+  }
+
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("VITE_OPENAI_API_KEY not configured in environment.");
+  }
+
+  const response = await fetch(`${config.default_base_url}/images/generations`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-image-1",
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024"
+    }),
+  });
+
+  if (!response.ok) {
+    const errorDetails = await response.text();
+    throw new Error(`OpenAI Image Generation failed: ${errorDetails}`);
+  }
+
+  const data = await response.json();
+  const url = data.data?.[0]?.url;
+  const b64_json = data.data?.[0]?.b64_json;
+
+  let resultUrl = "";
+  if (url) {
+    resultUrl = url;
+  } else if (b64_json) {
+    resultUrl = `data:image/png;base64,${b64_json}`;
+  }
+
+  if (!resultUrl) {
+    throw new Error("OpenAI DALL-E returned an empty image list.");
+  }
+
+  // Cost tracking
+  const cost = quality === "medium" ? 0.08 : 0.04;
+  addMonthlyCost(restaurantId, cost);
+
+  // Increment monthly image count
+  const monthKey = new Date().toISOString().substring(0, 7);
+  const countKey = `zappy_ai_images_count_${restaurantId}_${monthKey}`;
+  const currentCount = parseInt(localStorage.getItem(countKey) || "0") || 0;
+  localStorage.setItem(countKey, String(currentCount + 1));
+
+  return resultUrl;
+}
+

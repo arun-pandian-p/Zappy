@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { invokeFunction } from "@/integrations/supabase/functions";
+import { Trash2 } from "lucide-react";
 
 export function WaiterManagement({ restaurantId }: { restaurantId: string }) {
   const [employees, setEmployees] = useState<any[]>([]);
@@ -23,6 +25,7 @@ export function WaiterManagement({ restaurantId }: { restaurantId: string }) {
     phone: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -56,8 +59,38 @@ export function WaiterManagement({ restaurantId }: { restaurantId: string }) {
     setLoading(false);
   }
 
+  async function handleDeleteEmployee(emp: any) {
+    if (!confirm(`Are you sure you want to delete ${emp.full_name}? This will revoke their access.`)) return;
+    setIsDeleting(emp.id);
+
+    try {
+      const { data: funcData, error: funcError } = await invokeFunction('manage-staff', {
+        body: {
+          action: 'delete',
+          user_id: emp.user_id
+        }
+      });
+
+      if (funcError) throw funcError;
+      if (funcData?.error) throw new Error(funcData.error);
+
+      // Delete from employees table
+      const { error: dbError } = await supabase.from('employees').delete().eq('id', emp.id);
+      if (dbError) throw dbError;
+
+      toast({ title: "Success", description: "Employee deleted successfully." });
+      loadEmployees();
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: "Error", description: err.message || "Failed to delete employee", variant: "destructive" });
+    } finally {
+      setIsDeleting(null);
+    }
+  }
+
   async function handleCreateEmployee(e: React.FormEvent) {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent double execution
     if (!newEmp.username || !newEmp.password || !newEmp.full_name) {
       toast({ title: "Validation Error", description: "Username, password, and full name are required.", variant: "destructive" });
       return;
@@ -65,31 +98,52 @@ export function WaiterManagement({ restaurantId }: { restaurantId: string }) {
     setIsSubmitting(true);
 
     try {
+      // 1. Existing user check to prevent duplicate faux emails
+      const { data: existingEmp } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('restaurant_id', restaurantId)
+        .eq('username', newEmp.username)
+        .maybeSingle();
+
+      if (existingEmp) {
+        throw new Error(`Username '${newEmp.username}' is already taken. Please choose another.`);
+      }
+
       // Get restaurant slug
       const { data: restData } = await supabase.from('restaurants').select('slug').eq('id', restaurantId).single();
       const slug = restData?.slug || restaurantId.substring(0,8);
 
-      // Create user via Supabase Auth
+      // Create user via Supabase Edge Function to bypass rate limits
       const fauxEmail = `${newEmp.username.toLowerCase().replace(/[^a-z0-9]/g, '')}@${slug}.zappy.local`;
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: fauxEmail,
-        password: newEmp.password,
-        options: {
-          data: {
-            full_name: newEmp.full_name,
-            role: newEmp.role,
-            is_pseudo_username: true
-          }
+      const roleMap: Record<string, string> = {
+        WAITER: 'waiter_staff',
+        KITCHEN_STAFF: 'kitchen_staff',
+        MANAGER: 'restaurant_admin',
+        CASHIER: 'billing_staff'
+      };
+
+      const { data: funcData, error: funcError } = await invokeFunction('manage-staff', {
+        body: {
+          action: 'create',
+          email: fauxEmail,
+          password: newEmp.password,
+          name: newEmp.full_name,
+          role: roleMap[newEmp.role] || 'waiter_staff',
+          restaurant_id: restaurantId
         }
       });
 
-      if (authError) throw authError;
+      if (funcError) throw funcError;
+      if (funcData?.error) throw new Error(funcData.error);
+
+      const newUserId = funcData?.user_id;
 
       // Insert into employees table
       const { error: dbError } = await supabase.from('employees').insert({
         restaurant_id: restaurantId,
-        user_id: authData.user?.id,
+        user_id: newUserId,
         username: newEmp.username,
         full_name: newEmp.full_name,
         role: newEmp.role,
@@ -99,21 +153,7 @@ export function WaiterManagement({ restaurantId }: { restaurantId: string }) {
 
       if (dbError) throw dbError;
 
-      // Insert into user_roles
-      const roleMap: Record<string, string> = {
-        WAITER: 'waiter_staff',
-        KITCHEN_STAFF: 'kitchen_staff',
-        MANAGER: 'restaurant_admin',
-        CASHIER: 'billing_staff'
-      };
-
-      const { error: roleError } = await supabase.from('user_roles').insert({
-        user_id: authData.user?.id,
-        restaurant_id: restaurantId,
-        role: roleMap[newEmp.role] || 'waiter_staff'
-      });
-
-      if (roleError) throw roleError;
+      // Note: Edge function already inserts into user_roles and staff_profiles!
 
       toast({ title: "Success", description: "Employee created successfully." });
       setIsDialogOpen(false);
@@ -194,11 +234,12 @@ export function WaiterManagement({ restaurantId }: { restaurantId: string }) {
                 <TableHead>Username</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {employees.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center">No staff found.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center">No staff found.</TableCell></TableRow>
               ) : (
                 employees.map(emp => (
                   <TableRow key={emp.id}>
@@ -210,6 +251,17 @@ export function WaiterManagement({ restaurantId }: { restaurantId: string }) {
                       <Badge variant={emp.status === 'ACTIVE' ? 'default' : emp.status === 'ON_BREAK' ? 'secondary' : 'outline'}>
                         {emp.status.replace('_', ' ')}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleDeleteEmployee(emp)}
+                        disabled={isDeleting === emp.id}
+                      >
+                        {isDeleting === emp.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

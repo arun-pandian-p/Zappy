@@ -11,12 +11,26 @@ export async function syncImageToSupabase(
   fileName?: string
 ): Promise<string> {
   try {
-    console.log(`Syncing external image to Supabase: ${externalUrl}`);
+    console.log(`Syncing external image to Supabase: ${externalUrl.substring(0, 100)}...`);
     
-    // 1. Fetch the image via a CORS proxy
-    const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(externalUrl)}`;
-    const response = await fetch(proxiedUrl);
-    const blob = await response.blob();
+    let blob: Blob;
+    
+    if (externalUrl.startsWith("data:image")) {
+      const arr = externalUrl.split(',');
+      const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      blob = new Blob([u8arr], { type: mime });
+    } else {
+      // 1. Fetch the image via a CORS proxy
+      const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(externalUrl)}`;
+      const response = await fetch(proxiedUrl);
+      blob = await response.blob();
+    }
     
     // 2. Generate a unique file name
     const ext = blob.type.split("/")[1] || "jpg";

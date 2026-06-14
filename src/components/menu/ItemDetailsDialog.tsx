@@ -71,8 +71,8 @@ export function ItemDetailsDialog({
           <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-white/35 backdrop-blur-sm z-10 pointer-events-none" />
 
           <img
-            src={item.image_url || "/placeholder.svg"}
-            alt={item.name}
+            src={item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80"}
+            alt={item.name || "Menu Item"}
             className="w-full h-full object-cover"
           />
           {/* Ambient Cinematic fade-out bottom gradient */}
@@ -129,9 +129,9 @@ export function ItemDetailsDialog({
 
             {/* Title & Description Section */}
             <div className="space-y-2">
-              <DialogTitle className="text-2xl font-black tracking-tight leading-tight">{item.name}</DialogTitle>
+              <DialogTitle className="text-2xl font-black tracking-tight leading-tight">{item.name || "Menu Item"}</DialogTitle>
               <DialogDescription className="text-sm leading-relaxed text-muted-foreground/90">
-                {item.description || recipe.description}
+                {item.description || recipe.description || "Freshly prepared"}
               </DialogDescription>
             </div>
 
@@ -158,7 +158,7 @@ export function ItemDetailsDialog({
               <div className="flex flex-col">
                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Base Price</span>
                 <span className="text-2xl font-black text-[#008c4a] dark:text-[#10b981]">
-                  {currencySymbol}{Number(item.price).toFixed(2)}
+                  {currencySymbol}{Number(item.price || 0).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -243,7 +243,7 @@ export function ItemDetailsDialog({
                   className="w-full bg-[#008c4a] hover:bg-[#00703b] text-white rounded-2xl h-14 font-extrabold text-base shadow-lg shadow-[#008c4a]/15 gap-2 transition-transform active:scale-[0.98]"
                 >
                   <ShoppingBag className="w-5 h-5" />
-                  Add to Cart — {currencySymbol}{Number(item.price).toFixed(0)}
+                  Add to Cart — {currencySymbol}{Number(item.price || 0).toFixed(0)}
                 </Button>
               </motion.div>
             ) : (
@@ -286,7 +286,7 @@ export function ItemDetailsDialog({
                   <div className="text-right">
                     <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Subtotal</span>
                     <p className="text-xl font-black text-[#008c4a] dark:text-[#10b981]">
-                      {currencySymbol}{(Number(item.price) * quantity).toFixed(0)}
+                      {currencySymbol}{(Number(item.price || 0) * quantity).toFixed(0)}
                     </p>
                   </div>
                 </div>

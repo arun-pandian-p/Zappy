@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useSystemLogs } from "@/hooks/useSystemLogs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,26 +23,51 @@ export function ReportsPanel({ restaurantId }: ReportsPanelProps) {
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
-  const { logs, isLoading, refetch } = useSystemLogs(searchTerm);
+  const [employeesMap, setEmployeesMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    async function loadEmployees() {
+      if (!restaurantId) return;
+      try {
+        const { data } = await supabase
+          .from('employees')
+          .select('user_id, full_name')
+          .eq('restaurant_id', restaurantId);
+        
+        const mapping: Record<string, string> = {};
+        data?.forEach(emp => {
+          if (emp.user_id) mapping[emp.user_id] = emp.full_name;
+        });
+        setEmployeesMap(mapping);
+      } catch (err) {
+        console.error("Error loading employees mapping:", err);
+      }
+    }
+    loadEmployees();
+  }, [restaurantId]);
+
+  const { logs, isLoading, refetch } = useSystemLogs(restaurantId, searchTerm);
 
   // Filter logs locally based on categories
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
       if (categoryFilter === "ALL") return true;
       const action = (log.action || "").toLowerCase();
-      const entity = (log.entity_type || "").toLowerCase();
+      const entity = (log.table_name || "").toLowerCase();
       
       if (categoryFilter === "SECURITY") {
         return action.includes("login") || action.includes("logout") || action.includes("auth") || action.includes("session");
       }
       if (categoryFilter === "PRICE_CHANGE") {
-        return action.includes("price") || action.includes("rate") || action.includes("pricing") || (log.details && JSON.stringify(log.details).toLowerCase().includes("price"));
+        const hasPriceInDetail = (log.new_values && JSON.stringify(log.new_values).toLowerCase().includes("price")) ||
+                              (log.old_values && JSON.stringify(log.old_values).toLowerCase().includes("price"));
+        return action.includes("price") || action.includes("rate") || action.includes("pricing") || hasPriceInDetail;
       }
       if (categoryFilter === "DELETION") {
         return action.includes("delete") || action.includes("remove") || action.includes("destroy");
       }
       if (categoryFilter === "SYSTEM") {
-        return entity.includes("system") || action.includes("config") || action.includes("setting");
+        return entity.includes("system") || entity.includes("settings") || entity.includes("restaurants") || action.includes("config") || action.includes("setting");
       }
       return true;
     });
@@ -55,8 +81,9 @@ export function ReportsPanel({ restaurantId }: ReportsPanelProps) {
 
     logs.forEach(log => {
       const action = (log.action || "").toLowerCase();
+      const detailsStr = JSON.stringify({ old: log.old_values, new: log.new_values }).toLowerCase();
       if (action.includes("login")) logins++;
-      if (action.includes("price") || (log.details && JSON.stringify(log.details).toLowerCase().includes("price"))) priceChanges++;
+      if (action.includes("price") || detailsStr.includes("price")) priceChanges++;
       if (action.includes("delete") || action.includes("remove")) deletions++;
     });
 
@@ -66,14 +93,16 @@ export function ReportsPanel({ restaurantId }: ReportsPanelProps) {
   // Export logs to CSV
   const handleExportCSV = () => {
     if (filteredLogs.length === 0) return;
-    const headers = ["ID", "Timestamp", "Actor Email", "Action", "Entity Type", "Details"];
+    const headers = ["ID", "Timestamp", "Actor Name", "Action", "Table Name", "Details", "IP Address", "Device"];
     const rows = filteredLogs.map(log => [
       log.id,
       log.created_at ? format(parseISO(log.created_at), "yyyy-MM-dd HH:mm:ss") : "N/A",
-      log.actor_email || "System/Anonymous",
+      log.user_id ? (employeesMap[log.user_id] || "Staff Member") : "System/Anonymous",
       log.action,
-      log.entity_type || "N/A",
-      log.details ? JSON.stringify(log.details).replace(/"/g, '""') : ""
+      log.table_name || "N/A",
+      log.new_values || log.old_values ? JSON.stringify({ old: log.old_values, new: log.new_values }).replace(/"/g, '""') : "",
+      log.ip_address || "N/A",
+      log.device || "N/A"
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," 
@@ -265,11 +294,25 @@ export function ReportsPanel({ restaurantId }: ReportsPanelProps) {
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            By <span className="font-semibold text-slate-700 dark:text-zinc-300">{log.actor_email || "System/Anonymous"}</span>
+                            By <span className="font-semibold text-slate-700 dark:text-zinc-300">
+                              {log.user_id ? (employeesMap[log.user_id] || "Staff Member") : "System/Anonymous"}
+                            </span>
                           </p>
-                          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {log.created_at ? format(parseISO(log.created_at), "MMM dd, yyyy · hh:mm a") : "N/A"}
+                          <p className="text-[10px] text-muted-foreground flex flex-wrap items-center gap-2 mt-0.5">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                              {log.created_at ? format(parseISO(log.created_at), "MMM dd, yyyy · hh:mm a") : "N/A"}
+                            </span>
+                            {log.ip_address && (
+                              <span className="bg-slate-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-[9px] font-mono">
+                                IP: {log.ip_address}
+                              </span>
+                            )}
+                            {log.device && (
+                              <span className="bg-slate-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-[9px] truncate max-w-[120px]" title={log.device}>
+                                Device: {log.device.split(' ')[0]}
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -298,12 +341,12 @@ export function ReportsPanel({ restaurantId }: ReportsPanelProps) {
                     {/* Collapsible details inline */}
                     {isExpanded && (
                       <div className="mt-3 ml-12 bg-slate-50 dark:bg-zinc-900 border rounded-2xl p-4 text-xs font-mono overflow-x-auto space-y-2">
-                        <div className="grid grid-cols-3 gap-2 border-b pb-2 mb-2 opacity-75">
-                          <div><strong>Entity:</strong> {log.entity_type || "N/A"}</div>
-                          <div className="col-span-2"><strong>ID:</strong> {log.entity_id || "N/A"}</div>
+                        <div className="grid grid-cols-2 gap-2 border-b pb-2 mb-2 opacity-75 text-[10px]">
+                          <div><strong>Table:</strong> {log.table_name || "N/A"}</div>
+                          <div><strong>Record ID:</strong> {log.record_id || "N/A"}</div>
                         </div>
                         <pre className="text-[10px] leading-relaxed text-slate-700 dark:text-zinc-300 whitespace-pre-wrap">
-                          {log.details ? JSON.stringify(log.details, null, 2) : "No details available."}
+                          {log.new_values || log.old_values ? JSON.stringify({ old: log.old_values, new: log.new_values }, null, 2) : "No details available."}
                         </pre>
                       </div>
                     )}
@@ -327,18 +370,33 @@ export function ReportsPanel({ restaurantId }: ReportsPanelProps) {
               <div className="space-y-4">
                 <div className="space-y-1">
                   <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Action</span>
-                  <p className="font-bold text-slate-900 dark:text-white text-base">{selectedLog.action}</p>
+                  <p className="font-bold text-slate-900 dark:text-white text-sm bg-slate-50 dark:bg-zinc-900/50 p-2.5 rounded-xl border">{selectedLog.action}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <div className="space-y-1">
-                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Entity</span>
-                    <Badge variant="secondary" className="font-bold text-xs py-0.5 rounded-lg w-fit block">{selectedLog.entity_type || "N/A"}</Badge>
+                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Table</span>
+                    <Badge variant="secondary" className="font-bold text-xs py-0.5 rounded-lg w-fit block">{selectedLog.table_name || "N/A"}</Badge>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Timestamp</span>
-                    <p className="text-xs font-medium text-slate-800 dark:text-zinc-200">
+                    <p className="text-xs font-medium text-slate-800 dark:text-zinc-200 mt-1">
                       {selectedLog.created_at ? format(parseISO(selectedLog.created_at), "yyyy-MM-dd HH:mm:ss") : "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">IP Address</span>
+                    <p className="text-xs font-mono font-medium text-slate-800 dark:text-zinc-200 mt-1">
+                      {selectedLog.ip_address || "N/A"}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Device / Browser</span>
+                    <p className="text-xs font-medium text-slate-800 dark:text-zinc-200 mt-1 truncate" title={selectedLog.device}>
+                      {selectedLog.device ? selectedLog.device.split(' ')[0] : "N/A"}
                     </p>
                   </div>
                 </div>
@@ -346,14 +404,16 @@ export function ReportsPanel({ restaurantId }: ReportsPanelProps) {
                 <div className="space-y-1 pt-2">
                   <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Actor / Admin Account</span>
                   <p className="text-xs font-semibold text-slate-800 dark:text-zinc-200 bg-slate-50 dark:bg-zinc-900/50 p-2.5 rounded-xl border">
-                    {selectedLog.actor_email || "System/Anonymous"}
+                    {selectedLog.user_id ? (employeesMap[selectedLog.user_id] || "Staff Member") : "System/Anonymous"}
                   </p>
                 </div>
 
                 <div className="space-y-1 pt-2">
                   <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Payload Details</span>
                   <div className="bg-zinc-950 text-zinc-300 font-mono text-[10px] rounded-2xl p-4 overflow-x-auto max-h-[200px]">
-                    <pre className="whitespace-pre-wrap">{selectedLog.details ? JSON.stringify(selectedLog.details, null, 2) : "No details recorded."}</pre>
+                    <pre className="whitespace-pre-wrap">
+                      {selectedLog.new_values || selectedLog.old_values ? JSON.stringify({ old: selectedLog.old_values, new: selectedLog.new_values }, null, 2) : "No details recorded."}
+                    </pre>
                   </div>
                 </div>
 

@@ -34,6 +34,7 @@ import { SuperAdminProfileEditor } from '@/components/superadmin/SuperAdminProfi
 import PromotionsOverview from '@/components/superadmin/PromotionsOverview';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminAccountsTable from '@/components/superadmin/AdminAccountsTable';
+import LeadsCRM from '@/components/superadmin/LeadsCRM';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import type { Tables } from '@/integrations/supabase/types';
@@ -460,6 +461,9 @@ const SuperAdminDashboard = () => {
       case 'leaderboard':
         return <Leaderboard />;
 
+      case 'leads':
+        return <LeadsCRM />;
+
       case 'landing-cms':
         return <LandingCMS />;
 
@@ -504,6 +508,7 @@ const SuperAdminDashboard = () => {
   const pageTitles: Record<string, { title: string; description: string }> = {
     dashboard: { title: 'Dashboard', description: 'Platform overview and metrics' },
     restaurants: { title: 'Tenants / Hotels', description: 'Manage all tenants' },
+    leads: { title: 'Leads CRM', description: 'Manage and follow up on demo requests' },
     leaderboard: { title: 'Leaderboard', description: 'Top revenue-generating restaurants' },
     analytics: { title: 'Analytics', description: 'Revenue and performance trends' },
     users: { title: 'Restaurant Admins', description: 'View restaurant admin accounts' },

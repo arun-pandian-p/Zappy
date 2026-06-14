@@ -8,8 +8,6 @@ import ScrollProgress from '@/components/landing/ScrollProgress';
 import HeroSection from '@/components/landing/HeroSection';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import HowItWorks from '@/components/landing/HowItWorks';
-import DashboardCarousel from '@/components/landing/DashboardCarousel';
-import LiveDashboardTeaser from '@/components/landing/LiveDashboardTeaser';
 import PricingSection from '@/components/landing/PricingSection';
 import FAQSection from '@/components/landing/FAQSection';
 import CTABanner from '@/components/landing/CTABanner';
@@ -21,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { invokeFunction } from '@/integrations/supabase/functions';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from "@/integrations/supabase/client";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -68,6 +67,20 @@ const LandingPage = () => {
     setDemoSubmitting(true);
 
     try {
+      // 1. Store lead in database
+      const { error: dbError } = await supabase.from('leads').insert({
+        name: demoForm.name,
+        restaurant_name: demoForm.restaurantName,
+        phone: demoForm.phone || null,
+        email: demoForm.email,
+        city: demoForm.city || null,
+        branches: parseInt(demoForm.branches) || 1,
+        status: 'New'
+      });
+
+      if (dbError) throw dbError;
+
+      // 2. Trigger notification Edge function
       const { error } = await invokeFunction('notify-quote', {
         body: {
           name: demoForm.name,
@@ -214,12 +227,7 @@ const LandingPage = () => {
           />
         }
 
-        {/* 2. Live Dashboard Teaser */}
-        <ParallaxSection yOffset={30} fadeIn>
-          <LiveDashboardTeaser />
-        </ParallaxSection>
-
-        {/* 3. Features */}
+        {/* 2. Features */}
         {isVisible('features') &&
           <ParallaxSection yOffset={35} fadeIn>
             <div id="features">
@@ -228,7 +236,7 @@ const LandingPage = () => {
           </ParallaxSection>
         }
 
-        {/* 4. How it works */}
+        {/* 3. How it works */}
         {isVisible('how_it_works') &&
           <ParallaxSection yOffset={30} fadeIn>
             <div id="how-it-works">
@@ -237,12 +245,7 @@ const LandingPage = () => {
           </ParallaxSection>
         }
 
-        {/* 5. Dashboard Carousel */}
-        <ParallaxSection yOffset={20} fadeIn>
-          <DashboardCarousel />
-        </ParallaxSection>
-
-        {/* 6. Pricing */}
+        {/* 4. Pricing */}
         {isVisible('pricing') &&
           <ParallaxSection yOffset={30} fadeIn>
             <div id="pricing">
@@ -251,14 +254,14 @@ const LandingPage = () => {
           </ParallaxSection>
         }
 
-        {/* 7. FAQ */}
+        {/* 5. FAQ */}
         <ParallaxSection yOffset={20} fadeIn>
           <div id="faq">
             <FAQSection />
           </div>
         </ParallaxSection>
 
-        {/* 8. CTA Banner */}
+        {/* 6. CTA Banner */}
         {isVisible('cta_banner') &&
           <CTABanner onGetStarted={handleGetStarted} cms={cms.cta_banner?.content} />
         }

@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React, { useEffect, useRef, useState } from "react";
+import QRCodeStyling, { DotType, CornerSquareType, CornerDotType } from "qr-code-styling";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Palette, Image as ImageIcon, Sparkles, Check, ChevronDown, Eye, Trash2 } from "lucide-react";
+import { Loader2, Palette, Image as ImageIcon, Sparkles, Check, Eye, Trash2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface AdvancedQRBuilderProps {
@@ -26,9 +26,14 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
     error_level: initialValues?.error_level || "H",
     logo_url: initialValues?.logo_url || "",
     logo_excavate: initialValues?.logo_excavate ?? true,
-    logo_size: initialValues?.logo_size || 0.2, // 20% of QR
+    logo_size: initialValues?.logo_size || 0.2,
     qr_type_selection: initialValues?.qr_type_selection || "custom",
     table_number: initialValues?.table_number || "",
+    dots_type: initialValues?.dots_type || "rounded",
+    corners_square_type: initialValues?.corners_square_type || "extra-rounded",
+    corners_dot_type: initialValues?.corners_dot_type || "dot",
+    use_gradient: initialValues?.use_gradient || false,
+    gradient_color: initialValues?.gradient_color || "#ff0000",
   });
 
   const updateConfig = (key: string, value: any) => {
@@ -42,16 +47,69 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
     { name: "Sunset", fg: "#9D0208", bg: "#FFF0F3" },
     { name: "Royal", fg: "#3C096C", bg: "#F0E6FF" },
     { name: "Night", fg: "#E0E1DD", bg: "#1B1B1B" },
-    { name: "Zappy", fg: "#E11D48", bg: "#FFF1F2" }, // Zappy Primary
+    { name: "Zappy", fg: "#E11D48", bg: "#FFF1F2" },
   ];
 
   const handleSave = () => {
     onSave(config);
   };
 
+  const qrRef = useRef<HTMLDivElement>(null);
+  const [qrCode] = useState(() => new QRCodeStyling({
+    width: 1024,
+    height: 1024,
+    type: "svg",
+    margin: 10,
+    imageOptions: { crossOrigin: "anonymous", margin: 10 }
+  }));
+
+  useEffect(() => {
+    qrCode.update({
+      data: config.target_url || "https://zappy.ind.in",
+      dotsOptions: {
+        type: config.dots_type as DotType,
+        color: !config.use_gradient ? config.fg_color : undefined,
+        gradient: config.use_gradient ? {
+          type: "linear",
+          colorStops: [
+            { offset: 0, color: config.fg_color },
+            { offset: 1, color: config.gradient_color }
+          ]
+        } : undefined
+      },
+      backgroundOptions: { color: "transparent" },
+      cornersSquareOptions: { 
+        type: config.corners_square_type as CornerSquareType,
+        color: config.fg_color 
+      },
+      cornersDotOptions: { 
+        type: config.corners_dot_type as CornerDotType,
+        color: config.fg_color 
+      },
+      image: config.logo_url || undefined,
+      imageOptions: {
+        crossOrigin: "anonymous",
+        margin: config.logo_excavate ? 10 : 0,
+        imageSize: config.logo_size
+      },
+      qrOptions: { errorCorrectionLevel: config.error_level as any }
+    });
+    
+    if (qrRef.current) {
+      qrRef.current.innerHTML = "";
+      qrCode.append(qrRef.current);
+      // Scale down SVG for preview but keep high res export
+      const svg = qrRef.current.querySelector("svg");
+      if (svg) {
+        svg.style.width = "100%";
+        svg.style.height = "auto";
+        svg.style.maxWidth = "220px";
+      }
+    }
+  }, [config, qrCode]);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      {/* Settings Panel */}
       <div className="lg:col-span-8 space-y-6">
         <Tabs defaultValue="content" className="w-full">
           <TabsList className="grid w-full grid-cols-3 p-1 bg-muted/50 rounded-xl h-auto">
@@ -59,7 +117,7 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
               <Sparkles className="w-4 h-4 mr-2" /> Content
             </TabsTrigger>
             <TabsTrigger value="colors" className="py-2.5 rounded-lg data-[state=active]:shadow-sm text-sm">
-              <Palette className="w-4 h-4 mr-2" /> Colors
+              <Palette className="w-4 h-4 mr-2" /> Design & Colors
             </TabsTrigger>
             <TabsTrigger value="logo" className="py-2.5 rounded-lg data-[state=active]:shadow-sm text-sm">
               <ImageIcon className="w-4 h-4 mr-2" /> Add Logo
@@ -166,6 +224,47 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
                 </div>
               </div>
 
+              <div className="space-y-4 pt-4 border-t">
+                <Label className="text-sm font-semibold">Body & Frame Shapes</Label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Body Modules</Label>
+                    <Select value={config.dots_type} onValueChange={(val) => updateConfig("dots_type", val)}>
+                      <SelectTrigger className="bg-zinc-50 dark:bg-zinc-900 rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="square">Square</SelectItem>
+                        <SelectItem value="rounded">Rounded</SelectItem>
+                        <SelectItem value="dots">Dots</SelectItem>
+                        <SelectItem value="classy">Classy</SelectItem>
+                        <SelectItem value="classy-rounded">Classy Rounded</SelectItem>
+                        <SelectItem value="extra-rounded">Extra Rounded</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Eye Frame Shape</Label>
+                    <Select value={config.corners_square_type} onValueChange={(val) => updateConfig("corners_square_type", val)}>
+                      <SelectTrigger className="bg-zinc-50 dark:bg-zinc-900 rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="square">Square</SelectItem>
+                        <SelectItem value="extra-rounded">Extra Rounded</SelectItem>
+                        <SelectItem value="dot">Dot</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Eye Ball Shape</Label>
+                    <Select value={config.corners_dot_type} onValueChange={(val) => updateConfig("corners_dot_type", val)}>
+                      <SelectTrigger className="bg-zinc-50 dark:bg-zinc-900 rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="square">Square</SelectItem>
+                        <SelectItem value="dot">Dot</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
                 <div className="space-y-2">
                   <Label>Foreground Color</Label>
@@ -197,6 +296,34 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
                     />
                   </div>
                 </div>
+                
+                <div className="space-y-2 col-span-2">
+                  <div className="flex items-center h-10">
+                    <Switch 
+                      checked={config.use_gradient} 
+                      onCheckedChange={(val) => updateConfig("use_gradient", val)} 
+                    />
+                    <Label className="ml-2">Enable Linear Gradient</Label>
+                  </div>
+                </div>
+
+                {config.use_gradient && (
+                  <div className="space-y-2 col-span-2 sm:col-span-1">
+                    <Label>Gradient End Color</Label>
+                    <div className="flex gap-3">
+                      <div
+                        className="w-10 h-10 rounded-xl border shadow-inner flex-shrink-0"
+                        style={{ backgroundColor: config.gradient_color }}
+                      />
+                      <Input
+                        type="text"
+                        value={config.gradient_color}
+                        onChange={(e) => updateConfig("gradient_color", e.target.value)}
+                        className="font-mono text-sm bg-zinc-50 dark:bg-zinc-900 rounded-xl"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
@@ -255,7 +382,6 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
         </Tabs>
       </div>
 
-      {/* Live Preview Panel */}
       <div className="lg:col-span-4 space-y-6">
         <Card className="border-0 shadow-xl bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl sticky top-6">
           <CardHeader className="pb-4 text-center">
@@ -265,23 +391,10 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center space-y-6 pt-2 pb-8">
             <div 
-              className="p-6 bg-white rounded-3xl shadow-2xl ring-1 ring-black/5 transition-all duration-300 transform hover:scale-105"
+              className="p-6 bg-white rounded-3xl shadow-2xl ring-1 ring-black/5 transition-all duration-300 transform hover:scale-105 flex items-center justify-center min-h-[220px] min-w-[220px]"
               style={{ backgroundColor: config.bg_color }}
             >
-              <QRCodeSVG
-                value={config.target_url || "https://zappy.ind.in"}
-                size={220}
-                fgColor={config.fg_color}
-                bgColor="transparent"
-                level={config.error_level as any}
-                includeMargin={false}
-                imageSettings={config.logo_url ? {
-                  src: config.logo_url,
-                  height: 220 * config.logo_size,
-                  width: 220 * config.logo_size,
-                  excavate: config.logo_excavate,
-                } : undefined}
-              />
+              <div ref={qrRef} className="flex items-center justify-center" />
             </div>
 
             <div className="w-full text-center space-y-1 px-4">

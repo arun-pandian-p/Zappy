@@ -1,42 +1,40 @@
-import { generateItemDescription } from "./ocrService";
+import { executeOpenAIImageCall } from "./openaiService";
 import { syncImageToSupabase } from "./storageService";
 import { supabase } from "@/integrations/supabase/client";
 import { tracer } from "./telemetry";
 import { SpanStatusCode } from "@opentelemetry/api";
-import { enrichMenuItem } from "./imageDiscoveryService";
 
-export async function generateFoodImage(itemName: string, description: string, restaurantId: string): Promise<string> {
+export async function generateFoodImage(
+  itemName: string,
+  category: string,
+  restaurantId: string,
+  quality: "low" | "medium" = "low"
+): Promise<string> {
   return tracer.startActiveSpan("generateFoodImage", async (span) => {
-    span.setAttribute("llm.prompt_template.template", "{{itemName}}, {{description}}, professional food photography, 4k, delicious, restaurant style");
-    span.setAttribute("llm.prompt_template.variables", JSON.stringify({ itemName, description }));
-    span.setAttribute("llm.prompt_template.version", "1.0.0");
+    span.setAttribute("llm.prompt_template.template", "Professional food photography of {dish_name}, {category} dish, top-down angle, on a clean plate, restaurant menu style, natural lighting, appetizing, high detail, no text, no watermark");
+    span.setAttribute("llm.prompt_template.variables", JSON.stringify({ itemName, category }));
 
     try {
-      console.log(`Generating AI image for: ${itemName}`);
+      console.log(`Generating AI image for: ${itemName} (${category})`);
       
-      // 1. Enhance description locally if it's too short
-      let enhancedDesc = description;
-      if (!description || description.length < 10) {
-        enhancedDesc = generateItemDescription(itemName);
-      }
+      const prompt = `Professional food photography of ${itemName}, ${category || 'signature'} dish, top-down angle, on a clean plate, restaurant menu style, natural lighting, appetizing, high detail, no text, no watermark`;
+      span.setAttribute("llm.prompts", prompt);
 
-      // 2. Fetch from a high-quality food image source (Pollinations AI)
-      const rawPrompt = `${itemName}, ${enhancedDesc}, professional food photography, 4k, delicious, restaurant style`;
-      span.setAttribute("llm.prompts", rawPrompt);
+      console.log("[Image Gen] Request Payload:", { model: "gpt-image-1", prompt, quality });
 
-      // Estimate tokens
-      const promptTokens = Math.round(rawPrompt.length / 4);
-      span.setAttribute("llm.token_count.prompt", promptTokens);
-
-      const aiPrompt = encodeURIComponent(rawPrompt);
-      const externalUrl = `https://image.pollinations.ai/prompt/${aiPrompt}?width=800&height=600&nologo=true&seed=${Math.floor(Math.random() * 1000)}`;
+      // Call OpenAI DALL-E image generation
+      const externalUrl = await executeOpenAIImageCall(restaurantId, prompt, quality);
+      console.log("[Image Gen] API Response URL:", externalUrl.substring(0, 100) + "...");
       
-      // 3. Sync to Supabase storage to make it permanent
-      const finalUrl = await syncImageToSupabase(externalUrl, restaurantId, "menu", itemName.toLowerCase().replace(/\s+/g, "_"));
+      // Sync to Supabase storage to make it permanent
+      const finalUrl = await syncImageToSupabase(
+        externalUrl, 
+        restaurantId, 
+        "menu", 
+        `${itemName.toLowerCase().replace(/\s+/g, "_")}_${Date.now()}`
+      );
+      console.log("[Image Gen] Storage Upload Result:", finalUrl);
       
-      const completionTokens = Math.round(finalUrl.length / 4);
-      span.setAttribute("llm.token_count.completion", completionTokens);
-      span.setAttribute("llm.token_count.total", promptTokens + completionTokens);
       span.setStatus({ code: SpanStatusCode.OK });
       return finalUrl;
     } catch (err: any) {

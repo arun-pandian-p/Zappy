@@ -25,6 +25,11 @@ export const useAuth = () => {
   });
 
   useEffect(() => {
+    const handleUnload = () => {
+      supabase.removeAllChannels();
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (session?.user) {
@@ -87,7 +92,10 @@ export const useAuth = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -106,6 +114,11 @@ export const useAuth = () => {
 
   const signOut = async () => {
     localStorage.removeItem('impersonated_restaurant_id');
+    try {
+      await supabase.removeAllChannels();
+    } catch (err) {
+      console.warn('Failed to clean up channels on logout:', err);
+    }
     const { error } = await supabase.auth.signOut();
     return { error };
   };

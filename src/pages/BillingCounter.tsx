@@ -86,6 +86,43 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
   const { isMuted, toggleMute, play: playSound } = useSound(SOUNDS.ORDER_READY);
 
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+
+  useEffect(() => {
+    if (selectedOrder) {
+      setCustomerName(selectedOrder.customer_name || '');
+      setCustomerPhone(selectedOrder.customer_phone || '');
+    } else {
+      setCustomerName('');
+      setCustomerPhone('');
+    }
+  }, [selectedOrder]);
+
+  const handlePhoneChange = async (phone: string) => {
+    setCustomerPhone(phone);
+    if (phone.trim().length >= 10 && restaurantId) {
+      try {
+        const { data, error } = await supabase
+          .from('invoices')
+          .select('customer_name')
+          .eq('restaurant_id', restaurantId)
+          .eq('customer_phone', phone.trim())
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (data && data[0]?.customer_name) {
+          setCustomerName(data[0].customer_name);
+          toast({ 
+            title: 'Returning Customer Detected', 
+            description: `Prefilled name: "${data[0].customer_name}"` 
+          });
+        }
+      } catch (err) {
+        console.error('Failed to search returning customer:', err);
+      }
+    }
+  };
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -140,8 +177,8 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
         paymentMethod: selectedPaymentMethod,
         discountAmount: discountAmount,
         totalAmount: adjustedTotal,
-        customerName: selectedOrder.customer_name || null,
-        customerPhone: selectedOrder.customer_phone || null,
+        customerName: customerName.trim() || null,
+        customerPhone: customerPhone.trim() || null,
         notes: splitNote || null,
         invoiceNumber: generateInvoiceNumber(restaurantId),
       });
@@ -200,8 +237,8 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
             paymentMethod: selectedPaymentMethod,
             discountAmount: discountAmount,
             totalAmount: adjustedTotal,
-            customerName: selectedOrder.customer_name || null,
-            customerPhone: selectedOrder.customer_phone || null,
+            customerName: customerName.trim() || null,
+            customerPhone: customerPhone.trim() || null,
             notes: splitNote || null,
             invoiceNumber: generateInvoiceNumber(restaurantId),
             restaurantId,
@@ -664,6 +701,33 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                           <span className="text-primary">
                             {currencySymbol}{adjustedTotal.toFixed(2)}
                           </span>
+                        </div>
+                      </div>
+
+                      {/* Customer Details */}
+                      <div className="pt-3 border-t space-y-3">
+                        <p className="text-sm font-semibold text-foreground">Customer Details</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label htmlFor="cust-phone-input" className="text-xs font-semibold">Phone Number</Label>
+                            <Input
+                              id="cust-phone-input"
+                              placeholder="e.g. 9876543210"
+                              value={customerPhone}
+                              onChange={(e) => handlePhoneChange(e.target.value)}
+                              className="h-9 text-xs"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="cust-name-input" className="text-xs font-semibold">Customer Name</Label>
+                            <Input
+                              id="cust-name-input"
+                              placeholder="e.g. John Doe"
+                              value={customerName}
+                              onChange={(e) => setCustomerName(e.target.value)}
+                              className="h-9 text-xs"
+                            />
+                          </div>
                         </div>
                       </div>
 

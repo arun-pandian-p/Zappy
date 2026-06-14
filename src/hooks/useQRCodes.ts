@@ -117,27 +117,24 @@ export function useDeleteQRCode() {
     mutationFn: async ({ id, tenantId }: { id: string; tenantId: string }) => {
       console.log('DELETE_START', { id, tenantId });
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("qr_codes" as any)
-        .update({ is_active: false })
-        .eq("id", id)
-        .select()
-        .single();
+        .delete()
+        .eq("id", id);
 
-      console.log('DELETE_RESPONSE', { data, error });
       if (error) {
         console.error('DELETE_ERROR', error);
-        throw new Error(error.message || 'Failed to deactivate QR code');
+        throw new Error(error.message || 'Failed to delete QR code');
       }
 
-      return data as unknown as QRCode;
+      return id;
     },
-    // Optimistic update: remove/deactivate QR locally for snappy UX
+    // Optimistic update: remove QR locally for snappy UX
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: ["qr_codes", vars.tenantId] });
       const previous = queryClient.getQueryData<QRCode[]>(["qr_codes", vars.tenantId]);
       queryClient.setQueryData<QRCode[] | undefined>(["qr_codes", vars.tenantId], (old) =>
-        (old || []).map((q) => (q.id === vars.id ? { ...q, is_active: false } : q))
+        (old || []).filter((q) => q.id !== vars.id)
       );
       return { previous };
     },

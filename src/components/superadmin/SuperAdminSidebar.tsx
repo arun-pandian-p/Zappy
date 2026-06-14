@@ -15,6 +15,7 @@ import {
   ScrollText,
   Trophy,
   UserCircle,
+  ClipboardList,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,6 +40,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, value: "dashboard" },
   { title: "Tenants / Hotels", icon: Building2, value: "restaurants" },
+  { title: "Leads CRM", icon: ClipboardList, value: "leads" },
   { title: "Leaderboard", icon: Trophy, value: "leaderboard" },
   { title: "User Management", icon: Users, value: "users" },
   { title: "Subscription Plans", icon: CreditCard, value: "plans" },
