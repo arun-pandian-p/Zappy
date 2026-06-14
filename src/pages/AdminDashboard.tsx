@@ -37,7 +37,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { OrderHistory } from "@/components/admin/OrderHistory";
 import { AdsManager } from "@/components/admin/AdsManager";
-import { ReputationManager } from "@/components/admin/ReputationManager";
+import { GoogleReviewsManager } from "@/components/admin/GoogleReviewsManager";
 import { SettingsPanel } from "@/components/admin/SettingsPanel";
 import { ExportPanel } from "@/components/admin/ExportPanel";
 import { CouponManager } from "@/components/admin/CouponManager";
@@ -436,7 +436,7 @@ const AdminDashboard = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ReputationManager restaurantId={restaurantId} />
+                  <GoogleReviewsManager restaurantId={restaurantId} />
                 </motion.div>
               )}
 

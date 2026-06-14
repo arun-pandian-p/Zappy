@@ -28,7 +28,6 @@ import { useRestaurantDetails } from '@/hooks/useRestaurant';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useCustomerOrders } from '@/hooks/useCustomerOrders';
 import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
-import { useFeedbackStats } from '@/hooks/useFeedback';
 import { useRecentOrders, addRecentOrderId } from '@/hooks/useRecentOrders';
 import { checkRateLimit, RATE_LIMITS, getRemainingCooldown } from '@/utils/rateLimiter';
 
@@ -262,8 +261,6 @@ const CustomerMenu = () => {
   // Fetch customer orders for this table (with realtime)
   const { data: customerOrders = [] } = useCustomerOrders(restaurantId, resolvedTableId);
 
-  // Fetch feedback stats
-  const { data: feedbackStats } = useFeedbackStats(restaurantId || undefined);
 
   // Fetch recent orders stored in localStorage
   const { data: recentOrdersData = [], refreshIds: refreshRecentOrderIds } = useRecentOrders(restaurantId || undefined);
