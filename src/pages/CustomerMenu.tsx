@@ -261,6 +261,9 @@ const CustomerMenu = () => {
   // Fetch customer orders for this table (with realtime)
   const { data: customerOrders = [] } = useCustomerOrders(restaurantId, resolvedTableId);
 
+  // Fallback for removed feedbackStats
+  const feedbackStats = { total: 0, avgRating: 0 };
+
 
   // Fetch recent orders stored in localStorage
   const { data: recentOrdersData = [], refreshIds: refreshRecentOrderIds } = useRecentOrders(restaurantId || undefined);
