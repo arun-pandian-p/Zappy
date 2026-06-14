@@ -27,7 +27,7 @@ export function GoogleReviewsManager({ restaurantId }: { restaurantId: string })
     }
   });
 
-  const [placeIdInput, setPlaceIdInput] = useState("");
+  const [mapsUrlInput, setMapsUrlInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch Google Reviews using our custom hook
@@ -52,22 +52,34 @@ export function GoogleReviewsManager({ restaurantId }: { restaurantId: string })
     }
   });
 
-  const savePlaceId = async () => {
-    if (!placeIdInput) return;
+  const connectGooglePlaces = async () => {
+    if (!mapsUrlInput) return;
     setIsSaving(true);
     try {
+      // Resolve the Place ID from the URL via the Edge Function
+      const { data: resolveData, error: resolveError } = await supabase.functions.invoke('google-places', {
+        body: { url: mapsUrlInput }
+      });
+
+      if (resolveError || resolveData?.error) {
+        throw new Error(resolveError?.message || resolveData?.error || "Invalid Google Maps URL. Could not find Place ID.");
+      }
+
+      const extractedPlaceId = resolveData.extracted_place_id || resolveData.place_id;
+      if (!extractedPlaceId) throw new Error("Could not extract Place ID.");
+
       const { error } = await supabase
         .from('restaurants')
         .update({ 
-          google_place_id: placeIdInput,
-          google_review_url: `https://search.google.com/local/writereview?placeid=${placeIdInput}`,
-          google_maps_url: `https://www.google.com/maps/place/?q=place_id:${placeIdInput}`
+          google_place_id: extractedPlaceId,
+          google_review_url: `https://search.google.com/local/writereview?placeid=${extractedPlaceId}`,
+          google_maps_url: mapsUrlInput
         })
         .eq('id', restaurantId);
 
       if (error) throw error;
       
-      toast({ title: "Setup Complete", description: "Google Places integration enabled." });
+      toast({ title: "Setup Complete", description: "Google Places integration enabled successfully!" });
       refetchRestaurant();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -90,7 +102,7 @@ export function GoogleReviewsManager({ restaurantId }: { restaurantId: string })
 
       if (error) throw error;
       toast({ title: "Disconnected", description: "Google Places integration removed." });
-      setPlaceIdInput("");
+      setMapsUrlInput("");
       refetchRestaurant();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -124,23 +136,20 @@ export function GoogleReviewsManager({ restaurantId }: { restaurantId: string })
             <div className="space-y-2 max-w-md">
               <h3 className="text-xl font-bold">Connect Google Reviews</h3>
               <p className="text-sm text-muted-foreground">
-                Enter your Google Place ID to sync your ratings and directly redirect 4-5 star orders to your Google Review page.
+                Paste your Google Maps URL to sync your ratings and directly redirect 4-5 star orders to your Google Review page.
               </p>
             </div>
-            <div className="flex w-full max-w-sm items-center space-x-2 mt-4">
+            <div className="flex w-full max-w-md items-center space-x-2 mt-4">
               <Input 
-                placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4" 
-                value={placeIdInput}
-                onChange={(e) => setPlaceIdInput(e.target.value)}
-                className="bg-white"
+                placeholder="https://www.google.com/maps/place/..." 
+                value={mapsUrlInput}
+                onChange={(e) => setMapsUrlInput(e.target.value)}
+                className="bg-white flex-1"
               />
-              <Button onClick={savePlaceId} disabled={!placeIdInput || isSaving}>
-                {isSaving ? "Saving..." : "Connect"}
+              <Button onClick={connectGooglePlaces} disabled={!mapsUrlInput || isSaving}>
+                {isSaving ? "Connecting..." : "Connect"}
               </Button>
             </div>
-            <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline">
-              How to find my Place ID?
-            </a>
           </CardContent>
         </Card>
       ) : (
