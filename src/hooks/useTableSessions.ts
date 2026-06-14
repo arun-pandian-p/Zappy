@@ -48,7 +48,7 @@ export function useActiveTableSessions(restaurantId?: string) {
           table:tables(table_number, capacity)
         `)
         .eq("restaurant_id", restaurantId)
-        .neq("status", "completed")
+        .in("status", ["seated", "ordering", "preparing", "dining", "served", "billing"])
         .order("created_at", { ascending: false });
 
       if (error) throw error;
