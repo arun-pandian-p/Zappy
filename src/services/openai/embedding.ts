@@ -1,21 +1,9 @@
-import { OpenAIClient } from "./client";
+import { executeOpenAIEmbeddingCall } from "../openaiService";
 
 export class OpenAIEmbeddingService {
-  static async generate(text: string): Promise<number[]> {
-    const apiKey = await OpenAIClient.getApiKey();
-    const response = await fetch("https://api.openai.com/v1/embeddings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "text-embedding-3-small",
-        input: text
-      })
-    });
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.data[0].embedding;
+  static async generate(text: string, restaurantId?: string): Promise<number[]> {
+    const rid = restaurantId || "00000000-0000-0000-0000-000000000001";
+    const embeddings = await executeOpenAIEmbeddingCall(rid, [text]);
+    return embeddings[0];
   }
 }

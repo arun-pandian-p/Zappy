@@ -125,14 +125,8 @@ export function useCreateMenuItem() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
       
-      // Asynchronously generate and save embedding in the background
-      import("@/services/recommendations/embeddingService").then(({ generateAndSaveMenuEmbedding }) => {
-        generateAndSaveMenuEmbedding(data.id, data.name, data.description, data.restaurant_id)
-          .then(() => {
-            // Invalidate query key to refresh item in the UI with its new embedding
-            queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
-          });
-      });
+      debouncedEmbedding(data.id, data.name, data.description || "", data.restaurant_id)
+        .catch(() => {});
 
       logActivity({
         restaurantId: data.restaurant_id,
@@ -143,6 +137,27 @@ export function useCreateMenuItem() {
       });
     },
   });
+}
+
+const embeddingDebounce = new Map<string, number>();
+
+async function debouncedEmbedding(
+  id: string, name: string, description: string, restaurantId: string
+) {
+  const key = `${restaurantId}_${name}`;
+  const existing = embeddingDebounce.get(key);
+  if (existing) clearTimeout(existing);
+  await new Promise<void>((resolve) => {
+    const timer = window.setTimeout(() => {
+      embeddingDebounce.delete(key);
+      resolve();
+    }, 2000);
+    embeddingDebounce.set(key, timer);
+  });
+  const { generateAndSaveMenuEmbedding } = await import(
+    "@/services/recommendations/embeddingService"
+  );
+  await generateAndSaveMenuEmbedding(id, name, description, restaurantId);
 }
 
 export function useUpdateMenuItem() {
@@ -163,14 +178,8 @@ export function useUpdateMenuItem() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
 
-      // Asynchronously generate and save embedding in the background
-      import("@/services/recommendations/embeddingService").then(({ generateAndSaveMenuEmbedding }) => {
-        generateAndSaveMenuEmbedding(data.id, data.name, data.description, data.restaurant_id)
-          .then(() => {
-            // Invalidate query key to refresh item in the UI with its new embedding
-            queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
-          });
-      });
+      debouncedEmbedding(data.id, data.name, data.description || "", data.restaurant_id)
+        .catch(() => {});
 
       logActivity({
         restaurantId: data.restaurant_id,

@@ -1,4 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import { checkCircuitBreaker, recordSuccess, recordFailure, checkTokenBudget, dedupedRequest, getCachedEmbedding, setCachedEmbedding } from "./aiCostOptimizer";
+import { AICacheService } from "./aiCacheService";
+import { aiQueue } from "./aiQueueService";
 
 export interface OpenAIFeatureConfig {
   model: string;
@@ -284,6 +287,27 @@ async function getSha256Hash(text: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+const MEMO_CACHE = new Map<string, { response: string; timestamp: number }>();
+const MEMO_TTL = 60_000;
+
+function getMemoCache(key: string): string | null {
+  const entry = MEMO_CACHE.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > MEMO_TTL) {
+    MEMO_CACHE.delete(key);
+    return null;
+  }
+  return entry.response;
+}
+
+function setMemoCache(key: string, response: string) {
+  MEMO_CACHE.set(key, { response, timestamp: Date.now() });
+  if (MEMO_CACHE.size > 500) {
+    const oldest = MEMO_CACHE.keys().next().value;
+    if (oldest) MEMO_CACHE.delete(oldest);
+  }
+}
+
 // Core OpenAI request handler
 export async function executeOpenAIChatCall(
   restaurantId: string,
@@ -294,6 +318,10 @@ export async function executeOpenAIChatCall(
   const eligibility = await verifyAICallEligibility(restaurantId, featureKey);
   if (!eligibility.eligible) {
     throw new Error(`AI Call blocked: ${eligibility.reason}`);
+  }
+
+  if (!checkCircuitBreaker(featureKey as string)) {
+    throw new Error(`AI Call blocked: Circuit breaker open for ${featureKey}`);
   }
 
   // 1. Extract dish name if this is a menu description call (Rule 3)
@@ -350,9 +378,16 @@ export async function executeOpenAIChatCall(
     }
   }
 
-  // 4. Generic AI Cache Check (Rule 13)
+  // 4. Generic AI Cache Check (Rule 13) — in-memory first, then DB
   const inputString = JSON.stringify({ featureKey, messages, responseFormat });
   const cacheHash = await getSha256Hash(inputString);
+
+  const memCached = getMemoCache(cacheHash);
+  if (memCached) {
+    console.log(`[Cost Blocker] Memory cache hit for: ${featureKey}`);
+    return memCached;
+  }
+
   try {
     const { data: cached } = await supabase
       .from("ai_cache")
@@ -361,14 +396,24 @@ export async function executeOpenAIChatCall(
       .maybeSingle();
 
     if (cached?.response) {
-      console.log(`[Cost Blocker] Cache hit for feature: ${featureKey}, hash: ${cacheHash}`);
+      console.log(`[Cost Blocker] DB Cache hit for feature: ${featureKey}, hash: ${cacheHash}`);
+      setMemoCache(cacheHash, cached.response);
       return cached.response;
     }
   } catch (err) {
     console.warn("Failed to check ai_cache:", err);
   }
 
-  // 5. OpenAI API Key Blocker / Fallback (Rule 15)
+  // 5. Token budget check
+  const estimatedTokens = Math.max(
+    ...messages.map(m => typeof m.content === "string" ? m.content.length / 4 : 500)
+  ) + (responseFormat ? 50 : 0);
+  const budget = await checkTokenBudget(restaurantId, estimatedTokens);
+  if (!budget.allowed) {
+    throw new Error(`AI Call blocked: ${budget.reason}`);
+  }
+
+  // 6. OpenAI API Key Blocker / Fallback (Rule 15)
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (!apiKey) {
     console.warn(`VITE_OPENAI_API_KEY not configured. Returning local fallback for ${featureKey}`);
@@ -382,11 +427,10 @@ export async function executeOpenAIChatCall(
       });
       return mockDescription;
     }
-    // Generic chat fallback
     return `AI feature placeholder response for ${featureKey}. Please configure VITE_OPENAI_API_KEY.`;
   }
 
-  // 6. Slicing and Token Limits (Rule 11)
+  // 7. Slicing and Token Limits (Rule 11)
   let chatMessages = messages;
   const feature = eligibility.feature;
   let maxTokens = feature.max_tokens;
@@ -408,82 +452,92 @@ export async function executeOpenAIChatCall(
     response_format: responseFormat,
   };
 
-  const response = await fetch(`${eligibility.config.default_base_url}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(requestBody),
-  });
+  // 8. Execute via queue for rate limiting
+  return aiQueue.enqueue(featureKey as string, async () => {
+    const response = await dedupedRequest(cacheHash, async () => {
+      const res = await fetch(`${eligibility.config.default_base_url}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-  if (!response.ok) {
-    const errorDetails = await response.text();
-    throw new Error(`OpenAI API failed with status ${response.status}: ${errorDetails}`);
-  }
+      if (!res.ok) {
+        const errorDetails = await res.text();
+        recordFailure(featureKey as string);
+        throw new Error(`OpenAI API failed with status ${res.status}: ${errorDetails}`);
+      }
 
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
+      return res.json();
+    });
 
-  if (!content) {
-    throw new Error("OpenAI API returned an empty completion choice.");
-  }
+    const content = response.choices?.[0]?.message?.content;
 
-  // Cost tracking
-  if (data.usage) {
-    const promptTokens = data.usage.prompt_tokens || 0;
-    const completionTokens = data.usage.completion_tokens || 0;
-    const isBatch = !!feature.use_batch_api;
-    const estimatedCost = calculateEstimatedCost(feature.model, promptTokens, completionTokens, isBatch);
-    addMonthlyCost(restaurantId, estimatedCost);
-  }
-
-  // 7. Save to specific asset libraries & generic cache (Rule 2)
-  try {
-    // Save to generic cache
-    await supabase.from("ai_cache").insert({
-      hash: cacheHash,
-      feature: featureKey,
-      input: inputString,
-      response: content
-    }).then(({ error }) => { if (error) console.error("Failed to write to ai_cache:", error); });
-
-    // Save to description library
-    if (featureKey === "menu_description" && dishName) {
-      try {
-        const parsed = JSON.parse(content);
-        await supabase.from("ai_descriptions").insert({
-          name: dishName,
-          short_description: parsed.short_description || "",
-          medium_description: parsed.full_description || parsed.medium_description || "",
-          seo_description: parsed.seo_description || ""
-        }).then(({ error }) => { if (error) console.error("Failed to write to ai_descriptions:", error); });
-      } catch {}
+    if (!content) {
+      throw new Error("OpenAI API returned an empty completion choice.");
     }
 
-    // Save to translation library
-    if (featureKey === "translation") {
-      const textToTranslate = messages[messages.length - 1]?.content || "";
-      const transHash = await getSha256Hash(textToTranslate);
-      await supabase.from("ai_translations").insert({
-        hash: transHash,
-        source_text: textToTranslate,
-        target_lang: "target",
-        translated_text: content
-      }).then(({ error }) => { if (error) console.error("Failed to write to ai_translations:", error); });
-    }
-  } catch (err) {
-    console.warn("Failed to write to DB caches:", err);
-  }
+    recordSuccess(featureKey as string);
 
-  return content;
+    // Cost tracking
+    if (response.usage) {
+      const promptTokens = response.usage.prompt_tokens || 0;
+      const completionTokens = response.usage.completion_tokens || 0;
+      const isBatch = !!feature.use_batch_api;
+      const estimatedCost = calculateEstimatedCost(feature.model, promptTokens, completionTokens, isBatch);
+      addMonthlyCost(restaurantId, estimatedCost);
+    }
+
+    // Save to in-memory cache
+    setMemoCache(cacheHash, content);
+
+    // 9. Save to specific asset libraries & generic cache (Rule 2)
+    try {
+      await supabase.from("ai_cache").upsert({
+        hash: cacheHash,
+        feature: featureKey,
+        input: inputString,
+        response: content,
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }).then(({ error }) => { if (error) console.error("Failed to write to ai_cache:", error); });
+
+      if (featureKey === "menu_description" && dishName) {
+        try {
+          const parsed = JSON.parse(content);
+          await supabase.from("ai_descriptions").upsert({
+            name: dishName,
+            short_description: parsed.short_description || "",
+            medium_description: parsed.full_description || parsed.medium_description || "",
+            seo_description: parsed.seo_description || ""
+          }, { onConflict: "name" }).then(({ error }) => { if (error) console.error("Failed to write to ai_descriptions:", error); });
+        } catch {}
+      }
+
+      if (featureKey === "translation") {
+        const textToTranslate = messages[messages.length - 1]?.content || "";
+        const transHash = await getSha256Hash(textToTranslate);
+        await supabase.from("ai_translations").upsert({
+          hash: transHash,
+          source_text: textToTranslate,
+          target_lang: "target",
+          translated_text: content
+        }, { onConflict: "hash" }).then(({ error }) => { if (error) console.error("Failed to write to ai_translations:", error); });
+      }
+    } catch (err) {
+      console.warn("Failed to write to DB caches:", err);
+    }
+
+    return content;
+  }, "medium");
 }
 
 // Vision handler
 export async function executeOpenAIVisionCall(
   restaurantId: string,
   featureKey: keyof OpenAIModelConfig["features"],
-  base64Images: string[], // Base64 data URLs
+  base64Images: string[],
   promptText: string
 ): Promise<string> {
   const eligibility = await verifyAICallEligibility(restaurantId, featureKey);
@@ -491,24 +545,33 @@ export async function executeOpenAIVisionCall(
     throw new Error(`AI Call blocked: ${eligibility.reason}`);
   }
 
-  // 1. Generic AI Cache Check (Rule 13)
+  if (!checkCircuitBreaker(featureKey as string)) {
+    throw new Error(`AI Call blocked: Circuit breaker open for ${featureKey}`);
+  }
+
   const inputString = JSON.stringify({ featureKey, base64Images: base64Images.map(img => img.substring(0, 100)), promptText });
   const cacheHash = await getSha256Hash(inputString);
-  
+
+  const memCached = getMemoCache(cacheHash);
+  if (memCached) return memCached;
+
   try {
     const { data: cached } = await supabase
       .from("ai_cache")
       .select("response")
       .eq("hash", cacheHash)
       .maybeSingle();
-
     if (cached?.response) {
       console.log(`[Cost Blocker] Cache hit for Vision: ${featureKey}`);
+      setMemoCache(cacheHash, cached.response);
       return cached.response;
     }
   } catch (err) {
     console.warn("Failed to check Vision cache:", err);
   }
+
+  const budget = await checkTokenBudget(restaurantId, 5000);
+  if (!budget.allowed) throw new Error(`AI Call blocked: ${budget.reason}`);
 
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (!apiKey) {
@@ -520,20 +583,16 @@ export async function executeOpenAIVisionCall(
 
   const imageContents = base64Images.map((b64) => ({
     type: "image_url",
-    image_url: {
-      url: b64,
-    },
+    image_url: { url: b64 },
   }));
 
-  const messages = [
-    {
-      role: "user",
-      content: [
-        { type: "text", text: promptText },
-        ...imageContents,
-      ],
-    },
-  ];
+  const messages = [{
+    role: "user",
+    content: [
+      { type: "text", text: promptText },
+      ...imageContents,
+    ],
+  }];
 
   const requestBody = {
     model: realModel,
@@ -543,47 +602,54 @@ export async function executeOpenAIVisionCall(
     response_format: { type: "json_object" },
   };
 
-  const response = await fetch(`${eligibility.config.default_base_url}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(requestBody),
-  });
+  return aiQueue.enqueue(featureKey as string, async () => {
+    const response = await dedupedRequest(cacheHash, async () => {
+      const res = await fetch(`${eligibility.config.default_base_url}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-  if (!response.ok) {
-    const errorDetails = await response.text();
-    throw new Error(`OpenAI API failed with status ${response.status}: ${errorDetails}`);
-  }
+      if (!res.ok) {
+        const errorDetails = await res.text();
+        recordFailure(featureKey as string);
+        throw new Error(`OpenAI API failed with status ${res.status}: ${errorDetails}`);
+      }
 
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
+      return res.json();
+    });
 
-  if (!content) {
-    throw new Error("OpenAI Vision returned an empty completion choice.");
-  }
+    const content = response.choices?.[0]?.message?.content;
+    if (!content) throw new Error("OpenAI Vision returned an empty completion choice.");
 
-  if (data.usage) {
-    const promptTokens = data.usage.prompt_tokens || 0;
-    const completionTokens = data.usage.completion_tokens || 0;
-    const estimatedCost = calculateEstimatedCost(feature.model, promptTokens, completionTokens, false);
-    addMonthlyCost(restaurantId, estimatedCost);
-  }
+    recordSuccess(featureKey as string);
 
-  // Save to Cache
-  try {
-    await supabase.from("ai_cache").insert({
-      hash: cacheHash,
-      feature: featureKey,
-      input: inputString,
-      response: content
-    }).then(({ error }) => { if (error) console.error("Failed to write Vision to ai_cache:", error); });
-  } catch (err) {
-    console.warn("Failed to write Vision cache to DB:", err);
-  }
+    if (response.usage) {
+      const promptTokens = response.usage.prompt_tokens || 0;
+      const completionTokens = response.usage.completion_tokens || 0;
+      const estimatedCost = calculateEstimatedCost(feature.model, promptTokens, completionTokens, false);
+      addMonthlyCost(restaurantId, estimatedCost);
+    }
 
-  return content;
+    setMemoCache(cacheHash, content);
+
+    try {
+      await supabase.from("ai_cache").upsert({
+        hash: cacheHash,
+        feature: featureKey,
+        input: inputString,
+        response: content,
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }).then(({ error }) => { if (error) console.error("Failed to write Vision to ai_cache:", error); });
+    } catch (err) {
+      console.warn("Failed to write Vision cache to DB:", err);
+    }
+
+    return content;
+  }, "medium");
 }
 
 // Embeddings handler (Rule 7)
@@ -596,25 +662,31 @@ export async function executeOpenAIEmbeddingCall(
     throw new Error(`AI Call blocked: ${eligibility.reason}`);
   }
 
+  if (!checkCircuitBreaker("menu_embeddings")) {
+    throw new Error(`AI Call blocked: Circuit breaker open for embeddings`);
+  }
+
   const results: number[][] = new Array(texts.length);
   const missingIndices: number[] = [];
   const missingTexts: string[] = [];
 
-  // Batch check both DB and local storage
   for (let i = 0; i < texts.length; i++) {
     const text = texts[i].trim().toLowerCase();
     const hash = await getSha256Hash(text);
 
-    // Try local storage first
+    const memCached = getCachedEmbedding(text);
+    if (memCached) { results[i] = memCached; continue; }
+
     const localCached = localStorage.getItem(`zappy_openai_emb_${text.replace(/\s+/g, "_")}`);
     if (localCached) {
       try {
-        results[i] = JSON.parse(localCached);
+        const parsed = JSON.parse(localCached) as number[];
+        results[i] = parsed;
+        setCachedEmbedding(text, parsed);
         continue;
       } catch {}
     }
 
-    // Try DB library
     try {
       const { data: dbEmb } = await supabase
         .from("ai_embeddings")
@@ -627,7 +699,9 @@ export async function executeOpenAIEmbeddingCall(
           ? JSON.parse(dbEmb.embedding) 
           : (dbEmb.embedding as number[]);
         results[i] = embArray;
+        setCachedEmbedding(text, embArray);
         localStorage.setItem(`zappy_openai_emb_${text.replace(/\s+/g, "_")}`, JSON.stringify(embArray));
+        await supabase.rpc('increment_embedding_hit', { hash_text: hash }).catch(() => {});
         continue;
       }
     } catch (dbErr) {
@@ -639,12 +713,14 @@ export async function executeOpenAIEmbeddingCall(
   }
 
   if (missingTexts.length > 0) {
+    const budget = await checkTokenBudget(restaurantId, missingTexts.length * 50);
+    if (!budget.allowed) throw new Error(`AI Call blocked: ${budget.reason}`);
+
     const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
     if (!apiKey) {
       console.warn("VITE_OPENAI_API_KEY not configured. Returning mock embeddings.");
       for (let k = 0; k < missingTexts.length; k++) {
         const idx = missingIndices[k];
-        // 1536 dimension dummy vector
         const dummyVector = new Array(1536).fill(0).map(() => Math.random() - 0.5);
         results[idx] = dummyVector;
       }
@@ -665,10 +741,12 @@ export async function executeOpenAIEmbeddingCall(
       });
 
       if (!response.ok) {
+        recordFailure("menu_embeddings");
         const errorDetails = await response.text();
         throw new Error(`OpenAI Embeddings failed: ${errorDetails}`);
       }
 
+      recordSuccess("menu_embeddings");
       const data = await response.json();
       const newEmbeddings = data.data?.map((item: any) => item.embedding);
 
@@ -681,16 +759,16 @@ export async function executeOpenAIEmbeddingCall(
         const emb = newEmbeddings[k];
         results[idx] = emb;
 
-        // Cache globally and locally
         const textClean = missingTexts[k].trim().toLowerCase();
         const hash = await getSha256Hash(textClean);
+        setCachedEmbedding(textClean, emb);
         localStorage.setItem(`zappy_openai_emb_${textClean.replace(/\s+/g, "_")}`, JSON.stringify(emb));
         try {
-          await supabase.from("ai_embeddings").insert({
+          await supabase.from("ai_embeddings").upsert({
             hash: hash,
             text_content: textClean,
             embedding: emb
-          }).then(({ error }) => { if (error) console.error("Failed to write to ai_embeddings:", error); });
+          }, { onConflict: "hash" }).then(({ error }) => { if (error) console.error("Failed to write to ai_embeddings:", error); });
         } catch (dbErr) {
           console.error("Failed to save embedding to global library:", dbErr);
         }
@@ -719,11 +797,9 @@ export async function executeOpenAIImageCall(
     throw new Error("Monthly AI budget exceeded");
   }
 
-  // 1. Extract dish name from prompt
   const match = prompt.match(/Professional food photography of ([^,]+)/i);
   const dishName = match ? match[1].trim().toLowerCase() : prompt.trim().toLowerCase();
 
-  // 2. Global Asset Library check
   try {
     const { data: imgData } = await supabase
       .from("ai_food_images")
@@ -739,7 +815,6 @@ export async function executeOpenAIImageCall(
     console.warn("Failed to check global ai_food_images library:", err);
   }
 
-  // 3. Fallback to Pollinations AI if VITE_OPENAI_API_KEY is missing (Rule 4 & 9)
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   let resultUrl = "";
 
@@ -772,17 +847,11 @@ export async function executeOpenAIImageCall(
     const url = data.data?.[0]?.url;
     const b64_json = data.data?.[0]?.b64_json;
 
-    if (url) {
-      resultUrl = url;
-    } else if (b64_json) {
-      resultUrl = `data:image/png;base64,${b64_json}`;
-    }
+    if (url) resultUrl = url;
+    else if (b64_json) resultUrl = `data:image/png;base64,${b64_json}`;
 
-    if (!resultUrl) {
-      throw new Error("OpenAI DALL-E returned an empty image list.");
-    }
+    if (!resultUrl) throw new Error("OpenAI DALL-E returned an empty image list.");
 
-    // Cost tracking
     const cost = quality === "medium" ? 0.08 : 0.04;
     addMonthlyCost(restaurantId, cost);
 
@@ -792,12 +861,11 @@ export async function executeOpenAIImageCall(
     localStorage.setItem(countKey, String(currentCount + 1));
   }
 
-  // 4. Save to global library (Rule 4)
   try {
-    await supabase.from("ai_food_images").insert({
+    await supabase.from("ai_food_images").upsert({
       name: dishName,
       image_url: resultUrl
-    }).then(({ error }) => { if (error) console.error("Failed to write to ai_food_images:", error); });
+    }, { onConflict: "name" }).then(({ error }) => { if (error) console.error("Failed to write to ai_food_images:", error); });
   } catch (dbErr) {
     console.error("Failed to save generated image to global library:", dbErr);
   }

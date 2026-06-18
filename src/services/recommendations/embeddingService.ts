@@ -200,13 +200,25 @@ export async function generateAndSaveMenuEmbedding(
     const textToEmbed = `${name} ${description || ""}`.trim();
     if (!textToEmbed) return null;
 
+    const { supabase } = await import("@/integrations/supabase/client");
+
+    // Skip if embedding already exists for this item
+    const { data: existing } = await supabase
+      .from("menu_items")
+      .select("embedding")
+      .eq("id", menuItemId)
+      .maybeSingle();
+    if (existing?.embedding) {
+      console.log(`[Embedding] Skipping — already exists for ${name}`);
+      return existing.embedding as number[];
+    }
+
     console.log(`Generating database embedding for: "${textToEmbed}"`);
     const { executeOpenAIEmbeddingCall } = await import("../openaiService");
     const embeddings = await executeOpenAIEmbeddingCall(restaurantId, [textToEmbed]);
     const embedding = embeddings[0];
 
     if (embedding) {
-      const { supabase } = await import("@/integrations/supabase/client");
       const { error } = await supabase
         .from("menu_items")
         .update({ embedding })

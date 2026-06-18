@@ -1,18 +1,22 @@
-import { OpenAIClient } from "./client";
+import { executeOpenAIChatCall } from "../openaiService";
 
 export class OpenAIModerationService {
-  static async checkContent(text: string): Promise<boolean> {
-    const apiKey = await OpenAIClient.getApiKey();
-    const response = await fetch("https://api.openai.com/v1/moderations", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({ input: text })
-    });
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.results[0].flagged;
+  static async checkContent(text: string, restaurantId?: string): Promise<boolean> {
+    const rid = restaurantId || "00000000-0000-0000-0000-000000000001";
+    const response = await executeOpenAIChatCall(
+      rid,
+      "moderation",
+      [
+        { role: "system", content: "Analyze if the following user content requires moderation. Return JSON: {\"flagged\": boolean, \"categories\": string[]}" },
+        { role: "user", content: text }
+      ],
+      { type: "json_object" }
+    );
+    try {
+      const parsed = JSON.parse(response);
+      return parsed.flagged === true;
+    } catch {
+      return false;
+    }
   }
 }

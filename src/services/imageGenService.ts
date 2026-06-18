@@ -51,69 +51,70 @@ export async function generateFoodImage(
 export async function bulkEnrichMenu(restaurantId: string, items: any[]) {
   const itemsToUpdate = items.filter(item => !item.image_url);
   console.log(`Enriching ${itemsToUpdate.length} items with descriptions and images...`);
-  
-  for (const item of itemsToUpdate) {
-    const startTime = Date.now();
-    try {
-      // 1. Call the enrichment pipeline
-      const categoryName = item.category?.name || "Main Course";
-      const enriched = await enrichMenuItem(item.name, categoryName, restaurantId);
 
-      // 2. Update menu_items with description, image_url, and tags
-      const { error: menuError } = await supabase
-        .from("menu_items")
-        .update({
-          image_url: enriched.imageUrl,
-          description: enriched.mediumDescription || enriched.shortDescription,
-          tags: enriched.tags
-        })
-        .eq("id", item.id);
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < itemsToUpdate.length; i += BATCH_SIZE) {
+    const batch = itemsToUpdate.slice(i, i + BATCH_SIZE);
+    await Promise.allSettled(
+      batch.map(async (item) => {
+        const startTime = Date.now();
+        try {
+          const categoryName = item.category?.name || "Main Course";
+          const enriched = await enrichMenuItem(item.name, categoryName, restaurantId);
 
-      if (menuError) throw menuError;
+          const { error: menuError } = await supabase
+            .from("menu_items")
+            .update({
+              image_url: enriched.imageUrl,
+              description: enriched.mediumDescription || enriched.shortDescription,
+              tags: enriched.tags
+            })
+            .eq("id", item.id);
 
-      // 3. Persist detailed AI metadata in ai_enrichments
-      const { error: enrichmentError } = await supabase
-        .from("ai_enrichments")
-        .upsert({
-          menu_item_id: item.id,
-          short_description: enriched.shortDescription,
-          medium_description: enriched.mediumDescription,
-          seo_description: enriched.seoDescription,
-          calories: enriched.nutrition.calories,
-          protein: enriched.nutrition.protein,
-          carbs: enriched.nutrition.carbs,
-          fat: enriched.nutrition.fat,
-          allergens: enriched.allergens,
-          tags: enriched.tags,
-          upsell_recommendations: enriched.recommendations,
-          image_search_queries: [item.name]
-        }, { onConflict: "menu_item_id" });
+          if (menuError) throw menuError;
 
-      if (enrichmentError) throw enrichmentError;
+          const { error: enrichmentError } = await supabase
+            .from("ai_enrichments")
+            .upsert({
+              menu_item_id: item.id,
+              short_description: enriched.shortDescription,
+              medium_description: enriched.mediumDescription,
+              seo_description: enriched.seoDescription,
+              calories: enriched.nutrition.calories,
+              protein: enriched.nutrition.protein,
+              carbs: enriched.nutrition.carbs,
+              fat: enriched.nutrition.fat,
+              allergens: enriched.allergens,
+              tags: enriched.tags,
+              upsell_recommendations: enriched.recommendations,
+              image_search_queries: [item.name]
+            }, { onConflict: "menu_item_id" });
 
-      // 4. Record success in analytics metrics
-      await supabase
-        .from("ocr_analytics_metrics")
-        .insert({
-          restaurant_id: restaurantId,
-          action_type: 'ai_enrich',
-          is_success: true,
-          processing_time_ms: Date.now() - startTime
-        });
+          if (enrichmentError) throw enrichmentError;
 
-      console.log(`Successfully enriched menu item: ${item.name}`);
-    } catch (err: any) {
-      console.error(`Failed to enrich item ${item.name}:`, err);
-      // Record failure in analytics metrics
-      await supabase
-        .from("ocr_analytics_metrics")
-        .insert({
-          restaurant_id: restaurantId,
-          action_type: 'ai_enrich',
-          is_success: false,
-          processing_time_ms: Date.now() - startTime
-        });
-    }
+          await supabase
+            .from("ocr_analytics_metrics")
+            .insert({
+              restaurant_id: restaurantId,
+              action_type: 'ai_enrich',
+              is_success: true,
+              processing_time_ms: Date.now() - startTime
+            });
+
+          console.log(`Successfully enriched menu item: ${item.name}`);
+        } catch (err: any) {
+          console.error(`Failed to enrich item ${item.name}:`, err);
+          await supabase
+            .from("ocr_analytics_metrics")
+            .insert({
+              restaurant_id: restaurantId,
+              action_type: 'ai_enrich',
+              is_success: false,
+              processing_time_ms: Date.now() - startTime
+            });
+        }
+      })
+    );
   }
 }
 

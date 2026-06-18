@@ -15,6 +15,7 @@ import { parseMenuFromText, parseMenuFromCSV, type ParsedMenuItem } from "./menu
 import { tracer } from "./telemetry";
 import { SpanStatusCode } from "@opentelemetry/api";
 import { executeOpenAIVisionCall } from "./openaiService";
+import { AICacheService } from "./aiCacheService";
 
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
@@ -310,22 +311,15 @@ export async function processMenuFile(
         throw new Error("File too large (max 50MB)");
       }
 
-      // Check Cache (Rule 6)
       let fileHash = "";
       if (fileType === "image" || fileType === "pdf") {
         try {
           fileHash = await computeFileHash(file);
-          const { supabase } = await import("@/integrations/supabase/client");
-          const { data: cacheData } = await supabase
-            .from("ai_cache")
-            .select("response")
-            .eq("hash", `ocr_${fileHash}`)
-            .maybeSingle();
-
-          if (cacheData?.response) {
+          const cached = await AICacheService.get<ParsedMenuItem[]>("ocr_menu", `ocr_${fileHash}`);
+          if (cached && cached.length > 0) {
             console.log(`[OCR Cache Hit] Returning cached OCR results for file hash: ${fileHash}`);
             onProgress?.({ status: "Cached results found. Loading...", progress: 100 });
-            return JSON.parse(cacheData.response);
+            return cached;
           }
         } catch (cacheErr) {
           console.warn("Failed to check OCR cache:", cacheErr);
@@ -471,16 +465,9 @@ Do not add markdown backticks or extra text, just raw JSON.`;
         }
       }
 
-      // Save to Cache (Rule 6)
       if (fileHash && items.length > 0) {
         try {
-          const { supabase } = await import("@/integrations/supabase/client");
-          await supabase.from("ai_cache").insert({
-            hash: `ocr_${fileHash}`,
-            feature: "ocr_menu_import_fallback",
-            input: `file_${file.name}_size_${file.size}`,
-            response: JSON.stringify(items)
-          }).then(({ error }) => { if (error) console.error("Failed to write OCR cache to DB:", error); });
+          await AICacheService.set("ocr_menu", `ocr_${fileHash}`, items, "long");
           console.log(`[OCR Cache Saved] Saved OCR results for file hash: ${fileHash}`);
         } catch (cacheSaveErr) {
           console.error("Failed to save OCR cache:", cacheSaveErr);

@@ -142,7 +142,7 @@ const CustomerMenu = () => {
     type: NotificationType;
   } | null>(null);
 
-  const [currentView, setCurrentView] = useState<ViewType>('search');
+  const [currentView, setCurrentView] = useState<ViewType>('home');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedItemForDetails, setSelectedItemForDetails] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1655,6 +1655,7 @@ const CustomerMenu = () => {
         logoUrl={cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url)}
         tableNumber={tableNumber || 'Select Table'}
         onSearchClick={() => setCurrentView('search')}
+        onProfileClick={() => setCurrentView('profile')}
         primaryColor={primaryColor}
         branding={brandingConfig}
         restaurantId={restaurantId || undefined}

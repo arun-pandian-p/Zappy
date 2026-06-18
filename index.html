@@ -63,7 +63,8 @@
           }
         }
 
-        // Catch resource load errors (scripts, stylesheets failing to fetch)
+        var CURRENT_BUILD = Date.now();
+
         window.addEventListener('error', function(e) {
           var target = e.target;
           if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {

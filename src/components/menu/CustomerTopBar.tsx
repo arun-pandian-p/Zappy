@@ -16,6 +16,7 @@ interface CustomerTopBarProps {
   logoUrl?: string | null;
   tableNumber: string;
   onSearchClick: () => void;
+  onProfileClick?: () => void;
   primaryColor?: string;
   branding?: BrandingConfig;
   restaurantId?: string;
@@ -30,6 +31,7 @@ export function CustomerTopBar({
   logoUrl,
   tableNumber,
   onSearchClick,
+  onProfileClick,
   primaryColor,
   branding,
   restaurantId,
@@ -167,7 +169,7 @@ export function CustomerTopBar({
           src={avatarUrl}
           alt=""
           className="w-7 h-7 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 object-cover cursor-pointer hover:scale-105 active:scale-95 transition-transform shrink-0"
-          onClick={() => navigate('/login')}
+          onClick={() => onProfileClick ? onProfileClick() : navigate('/login')}
           title="Profile"
         />
       </div>
