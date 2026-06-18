@@ -1,0 +1,26 @@
+{
+  "name": "higgsfield",
+  "version": "0.3.0",
+  "description": "Higgsfield AI skills: generate images and videos with 35+ models, create branded marketing assets via Marketing Studio, analyze video engagement with Brain Activity, and train Soul Character (face-faithful identity).",
+  "author": {
+    "name": "Higgsfield AI",
+    "url": "https://higgsfield.ai"
+  },
+  "homepage": "https://higgsfield.ai",
+  "repository": "https://github.com/higgsfield-ai/skills",
+  "license": "MIT",
+  "keywords": [
+    "higgsfield",
+    "image-generation",
+    "video-generation",
+    "engagement-analysis",
+    "soul-character",
+    "marketing-studio",
+    "ai-video",
+    "ai-image",
+    "img2img",
+    "img2vid",
+    "ugc",
+    "avatar"
+  ]
+}

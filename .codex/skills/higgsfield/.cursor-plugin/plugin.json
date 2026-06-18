@@ -1,0 +1,26 @@
+{
+  "$schema": "https://cursor.com/schemas/cursor-plugin/plugin.json",
+  "name": "higgsfield",
+  "displayName": "Higgsfield AI",
+  "version": "0.3.0",
+  "description": "Image/video generation, branded Marketing Studio, video engagement analysis, and Soul Character training via Higgsfield AI.",
+  "author": {
+    "name": "Higgsfield AI",
+    "email": "support@higgsfield.ai"
+  },
+  "publisher": "HiggsfieldAI",
+  "homepage": "https://higgsfield.ai",
+  "repository": "https://github.com/higgsfield-ai/skills",
+  "license": "MIT",
+  "category": "ai-content",
+  "keywords": [
+    "higgsfield",
+    "image-generation",
+    "video-generation",
+    "engagement-analysis",
+    "soul-character",
+    "marketing-studio",
+    "ai-video",
+    "ai-image"
+  ]
+}

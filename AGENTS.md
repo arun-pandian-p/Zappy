@@ -1,3 +1,17 @@
+## Higgsfield Skills
+
+Load skills from:
+
+- .codex/skills/higgsfield
+- .cursor/skills/higgsfield
+- .opencode/skills/higgsfield
+- .agents/skills/higgsfield
+
+Available:
+- higgsfield-generate
+- higgsfield-product-photoshoot
+- higgsfield-marketplace-cards
+- higgsfield-soul-id
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
