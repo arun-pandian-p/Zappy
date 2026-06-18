@@ -11,9 +11,8 @@ import Transformation from '@/components/landing/Transformation';
 import Ecosystem from '@/components/landing/Ecosystem';
 import MealStory from '@/components/landing/MealStory';
 import ModernRestaurants from '@/components/landing/ModernRestaurants';
-import TrustResults from '@/components/landing/TrustResults';
 import ProductExperience from '@/components/landing/ProductExperience';
-import PricingSection from '@/components/landing/PricingSection';
+import ProductDemo from '@/components/landing/ProductDemo';
 import FAQSection from '@/components/landing/FAQSection';
 import FinalCTA from '@/components/landing/FinalCTA';
 import Footer from '@/components/landing/Footer';
@@ -59,10 +58,6 @@ const LandingPage = () => {
   const isVisible = (key: string) => cms[key]?.visible !== false;
 
   const handleGetStarted = () => navigate('/login');
-  const handleSelectPlan = (plan: string) => {
-    console.log('Selected plan:', plan);
-    navigate('/login');
-  };
 
   const handleBookDemoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,7 +136,6 @@ const LandingPage = () => {
   const navLinks = [
     { label: 'Daily Struggles', href: '#challenge' },
     { label: 'How It Works', href: '#ecosystem' },
-    { label: 'Pricing', href: '#pricing' },
     { label: 'Common Questions', href: '#faq' }
   ];
 
@@ -294,18 +288,11 @@ const LandingPage = () => {
         {/* Section 6: Built for Modern Restaurants */}
         <ModernRestaurants />
 
-        {/* Section 8: Trust & Results */}
-        <TrustResults />
-
-        {/* Section 9: Product Experience */}
+        {/* Section 8: Product Experience */}
         <ProductExperience />
 
-        {/* Section 10: Pricing */}
-        {isVisible('pricing') &&
-          <div id="pricing">
-            <PricingSection onSelectPlan={handleSelectPlan} cms={cms.pricing?.content} />
-          </div>
-        }
+        {/* Section 9: Interactive Product Demo */}
+        <ProductDemo />
 
         {/* Section FAQ */}
         <div id="faq">

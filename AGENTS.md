@@ -24,3 +24,47 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+## Zappy - Premium Restaurant OS
+
+### Mission
+Transform Zappy into a premium restaurant OS with unified UX across landing, customer, admin, and super admin.
+
+### Phases
+- **P0** — Functional Fixes: Notifications, Orders, QR Session, Search
+- **P1** — UI Refactor: Customer premium mobile, Landing revamp
+- **P2** — Design System: Dark luxury theme (emerald+gold, glassmorphism, motion)
+- **P3** — Performance: 404 assets, dead routes, bundle size, images
+
+### P0 Progress
+| Item | Status | Details |
+|------|--------|---------|
+| Notifications | ✅ Done | Gutted `NotificationCenter.tsx` sheet; bell in `CustomerTopBar.tsx` now routes to `notifications` view; removed push notification toggle (VAPID broken); removed `onNotificationClick` prop |
+| Orders | ✅ Clean | `renderOrders()` already minimal — shows items, qty, price, status, timeline. No waiter/notification noise. |
+| QR Seat Selection | ✅ Done | Created `SeatPickerDialog.tsx` — shows seat 1-N (based on table capacity) after table selection; stores seat in `localStorage`; seat shown in profile |
+| Search | ✅ OK | Already sticky (`sticky top-[56px]`), realtime filtering, category slider, mobile-optimized |
+
+### P1 Queue
+- [ ] Higgsfield premium mobile UI (FoodCard, MenuItemRow, ItemDetailsDialog, empty/loading)
+- [ ] Remove PricingSection and TrustCounters from landing
+- [ ] Add product showcase, restaurant stories, interactive demo
+
+### P2 Queue
+- [ ] Design tokens (colors, typography, buttons, cards, inputs, dialogs, nav)
+- [ ] Apply across landing, customer, admin, super admin
+
+### P3 Queue
+- [ ] Fix 404 assets, dead routes, duplicate components, bundle size, image optimization
+
+### Build Status
+- Build: ✅ 0 errors
+- Tests: ✅ 134 pass (12 files)
+
+### Relevant Files
+- `src/pages/CustomerMenu.tsx` (1762 lines) — main customer menu, orders, search, notifications
+- `src/components/menu/CustomerTopBar.tsx` — top bar with search, bell→Alerts, profile
+- `src/components/menu/SeatPickerDialog.tsx` — seat selection (P0 new)
+- `src/components/menu/TablePickerDialog.tsx` — table selection
+- `src/components/menu/NotificationCenter.tsx` — deprecated (unused sheet)
+- `src/components/menu/BottomNav.tsx` — bottom nav (Home, Search, Orders, Alerts, Profile)
+- `src/hooks/useTableSessions.ts` — session lifecycle
+- `src/components/admin/AdminSidebar.tsx` (347 lines) — admin sidebar

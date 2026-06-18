@@ -33,6 +33,7 @@ import { checkRateLimit, RATE_LIMITS, getRemainingCooldown } from '@/utils/rateL
 
 import { useTableByNumber, useTables } from '@/hooks/useTables';
 import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
+import { SeatPickerDialog } from '@/components/menu/SeatPickerDialog';
 import { useActiveEnterprisePromotions } from '@/hooks/useEnterprisePromotions';
 import { evaluateCartDiscounts } from '@/services/promotions/cartPricingEngine';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
@@ -126,6 +127,15 @@ const CustomerMenu = () => {
   const [dynamicTableId, setDynamicTableId] = useState(
     tableId || (restaurantId ? getPersistedTable(restaurantId) : '')
   );
+  const getPersistedSeat = (): number | null => {
+    try {
+      const raw = localStorage.getItem('zappy_selected_seat');
+      return raw ? parseInt(raw) : null;
+    } catch { return null; }
+  };
+  const [selectedSeat, setSelectedSeat] = useState<number | null>(getPersistedSeat());
+  const [showSeatPicker, setShowSeatPicker] = useState(false);
+  const [pendingTableForSeat, setPendingTableForSeat] = useState<string | null>(null);
   const isPreviewMode = false;
   const showTablePicker = !dynamicTableId && !!restaurantId;
   const { toast } = useToast();
@@ -498,14 +508,23 @@ const CustomerMenu = () => {
   }, [restaurantId, resolvedTableId]);
 
   const handleTableSelect = (tableNumber: string) => {
+    setPendingTableForSeat(tableNumber);
+    setShowSeatPicker(true);
+  };
+
+  const handleSeatSelect = (seat: number) => {
+    const tableNumber = pendingTableForSeat;
+    if (!tableNumber || !restaurantId) return;
+    setSelectedSeat(seat);
+    setShowSeatPicker(false);
+    setPendingTableForSeat(null);
     setDynamicTableId(tableNumber);
+    localStorage.setItem('zappy_selected_seat', String(seat));
     // Persist to localStorage for session survival
-    if (restaurantId) {
-      localStorage.setItem(
-        `qr_table_${restaurantId}`,
-        JSON.stringify({ tableNumber, timestamp: Date.now() })
-      );
-    }
+    localStorage.setItem(
+      `qr_table_${restaurantId}`,
+      JSON.stringify({ tableNumber, timestamp: Date.now() })
+    );
     // Update URL without reload
     const url = new URL(window.location.href);
     url.searchParams.set('table', tableNumber);
@@ -1625,6 +1644,19 @@ const CustomerMenu = () => {
         onSelectTable={handleTableSelect}
       />
 
+      {/* Seat Picker Dialog */}
+      {showSeatPicker && pendingTableForSeat && (
+        <SeatPickerDialog
+          open={showSeatPicker}
+          tableNumber={pendingTableForSeat}
+          capacity={(() => {
+            const t = allTables.find(tbl => tbl.table_number === pendingTableForSeat);
+            return t?.capacity || 4;
+          })()}
+          onSelectSeat={handleSeatSelect}
+        />
+      )}
+
       {/* Details Dialog */}
       <ItemDetailsDialog
         item={selectedItemForDetails}
@@ -1656,6 +1688,7 @@ const CustomerMenu = () => {
         tableNumber={tableNumber || 'Select Table'}
         onSearchClick={() => setCurrentView('search')}
         onProfileClick={() => setCurrentView('profile')}
+        onNotificationClick={() => setCurrentView('notifications')}
         primaryColor={primaryColor}
         branding={brandingConfig}
         restaurantId={restaurantId || undefined}
