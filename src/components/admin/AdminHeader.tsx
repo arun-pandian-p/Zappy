@@ -38,7 +38,7 @@ export function AdminHeader({
   const avatarUrl = user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`;
 
   return (
-    <header className="sticky top-0 z-40 bg-card border-b">
+    <header className="sticky top-0 z-40 bg-card border-b border-white/[0.06]">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
@@ -72,31 +72,31 @@ export function AdminHeader({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="text-[#64748B] hover:text-[#F1F5F9] hover:bg-white/[0.06]">
             <Search className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon" className="text-[#64748B] hover:text-[#F1F5F9] hover:bg-white/[0.06]">
             <Bell className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon" className="text-[#64748B] hover:text-[#F1F5F9] hover:bg-white/[0.06]">
             <Settings className="w-5 h-5" />
           </Button>
           {user?.email && (
-            <Badge variant="secondary" className="hidden sm:flex items-center gap-1 text-xs">
+            <Badge variant="secondary" className="hidden sm:flex items-center gap-1 text-xs bg-white/[0.06] text-[#94A3B8] border border-white/[0.08]">
               <Mail className="w-3 h-3" />
               {user.email}
             </Badge>
           )}
           {user?.email && (
-            <Badge variant="secondary" className="flex sm:hidden items-center gap-1 text-xs">
+            <Badge variant="secondary" className="flex sm:hidden items-center gap-1 text-xs bg-white/[0.06] text-[#94A3B8]">
               <Mail className="w-3 h-3" />
               {emailPrefix}
             </Badge>
           )}
-          <Avatar className="w-9 h-9 ml-2">
+          <Avatar className="w-9 h-9 ml-2 ring-2 ring-white/[0.06]">
             <AvatarImage src={avatarUrl} />
-            <AvatarFallback className="bg-primary/20 text-primary text-sm">
+            <AvatarFallback className="bg-[#6366F1]/20 text-[#6366F1] text-sm">
               {displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>

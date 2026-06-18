@@ -197,7 +197,7 @@ export function AdminSidebar({
 
   return (
     <>
-      <Sidebar className="border-r-0 bg-sidebar" collapsible="icon">
+      <Sidebar className="border-r border-white/[0.04] bg-sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
           <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between")}>
             <div className="flex items-center gap-3">
@@ -252,10 +252,10 @@ export function AdminSidebar({
                     className={cn(
                       "w-full justify-start gap-3 rounded-xl transition-all duration-200",
                       isActive
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        ? "bg-primary/20 text-primary shadow-[0_0_16px_rgba(99,102,241,0.15)] hover:bg-primary/30"
                         : locked
                           ? "text-sidebar-foreground/40 hover:bg-sidebar-accent/50"
-                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
                     )}
                   >
                     <item.icon className="w-5 h-5 shrink-0" />
@@ -272,7 +272,7 @@ export function AdminSidebar({
           </SidebarMenu>
         </SidebarContent>
 
-        <SidebarFooter className={cn("mt-auto border-t border-sidebar-border", collapsed ? "p-2" : "p-4")}>
+        <SidebarFooter className={cn("mt-auto border-t border-white/[0.06]", collapsed ? "p-2" : "p-4")}>
           <div className={cn("flex items-center", collapsed ? "flex-col gap-2" : "gap-3 mb-3")}>
             <input
               ref={fileInputRef}
