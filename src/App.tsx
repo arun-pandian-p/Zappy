@@ -10,8 +10,6 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import SuperAdminLogin from "./pages/SuperAdminLogin";
-import TenantAdminLogin from "./pages/TenantAdminLogin";
 import CustomerMenu from "./pages/CustomerMenu";
 import KitchenDashboard from "./pages/KitchenDashboard";
 import WaiterDashboard from "./pages/WaiterDashboard";
@@ -68,10 +66,6 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/super-admin/login" element={<SuperAdminLogin />} />
-            <Route path="/admin/login" element={<TenantAdminLogin />} />
-            <Route path="/tenant-admin/login" element={<TenantAdminLogin />} />
-            <Route path="/customer-menu" element={<CustomerMenu />} />
             <Route path="/order" element={<CustomerMenu />} />
             <Route path="/menu" element={<CustomerMenu />} />
             <Route path="/feedback" element={<FeedbackPage />} />
