@@ -187,3 +187,111 @@ export async function getOpenAIEmbedding(text: string, restaurantId: string): Pr
   throw new Error("Failed to retrieve embedding from OpenAI API.");
 }
 
+/**
+ * Generate embedding for a single menu item and update it directly in the database.
+ */
+export async function generateAndSaveMenuEmbedding(
+  menuItemId: string,
+  name: string,
+  description: string | null,
+  restaurantId: string
+): Promise<number[] | null> {
+  try {
+    const textToEmbed = `${name} ${description || ""}`.trim();
+    if (!textToEmbed) return null;
+
+    console.log(`Generating database embedding for: "${textToEmbed}"`);
+    const { executeOpenAIEmbeddingCall } = await import("../openaiService");
+    const embeddings = await executeOpenAIEmbeddingCall(restaurantId, [textToEmbed]);
+    const embedding = embeddings[0];
+
+    if (embedding) {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { error } = await supabase
+        .from("menu_items")
+        .update({ embedding })
+        .eq("id", menuItemId);
+
+      if (error) {
+        console.error("Failed to save embedding in database:", error.message);
+        throw error;
+      }
+      
+      const cacheKey = `zappy_openai_emb_${name.trim().toLowerCase().replace(/\s+/g, "_")}`;
+      localStorage.setItem(cacheKey, JSON.stringify(embedding));
+
+      return embedding;
+    }
+    return null;
+  } catch (err) {
+    console.error("generateAndSaveMenuEmbedding error:", err);
+    return null;
+  }
+}
+
+/**
+ * Bulk generate embeddings for all menu items of a restaurant and save them.
+ */
+export async function regenerateAllMenuEmbeddings(
+  restaurantId: string
+): Promise<{ successCount: number; failCount: number }> {
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: items, error } = await supabase
+      .from("menu_items")
+      .select("id, name, description")
+      .eq("restaurant_id", restaurantId);
+
+    if (error) throw error;
+    if (!items || items.length === 0) return { successCount: 0, failCount: 0 };
+
+    let successCount = 0;
+    let failCount = 0;
+
+    const { executeOpenAIEmbeddingCall } = await import("../openaiService");
+
+    const batchSize = 10;
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      const texts = batch.map(item => `${item.name} ${item.description || ""}`.trim());
+
+      try {
+        console.log(`Fetching batch of ${batch.length} embeddings from OpenAI...`);
+        const embeddings = await executeOpenAIEmbeddingCall(restaurantId, texts);
+
+        for (let j = 0; j < batch.length; j++) {
+          const item = batch[j];
+          const embedding = embeddings[j];
+
+          if (embedding) {
+            const { error: updateError } = await supabase
+              .from("menu_items")
+              .update({ embedding })
+              .eq("id", item.id);
+
+            if (updateError) {
+              console.error(`Failed to save bulk embedding for ${item.name}:`, updateError.message);
+              failCount++;
+            } else {
+              successCount++;
+              const cacheKey = `zappy_openai_emb_${item.name.trim().toLowerCase().replace(/\s+/g, "_")}`;
+              localStorage.setItem(cacheKey, JSON.stringify(embedding));
+            }
+          } else {
+            failCount++;
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to process batch ${i} to ${i + batchSize}:`, err);
+        failCount += batch.length;
+      }
+    }
+
+    return { successCount, failCount };
+  } catch (err) {
+    console.error("regenerateAllMenuEmbeddings error:", err);
+    return { successCount: 0, failCount: 0 };
+  }
+}
+
+

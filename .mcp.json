@@ -31,6 +31,10 @@
       "args": [
         "@playwright/mcp"
       ]
+    },
+    "higgsfield": {
+      "type": "http",
+      "url": "https://mcp.higgsfield.ai/mcp"
     }
   }
 }

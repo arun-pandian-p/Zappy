@@ -1,0 +1,1052 @@
+{
+  "1": {
+    "name": "Idli",
+    "slug": "idli",
+    "filename": "idli.png",
+    "has_real_image": true
+  },
+  "2": {
+    "name": "Mini Idli",
+    "slug": "mini_idli",
+    "filename": "mini_idli.png",
+    "has_real_image": true
+  },
+  "3": {
+    "name": "Rava Idli",
+    "slug": "rava_idli",
+    "filename": "rava_idli.png",
+    "has_real_image": true
+  },
+  "4": {
+    "name": "Plain Dosa",
+    "slug": "plain_dosa",
+    "filename": "plain_dosa.png",
+    "has_real_image": false
+  },
+  "5": {
+    "name": "Masala Dosa",
+    "slug": "masala_dosa",
+    "filename": "masala_dosa.png",
+    "has_real_image": true
+  },
+  "6": {
+    "name": "Onion Dosa",
+    "slug": "onion_dosa",
+    "filename": "onion_dosa.png",
+    "has_real_image": true
+  },
+  "7": {
+    "name": "Rava Dosa",
+    "slug": "rava_dosa",
+    "filename": "rava_dosa.png",
+    "has_real_image": true
+  },
+  "8": {
+    "name": "Set Dosa",
+    "slug": "set_dosa",
+    "filename": "set_dosa.png",
+    "has_real_image": true
+  },
+  "9": {
+    "name": "Paper Dosa",
+    "slug": "paper_dosa",
+    "filename": "paper_dosa.png",
+    "has_real_image": true
+  },
+  "10": {
+    "name": "Green Gram Dosa",
+    "slug": "green_gram_dosa",
+    "filename": "green_gram_dosa.png",
+    "has_real_image": true
+  },
+  "11": {
+    "name": "Uttapam",
+    "slug": "uttapam",
+    "filename": "uttapam.png",
+    "has_real_image": true
+  },
+  "12": {
+    "name": "Adai",
+    "slug": "adai",
+    "filename": "adai.png",
+    "has_real_image": true
+  },
+  "13": {
+    "name": "Vada (Medu Vada)",
+    "slug": "vada",
+    "filename": "vada.png",
+    "has_real_image": true
+  },
+  "14": {
+    "name": "Sambar Vada",
+    "slug": "sambar_vada",
+    "filename": "sambar_vada.png",
+    "has_real_image": true
+  },
+  "15": {
+    "name": "Dahi Vada",
+    "slug": "dahi_vada",
+    "filename": "dahi_vada.png",
+    "has_real_image": true
+  },
+  "16": {
+    "name": "Pongal (Ven Pongal)",
+    "slug": "pongal",
+    "filename": "pongal.png",
+    "has_real_image": true
+  },
+  "17": {
+    "name": "Sweet Pongal (Sakkarai Pongal)",
+    "slug": "sweet_pongal",
+    "filename": "sweet_pongal.png",
+    "has_real_image": true
+  },
+  "18": {
+    "name": "Upma",
+    "slug": "upma",
+    "filename": "upma.png",
+    "has_real_image": true
+  },
+  "19": {
+    "name": "Khichdi",
+    "slug": "khichdi",
+    "filename": "khichdi.png",
+    "has_real_image": false
+  },
+  "20": {
+    "name": "Idiyappam",
+    "slug": "idiyappam",
+    "filename": "idiyappam.png",
+    "has_real_image": false
+  },
+  "21": {
+    "name": "Appam",
+    "slug": "appam",
+    "filename": "appam.png",
+    "has_real_image": true
+  },
+  "22": {
+    "name": "Puttu",
+    "slug": "puttu",
+    "filename": "puttu.png",
+    "has_real_image": false
+  },
+  "23": {
+    "name": "Dosa with Chutney & Sambar",
+    "slug": "dosa_with_chutney_sambar",
+    "filename": "dosa_with_chutney_sambar.png",
+    "has_real_image": false
+  },
+  "24": {
+    "name": "Bisi Bele Bath",
+    "slug": "bisi_bele_bath",
+    "filename": "bisi_bele_bath.png",
+    "has_real_image": true
+  },
+  "25": {
+    "name": "Akki Roti",
+    "slug": "akki_roti",
+    "filename": "akki_roti.png",
+    "has_real_image": false
+  },
+  "26": {
+    "name": "Neer Dosa",
+    "slug": "neer_dosa",
+    "filename": "neer_dosa.png",
+    "has_real_image": true
+  },
+  "27": {
+    "name": "Curd Rice (Thayir Sadam)",
+    "slug": "curd_rice",
+    "filename": "curd_rice.png",
+    "has_real_image": true
+  },
+  "28": {
+    "name": "Lemon Rice",
+    "slug": "lemon_rice",
+    "filename": "lemon_rice.png",
+    "has_real_image": true
+  },
+  "29": {
+    "name": "Tamarind Rice (Puliyodarai)",
+    "slug": "tamarind_rice",
+    "filename": "tamarind_rice.png",
+    "has_real_image": true
+  },
+  "30": {
+    "name": "Coconut Rice",
+    "slug": "coconut_rice",
+    "filename": "coconut_rice.png",
+    "has_real_image": true
+  },
+  "31": {
+    "name": "Tomato Rice",
+    "slug": "tomato_rice",
+    "filename": "tomato_rice.png",
+    "has_real_image": true
+  },
+  "32": {
+    "name": "Vegetable Biryani",
+    "slug": "vegetable_biryani",
+    "filename": "vegetable_biryani.png",
+    "has_real_image": true
+  },
+  "33": {
+    "name": "Chicken Biryani",
+    "slug": "chicken_biryani",
+    "filename": "chicken_biryani.png",
+    "has_real_image": true
+  },
+  "34": {
+    "name": "Mutton Biryani",
+    "slug": "mutton_biryani",
+    "filename": "mutton_biryani.png",
+    "has_real_image": true
+  },
+  "35": {
+    "name": "Ghee Rice",
+    "slug": "ghee_rice",
+    "filename": "ghee_rice.png",
+    "has_real_image": true
+  },
+  "36": {
+    "name": "Curd Vada with Rice",
+    "slug": "curd_vada_with_rice",
+    "filename": "curd_vada_with_rice.png",
+    "has_real_image": false
+  },
+  "37": {
+    "name": "Kara Sadam",
+    "slug": "kara_sadam",
+    "filename": "kara_sadam.png",
+    "has_real_image": false
+  },
+  "38": {
+    "name": "Bisibele Bath Rice",
+    "slug": "bisibele_bath_rice",
+    "filename": "bisibele_bath_rice.png",
+    "has_real_image": false
+  },
+  "39": {
+    "name": "Sambar Rice",
+    "slug": "sambar_rice",
+    "filename": "sambar_rice.png",
+    "has_real_image": false
+  },
+  "40": {
+    "name": "Rasam Rice",
+    "slug": "rasam_rice",
+    "filename": "rasam_rice.png",
+    "has_real_image": false
+  },
+  "41": {
+    "name": "Mango Rice",
+    "slug": "mango_rice",
+    "filename": "mango_rice.png",
+    "has_real_image": false
+  },
+  "42": {
+    "name": "Vegetable Pulao",
+    "slug": "vegetable_pulao",
+    "filename": "vegetable_pulao.png",
+    "has_real_image": false
+  },
+  "43": {
+    "name": "Coconut Milk Rice (Thengai Paal Sadam)",
+    "slug": "coconut_milk_rice",
+    "filename": "coconut_milk_rice.png",
+    "has_real_image": false
+  },
+  "44": {
+    "name": "Curd Rice with Pomegranate",
+    "slug": "curd_rice_with_pomegranate",
+    "filename": "curd_rice_with_pomegranate.png",
+    "has_real_image": false
+  },
+  "45": {
+    "name": "Jeera Rice",
+    "slug": "jeera_rice",
+    "filename": "jeera_rice.png",
+    "has_real_image": false
+  },
+  "46": {
+    "name": "Kalan Sadam",
+    "slug": "kalan_sadam",
+    "filename": "kalan_sadam.png",
+    "has_real_image": false
+  },
+  "47": {
+    "name": "Arachuvitta Sambar",
+    "slug": "arachuvitta_sambar",
+    "filename": "arachuvitta_sambar.png",
+    "has_real_image": true
+  },
+  "48": {
+    "name": "Drumstick Sambar",
+    "slug": "drumstick_sambar",
+    "filename": "drumstick_sambar.png",
+    "has_real_image": true
+  },
+  "49": {
+    "name": "Mixed Vegetable Sambar",
+    "slug": "mixed_vegetable_sambar",
+    "filename": "mixed_vegetable_sambar.png",
+    "has_real_image": true
+  },
+  "50": {
+    "name": "Onion Sambar",
+    "slug": "onion_sambar",
+    "filename": "onion_sambar.png",
+    "has_real_image": true
+  },
+  "51": {
+    "name": "Brinjal Sambar",
+    "slug": "brinjal_sambar",
+    "filename": "brinjal_sambar.png",
+    "has_real_image": true
+  },
+  "52": {
+    "name": "Hotel-style Sambar",
+    "slug": "hotel_style_sambar",
+    "filename": "hotel_style_sambar.png",
+    "has_real_image": true
+  },
+  "53": {
+    "name": "Pumpkin Sambar",
+    "slug": "pumpkin_sambar",
+    "filename": "pumpkin_sambar.png",
+    "has_real_image": true
+  },
+  "54": {
+    "name": "Udupi Sambar",
+    "slug": "udupi_sambar",
+    "filename": "udupi_sambar.png",
+    "has_real_image": true
+  },
+  "55": {
+    "name": "Paruppu Sambar",
+    "slug": "paruppu_sambar",
+    "filename": "paruppu_sambar.png",
+    "has_real_image": true
+  },
+  "56": {
+    "name": "Vatha Kuzhambu",
+    "slug": "vatha_kuzhambu",
+    "filename": "vatha_kuzhambu.png",
+    "has_real_image": false
+  },
+  "57": {
+    "name": "Tomato Rasam",
+    "slug": "tomato_rasam",
+    "filename": "tomato_rasam.png",
+    "has_real_image": true
+  },
+  "58": {
+    "name": "Pepper Rasam (Milagu Rasam)",
+    "slug": "pepper_rasam",
+    "filename": "pepper_rasam.png",
+    "has_real_image": true
+  },
+  "59": {
+    "name": "Garlic Rasam",
+    "slug": "garlic_rasam",
+    "filename": "garlic_rasam.png",
+    "has_real_image": true
+  },
+  "60": {
+    "name": "Lemon Rasam",
+    "slug": "lemon_rasam",
+    "filename": "lemon_rasam.png",
+    "has_real_image": true
+  },
+  "61": {
+    "name": "Dal Rasam (Paruppu Rasam)",
+    "slug": "dal_rasam",
+    "filename": "dal_rasam.png",
+    "has_real_image": true
+  },
+  "62": {
+    "name": "Mysore Rasam",
+    "slug": "mysore_rasam",
+    "filename": "mysore_rasam.png",
+    "has_real_image": true
+  },
+  "63": {
+    "name": "Pineapple Rasam",
+    "slug": "pineapple_rasam",
+    "filename": "pineapple_rasam.png",
+    "has_real_image": true
+  },
+  "64": {
+    "name": "Ginger Rasam",
+    "slug": "ginger_rasam",
+    "filename": "ginger_rasam.png",
+    "has_real_image": true
+  },
+  "65": {
+    "name": "Curry Leaves Rasam",
+    "slug": "curry_leaves_rasam",
+    "filename": "curry_leaves_rasam.png",
+    "has_real_image": true
+  },
+  "66": {
+    "name": "Rasam Vada",
+    "slug": "rasam_vada",
+    "filename": "rasam_vada.png",
+    "has_real_image": false
+  },
+  "67": {
+    "name": "Coconut Chutney",
+    "slug": "coconut_chutney",
+    "filename": "coconut_chutney.png",
+    "has_real_image": true
+  },
+  "68": {
+    "name": "Tomato Chutney",
+    "slug": "tomato_chutney",
+    "filename": "tomato_chutney.png",
+    "has_real_image": true
+  },
+  "69": {
+    "name": "Coriander Chutney",
+    "slug": "coriander_chutney",
+    "filename": "coriander_chutney.png",
+    "has_real_image": true
+  },
+  "70": {
+    "name": "Mint Chutney",
+    "slug": "mint_chutney",
+    "filename": "mint_chutney.png",
+    "has_real_image": true
+  },
+  "71": {
+    "name": "Onion Chutney",
+    "slug": "onion_chutney",
+    "filename": "onion_chutney.png",
+    "has_real_image": true
+  },
+  "72": {
+    "name": "Tamarind Chutney",
+    "slug": "tamarind_chutney",
+    "filename": "tamarind_chutney.png",
+    "has_real_image": false
+  },
+  "73": {
+    "name": "Peanut Chutney",
+    "slug": "peanut_chutney",
+    "filename": "peanut_chutney.png",
+    "has_real_image": true
+  },
+  "74": {
+    "name": "Ginger Chutney",
+    "slug": "ginger_chutney",
+    "filename": "ginger_chutney.png",
+    "has_real_image": true
+  },
+  "75": {
+    "name": "Garlic Chutney",
+    "slug": "garlic_chutney",
+    "filename": "garlic_chutney.png",
+    "has_real_image": true
+  },
+  "76": {
+    "name": "Curry Leaves Chutney",
+    "slug": "curry_leaves_chutney",
+    "filename": "curry_leaves_chutney.png",
+    "has_real_image": true
+  },
+  "77": {
+    "name": "Pudina Coconut Chutney",
+    "slug": "pudina_coconut_chutney",
+    "filename": "pudina_coconut_chutney.png",
+    "has_real_image": false
+  },
+  "78": {
+    "name": "Red Chili Chutney",
+    "slug": "red_chili_chutney",
+    "filename": "red_chili_chutney.png",
+    "has_real_image": false
+  },
+  "79": {
+    "name": "Carrot Chutney",
+    "slug": "carrot_chutney",
+    "filename": "carrot_chutney.png",
+    "has_real_image": false
+  },
+  "80": {
+    "name": "Coconut-Ginger Chutney",
+    "slug": "coconut_ginger_chutney",
+    "filename": "coconut_ginger_chutney.png",
+    "has_real_image": false
+  },
+  "81": {
+    "name": "Chana Dal Chutney",
+    "slug": "chana_dal_chutney",
+    "filename": "chana_dal_chutney.png",
+    "has_real_image": false
+  },
+  "82": {
+    "name": "Beans Poriyal",
+    "slug": "beans_poriyal",
+    "filename": "beans_poriyal.png",
+    "has_real_image": true
+  },
+  "83": {
+    "name": "Cabbage Poriyal",
+    "slug": "cabbage_poriyal",
+    "filename": "cabbage_poriyal.png",
+    "has_real_image": true
+  },
+  "84": {
+    "name": "Carrot Poriyal",
+    "slug": "carrot_poriyal",
+    "filename": "carrot_poriyal.png",
+    "has_real_image": true
+  },
+  "85": {
+    "name": "Beetroot Poriyal",
+    "slug": "beetroot_poriyal",
+    "filename": "beetroot_poriyal.png",
+    "has_real_image": true
+  },
+  "86": {
+    "name": "Snake Gourd Poriyal",
+    "slug": "snake_gourd_poriyal",
+    "filename": "snake_gourd_poriyal.png",
+    "has_real_image": false
+  },
+  "87": {
+    "name": "Cluster Beans Poriyal",
+    "slug": "cluster_beans_poriyal",
+    "filename": "cluster_beans_poriyal.png",
+    "has_real_image": true
+  },
+  "88": {
+    "name": "Avial",
+    "slug": "avial",
+    "filename": "avial.png",
+    "has_real_image": true
+  },
+  "89": {
+    "name": "Olan",
+    "slug": "olan",
+    "filename": "olan.png",
+    "has_real_image": false
+  },
+  "90": {
+    "name": "Kootu (Mixed Vegetable Kootu)",
+    "slug": "kootu",
+    "filename": "kootu.png",
+    "has_real_image": true
+  },
+  "91": {
+    "name": "Pumpkin Kootu",
+    "slug": "pumpkin_kootu",
+    "filename": "pumpkin_kootu.png",
+    "has_real_image": true
+  },
+  "92": {
+    "name": "Mor Kuzhambu",
+    "slug": "mor_kuzhambu",
+    "filename": "mor_kuzhambu.png",
+    "has_real_image": true
+  },
+  "93": {
+    "name": "Erissery",
+    "slug": "erissery",
+    "filename": "erissery.png",
+    "has_real_image": true
+  },
+  "94": {
+    "name": "Thoran",
+    "slug": "thoran",
+    "filename": "thoran.png",
+    "has_real_image": true
+  },
+  "95": {
+    "name": "Pachadi",
+    "slug": "pachadi",
+    "filename": "pachadi.png",
+    "has_real_image": false
+  },
+  "96": {
+    "name": "Vazhakkai Poriyal",
+    "slug": "vazhakkai_poriyal",
+    "filename": "vazhakkai_poriyal.png",
+    "has_real_image": false
+  },
+  "97": {
+    "name": "Beans Usili",
+    "slug": "beans_usili",
+    "filename": "beans_usili.png",
+    "has_real_image": false
+  },
+  "98": {
+    "name": "Vegetable Kurma",
+    "slug": "vegetable_kurma",
+    "filename": "vegetable_kurma.png",
+    "has_real_image": false
+  },
+  "99": {
+    "name": "Potato Masala",
+    "slug": "potato_masala",
+    "filename": "potato_masala.png",
+    "has_real_image": false
+  },
+  "100": {
+    "name": "Chettinad Chicken Curry",
+    "slug": "chettinad_chicken_curry",
+    "filename": "chettinad_chicken_curry.png",
+    "has_real_image": false
+  },
+  "101": {
+    "name": "Kerala Fish Curry",
+    "slug": "kerala_fish_curry",
+    "filename": "kerala_fish_curry.png",
+    "has_real_image": false
+  },
+  "102": {
+    "name": "Mutton Chukka",
+    "slug": "mutton_chukka",
+    "filename": "mutton_chukka.png",
+    "has_real_image": false
+  },
+  "103": {
+    "name": "Egg Curry",
+    "slug": "egg_curry",
+    "filename": "egg_curry.png",
+    "has_real_image": false
+  },
+  "104": {
+    "name": "Prawn Roast",
+    "slug": "prawn_roast",
+    "filename": "prawn_roast.png",
+    "has_real_image": false
+  },
+  "105": {
+    "name": "Chicken 65",
+    "slug": "chicken_65",
+    "filename": "chicken_65.png",
+    "has_real_image": false
+  },
+  "106": {
+    "name": "Chicken Chettinad",
+    "slug": "chicken_chettinad",
+    "filename": "chicken_chettinad.png",
+    "has_real_image": false
+  },
+  "107": {
+    "name": "Meen Pollichathu",
+    "slug": "meen_pollichathu",
+    "filename": "meen_pollichathu.png",
+    "has_real_image": false
+  },
+  "108": {
+    "name": "Kozhi Varutharacha Curry",
+    "slug": "kozhi_varutharacha_curry",
+    "filename": "kozhi_varutharacha_curry.png",
+    "has_real_image": false
+  },
+  "109": {
+    "name": "Mutton Kuzhambu",
+    "slug": "mutton_kuzhambu",
+    "filename": "mutton_kuzhambu.png",
+    "has_real_image": false
+  },
+  "110": {
+    "name": "Fish Moilee",
+    "slug": "fish_moilee",
+    "filename": "fish_moilee.png",
+    "has_real_image": false
+  },
+  "111": {
+    "name": "Egg Roast",
+    "slug": "egg_roast",
+    "filename": "egg_roast.png",
+    "has_real_image": false
+  },
+  "112": {
+    "name": "Mysore Bonda",
+    "slug": "mysore_bonda",
+    "filename": "mysore_bonda.png",
+    "has_real_image": false
+  },
+  "113": {
+    "name": "Onion Bajji",
+    "slug": "onion_bajji",
+    "filename": "onion_bajji.png",
+    "has_real_image": false
+  },
+  "114": {
+    "name": "Banana Bajji",
+    "slug": "banana_bajji",
+    "filename": "banana_bajji.png",
+    "has_real_image": false
+  },
+  "115": {
+    "name": "Potato Bonda",
+    "slug": "potato_bonda",
+    "filename": "potato_bonda.png",
+    "has_real_image": false
+  },
+  "116": {
+    "name": "Mirchi Bajji",
+    "slug": "mirchi_bajji",
+    "filename": "mirchi_bajji.png",
+    "has_real_image": false
+  },
+  "117": {
+    "name": "Murukku",
+    "slug": "murukku",
+    "filename": "murukku.png",
+    "has_real_image": true
+  },
+  "118": {
+    "name": "Banana Chips",
+    "slug": "banana_chips",
+    "filename": "banana_chips.png",
+    "has_real_image": true
+  },
+  "119": {
+    "name": "Vadai (Paruppu Vadai)",
+    "slug": "vadai",
+    "filename": "vadai.png",
+    "has_real_image": false
+  },
+  "120": {
+    "name": "Masala Vada",
+    "slug": "masala_vada",
+    "filename": "masala_vada.png",
+    "has_real_image": false
+  },
+  "121": {
+    "name": "Bonda Soup",
+    "slug": "bonda_soup",
+    "filename": "bonda_soup.png",
+    "has_real_image": false
+  },
+  "122": {
+    "name": "Sundal",
+    "slug": "sundal",
+    "filename": "sundal.png",
+    "has_real_image": true
+  },
+  "123": {
+    "name": "Kara Boondi",
+    "slug": "kara_boondi",
+    "filename": "kara_boondi.png",
+    "has_real_image": true
+  },
+  "124": {
+    "name": "Thattai",
+    "slug": "thattai",
+    "filename": "thattai.png",
+    "has_real_image": true
+  },
+  "125": {
+    "name": "Pakoda",
+    "slug": "pakoda",
+    "filename": "pakoda.png",
+    "has_real_image": true
+  },
+  "126": {
+    "name": "Payasam (Paal Payasam)",
+    "slug": "payasam",
+    "filename": "payasam.png",
+    "has_real_image": true
+  },
+  "127": {
+    "name": "Semiya Payasam",
+    "slug": "semiya_payasam",
+    "filename": "semiya_payasam.png",
+    "has_real_image": true
+  },
+  "128": {
+    "name": "Ada Pradhaman",
+    "slug": "ada_pradhaman",
+    "filename": "ada_pradhaman.png",
+    "has_real_image": false
+  },
+  "129": {
+    "name": "Mysore Pak",
+    "slug": "mysore_pak",
+    "filename": "mysore_pak.png",
+    "has_real_image": true
+  },
+  "130": {
+    "name": "Halwa (Kesari)",
+    "slug": "halwa",
+    "filename": "halwa.png",
+    "has_real_image": false
+  },
+  "131": {
+    "name": "Rava Kesari",
+    "slug": "rava_kesari",
+    "filename": "rava_kesari.png",
+    "has_real_image": true
+  },
+  "132": {
+    "name": "Boondi Laddu",
+    "slug": "boondi_laddu",
+    "filename": "boondi_laddu.png",
+    "has_real_image": false
+  },
+  "133": {
+    "name": "Jangiri",
+    "slug": "jangiri",
+    "filename": "jangiri.png",
+    "has_real_image": true
+  },
+  "134": {
+    "name": "Adhirasam",
+    "slug": "adhirasam",
+    "filename": "adhirasam.png",
+    "has_real_image": true
+  },
+  "135": {
+    "name": "Pal Kova",
+    "slug": "pal_kova",
+    "filename": "pal_kova.png",
+    "has_real_image": false
+  },
+  "136": {
+    "name": "Sweet Pongal",
+    "slug": "sweet_pongal",
+    "filename": "sweet_pongal.png",
+    "has_real_image": true
+  },
+  "137": {
+    "name": "Banana Halwa",
+    "slug": "banana_halwa",
+    "filename": "banana_halwa.png",
+    "has_real_image": false
+  },
+  "138": {
+    "name": "Unniyappam",
+    "slug": "unniyappam",
+    "filename": "unniyappam.png",
+    "has_real_image": true
+  },
+  "139": {
+    "name": "Coconut Burfi",
+    "slug": "coconut_burfi",
+    "filename": "coconut_burfi.png",
+    "has_real_image": false
+  },
+  "140": {
+    "name": "Rasgulla (South Indian style)",
+    "slug": "rasgulla",
+    "filename": "rasgulla.png",
+    "has_real_image": false
+  },
+  "141": {
+    "name": "Filter Coffee",
+    "slug": "filter_coffee",
+    "filename": "filter_coffee.png",
+    "has_real_image": true
+  },
+  "142": {
+    "name": "Masala Chai",
+    "slug": "masala_chai",
+    "filename": "masala_chai.png",
+    "has_real_image": true
+  },
+  "143": {
+    "name": "Buttermilk (Spiced Chaas)",
+    "slug": "buttermilk",
+    "filename": "buttermilk.png",
+    "has_real_image": true
+  },
+  "144": {
+    "name": "Tender Coconut Water",
+    "slug": "tender_coconut_water",
+    "filename": "tender_coconut_water.png",
+    "has_real_image": true
+  },
+  "145": {
+    "name": "Sambharam",
+    "slug": "sambharam",
+    "filename": "sambharam.png",
+    "has_real_image": false
+  },
+  "146": {
+    "name": "Rose Milk",
+    "slug": "rose_milk",
+    "filename": "rose_milk.png",
+    "has_real_image": true
+  },
+  "147": {
+    "name": "Jigarthanda",
+    "slug": "jigarthanda",
+    "filename": "jigarthanda.png",
+    "has_real_image": true
+  },
+  "148": {
+    "name": "Sukku Coffee",
+    "slug": "sukku_coffee",
+    "filename": "sukku_coffee.png",
+    "has_real_image": false
+  },
+  "149": {
+    "name": "Panakam",
+    "slug": "panakam",
+    "filename": "panakam.png",
+    "has_real_image": false
+  },
+  "150": {
+    "name": "Nannari Sherbet",
+    "slug": "nannari_sherbet",
+    "filename": "nannari_sherbet.png",
+    "has_real_image": false
+  },
+  "151": {
+    "name": "South Indian Thali",
+    "slug": "south_indian_thali",
+    "filename": "south_indian_thali.png",
+    "has_real_image": true
+  },
+  "152": {
+    "name": "Banana Leaf Meals",
+    "slug": "banana_leaf_meals",
+    "filename": "banana_leaf_meals.png",
+    "has_real_image": true
+  },
+  "153": {
+    "name": "Combo Tiffin Plate",
+    "slug": "combo_tiffin_plate",
+    "filename": "combo_tiffin_plate.png",
+    "has_real_image": true
+  },
+  "154": {
+    "name": "Mini Tiffin Platter",
+    "slug": "mini_tiffin_platter",
+    "filename": "mini_tiffin_platter.png",
+    "has_real_image": true
+  },
+  "155": {
+    "name": "Family Pack Dosa Combo",
+    "slug": "family_pack_dosa_combo",
+    "filename": "family_pack_dosa_combo.png",
+    "has_real_image": false
+  },
+  "156": {
+    "name": "Andhra Meals",
+    "slug": "andhra_meals",
+    "filename": "andhra_meals.png",
+    "has_real_image": true
+  },
+  "157": {
+    "name": "Chettinad Special Thali",
+    "slug": "chettinad_special_thali",
+    "filename": "chettinad_special_thali.png",
+    "has_real_image": true
+  },
+  "158": {
+    "name": "Kerala Sadya",
+    "slug": "kerala_sadya",
+    "filename": "kerala_sadya.png",
+    "has_real_image": true
+  },
+  "159": {
+    "name": "Hotel Saravana Bhavan Special Dosa",
+    "slug": "hotel_saravana_bhavan_special_dosa",
+    "filename": "hotel_saravana_bhavan_special_dosa.png",
+    "has_real_image": false
+  },
+  "160": {
+    "name": "Madurai Special Mutton Curry",
+    "slug": "madurai_special_mutton_curry",
+    "filename": "madurai_special_mutton_curry.png",
+    "has_real_image": true
+  },
+  "161": {
+    "name": "Chennai Filter Coffee Combo",
+    "slug": "chennai_filter_coffee_combo",
+    "filename": "chennai_filter_coffee_combo.png",
+    "has_real_image": false
+  },
+  "162": {
+    "name": "South Indian Breakfast Buffet",
+    "slug": "south_indian_breakfast_buffet",
+    "filename": "south_indian_breakfast_buffet.png",
+    "has_real_image": false
+  },
+  "163": {
+    "name": "Special Sunday Brunch Thali",
+    "slug": "special_sunday_brunch_thali",
+    "filename": "special_sunday_brunch_thali.png",
+    "has_real_image": false
+  },
+  "164": {
+    "name": "Cafe Filter Coffee & Snacks Combo",
+    "slug": "cafe_filter_coffee_snacks_combo",
+    "filename": "cafe_filter_coffee_snacks_combo.png",
+    "has_real_image": false
+  },
+  "165": {
+    "name": "Tiffin Center Special",
+    "slug": "tiffin_center_special",
+    "filename": "tiffin_center_special.png",
+    "has_real_image": false
+  },
+  "166": {
+    "name": "Kongunadu Special Meals",
+    "slug": "kongunadu_special_meals",
+    "filename": "kongunadu_special_meals.png",
+    "has_real_image": false
+  },
+  "167": {
+    "name": "Ghee Roast Dosa Special",
+    "slug": "ghee_roast_dosa_special",
+    "filename": "ghee_roast_dosa_special.png",
+    "has_real_image": true
+  },
+  "168": {
+    "name": "Onion Rava Masala Dosa",
+    "slug": "onion_rava_masala_dosa",
+    "filename": "onion_rava_masala_dosa.png",
+    "has_real_image": false
+  },
+  "169": {
+    "name": "Paneer Dosa (fusion)",
+    "slug": "paneer_dosa",
+    "filename": "paneer_dosa.png",
+    "has_real_image": true
+  },
+  "170": {
+    "name": "Schezwan Dosa (fusion)",
+    "slug": "schezwan_dosa",
+    "filename": "schezwan_dosa.png",
+    "has_real_image": true
+  },
+  "171": {
+    "name": "Cheese Dosa (fusion café style)",
+    "slug": "cheese_dosa",
+    "filename": "cheese_dosa.png",
+    "has_real_image": true
+  },
+  "172": {
+    "name": "Mini Idli Sambar Bowl (café style)",
+    "slug": "mini_idli_sambar_bowl",
+    "filename": "mini_idli_sambar_bowl.png",
+    "has_real_image": true
+  },
+  "173": {
+    "name": "South Indian Filter Coffee Float",
+    "slug": "south_indian_filter_coffee_float",
+    "filename": "south_indian_filter_coffee_float.png",
+    "has_real_image": true
+  },
+  "174": {
+    "name": "Madras Curry Special",
+    "slug": "madras_curry_special",
+    "filename": "madras_curry_special.png",
+    "has_real_image": true
+  },
+  "175": {
+    "name": "Hyderabadi-South Indian Fusion Biryani",
+    "slug": "hyderabadi_south_indian_fusion_biryani",
+    "filename": "hyderabadi_south_indian_fusion_biryani.png",
+    "has_real_image": false
+  }
+}

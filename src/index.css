@@ -377,4 +377,126 @@
   animation: marquee-slow 30s linear infinite;
 }
 
+/* 2026 Website Redesign - Premium Editorial Theme */
+.landing-theme {
+  --background: 40 20% 96%; /* #F7F5F0 */
+  --foreground: 0 0% 7%;    /* #111111 */
+  --primary: 25 100% 50%;   /* #FF6B00 */
+  --primary-foreground: 0 0% 100%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 7%;
+  --accent: 25 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --border: 0 0% 0% / 0.08;
+  --ring: 25 100% 50%;
+  --muted: 40 10% 90%;
+  --muted-foreground: 0 0% 40%;
+  
+  background-color: #F7F5F0 !important;
+  color: #111111 !important;
+  font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+  scroll-behavior: smooth;
+}
+
+.landing-theme ::selection {
+  background-color: #FF6B00;
+  color: #FFFFFF;
+}
+
+/* Editorial Typography */
+.landing-title-massive {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.85;
+  text-transform: uppercase;
+}
+
+.landing-label-uppercase {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #FF6B00;
+}
+
+.landing-body-premium {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  line-height: 1.6;
+  color: rgba(17, 17, 17, 0.8);
+}
+
+@media (min-width: 1024px) {
+  .landing-body-premium {
+    font-size: 22px;
+  }
+}
+
+/* Custom Interactive UI elements */
+.landing-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.1);
+  border-color: rgba(255, 107, 0, 0.3);
+}
+
+/* Creative Letter Morphing / Text Reveal */
+.reveal-text-line {
+  overflow: hidden;
+  display: block;
+}
+
+.reveal-text-word {
+  display: inline-block;
+  transform: translateY(100%);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.revealed .reveal-text-word {
+  transform: translateY(0);
+}
+
+/* Glassmorphism surfaces */
+.landing-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Creative footer styles */
+.footer-massive-text {
+  font-size: 12vw;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 0.8;
+  color: #111111;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.footer-letter-span {
+  display: inline-block;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.footer-letter-span:hover {
+  color: #FF6B00;
+  transform: scale(1.15) translateY(-10px);
+}
+
+/* Dark hero section */
+.landing-hero {
+  --hero-accent: #5EA8FF;
+  --hero-accent-solid: #3B82F6;
+}
+
 

@@ -3,6 +3,8 @@ import { Plus, Minus, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+const fallbackImage = "/placeholder.svg";
+
 interface MenuItemRowProps {
   id: string;
   name: string;
@@ -47,7 +49,7 @@ export function MenuItemRow({
       {/* Thumbnail */}
       <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
         <img
-          src={imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80"}
+          src={imageUrl || fallbackImage}
           alt={name || "Menu Item"}
           loading="lazy"
           className="w-full h-full object-cover"

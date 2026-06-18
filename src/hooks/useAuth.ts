@@ -14,6 +14,25 @@ interface AuthState {
   loading: boolean;
 }
 
+const clearSupabaseAuthState = () => {
+  localStorage.removeItem('impersonated_restaurant_id');
+
+  const authKeys = Object.keys(localStorage).filter(
+    (key) => key.startsWith('sb-') || key.includes('supabase')
+  );
+
+  authKeys.forEach((key) => localStorage.removeItem(key));
+};
+
+const isRefreshTokenError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error || '');
+  return (
+    message.toLowerCase().includes('refresh token') ||
+    message.toLowerCase().includes('invalid refresh token') ||
+    message.toLowerCase().includes('token not found')
+  );
+};
+
 export const useAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
@@ -29,6 +48,68 @@ export const useAuth = () => {
       supabase.removeAllChannels();
     };
     window.addEventListener('beforeunload', handleUnload);
+
+    const setLoggedOutState = () => {
+      setAuthState({
+        user: null,
+        session: null,
+        role: null,
+        restaurantId: null,
+        originalRestaurantId: null,
+        loading: false,
+      });
+    };
+
+    const loadSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.warn('Auth session recovery failed:', error.message);
+          if (isRefreshTokenError(error)) {
+            clearSupabaseAuthState();
+          }
+          setLoggedOutState();
+          return;
+        }
+
+        const session = data.session;
+
+        if (!session?.user) {
+          setLoggedOutState();
+          return;
+        }
+
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role, restaurant_id')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (roleError) {
+          console.warn('Failed to load user role during auth bootstrap:', roleError.message);
+        }
+
+        const impersonatedId = localStorage.getItem('impersonated_restaurant_id');
+        const actualRestId = roleData?.restaurant_id || null;
+        const restIdToUse = (roleData?.role === 'super_admin' && impersonatedId) ? impersonatedId : actualRestId;
+
+        setAuthState({
+          user: session.user,
+          session,
+          role: roleData?.role || null,
+          restaurantId: restIdToUse,
+          originalRestaurantId: actualRestId,
+          loading: false,
+        });
+      } catch (error) {
+        console.warn('Unexpected auth bootstrap failure:', error);
+        if (isRefreshTokenError(error)) {
+          clearSupabaseAuthState();
+        }
+        setLoggedOutState();
+      }
+    };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
@@ -54,43 +135,12 @@ export const useAuth = () => {
             });
           }, 0);
         } else {
-          setAuthState({
-            user: null,
-            session: null,
-            role: null,
-            restaurantId: null,
-            originalRestaurantId: null,
-            loading: false,
-          });
+          setLoggedOutState();
         }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        supabase
-          .from('user_roles')
-          .select('role, restaurant_id')
-          .eq('user_id', session.user.id)
-          .single()
-          .then(({ data: roleData }) => {
-            const impersonatedId = localStorage.getItem('impersonated_restaurant_id');
-            const actualRestId = roleData?.restaurant_id || null;
-            const restIdToUse = (roleData?.role === 'super_admin' && impersonatedId) ? impersonatedId : actualRestId;
-
-            setAuthState({
-              user: session.user,
-              session,
-              role: roleData?.role || null,
-              restaurantId: restIdToUse,
-              originalRestaurantId: actualRestId,
-              loading: false,
-            });
-          });
-      } else {
-        setAuthState(prev => ({ ...prev, loading: false }));
-      }
-    });
+    loadSession();
 
     return () => {
       window.removeEventListener('beforeunload', handleUnload);
@@ -113,14 +163,19 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
-    localStorage.removeItem('impersonated_restaurant_id');
+    clearSupabaseAuthState();
     try {
       await supabase.removeAllChannels();
     } catch (err) {
       console.warn('Failed to clean up channels on logout:', err);
     }
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    try {
+      const { error } = await supabase.auth.signOut();
+      return { error };
+    } catch (error) {
+      console.warn('Supabase signOut failed, clearing local auth state anyway:', error);
+      return { error: error instanceof Error ? error : new Error('Sign out failed') };
+    }
   };
 
   const impersonateRestaurant = (id: string | null) => {

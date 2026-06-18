@@ -1273,6 +1273,31 @@ const CustomerMenu = () => {
           >
             Browse Menu
           </Button>
+          
+          <div className="mt-8 text-left">
+            <RecommendationsSection 
+              restaurantId={restaurantId}
+              cartItemNames={[]}
+              onAddItem={(id) => {
+                const item = menuItems.find(mi => mi.id === id);
+                if (item) {
+                  addItem(item);
+                  if (restaurantId) {
+                    analyticsService.trackEvent({
+                      campaignId: id,
+                      eventType: 'recommendation_click',
+                      tenantId: restaurantId,
+                      metadata: {
+                        item_name: item.name,
+                        price: item.price
+                      }
+                    });
+                  }
+                }
+              }}
+              currencySymbol={currencySymbol}
+            />
+          </div>
         </div>
       ) : (
         <>

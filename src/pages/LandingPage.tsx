@@ -1,18 +1,22 @@
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogIn, Menu, X, Play, Loader2, Send, CheckCircle2 } from 'lucide-react';
+import { LogIn, Menu, X, Loader2, Send, CheckCircle2 } from 'lucide-react';
 import { ZappyLogo } from '@/components/branding/ZappyLogo';
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import ScrollProgress from '@/components/landing/ScrollProgress';
 import HeroSection from '@/components/landing/HeroSection';
-import FeaturesSection from '@/components/landing/FeaturesSection';
-import HowItWorks from '@/components/landing/HowItWorks';
+import DailyChallenge from '@/components/landing/DailyChallenge';
+import Transformation from '@/components/landing/Transformation';
+import Ecosystem from '@/components/landing/Ecosystem';
+import MealStory from '@/components/landing/MealStory';
+import ModernRestaurants from '@/components/landing/ModernRestaurants';
+import TrustResults from '@/components/landing/TrustResults';
+import ProductExperience from '@/components/landing/ProductExperience';
 import PricingSection from '@/components/landing/PricingSection';
 import FAQSection from '@/components/landing/FAQSection';
-import CTABanner from '@/components/landing/CTABanner';
+import FinalCTA from '@/components/landing/FinalCTA';
 import Footer from '@/components/landing/Footer';
-import ParallaxSection from '@/components/landing/ParallaxSection';
 import { useLandingCMS } from '@/hooks/useLandingCMS';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -20,10 +24,12 @@ import { Label } from '@/components/ui/label';
 import { invokeFunction } from '@/integrations/supabase/functions';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from '@/lib/utils';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [headerDark, setHeaderDark] = useState(true);
   const [showFloatingButton, setShowFloatingButton] = useState(false);
   const [bookDemoOpen, setBookDemoOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
@@ -123,65 +129,97 @@ const LandingPage = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowFloatingButton(true);
-      } else {
-        setShowFloatingButton(false);
-      }
+      const y = window.scrollY;
+      setShowFloatingButton(y > 300);
+      setHeaderDark(y < 640);
     };
+    handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const navLinks = [
-    { label: 'Features', href: '#features' },
-    { label: 'How It Works', href: '#how-it-works' },
+    { label: 'Daily Struggles', href: '#challenge' },
+    { label: 'How It Works', href: '#ecosystem' },
     { label: 'Pricing', href: '#pricing' },
-    { label: 'FAQ', href: '#faq' }
+    { label: 'Common Questions', href: '#faq' }
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="landing-theme min-h-screen bg-[#F7F5F0] text-[#111111]">
       <ScrollProgress />
 
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-border">
+        className={cn(
+          'fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-colors duration-300',
+          headerDark
+            ? 'bg-[#0A1628]/90 border-white/10 text-white'
+            : 'bg-[#F7F5F0]/90 border-[#111111]/8 text-[#111111]'
+        )}>
         
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <ZappyLogo size={56} compact />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex lg:grid lg:grid-cols-[auto_1fr_auto] items-center justify-between h-16 lg:h-[72px] gap-x-4 lg:gap-x-6">
+            <div className="flex items-center shrink-0">
+              <ZappyLogo size={48} compact variant={headerDark ? 'dark' : 'light'} />
             </div>
 
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden lg:flex items-center justify-center gap-x-5 xl:gap-x-8 min-w-0">
               {navLinks.map((link) =>
                 <a
                   key={link.href}
                   href={link.href}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left">
+                  className={cn(
+                    'text-[11px] xl:text-xs uppercase tracking-widest font-semibold transition-colors whitespace-nowrap relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left',
+                    headerDark
+                      ? 'text-white/65 hover:text-[#5EA8FF] after:bg-[#5EA8FF]'
+                      : 'text-[#111111]/60 hover:text-[#3B82F6] after:bg-[#3B82F6]'
+                  )}>
                   {link.label}
                 </a>
               )}
             </nav>
 
-            <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" onClick={() => navigate('/login')}>
-                <LogIn className="w-4 h-4 mr-2" />
+            <div className="hidden lg:flex items-center justify-end gap-2 shrink-0">
+              <Button 
+                variant="ghost" 
+                className={cn(
+                  'h-10 px-3 text-xs uppercase tracking-wider font-bold hover:bg-transparent',
+                  headerDark ? 'text-white/80 hover:text-[#5EA8FF]' : 'text-[#111111]/80 hover:text-[#3B82F6]'
+                )}
+                onClick={() => navigate('/login')}
+              >
+                <LogIn className="w-4 h-4 mr-1.5" />
                 Login
               </Button>
-              <Button onClick={() => setBookDemoOpen(true)}>Book Demo</Button>
-              <Button variant="outline" onClick={handleGetStarted}>Start Free Trial</Button>
+              <Button 
+                onClick={() => setBookDemoOpen(true)}
+                className="h-10 px-5 rounded-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-xs uppercase tracking-wider shadow-sm shadow-blue-500/20"
+              >
+                Book Demo
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleGetStarted}
+                className={cn(
+                  'h-10 px-5 rounded-full font-bold text-xs uppercase tracking-wider',
+                  headerDark
+                    ? 'border-white/25 bg-transparent text-white hover:bg-white/10'
+                    : 'border-[#111111]/10 bg-transparent text-[#111111] hover:bg-[#111111]/5'
+                )}
+              >
+                Start Free Trial
+              </Button>
             </div>
 
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className={cn('lg:hidden shrink-0', headerDark ? 'text-white' : 'text-[#111111]')}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className="w-5 h-5 text-foreground" /> : <Menu className="w-5 h-5 text-foreground" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
         </div>
@@ -192,22 +230,28 @@ const LandingPage = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t bg-background overflow-hidden">
+              className={cn(
+                'lg:hidden border-t overflow-hidden',
+                headerDark ? 'border-white/10 bg-[#0A1628]' : 'border-[#111111]/8 bg-[#F7F5F0]'
+              )}>
               
-              <div className="container mx-auto px-4 py-4 space-y-4">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-3">
                 {navLinks.map((link) =>
                   <a
                     key={link.href}
                     href={link.href}
-                    className="block text-sm text-muted-foreground hover:text-foreground"
+                    className={cn(
+                      'block text-xs uppercase tracking-widest font-bold transition-colors',
+                      headerDark ? 'text-white/65 hover:text-[#5EA8FF]' : 'text-[#111111]/60 hover:text-[#3B82F6]'
+                    )}
                     onClick={() => setMobileMenuOpen(false)}>
                     {link.label}
                   </a>
                 )}
-                <div className="pt-4 border-t flex flex-col gap-2">
-                  <Button variant="outline" onClick={() => navigate('/login')}>Login</Button>
-                  <Button onClick={() => { setMobileMenuOpen(false); setBookDemoOpen(true); }}>Book Demo</Button>
-                  <Button onClick={handleGetStarted}>Start Free Trial</Button>
+                <div className={cn('pt-4 border-t flex flex-col gap-2', headerDark ? 'border-white/10' : 'border-[#111111]/5')}>
+                  <Button variant="outline" className={cn('font-bold text-xs uppercase tracking-wider rounded-full h-11', headerDark ? 'border-white/20 text-white hover:bg-white/10' : 'border-[#111111]/10 text-[#111111]')} onClick={() => navigate('/login')}>Login</Button>
+                  <Button className="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-xs uppercase tracking-wider rounded-full h-11" onClick={() => { setMobileMenuOpen(false); setBookDemoOpen(true); }}>Book Demo</Button>
+                  <Button className={cn('font-bold text-xs uppercase tracking-wider rounded-full h-11', headerDark ? 'border border-white/20 text-white bg-transparent hover:bg-white/10' : 'border-[#111111]/10 text-[#111111]')} onClick={handleGetStarted}>Start Free Trial</Button>
                 </div>
               </div>
             </motion.div>
@@ -216,8 +260,8 @@ const LandingPage = () => {
       </motion.header>
 
       {/* Main Content */}
-      <main className="pt-16">
-        {/* 1. Hero */}
+      <main>
+        {/* Section 1: Hero */}
         {isVisible('hero') &&
           <HeroSection 
             onGetStarted={handleGetStarted} 
@@ -227,47 +271,54 @@ const LandingPage = () => {
           />
         }
 
-        {/* 2. Features */}
+        {/* Section 2: The Daily Challenge */}
         {isVisible('features') &&
-          <ParallaxSection yOffset={35} fadeIn>
-            <div id="features">
-              <FeaturesSection cms={cms.features?.content} />
-            </div>
-          </ParallaxSection>
-        }
-
-        {/* 3. How it works */}
-        {isVisible('how_it_works') &&
-          <ParallaxSection yOffset={30} fadeIn>
-            <div id="how-it-works">
-              <HowItWorks cms={cms.how_it_works?.content} />
-            </div>
-          </ParallaxSection>
-        }
-
-        {/* 4. Pricing */}
-        {isVisible('pricing') &&
-          <ParallaxSection yOffset={30} fadeIn>
-            <div id="pricing">
-              <PricingSection onSelectPlan={handleSelectPlan} cms={cms.pricing?.content} />
-            </div>
-          </ParallaxSection>
-        }
-
-        {/* 5. FAQ */}
-        <ParallaxSection yOffset={20} fadeIn>
-          <div id="faq">
-            <FAQSection />
+          <div id="challenge">
+            <DailyChallenge />
           </div>
-        </ParallaxSection>
+        }
 
-        {/* 6. CTA Banner */}
+        {/* Section 3: The Transformation */}
+        {isVisible('how_it_works') &&
+          <Transformation />
+        }
+
+        {/* Section 4: Ecosystem horizontal showcase */}
+        <div id="ecosystem">
+          <Ecosystem />
+        </div>
+
+        {/* Section 5: Every Meal Has A Story */}
+        <MealStory />
+
+        {/* Section 6: Built for Modern Restaurants */}
+        <ModernRestaurants />
+
+        {/* Section 8: Trust & Results */}
+        <TrustResults />
+
+        {/* Section 9: Product Experience */}
+        <ProductExperience />
+
+        {/* Section 10: Pricing */}
+        {isVisible('pricing') &&
+          <div id="pricing">
+            <PricingSection onSelectPlan={handleSelectPlan} cms={cms.pricing?.content} />
+          </div>
+        }
+
+        {/* Section FAQ */}
+        <div id="faq">
+          <FAQSection />
+        </div>
+
+        {/* Section 11: Final CTA */}
         {isVisible('cta_banner') &&
-          <CTABanner onGetStarted={handleGetStarted} cms={cms.cta_banner?.content} />
+          <FinalCTA onGetStarted={handleGetStarted} />
         }
       </main>
 
-      {/* 9. Footer */}
+      {/* Footer */}
       {isVisible('footer') && <Footer cms={cms.footer?.content} />}
 
       {/* Floating Book Demo button */}
@@ -282,7 +333,7 @@ const LandingPage = () => {
             <Button
               onClick={() => setBookDemoOpen(true)}
               size="lg"
-              className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 px-6 py-6"
+              className="rounded-full bg-[#FF6B00] hover:bg-[#FF6B00]/95 text-white font-bold shadow-lg shadow-orange-500/20 px-6 py-6 uppercase text-xs tracking-wider"
             >
               Book Demo
             </Button>
@@ -292,27 +343,28 @@ const LandingPage = () => {
 
       {/* Book Demo Modal */}
       <Dialog open={bookDemoOpen} onOpenChange={setBookDemoOpen}>
-        <DialogContent className="max-w-md rounded-3xl" aria-describedby="demo-desc">
+        <DialogContent className="max-w-md rounded-3xl bg-[#F7F5F0] border border-[#111111]/8" aria-describedby="demo-desc">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-slate-900">Book ZAPPY Demo</DialogTitle>
-            <DialogDescription id="demo-desc">
+            <DialogTitle className="text-xl font-black text-[#111111] uppercase tracking-tight">Book ZAPPY Demo</DialogTitle>
+            <DialogDescription id="demo-desc" className="text-sm text-[#111111]/60 font-light">
               Request a live interactive product tour and demo with our restaurant solution specialist.
             </DialogDescription>
           </DialogHeader>
 
           {demoSubmitted ? (
             <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
-              <CheckCircle2 className="w-16 h-16 text-green-500 animate-bounce" />
-              <h3 className="text-lg font-bold text-slate-800">Request Received!</h3>
-              <p className="text-sm text-muted-foreground">We'll reach out to schedule your tour shortly.</p>
+              <CheckCircle2 className="w-16 h-16 text-[#FF6B00] animate-bounce" />
+              <h3 className="text-lg font-bold text-[#111111] uppercase">Request Received!</h3>
+              <p className="text-sm text-[#111111]/60">We'll reach out to schedule your tour shortly.</p>
             </div>
           ) : (
             <form onSubmit={handleBookDemoSubmit} className="space-y-4">
               <div className="space-y-1">
-                <Label htmlFor="demo-name" className="text-xs font-semibold">Your Name *</Label>
+                <Label htmlFor="demo-name" className="text-xs font-semibold uppercase tracking-wider text-[#111111]/60">Your Name *</Label>
                 <Input
                   id="demo-name"
                   placeholder="John Doe"
+                  className="bg-white border-[#111111]/8 rounded-xl focus-visible:ring-[#FF6B00]"
                   value={demoForm.name}
                   onChange={(e) => setDemoForm({ ...demoForm, name: e.target.value })}
                   required
@@ -320,10 +372,11 @@ const LandingPage = () => {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="demo-rest" className="text-xs font-semibold">Restaurant Name *</Label>
+                <Label htmlFor="demo-rest" className="text-xs font-semibold uppercase tracking-wider text-[#111111]/60">Restaurant Name *</Label>
                 <Input
                   id="demo-rest"
                   placeholder="Bella Italia Bistro"
+                  className="bg-white border-[#111111]/8 rounded-xl focus-visible:ring-[#FF6B00]"
                   value={demoForm.restaurantName}
                   onChange={(e) => setDemoForm({ ...demoForm, restaurantName: e.target.value })}
                   required
@@ -332,21 +385,23 @@ const LandingPage = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="demo-phone" className="text-xs font-semibold">Phone *</Label>
+                  <Label htmlFor="demo-phone" className="text-xs font-semibold uppercase tracking-wider text-[#111111]/60">Phone *</Label>
                   <Input
                     id="demo-phone"
                     placeholder="+91 98765 43210"
+                    className="bg-white border-[#111111]/8 rounded-xl focus-visible:ring-[#FF6B00]"
                     value={demoForm.phone}
                     onChange={(e) => setDemoForm({ ...demoForm, phone: e.target.value })}
                     required
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="demo-email" className="text-xs font-semibold">Email *</Label>
+                  <Label htmlFor="demo-email" className="text-xs font-semibold uppercase tracking-wider text-[#111111]/60">Email *</Label>
                   <Input
                     id="demo-email"
                     type="email"
                     placeholder="john@restaurant.com"
+                    className="bg-white border-[#111111]/8 rounded-xl focus-visible:ring-[#FF6B00]"
                     value={demoForm.email}
                     onChange={(e) => setDemoForm({ ...demoForm, email: e.target.value })}
                     required
@@ -356,21 +411,23 @@ const LandingPage = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="demo-branches" className="text-xs font-semibold">Number of Branches</Label>
+                  <Label htmlFor="demo-branches" className="text-xs font-semibold uppercase tracking-wider text-[#111111]/60">Number of Branches</Label>
                   <Input
                     id="demo-branches"
                     type="number"
                     min="1"
                     placeholder="1"
+                    className="bg-white border-[#111111]/8 rounded-xl focus-visible:ring-[#FF6B00]"
                     value={demoForm.branches}
                     onChange={(e) => setDemoForm({ ...demoForm, branches: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="demo-city" className="text-xs font-semibold">City *</Label>
+                  <Label htmlFor="demo-city" className="text-xs font-semibold uppercase tracking-wider text-[#111111]/60">City *</Label>
                   <Input
                     id="demo-city"
                     placeholder="Mumbai"
+                    className="bg-white border-[#111111]/8 rounded-xl focus-visible:ring-[#FF6B00]"
                     value={demoForm.city}
                     onChange={(e) => setDemoForm({ ...demoForm, city: e.target.value })}
                     required
@@ -378,7 +435,7 @@ const LandingPage = () => {
                 </div>
               </div>
 
-              <Button type="submit" disabled={demoSubmitting} className="w-full rounded-2xl h-11 font-bold gap-2">
+              <Button type="submit" disabled={demoSubmitting} className="w-full bg-[#FF6B00] hover:bg-[#FF6B00]/95 text-white font-bold rounded-full py-6 uppercase text-xs tracking-wider gap-2 mt-2">
                 {demoSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Submit Demo Request
               </Button>

@@ -1,0 +1,25 @@
+[mcp_servers.arize-tracing-assistant]
+command = "uvx"
+args = ["arize-tracing-assistant@latest"]
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp"]
+
+[mcp_servers.supabase]
+url = "https://mcp.supabase.com/mcp?project_ref=copkzrwvpqfjpsyyyqdy&read_only=true"
+
+[mcp_servers.supabase.http_headers]
+Authorization = "Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY"
+
+[mcp_servers.toolbox]
+command = "npx"
+args = [
+    "-y",
+    "@toolbox-sdk/server",
+    "--config",
+    'c:\Users\Rishi\Desktop\Zappy\tools.yaml',
+]
+
+[mcp_servers.twilio-docs]
+url = "https://mcp.twilio.com/docs"

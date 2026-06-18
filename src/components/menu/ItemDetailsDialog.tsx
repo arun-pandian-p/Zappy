@@ -13,6 +13,8 @@ import { RecommendationsSection } from "./RecommendationsSection";
 import { getRecipeInfo, getSpiceLevelLabel, getSpiceLevelEmoji } from "@/services/recipeService";
 import type { MenuItem } from "@/hooks/useMenuItems";
 
+const fallbackImage = "/placeholder.svg";
+
 interface ItemDetailsDialogProps {
   item: MenuItem | null;
   isOpen: boolean;
@@ -71,7 +73,7 @@ export function ItemDetailsDialog({
           <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-white/35 backdrop-blur-sm z-10 pointer-events-none" />
 
           <img
-            src={item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80"}
+            src={item.image_url || fallbackImage}
             alt={item.name || "Menu Item"}
             className="w-full h-full object-cover"
           />

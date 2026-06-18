@@ -8,10 +8,9 @@ interface FooterProps {
   cms?: Record<string, any>;
 }
 
-const Footer = ({ cms }: FooterProps) => {
+const Footer = ({ cms: _cms }: FooterProps) => {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
-  const companyName = cms?.company_name || 'ZAPPY Inc.';
 
   const footerLinks = [
     {
@@ -137,7 +136,7 @@ const Footer = ({ cms }: FooterProps) => {
 
         {/* Bottom Bar */}
         <div className="border-t border-[#111111]/8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#111111]/50 font-medium">
-          <p>© {currentYear} {companyName} All rights reserved.</p>
+          <p>© {currentYear} Zappy. All rights reserved.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-[#FF6B00] transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-[#FF6B00] transition-colors">Terms of Service</a>

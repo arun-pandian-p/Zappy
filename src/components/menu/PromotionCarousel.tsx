@@ -7,6 +7,8 @@ import { useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { analyticsService } from '@/services/analyticsService';
 
+const fallbackImage = "/placeholder.svg";
+
 interface Category {
   id: string;
   name: string;
@@ -29,8 +31,6 @@ interface PromotionCarouselProps {
   onSelectCategory: (categoryName: string) => void;
   onApplyCoupon?: (couponCode: string) => void;
 }
-
-const fallbackImage = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80";
 
 export function PromotionCarousel({
   promotions,

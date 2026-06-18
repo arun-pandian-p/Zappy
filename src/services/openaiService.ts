@@ -267,6 +267,23 @@ export async function verifyAICallEligibility(
   return { eligible: true, config, feature };
 }
 
+// SHA-256 Hashing helper with environment fallback
+async function getSha256Hash(text: string): Promise<string> {
+  if (typeof crypto === "undefined" || !crypto.subtle) {
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      const char = text.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash |= 0;
+    }
+    return "test_" + Math.abs(hash).toString(16);
+  }
+  const msgBuffer = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // Core OpenAI request handler
 export async function executeOpenAIChatCall(
   restaurantId: string,
@@ -279,18 +296,114 @@ export async function executeOpenAIChatCall(
     throw new Error(`AI Call blocked: ${eligibility.reason}`);
   }
 
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("VITE_OPENAI_API_KEY not configured in environment.");
+  // 1. Extract dish name if this is a menu description call (Rule 3)
+  let dishName = "";
+  if (featureKey === "menu_description") {
+    const contentText = messages[0]?.content || "";
+    const match = contentText.match(/Item:\s*([^\n]+)/i);
+    if (match) {
+      dishName = match[1].trim().toLowerCase();
+    }
   }
 
+  // 2. Description Library Check (Rule 3)
+  if (featureKey === "menu_description" && dishName) {
+    try {
+      const { data: descData } = await supabase
+        .from("ai_descriptions")
+        .select("short_description, medium_description, seo_description")
+        .eq("name", dishName)
+        .maybeSingle();
+
+      if (descData) {
+        console.log(`[Cost Blocker] Description Library hit for: ${dishName}`);
+        return JSON.stringify({
+          short_description: descData.short_description,
+          full_description: descData.medium_description,
+          is_popular: Math.random() > 0.5,
+          prep_time_minutes: 15,
+          tags: ["Featured", "Delicious"]
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to check ai_descriptions library:", err);
+    }
+  }
+
+  // 3. Translation Library Check (Rule 5)
+  if (featureKey === "translation") {
+    try {
+      const textToTranslate = messages[messages.length - 1]?.content || "";
+      const transHash = await getSha256Hash(textToTranslate);
+      const { data: transData } = await supabase
+        .from("ai_translations")
+        .select("translated_text")
+        .eq("hash", transHash)
+        .maybeSingle();
+
+      if (transData) {
+        console.log(`[Cost Blocker] Translation Library hit for text hash: ${transHash}`);
+        return transData.translated_text;
+      }
+    } catch (err) {
+      console.warn("Failed to check ai_translations library:", err);
+    }
+  }
+
+  // 4. Generic AI Cache Check (Rule 13)
+  const inputString = JSON.stringify({ featureKey, messages, responseFormat });
+  const cacheHash = await getSha256Hash(inputString);
+  try {
+    const { data: cached } = await supabase
+      .from("ai_cache")
+      .select("response")
+      .eq("hash", cacheHash)
+      .maybeSingle();
+
+    if (cached?.response) {
+      console.log(`[Cost Blocker] Cache hit for feature: ${featureKey}, hash: ${cacheHash}`);
+      return cached.response;
+    }
+  } catch (err) {
+    console.warn("Failed to check ai_cache:", err);
+  }
+
+  // 5. OpenAI API Key Blocker / Fallback (Rule 15)
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) {
+    console.warn(`VITE_OPENAI_API_KEY not configured. Returning local fallback for ${featureKey}`);
+    if (featureKey === "menu_description" && dishName) {
+      const mockDescription = JSON.stringify({
+        short_description: `Freshly prepared delicious ${dishName}.`,
+        full_description: `Our signature ${dishName} cooked with high-quality ingredients, traditional spices, and served hot. A perfect choice for any meal.`,
+        is_popular: true,
+        prep_time_minutes: 15,
+        tags: ["Featured", "Chef Special"]
+      });
+      return mockDescription;
+    }
+    // Generic chat fallback
+    return `AI feature placeholder response for ${featureKey}. Please configure VITE_OPENAI_API_KEY.`;
+  }
+
+  // 6. Slicing and Token Limits (Rule 11)
+  let chatMessages = messages;
   const feature = eligibility.feature;
+  let maxTokens = feature.max_tokens;
+  
+  if (featureKey === "menu_assistant") {
+    if (chatMessages.length > 3) {
+      chatMessages = chatMessages.slice(-3);
+    }
+    maxTokens = Math.min(maxTokens, 60);
+  }
+
   const realModel = mapModelToRealOpenAIModel(feature.model);
 
   const requestBody = {
     model: realModel,
-    messages,
-    max_tokens: feature.max_tokens,
+    messages: chatMessages,
+    max_tokens: maxTokens,
     temperature: feature.temperature,
     response_format: responseFormat,
   };
@@ -325,6 +438,44 @@ export async function executeOpenAIChatCall(
     addMonthlyCost(restaurantId, estimatedCost);
   }
 
+  // 7. Save to specific asset libraries & generic cache (Rule 2)
+  try {
+    // Save to generic cache
+    await supabase.from("ai_cache").insert({
+      hash: cacheHash,
+      feature: featureKey,
+      input: inputString,
+      response: content
+    }).then(({ error }) => { if (error) console.error("Failed to write to ai_cache:", error); });
+
+    // Save to description library
+    if (featureKey === "menu_description" && dishName) {
+      try {
+        const parsed = JSON.parse(content);
+        await supabase.from("ai_descriptions").insert({
+          name: dishName,
+          short_description: parsed.short_description || "",
+          medium_description: parsed.full_description || parsed.medium_description || "",
+          seo_description: parsed.seo_description || ""
+        }).then(({ error }) => { if (error) console.error("Failed to write to ai_descriptions:", error); });
+      } catch {}
+    }
+
+    // Save to translation library
+    if (featureKey === "translation") {
+      const textToTranslate = messages[messages.length - 1]?.content || "";
+      const transHash = await getSha256Hash(textToTranslate);
+      await supabase.from("ai_translations").insert({
+        hash: transHash,
+        source_text: textToTranslate,
+        target_lang: "target",
+        translated_text: content
+      }).then(({ error }) => { if (error) console.error("Failed to write to ai_translations:", error); });
+    }
+  } catch (err) {
+    console.warn("Failed to write to DB caches:", err);
+  }
+
   return content;
 }
 
@@ -340,6 +491,25 @@ export async function executeOpenAIVisionCall(
     throw new Error(`AI Call blocked: ${eligibility.reason}`);
   }
 
+  // 1. Generic AI Cache Check (Rule 13)
+  const inputString = JSON.stringify({ featureKey, base64Images: base64Images.map(img => img.substring(0, 100)), promptText });
+  const cacheHash = await getSha256Hash(inputString);
+  
+  try {
+    const { data: cached } = await supabase
+      .from("ai_cache")
+      .select("response")
+      .eq("hash", cacheHash)
+      .maybeSingle();
+
+    if (cached?.response) {
+      console.log(`[Cost Blocker] Cache hit for Vision: ${featureKey}`);
+      return cached.response;
+    }
+  } catch (err) {
+    console.warn("Failed to check Vision cache:", err);
+  }
+
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("VITE_OPENAI_API_KEY not configured in environment.");
@@ -351,7 +521,7 @@ export async function executeOpenAIVisionCall(
   const imageContents = base64Images.map((b64) => ({
     type: "image_url",
     image_url: {
-      url: b64, // e.g. "data:image/png;base64,..."
+      url: b64,
     },
   }));
 
@@ -401,10 +571,22 @@ export async function executeOpenAIVisionCall(
     addMonthlyCost(restaurantId, estimatedCost);
   }
 
+  // Save to Cache
+  try {
+    await supabase.from("ai_cache").insert({
+      hash: cacheHash,
+      feature: featureKey,
+      input: inputString,
+      response: content
+    }).then(({ error }) => { if (error) console.error("Failed to write Vision to ai_cache:", error); });
+  } catch (err) {
+    console.warn("Failed to write Vision cache to DB:", err);
+  }
+
   return content;
 }
 
-// Embeddings handler
+// Embeddings handler (Rule 7)
 export async function executeOpenAIEmbeddingCall(
   restaurantId: string,
   texts: string[]
@@ -414,47 +596,118 @@ export async function executeOpenAIEmbeddingCall(
     throw new Error(`AI Call blocked: ${eligibility.reason}`);
   }
 
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("VITE_OPENAI_API_KEY not configured in environment.");
+  const results: number[][] = new Array(texts.length);
+  const missingIndices: number[] = [];
+  const missingTexts: string[] = [];
+
+  // Batch check both DB and local storage
+  for (let i = 0; i < texts.length; i++) {
+    const text = texts[i].trim().toLowerCase();
+    const hash = await getSha256Hash(text);
+
+    // Try local storage first
+    const localCached = localStorage.getItem(`zappy_openai_emb_${text.replace(/\s+/g, "_")}`);
+    if (localCached) {
+      try {
+        results[i] = JSON.parse(localCached);
+        continue;
+      } catch {}
+    }
+
+    // Try DB library
+    try {
+      const { data: dbEmb } = await supabase
+        .from("ai_embeddings")
+        .select("embedding")
+        .eq("hash", hash)
+        .maybeSingle();
+
+      if (dbEmb?.embedding) {
+        const embArray = typeof dbEmb.embedding === "string" 
+          ? JSON.parse(dbEmb.embedding) 
+          : (dbEmb.embedding as number[]);
+        results[i] = embArray;
+        localStorage.setItem(`zappy_openai_emb_${text.replace(/\s+/g, "_")}`, JSON.stringify(embArray));
+        continue;
+      }
+    } catch (dbErr) {
+      console.warn("Failed to check DB embedding library:", dbErr);
+    }
+
+    missingIndices.push(i);
+    missingTexts.push(texts[i]);
   }
 
-  const feature = eligibility.feature;
-  const realModel = mapModelToRealOpenAIModel(feature.model);
+  if (missingTexts.length > 0) {
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    if (!apiKey) {
+      console.warn("VITE_OPENAI_API_KEY not configured. Returning mock embeddings.");
+      for (let k = 0; k < missingTexts.length; k++) {
+        const idx = missingIndices[k];
+        // 1536 dimension dummy vector
+        const dummyVector = new Array(1536).fill(0).map(() => Math.random() - 0.5);
+        results[idx] = dummyVector;
+      }
+    } else {
+      const feature = eligibility.feature;
+      const realModel = mapModelToRealOpenAIModel(feature.model);
 
-  const response = await fetch(`${eligibility.config.default_base_url}/embeddings`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: realModel,
-      input: texts,
-    }),
-  });
+      const response = await fetch(`${eligibility.config.default_base_url}/embeddings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: realModel,
+          input: missingTexts,
+        }),
+      });
 
-  if (!response.ok) {
-    const errorDetails = await response.text();
-    throw new Error(`OpenAI Embeddings failed: ${errorDetails}`);
+      if (!response.ok) {
+        const errorDetails = await response.text();
+        throw new Error(`OpenAI Embeddings failed: ${errorDetails}`);
+      }
+
+      const data = await response.json();
+      const newEmbeddings = data.data?.map((item: any) => item.embedding);
+
+      if (!newEmbeddings || newEmbeddings.length === 0) {
+        throw new Error("OpenAI Embeddings returned an empty response.");
+      }
+
+      for (let k = 0; k < missingTexts.length; k++) {
+        const idx = missingIndices[k];
+        const emb = newEmbeddings[k];
+        results[idx] = emb;
+
+        // Cache globally and locally
+        const textClean = missingTexts[k].trim().toLowerCase();
+        const hash = await getSha256Hash(textClean);
+        localStorage.setItem(`zappy_openai_emb_${textClean.replace(/\s+/g, "_")}`, JSON.stringify(emb));
+        try {
+          await supabase.from("ai_embeddings").insert({
+            hash: hash,
+            text_content: textClean,
+            embedding: emb
+          }).then(({ error }) => { if (error) console.error("Failed to write to ai_embeddings:", error); });
+        } catch (dbErr) {
+          console.error("Failed to save embedding to global library:", dbErr);
+        }
+      }
+
+      if (data.usage) {
+        const promptTokens = data.usage.prompt_tokens || 0;
+        const estimatedCost = calculateEstimatedCost(feature.model, promptTokens, 0, false);
+        addMonthlyCost(restaurantId, estimatedCost);
+      }
+    }
   }
 
-  const data = await response.json();
-  const embeddings = data.data?.map((item: any) => item.embedding);
-
-  if (!embeddings || embeddings.length === 0) {
-    throw new Error("OpenAI Embeddings returned an empty response.");
-  }
-
-  if (data.usage) {
-    const promptTokens = data.usage.prompt_tokens || 0;
-    const estimatedCost = calculateEstimatedCost(feature.model, promptTokens, 0, false);
-    addMonthlyCost(restaurantId, estimatedCost);
-  }
-
-  return embeddings;
+  return results;
 }
 
+// Image generator handler (Rule 4 & 9)
 export async function executeOpenAIImageCall(
   restaurantId: string,
   prompt: string,
@@ -466,54 +719,88 @@ export async function executeOpenAIImageCall(
     throw new Error("Monthly AI budget exceeded");
   }
 
+  // 1. Extract dish name from prompt
+  const match = prompt.match(/Professional food photography of ([^,]+)/i);
+  const dishName = match ? match[1].trim().toLowerCase() : prompt.trim().toLowerCase();
+
+  // 2. Global Asset Library check
+  try {
+    const { data: imgData } = await supabase
+      .from("ai_food_images")
+      .select("image_url")
+      .eq("name", dishName)
+      .maybeSingle();
+
+    if (imgData?.image_url) {
+      console.log(`[Cost Blocker] Reusing global image for ${dishName}: ${imgData.image_url}`);
+      return imgData.image_url;
+    }
+  } catch (err) {
+    console.warn("Failed to check global ai_food_images library:", err);
+  }
+
+  // 3. Fallback to Pollinations AI if VITE_OPENAI_API_KEY is missing (Rule 4 & 9)
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("VITE_OPENAI_API_KEY not configured in environment.");
-  }
-
-  const response = await fetch(`${config.default_base_url}/images/generations`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-image-1",
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024"
-    }),
-  });
-
-  if (!response.ok) {
-    const errorDetails = await response.text();
-    throw new Error(`OpenAI Image Generation failed: ${errorDetails}`);
-  }
-
-  const data = await response.json();
-  const url = data.data?.[0]?.url;
-  const b64_json = data.data?.[0]?.b64_json;
-
   let resultUrl = "";
-  if (url) {
-    resultUrl = url;
-  } else if (b64_json) {
-    resultUrl = `data:image/png;base64,${b64_json}`;
+
+  if (!apiKey) {
+    console.warn("VITE_OPENAI_API_KEY not configured. Falling back to Pollinations AI.");
+    const enhancedPrompt = `${prompt}, professional food photography, 4k, delicious, macro shot, isolated background, styled plate`;
+    const aiPrompt = encodeURIComponent(enhancedPrompt);
+    resultUrl = `https://image.pollinations.ai/prompt/${aiPrompt}?width=1000&height=1000&nologo=true&seed=${Math.floor(Math.random() * 10000)}`;
+  } else {
+    const response = await fetch(`${config.default_base_url}/images/generations`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-image-1",
+        prompt: prompt,
+        n: 1,
+        size: "1024x1024"
+      }),
+    });
+
+    if (!response.ok) {
+      const errorDetails = await response.text();
+      throw new Error(`OpenAI Image Generation failed: ${errorDetails}`);
+    }
+
+    const data = await response.json();
+    const url = data.data?.[0]?.url;
+    const b64_json = data.data?.[0]?.b64_json;
+
+    if (url) {
+      resultUrl = url;
+    } else if (b64_json) {
+      resultUrl = `data:image/png;base64,${b64_json}`;
+    }
+
+    if (!resultUrl) {
+      throw new Error("OpenAI DALL-E returned an empty image list.");
+    }
+
+    // Cost tracking
+    const cost = quality === "medium" ? 0.08 : 0.04;
+    addMonthlyCost(restaurantId, cost);
+
+    const monthKey = new Date().toISOString().substring(0, 7);
+    const countKey = `zappy_ai_images_count_${restaurantId}_${monthKey}`;
+    const currentCount = parseInt(localStorage.getItem(countKey) || "0") || 0;
+    localStorage.setItem(countKey, String(currentCount + 1));
   }
 
-  if (!resultUrl) {
-    throw new Error("OpenAI DALL-E returned an empty image list.");
+  // 4. Save to global library (Rule 4)
+  try {
+    await supabase.from("ai_food_images").insert({
+      name: dishName,
+      image_url: resultUrl
+    }).then(({ error }) => { if (error) console.error("Failed to write to ai_food_images:", error); });
+  } catch (dbErr) {
+    console.error("Failed to save generated image to global library:", dbErr);
   }
-
-  // Cost tracking
-  const cost = quality === "medium" ? 0.08 : 0.04;
-  addMonthlyCost(restaurantId, cost);
-
-  // Increment monthly image count
-  const monthKey = new Date().toISOString().substring(0, 7);
-  const countKey = `zappy_ai_images_count_${restaurantId}_${monthKey}`;
-  const currentCount = parseInt(localStorage.getItem(countKey) || "0") || 0;
-  localStorage.setItem(countKey, String(currentCount + 1));
 
   return resultUrl;
 }

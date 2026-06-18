@@ -3,6 +3,7 @@ import { syncImageToSupabase } from "./storageService";
 import { supabase } from "@/integrations/supabase/client";
 import { tracer } from "./telemetry";
 import { SpanStatusCode } from "@opentelemetry/api";
+import { enrichMenuItem } from "./imageDiscoveryService";
 
 export async function generateFoodImage(
   itemName: string,

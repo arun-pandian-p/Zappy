@@ -2,21 +2,34 @@ import { motion } from "framer-motion";
 import { Plus, Sparkles, Star, Utensils, GlassWater, IceCreamCone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getCartRecommendations, type Recommendation } from "@/services/recommendationService";
-import type { MenuItem } from "@/hooks/useMenuItems";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useRecommendations } from "@/hooks/useRecommendations";
 
 interface RecommendationsSectionProps {
   restaurantId?: string;
   cartItemNames: string[];
-  allMenuItems: MenuItem[];
+  allMenuItems?: any[]; // kept for backward compatibility in function signature
   onAddItem: (itemId: string) => void;
   currencySymbol?: string;
 }
 
-// Type → icon mapping
-function TypeIcon({ type }: { type: Recommendation["type"] }) {
+function getItemType(name: string): "drink" | "dessert" | "combo" | "side" | "addon" {
+  const lower = name.toLowerCase();
+  if (lower.includes("drink") || lower.includes("soda") || lower.includes("coffee") || lower.includes("tea") || lower.includes("juice") || lower.includes("lassi") || lower.includes("water") || lower.includes("mojito") || lower.includes("shake") || lower.includes("beer") || lower.includes("wine") || lower.includes("cocktail")) {
+    return "drink";
+  }
+  if (lower.includes("ice cream") || lower.includes("sweet") || lower.includes("jamun") || lower.includes("cake") || lower.includes("kesari") || lower.includes("brownie") || lower.includes("pudding") || lower.includes("mousse") || lower.includes("donut")) {
+    return "dessert";
+  }
+  if (lower.includes("combo") || lower.includes("thali") || lower.includes("platter")) {
+    return "combo";
+  }
+  if (lower.includes("fry") || lower.includes("tikka") || lower.includes("kebab") || lower.includes("soup") || lower.includes("salad") || lower.includes("wing") || lower.includes("nugget") || lower.includes("salna") || lower.includes("raita") || lower.includes("sambar") || lower.includes("chutney")) {
+    return "side";
+  }
+  return "addon";
+}
+
+function TypeIcon({ type }: { type: string }) {
   switch (type) {
     case "drink":
       return <GlassWater className="w-3 h-3" />;
@@ -29,7 +42,6 @@ function TypeIcon({ type }: { type: Recommendation["type"] }) {
   }
 }
 
-// Add trending icon mapping
 function CategoryIcon({ category }: { category: string }) {
   switch (category) {
     case "Pairs Perfectly":
@@ -45,8 +57,7 @@ function CategoryIcon({ category }: { category: string }) {
   }
 }
 
-// Type → color mapping
-function getTypeColor(type: Recommendation["type"]) {
+function getTypeColor(type: string) {
   switch (type) {
     case "drink":
       return "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300";
@@ -59,7 +70,7 @@ function getTypeColor(type: Recommendation["type"]) {
   }
 }
 
-function getTypeLabel(type: Recommendation["type"]) {
+function getTypeLabel(type: string) {
   switch (type) {
     case "drink": return "Best Drink";
     case "dessert": return "Sweet Finish";
@@ -71,43 +82,12 @@ function getTypeLabel(type: Recommendation["type"]) {
 export function RecommendationsSection({
   restaurantId,
   cartItemNames,
-  allMenuItems,
   onAddItem,
   currencySymbol = "₹"
 }: RecommendationsSectionProps) {
-  const { data: dbPairings = [] } = useQuery({
-    queryKey: ["food-pairings", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("food_pairings")
-        .select(`
-          weight,
-          item:menu_items!item_id (name),
-          paired_item:menu_items!paired_item_id (name)
-        `)
-        .eq("restaurant_id", restaurantId);
-      
-      if (error) {
-        console.error("Error fetching food pairings:", error);
-        return [];
-      }
-      return (data || []).map((p: any) => ({
-        sourceName: p.item?.name || "",
-        targetName: p.paired_item?.name || "",
-        weight: Number(p.weight) || 1.0
-      }));
-    },
-    enabled: !!restaurantId,
-  });
+  const { data: recommendations = [], isLoading } = useRecommendations(cartItemNames, restaurantId);
 
-  const recommendations = getCartRecommendations(
-    cartItemNames, 
-    allMenuItems.map(i => i.name),
-    dbPairings
-  );
-
-  if (recommendations.length === 0) return null;
+  if (isLoading || recommendations.length === 0) return null;
 
   const mainTarget = cartItemNames.length > 0 ? cartItemNames[cartItemNames.length - 1] : "";
   const title = mainTarget ? `Best with ${mainTarget}` : "Recommended for your order";
@@ -120,26 +100,24 @@ export function RecommendationsSection({
         </div>
         <div>
           <h3 className="font-bold text-sm">{title}</h3>
-          <p className="text-[10px] text-muted-foreground">AI-powered smart pairings</p>
+          <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            AI-powered smart pairings
+          </p>
         </div>
       </div>
 
       {/* Horizontal Carousel */}
       <div className="flex gap-2.5 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory">
         {recommendations.map((rec, idx) => {
-          // Find matching menu item
-          const menuItem = allMenuItems.find(item => 
-            item.name.toLowerCase().includes(rec.name.toLowerCase()) ||
-            rec.name.toLowerCase().includes(item.name.toLowerCase())
-          );
-
-          if (!menuItem) return null;
-
-          const typeColor = getTypeColor(rec.type);
+          const menuItem = rec.item;
+          const type = getItemType(menuItem.name);
+          const typeColor = getTypeColor(type);
+          const pairingPercentage = Math.floor(rec.confidence * 100);
 
           return (
             <motion.div
-              key={idx}
+              key={menuItem.id}
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.08, type: "spring", stiffness: 300, damping: 30 }}
@@ -155,18 +133,13 @@ export function RecommendationsSection({
                 />
                 <Badge className={`absolute top-1.5 left-1.5 text-[8px] px-1.5 py-0 h-4 border-0 rounded-full font-semibold ${typeColor}`}>
                   <CategoryIcon category={rec.category || "Pairs Perfectly"} />
-                  <span className="ml-0.5">{rec.relationBadge || getTypeLabel(rec.type)}</span>
+                  <span className="ml-0.5">{rec.category || getTypeLabel(type)}</span>
                 </Badge>
                 
                 {/* Bestseller / Chef Special Tag */}
-                {rec.isBestseller && (
+                {menuItem.is_popular && (
                   <Badge className="absolute bottom-1.5 left-1.5 text-[8px] px-1.5 py-0 h-4 border-0 rounded-full font-bold bg-amber-500 text-white shadow-sm">
                     Bestseller
-                  </Badge>
-                )}
-                {rec.isChefSpecial && !rec.isBestseller && (
-                  <Badge className="absolute bottom-1.5 left-1.5 text-[8px] px-1.5 py-0 h-4 border-0 rounded-full font-bold bg-[#008c4a] text-white shadow-sm">
-                    Chef Special
                   </Badge>
                 )}
               </div>
@@ -181,11 +154,11 @@ export function RecommendationsSection({
                     <Sparkles className="w-2.5 h-2.5 text-primary mt-0.5 flex-shrink-0" />
                     <div className="flex flex-col gap-0.5">
                       <p className="text-[9px] text-muted-foreground line-clamp-2 leading-tight">
-                        <span className="font-medium text-foreground/80">{rec.category || "Recommended"}:</span> {rec.reason}
+                        <span className="font-semibold text-foreground/80">{rec.category}:</span> {rec.reason}
                       </p>
-                      {rec.pairingPercentage && (
+                      {pairingPercentage > 50 && (
                         <p className="text-[8px] font-medium text-emerald-600 dark:text-emerald-400">
-                          {rec.pairingPercentage}% customers order this together
+                          {pairingPercentage}% match index
                         </p>
                       )}
                     </div>
@@ -197,9 +170,6 @@ export function RecommendationsSection({
                     <span className="text-xs font-bold text-[#008c4a]">
                       {currencySymbol}{Number(menuItem.price).toFixed(0)}
                     </span>
-                    {rec.comboSavings && (
-                      <span className="text-[8px] text-primary font-medium">Save {currencySymbol}{rec.comboSavings}</span>
-                    )}
                   </div>
                   <Button
                     size="sm"

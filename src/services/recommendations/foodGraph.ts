@@ -415,11 +415,62 @@ export const FOOD_NODES: Record<string, FoodNode> = {
     tags: ["cold", "sweet", "shake"],
     type: "dessert",
     isVegetarian: true,
+  },
+  "chicken_biryani": {
+    id: "chicken_biryani",
+    name: "Chicken Biryani",
+    cuisine: ["Mughlai", "South Indian"],
+    ingredients: ["basmati rice", "spices", "chicken", "ghee"],
+    tags: ["spicy", "heavy", "lunch", "dinner", "aromatic"],
+    type: "combo",
+    isVegetarian: false,
+  },
+  "parotta": {
+    id: "parotta",
+    name: "Parotta",
+    cuisine: ["South Indian"],
+    ingredients: ["maida", "ghee", "oil"],
+    tags: ["layered", "soft", "breakfast", "dinner"],
+    type: "combo",
+    isVegetarian: true,
+  },
+  "salna": {
+    id: "salna",
+    name: "Salna",
+    cuisine: ["South Indian"],
+    ingredients: ["spices", "gravy", "onion", "tomato"],
+    tags: ["spicy", "hot", "gravy", "side"],
+    type: "side",
+    isVegetarian: true,
+  },
+  "fries": {
+    id: "fries",
+    name: "Fries",
+    cuisine: ["Fast Food"],
+    ingredients: ["potato", "salt"],
+    tags: ["crispy", "snack"],
+    type: "side",
+    isVegetarian: true,
+  },
+  "soft_drink": {
+    id: "soft_drink",
+    name: "Soft Drink",
+    cuisine: ["Universal", "Beverage"],
+    ingredients: ["carbonated water", "sugar"],
+    tags: ["cold", "sweet", "beverage"],
+    type: "drink",
+    isVegetarian: true,
   }
 };
 
 // Pre-computed explicit relationships (mimicking a graph structure like KitcheNette)
 export const EXPLICIT_EDGES: Edge[] = [
+  { source: "chicken_biryani", target: "raita", weight: 0.99, reason: "Classic cooling pairing", type: "addon" },
+  { source: "dosa", target: "filter_coffee", weight: 0.99, reason: "Essential South Indian breakfast finish", type: "drink" },
+  { source: "parotta", target: "salna", weight: 0.99, reason: "Traditional layered flatbread side", type: "side" },
+  { source: "burger", target: "fries", weight: 0.99, reason: "Ultimate fast food combo", type: "side" },
+  { source: "pizza", target: "soft_drink", weight: 0.99, reason: "Standard combo pairing", type: "drink" },
+
   { source: "biryani", target: "chicken_65", weight: 0.98, reason: "Spicy starter combo", type: "starter" },
   { source: "biryani", target: "raita", weight: 0.95, reason: "Cools down the aromatic spices", type: "addon" },
   { source: "biryani", target: "coke", weight: 0.85, reason: "Perfect fizzy balance", type: "drink" },

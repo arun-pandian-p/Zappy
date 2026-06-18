@@ -124,6 +124,16 @@ export function useCreateMenuItem() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
+      
+      // Asynchronously generate and save embedding in the background
+      import("@/services/recommendations/embeddingService").then(({ generateAndSaveMenuEmbedding }) => {
+        generateAndSaveMenuEmbedding(data.id, data.name, data.description, data.restaurant_id)
+          .then(() => {
+            // Invalidate query key to refresh item in the UI with its new embedding
+            queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
+          });
+      });
+
       logActivity({
         restaurantId: data.restaurant_id,
         action: "Create Menu Item",
@@ -152,6 +162,16 @@ export function useUpdateMenuItem() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
+
+      // Asynchronously generate and save embedding in the background
+      import("@/services/recommendations/embeddingService").then(({ generateAndSaveMenuEmbedding }) => {
+        generateAndSaveMenuEmbedding(data.id, data.name, data.description, data.restaurant_id)
+          .then(() => {
+            // Invalidate query key to refresh item in the UI with its new embedding
+            queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
+          });
+      });
+
       logActivity({
         restaurantId: data.restaurant_id,
         action: "Update Menu Item",

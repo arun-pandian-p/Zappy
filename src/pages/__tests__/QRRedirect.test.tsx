@@ -55,7 +55,7 @@ describe("QRRedirect Component", () => {
   });
 
   it("fetches QR code and redirects to relative target URL", async () => {
-    const qrId = "test-qr-id";
+    const qrId = "12345678-1234-1234-1234-123456789abc";
     vi.mocked(useParams).mockReturnValue({ id: qrId });
 
     const mockQRData = {
@@ -90,7 +90,7 @@ describe("QRRedirect Component", () => {
   });
 
   it("redirects to external target URL via window.location.replace", async () => {
-    const qrId = "test-qr-id-external";
+    const qrId = "87654321-4321-4321-4321-cba987654321";
     vi.mocked(useParams).mockReturnValue({ id: qrId });
 
     const mockQRData = {
@@ -125,7 +125,7 @@ describe("QRRedirect Component", () => {
   });
 
   it("shows error when QR code is inactive", async () => {
-    const qrId = "inactive-qr";
+    const qrId = "00000000-0000-0000-0000-000000000000";
     vi.mocked(useParams).mockReturnValue({ id: qrId });
 
     const mockQRData = {

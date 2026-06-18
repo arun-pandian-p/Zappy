@@ -276,6 +276,16 @@ export interface OCROptions {
   restaurantId?: string;
 }
 
+async function computeFileHash(file: File): Promise<string> {
+  if (typeof crypto === "undefined" || !crypto.subtle) {
+    return "test_hash_" + file.size + "_" + file.name.replace(/[^a-zA-Z0-9]/g, "");
+  }
+  const arrayBuffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export async function processMenuFile(
   file: File,
   options?: OCROptions,
@@ -298,6 +308,28 @@ export async function processMenuFile(
       // Validate file
       if (file.size > 50 * 1024 * 1024) {
         throw new Error("File too large (max 50MB)");
+      }
+
+      // Check Cache (Rule 6)
+      let fileHash = "";
+      if (fileType === "image" || fileType === "pdf") {
+        try {
+          fileHash = await computeFileHash(file);
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { data: cacheData } = await supabase
+            .from("ai_cache")
+            .select("response")
+            .eq("hash", `ocr_${fileHash}`)
+            .maybeSingle();
+
+          if (cacheData?.response) {
+            console.log(`[OCR Cache Hit] Returning cached OCR results for file hash: ${fileHash}`);
+            onProgress?.({ status: "Cached results found. Loading...", progress: 100 });
+            return JSON.parse(cacheData.response);
+          }
+        } catch (cacheErr) {
+          console.warn("Failed to check OCR cache:", cacheErr);
+        }
       }
 
       // Handle simulation progress for non-local engines
@@ -439,6 +471,22 @@ Do not add markdown backticks or extra text, just raw JSON.`;
         }
       }
 
+      // Save to Cache (Rule 6)
+      if (fileHash && items.length > 0) {
+        try {
+          const { supabase } = await import("@/integrations/supabase/client");
+          await supabase.from("ai_cache").insert({
+            hash: `ocr_${fileHash}`,
+            feature: "ocr_menu_import_fallback",
+            input: `file_${file.name}_size_${file.size}`,
+            response: JSON.stringify(items)
+          }).then(({ error }) => { if (error) console.error("Failed to write OCR cache to DB:", error); });
+          console.log(`[OCR Cache Saved] Saved OCR results for file hash: ${fileHash}`);
+        } catch (cacheSaveErr) {
+          console.error("Failed to save OCR cache:", cacheSaveErr);
+        }
+      }
+
       onProgress?.({ status: "Complete", progress: 100 });
       console.log(`[OCR] Extracted ${items.length} menu items from ${file.name}`);
       span.setAttribute("ocr.items_extracted", items.length);
@@ -455,10 +503,6 @@ Do not add markdown backticks or extra text, just raw JSON.`;
   });
 }
 
-/**
- * Process multiple files in batch with progress tracking.
- * Returns results per file with status tracking.
- */
 export interface BatchFileResult {
   fileName: string;
   status: "pending" | "processing" | "completed" | "failed";
