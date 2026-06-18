@@ -42,12 +42,12 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
 
   const PRESET_COLORS = [
     { name: "Classic", fg: "#000000", bg: "#FFFFFF" },
-    { name: "Ocean", fg: "#0077B6", bg: "#FFFFFF" },
-    { name: "Forest", fg: "#1B4332", bg: "#FFFFFF" },
-    { name: "Sunset", fg: "#9D0208", bg: "#FFFFFF" },
-    { name: "Royal", fg: "#3C096C", bg: "#FFFFFF" },
-    { name: "Night", fg: "#1B1B1B", bg: "#FFFFFF" },
-    { name: "Zappy", fg: "#E11D48", bg: "#FFFFFF" },
+    { name: "Ocean", fg: "#0077B6", bg: "#CAF0F8" },
+    { name: "Forest", fg: "#1B4332", bg: "#D8F3DC" },
+    { name: "Sunset", fg: "#9D0208", bg: "#FFF0F3" },
+    { name: "Royal", fg: "#3C096C", bg: "#F0E6FF" },
+    { name: "Night", fg: "#E0E1DD", bg: "#1B1B1B" },
+    { name: "Zappy", fg: "#E11D48", bg: "#FFF1F2" },
   ];
 
   const handleSave = () => {
@@ -59,8 +59,8 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
     width: 1024,
     height: 1024,
     type: "svg",
-    margin: 40,
-    imageOptions: { crossOrigin: "anonymous", margin: 20 }
+    margin: 10,
+    imageOptions: { crossOrigin: "anonymous", margin: 10 }
   }));
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
           ]
         } : undefined
       },
-      backgroundOptions: { color: "#FFFFFF" },
+      backgroundOptions: { color: "transparent" },
       cornersSquareOptions: { 
         type: config.corners_square_type as CornerSquareType,
         color: config.fg_color 
@@ -92,7 +92,7 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
         margin: config.logo_excavate ? 10 : 0,
         imageSize: config.logo_size
       },
-      qrOptions: { errorCorrectionLevel: "H" }
+      qrOptions: { errorCorrectionLevel: config.error_level as any }
     });
     
     if (qrRef.current) {
@@ -391,8 +391,8 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center space-y-6 pt-2 pb-8">
             <div 
-              className="p-2 bg-white rounded-3xl shadow-2xl ring-1 ring-black/5 transition-all duration-300 transform hover:scale-105 flex items-center justify-center min-h-[220px] min-w-[220px]"
-              style={{ backgroundColor: "#FFFFFF" }}
+              className="p-6 bg-white rounded-3xl shadow-2xl ring-1 ring-black/5 transition-all duration-300 transform hover:scale-105 flex items-center justify-center min-h-[220px] min-w-[220px]"
+              style={{ backgroundColor: config.bg_color }}
             >
               <div ref={qrRef} className="flex items-center justify-center" />
             </div>

@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useTrackAdImpression, useTrackAdClick } from '@/hooks/useAds';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
-const fallbackImage = "/placeholder.svg";
-
 interface Category {
   id: string;
   name: string;
@@ -27,6 +25,8 @@ interface PromotionBannerProps {
   onSelectCategory?: (categoryName: string) => void;
   onApplyCoupon?: (couponCode: string) => void;
 }
+
+const fallbackImage = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80";
 
 export function PromotionBanner({ 
   promotion, 

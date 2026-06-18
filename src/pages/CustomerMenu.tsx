@@ -33,7 +33,6 @@ import { checkRateLimit, RATE_LIMITS, getRemainingCooldown } from '@/utils/rateL
 
 import { useTableByNumber, useTables } from '@/hooks/useTables';
 import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
-import { SeatPickerDialog } from '@/components/menu/SeatPickerDialog';
 import { useActiveEnterprisePromotions } from '@/hooks/useEnterprisePromotions';
 import { evaluateCartDiscounts } from '@/services/promotions/cartPricingEngine';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
@@ -127,15 +126,6 @@ const CustomerMenu = () => {
   const [dynamicTableId, setDynamicTableId] = useState(
     tableId || (restaurantId ? getPersistedTable(restaurantId) : '')
   );
-  const getPersistedSeat = (): number | null => {
-    try {
-      const raw = localStorage.getItem('zappy_selected_seat');
-      return raw ? parseInt(raw) : null;
-    } catch { return null; }
-  };
-  const [selectedSeat, setSelectedSeat] = useState<number | null>(getPersistedSeat());
-  const [showSeatPicker, setShowSeatPicker] = useState(false);
-  const [pendingTableForSeat, setPendingTableForSeat] = useState<string | null>(null);
   const isPreviewMode = false;
   const showTablePicker = !dynamicTableId && !!restaurantId;
   const { toast } = useToast();
@@ -152,7 +142,7 @@ const CustomerMenu = () => {
     type: NotificationType;
   } | null>(null);
 
-  const [currentView, setCurrentView] = useState<ViewType>('home');
+  const [currentView, setCurrentView] = useState<ViewType>('search');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedItemForDetails, setSelectedItemForDetails] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -270,10 +260,6 @@ const CustomerMenu = () => {
 
   // Fetch customer orders for this table (with realtime)
   const { data: customerOrders = [] } = useCustomerOrders(restaurantId, resolvedTableId);
-
-  // Fallback for removed feedbackStats
-  const feedbackStats = { total: 0, avgRating: 0 };
-
 
   // Fetch recent orders stored in localStorage
   const { data: recentOrdersData = [], refreshIds: refreshRecentOrderIds } = useRecentOrders(restaurantId || undefined);
@@ -508,23 +494,14 @@ const CustomerMenu = () => {
   }, [restaurantId, resolvedTableId]);
 
   const handleTableSelect = (tableNumber: string) => {
-    setPendingTableForSeat(tableNumber);
-    setShowSeatPicker(true);
-  };
-
-  const handleSeatSelect = (seat: number) => {
-    const tableNumber = pendingTableForSeat;
-    if (!tableNumber || !restaurantId) return;
-    setSelectedSeat(seat);
-    setShowSeatPicker(false);
-    setPendingTableForSeat(null);
     setDynamicTableId(tableNumber);
-    localStorage.setItem('zappy_selected_seat', String(seat));
     // Persist to localStorage for session survival
-    localStorage.setItem(
-      `qr_table_${restaurantId}`,
-      JSON.stringify({ tableNumber, timestamp: Date.now() })
-    );
+    if (restaurantId) {
+      localStorage.setItem(
+        `qr_table_${restaurantId}`,
+        JSON.stringify({ tableNumber, timestamp: Date.now() })
+      );
+    }
     // Update URL without reload
     const url = new URL(window.location.href);
     url.searchParams.set('table', tableNumber);
@@ -1078,13 +1055,6 @@ const CustomerMenu = () => {
           />
         )}
         <h2 className="text-2xl font-bold">{restaurant?.name}</h2>
-        {feedbackStats && feedbackStats.total > 0 && (
-          <div className="flex items-center justify-center gap-1.5 mt-1.5 text-amber-500 font-bold text-sm">
-            <span>★</span>
-            <span>{feedbackStats.avgRating.toFixed(1)}</span>
-            <span className="text-muted-foreground dark:text-zinc-500 font-normal text-xs">({feedbackStats.total} reviews)</span>
-          </div>
-        )}
         <p className="text-muted-foreground mt-2 text-sm">{restaurant?.description || 'Welcome!'}</p>
         {tableNumber && (
           <Badge variant="secondary" className="mt-3">Table {tableNumber}</Badge>
@@ -1292,31 +1262,6 @@ const CustomerMenu = () => {
           >
             Browse Menu
           </Button>
-          
-          <div className="mt-8 text-left">
-            <RecommendationsSection 
-              restaurantId={restaurantId}
-              cartItemNames={[]}
-              onAddItem={(id) => {
-                const item = menuItems.find(mi => mi.id === id);
-                if (item) {
-                  addItem(item);
-                  if (restaurantId) {
-                    analyticsService.trackEvent({
-                      campaignId: id,
-                      eventType: 'recommendation_click',
-                      tenantId: restaurantId,
-                      metadata: {
-                        item_name: item.name,
-                        price: item.price
-                      }
-                    });
-                  }
-                }
-              }}
-              currencySymbol={currencySymbol}
-            />
-          </div>
         </div>
       ) : (
         <>
@@ -1644,19 +1589,6 @@ const CustomerMenu = () => {
         onSelectTable={handleTableSelect}
       />
 
-      {/* Seat Picker Dialog */}
-      {showSeatPicker && pendingTableForSeat && (
-        <SeatPickerDialog
-          open={showSeatPicker}
-          tableNumber={pendingTableForSeat}
-          capacity={(() => {
-            const t = allTables.find(tbl => tbl.table_number === pendingTableForSeat);
-            return t?.capacity || 4;
-          })()}
-          onSelectSeat={handleSeatSelect}
-        />
-      )}
-
       {/* Details Dialog */}
       <ItemDetailsDialog
         item={selectedItemForDetails}
@@ -1687,15 +1619,11 @@ const CustomerMenu = () => {
         logoUrl={cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url)}
         tableNumber={tableNumber || 'Select Table'}
         onSearchClick={() => setCurrentView('search')}
-        onProfileClick={() => setCurrentView('profile')}
-        onNotificationClick={() => setCurrentView('notifications')}
         primaryColor={primaryColor}
         branding={brandingConfig}
         restaurantId={restaurantId || undefined}
         tableId={resolvedTableId || undefined}
         notificationCount={tabNotifications.length}
-        avgRating={feedbackStats?.avgRating}
-        totalReviews={feedbackStats?.total}
       />
 
       {/* Content */}

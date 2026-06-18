@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import type { MenuItem } from "@/hooks/useMenuItems";
 
-const fallbackImage = "/placeholder.svg";
-
 interface MenuPreviewCardProps {
   item: MenuItem;
   currencySymbol?: string;
@@ -31,7 +29,7 @@ export function MenuPreviewCard({
   const displayName = safeItem?.name ?? "Menu Item";
   const displayPrice = safeItem?.price ?? 0;
   const displayDesc = safeItem?.description ?? "No description";
-  const displayImage = safeItem?.image_url ?? fallbackImage;
+  const displayImage = safeItem?.image_url ?? "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80";
 
   return (
     <motion.div
@@ -46,7 +44,7 @@ export function MenuPreviewCard({
             src={displayImage}
             alt={displayName}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={(e) => { (e.target as HTMLImageElement).src = fallbackImage; }}
+            onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80"; }}
           />
           <div className="absolute top-2 left-2 flex flex-col gap-1.5">
             {safeItem?.is_vegetarian !== null && safeItem?.is_vegetarian !== undefined && (

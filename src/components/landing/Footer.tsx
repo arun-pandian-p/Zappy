@@ -8,9 +8,10 @@ interface FooterProps {
   cms?: Record<string, any>;
 }
 
-const Footer = ({ cms: _cms }: FooterProps) => {
+const Footer = ({ cms }: FooterProps) => {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
+  const companyName = cms?.company_name || 'ZAPPY Inc.';
 
   const footerLinks = [
     {
@@ -43,48 +44,89 @@ const Footer = ({ cms: _cms }: FooterProps) => {
   ];
 
   return (
-    <footer className="relative bg-[#F7F5F0] text-[#111111] overflow-hidden pt-24 pb-12 border-t border-[#111111]/8">
-      {/* Background Atmosphere */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-5">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[#FF6B00] blur-[120px] rounded-full" />
+    <footer className="relative bg-[#0B1220] text-white overflow-hidden pt-24 pb-6 border-t border-slate-800/80">
+      {/* Background Glow */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-primary/5 blur-[120px] rounded-full" />
       </div>
 
       <div className="container relative z-10 mx-auto px-6 max-w-6xl">
         {/* Top Header Section */}
-        <div className="text-center mb-16 space-y-4">
+        <div className="text-center mb-16 space-y-6">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-5xl font-black tracking-tight text-[#111111] uppercase"
+            className="text-4xl md:text-5xl font-bold tracking-tight text-white"
           >
-            Run Your Entire Restaurant on <br />
-            <span className="text-[#FF6B00]">Zappy Restaurant OS</span>
+            Run Your Entire Restaurant on
+            <br />
+            the Zappy Restaurant OS
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-[#111111]/60 text-lg font-light"
+            className="text-[hsl(215,20%,75%)] text-lg"
           >
-            QR Ordering &bull; Kitchen KDS &bull; Cashier Billing &bull; Diner Loyalty &bull; Live Analytics
+            QR Ordering &bull; Kitchen &bull; Billing &bull; Reviews &bull; Analytics &bull; Staff Management
           </motion.p>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+          >
+            <Button 
+              onClick={() => navigate('/order?slug=arun&table=T1&demo=true')}
+              className="bg-[hsl(var(--accent))] text-black hover:bg-[hsl(var(--accent))]/90 font-semibold px-8 h-12 rounded-full shadow-lg shadow-amber-500/10"
+            >
+              Book Demo
+            </Button>
+            <Button 
+              onClick={() => navigate('/login')}
+              variant="outline" 
+              className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white font-semibold px-8 h-12 rounded-full backdrop-blur-sm relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[hsl(var(--accent))]/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              Start Free Trial
+            </Button>
+          </motion.div>
         </div>
 
-        {/* Giant Interactive Morphing Logo Area */}
-        <div className="flex justify-center mb-20">
-          <div className="footer-massive-text select-none text-center flex items-center justify-center gap-1">
-            {['Z', 'A', 'P', 'P', 'Y'].map((letter, idx) => (
-              <span key={idx} className="footer-letter-span cursor-pointer">
-                {letter}
-              </span>
-            ))}
+        {/* Giant Logo Area */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="flex justify-center mb-24 relative"
+        >
+          <div className="relative w-full max-w-4xl mx-auto flex justify-center items-center drop-shadow-[0_0_30px_rgba(37,99,235,0.15)]">
+            <img 
+              src="/zappy-uploads/53e47e43-08ad-46f9-a01e-426fd946553a.png" 
+              alt="Zappy Logo" 
+              className="w-full h-auto max-w-[800px] object-contain mix-blend-screen cursor-pointer"
+              onClick={() => { navigate('/'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onError={(e) => {
+                // Fallback to text if image fails to load
+                e.currentTarget.style.display = 'none';
+                const parent = e.currentTarget.parentElement;
+                if (parent) {
+                  const fallback = document.createElement('h1');
+                  fallback.className = "text-8xl md:text-[150px] font-black tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]";
+                  fallback.innerText = "ZAPPY";
+                  parent.appendChild(fallback);
+                }
+              }}
+            />
           </div>
-        </div>
+        </motion.div>
 
         {/* Links Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-16 max-w-4xl mx-auto border-t border-[#111111]/8 pt-16">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-16 max-w-4xl mx-auto">
           {footerLinks.map((section, idx) => (
             <motion.div 
               key={section.title}
@@ -94,11 +136,11 @@ const Footer = ({ cms: _cms }: FooterProps) => {
               transition={{ delay: 0.1 * idx }}
               className="text-center md:text-left"
             >
-              <h3 className="font-bold text-xs uppercase tracking-widest text-[#FF6B00] mb-6">{section.title}</h3>
+              <h3 className="font-semibold text-lg text-white mb-6">{section.title}</h3>
               <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.name}>
-                    <a href={link.href} className="text-[#111111]/70 hover:text-[#FF6B00] transition-colors text-sm font-light">
+                    <a href={link.href} className="text-[hsl(215,20%,75%)] hover:text-white transition-colors text-sm">
                       {link.name}
                     </a>
                   </li>
@@ -109,14 +151,14 @@ const Footer = ({ cms: _cms }: FooterProps) => {
         </div>
 
         {/* Newsletter & Socials */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12 border-t border-[#111111]/8 pt-12">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12 border-t border-white/5 pt-12">
           <div className="w-full md:w-auto flex-1 max-w-md relative flex">
             <Input 
               type="email" 
-              placeholder="Join our restaurant newsletter" 
-              className="w-full bg-[#FFFFFF] border border-[#111111]/8 text-[#111111] placeholder:text-[#111111]/40 h-12 rounded-l-full rounded-r-none focus-visible:ring-1 focus-visible:ring-[#FF6B00]/50 pr-24"
+              placeholder="Enter your email" 
+              className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/40 h-12 rounded-l-full rounded-r-none backdrop-blur-md focus-visible:ring-1 focus-visible:ring-[hsl(var(--accent))]/50 pr-24"
             />
-            <Button className="absolute right-0 h-12 rounded-l-none rounded-r-full bg-[#111111] hover:bg-[#111111]/90 border border-transparent text-white px-6 font-semibold">
+            <Button className="absolute right-0 h-12 rounded-l-none rounded-r-full bg-white/10 hover:bg-white/20 border border-white/10 text-white backdrop-blur-md px-6">
               Subscribe
             </Button>
           </div>
@@ -126,21 +168,21 @@ const Footer = ({ cms: _cms }: FooterProps) => {
               <a 
                 key={idx} 
                 href="#" 
-                className="w-10 h-10 rounded-full border border-[#111111]/8 flex items-center justify-center text-[#111111]/60 hover:text-[#FF6B00] hover:border-[#FF6B00]/20 hover:bg-[#FF6B00]/5 transition-all"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-[hsl(var(--accent))] hover:bg-white/5 transition-colors animate-pulse"
               >
-                <Icon className="w-4.5 h-4.5" />
+                <Icon className="w-5 h-5" />
               </a>
             ))}
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-[#111111]/8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#111111]/50 font-medium">
-          <p>© {currentYear} Zappy. All rights reserved.</p>
+        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[hsl(215,20%,65%)]">
+          <p>© {currentYear} {companyName} All rights reserved.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-[#FF6B00] transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-[#FF6B00] transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-[#FF6B00] transition-colors">Cookie Policy</a>
+            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
           </div>
         </div>
       </div>

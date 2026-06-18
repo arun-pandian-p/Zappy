@@ -5,8 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-const fallbackImage = "/placeholder.svg";
-
 interface FoodCardProps {
   id: string;
   name: string;
@@ -57,11 +55,11 @@ export const FoodCard = React.forwardRef<HTMLDivElement, FoodCardProps>(({
         {/* Image Section with Badges */}
         <div className="relative aspect-[16/10] overflow-hidden bg-muted m-2 rounded-[14px]">
           <img
-            src={imageUrl || fallbackImage}
+            src={imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80"}
             alt={name || "Menu Item"}
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-            onError={(e) => { (e.target as HTMLImageElement).src = fallbackImage; }}
+            onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80"; }}
           />
           
           {/* Badge - Top Left */}

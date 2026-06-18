@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useSound, SOUNDS } from '@/hooks/useSound';
 import ThermalReceipt from '@/components/receipt/ThermalReceipt';
@@ -35,7 +34,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { LogOut } from 'lucide-react';
 import { usePrinter } from '@/hooks/usePrinter';
-import { supabase } from '@/integrations/supabase/client';
 
 interface BillingCounterProps {
   embedded?: boolean;

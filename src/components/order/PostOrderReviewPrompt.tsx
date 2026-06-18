@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { checkRateLimit, RATE_LIMITS, getRemainingCooldown } from '@/utils/rateLimiter';
 
+
 interface PostOrderReviewPromptProps {
   restaurantId: string;
   orderId: string;
@@ -33,9 +34,15 @@ export const PostOrderReviewPrompt = ({
   immediate = false,
 }: PostOrderReviewPromptProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Ratings
   const [overallRating, setOverallRating] = useState(0);
+  const [foodRating, setFoodRating] = useState(0);
+  const [serviceRating, setServiceRating] = useState(0);
+  const [ambianceRating, setAmbianceRating] = useState(0);
+  
   const [comment, setComment] = useState('');
-  const [step, setStep] = useState<'overall' | 'details' | 'google' | 'done'>('overall');
+  const [step, setStep] = useState<'overall' | 'details' | 'feedback' | 'google' | 'done'>('overall');
   const [submitting, setSubmitting] = useState(false);
   
   const { toast } = useToast();
@@ -43,6 +50,9 @@ export const PostOrderReviewPrompt = ({
 
   useEffect(() => {
     setOverallRating(0);
+    setFoodRating(0);
+    setServiceRating(0);
+    setAmbianceRating(0);
     setComment('');
     setStep('overall');
     setIsOpen(false);
@@ -51,6 +61,7 @@ export const PostOrderReviewPrompt = ({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // Already shown/dismissed — do not re-open
     if (localStorage.getItem(storageKey) === 'true' || sessionStorage.getItem(`reviewed_${orderId}`) === 'true') {
       return;
     }
@@ -60,8 +71,13 @@ export const PostOrderReviewPrompt = ({
       return;
     }
 
-    const timer = setTimeout(() => setIsOpen(true), delayMs);
+    // Delay then open — DO NOT set localStorage here; only set on close/submit
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+    }, delayMs);
+
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, delayMs, immediate]);
 
   const quickChips = overallRating >= 4 
@@ -78,17 +94,14 @@ export const PostOrderReviewPrompt = ({
 
   const handleNextFromOverall = () => {
     if (overallRating === 0) return;
-    
-    if (overallRating >= 4 && googleReviewUrl) {
-      setStep('google');
-    } else {
-      setStep('details');
-    }
+    // Ask for details, but keep it short
+    setStep('details');
   };
 
   const handleSubmitAll = useCallback(async () => {
     if (overallRating === 0) return;
 
+    // Rate Limit Check
     if (!checkRateLimit(`feedback_${restaurantId}`, RATE_LIMITS.FEEDBACK.maxAttempts, RATE_LIMITS.FEEDBACK.windowMs)) {
       const cooldown = getRemainingCooldown(`feedback_${restaurantId}`);
       toast({
@@ -102,24 +115,29 @@ export const PostOrderReviewPrompt = ({
     setSubmitting(true);
 
     try {
-      if (overallRating < 4) {
-        await supabase.from('customer_feedback' as any).insert({
-          restaurant_id: restaurantId,
-          order_id: orderId,
-          rating: overallRating,
-          comment: comment.trim() || null,
-        });
+      await supabase.from('feedback').insert({
+        restaurant_id: restaurantId,
+        order_id: orderId,
+        table_id: tableId || null,
+        rating: overallRating,
+        comment: comment.trim() || null,
+        redirected_to_google: overallRating >= 4 && !!googleReviewUrl,
+      });
+
+      if (overallRating >= 4 && googleReviewUrl) {
+        setStep('google');
+      } else {
+        handleClose();
+        toast({ title: 'Thank you for your feedback! 🙏' });
       }
-      
-      handleClose();
-      toast({ title: 'Thank you for your feedback! 🙏' });
+
     } catch (err) {
       toast({ title: 'Error', description: 'Could not save feedback.', variant: 'destructive' });
       handleClose();
     } finally {
       setSubmitting(false);
     }
-  }, [overallRating, comment, restaurantId, orderId, toast]);
+  }, [overallRating, foodRating, serviceRating, ambianceRating, comment, restaurantId, orderId, tableId, googleReviewUrl, toast]);
 
   const handleGoogleRedirect = () => {
     if (googleReviewUrl) {
@@ -161,6 +179,7 @@ export const PostOrderReviewPrompt = ({
           </div>
 
           <AnimatePresence mode="wait">
+            {/* Step 1: Overall Rating */}
             {step === 'overall' && (
               <motion.div key="overall" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 space-y-6">
                 <div className="flex justify-center">
@@ -185,8 +204,20 @@ export const PostOrderReviewPrompt = ({
               </motion.div>
             )}
 
+            {/* Step 2: Detailed Feedback & Chips */}
             {step === 'details' && (
               <motion.div key="details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-6 space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Food Quality</span>
+                    <StarRating value={foodRating} onChange={setFoodRating} size="sm" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Service Speed</span>
+                    <StarRating value={serviceRating} onChange={setServiceRating} size="sm" />
+                  </div>
+                </div>
+
                 <div className="space-y-3">
                   <span className="text-sm font-medium text-muted-foreground">Quick Tags</span>
                   <div className="flex flex-wrap gap-2">
@@ -220,6 +251,7 @@ export const PostOrderReviewPrompt = ({
               </motion.div>
             )}
 
+            {/* Step 3: Google Review Redirect */}
             {step === 'google' && (
               <motion.div key="google" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-6 text-center space-y-6">
                 <motion.div animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }} transition={{ duration: 2, repeat: Infinity }} className="text-6xl my-4">

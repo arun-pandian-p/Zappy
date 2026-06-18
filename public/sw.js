@@ -1,5 +1,4 @@
-const CACHE_VERSION = 4;
-const CACHE_NAME = `zappy-cache-v${CACHE_VERSION}`;
+const CACHE_NAME = 'zappy-cache-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -119,9 +118,9 @@ self.addEventListener('notificationclick', (event) => {
   let targetUrl = '/';
   
   if (payload.order_id) {
-    targetUrl = `/order?order_id=${payload.order_id}`;
+    targetUrl = `/?view=orders&order_id=${payload.order_id}`;
   } else if (payload.type === 'waiter_call') {
-    targetUrl = '/waiter';
+    targetUrl = '/waiter-dashboard';
   }
 
   event.waitUntil(

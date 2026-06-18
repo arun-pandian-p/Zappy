@@ -125,10 +125,6 @@ Respond with ONLY a valid JSON object containing:
       toast({ title: "Item Name Required", description: "Please enter an item name first.", variant: "destructive" });
       return;
     }
-    if (form.image_url) {
-      toast({ title: "Image Already Exists", description: "This item already has an image. Regeneration is disabled.", variant: "destructive" });
-      return;
-    }
     setIsGeneratingImage(true);
     toast({ title: "Generating Image...", description: "Creating a realistic food photo." });
     try {
@@ -273,11 +269,11 @@ Respond with ONLY a valid JSON object containing:
                     </div>
                     <Button 
                       onClick={handleAIGenerateImage} 
-                      disabled={!form.name || isGeneratingImage || !!form.image_url}
+                      disabled={!form.name || isGeneratingImage}
                       className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl shadow-lg border-0 h-10"
                     >
                       {isGeneratingImage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                      {form.image_url ? "Image Exists" : "Generate Image"}
+                      {form.image_url ? "Regenerate Image" : "Generate Image"}
                     </Button>
                   </div>
                 </TabsContent>

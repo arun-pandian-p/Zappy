@@ -184,26 +184,6 @@ export function MenuTab({
   const handleCompleteMenu = () => runCompletion(menuItems);
   const handleFixMissing = () => runCompletion(failedItems.map(f => f.item));
 
-  const [isRegeneratingEmbeddings, setIsRegeneratingEmbeddings] = useState(false);
-
-  const handleRegenerateEmbeddings = async () => {
-    setIsRegeneratingEmbeddings(true);
-    toast({ title: "Regenerating Embeddings...", description: "Updating all menu item vectors." });
-    try {
-      const { regenerateAllMenuEmbeddings } = await import("@/services/recommendations/embeddingService");
-      const { successCount, failCount } = await regenerateAllMenuEmbeddings(restaurantId);
-      toast({
-        title: "Embeddings Updated",
-        description: `Regenerated: ${successCount}. Failed: ${failCount}.`,
-      });
-    } catch (err: any) {
-      console.error(err);
-      toast({ title: "Failed to update embeddings", description: err.message, variant: "destructive" });
-    } finally {
-      setIsRegeneratingEmbeddings(false);
-    }
-  };
-
   const handleAIEnrich = async () => {
     if (!newItem.name) {
       toast({ title: "Item Name Required", description: "Please enter an item name to enrich.", variant: "destructive" });
@@ -253,10 +233,6 @@ Respond with ONLY a valid JSON object containing:
   const handleAIGenerateImage = async () => {
     if (!newItem.name) {
       toast({ title: "Please enter item name first", variant: "destructive" });
-      return;
-    }
-    if (newItem.image_url) {
-      toast({ title: "Image Already Exists", description: "This item already has an image. Regeneration is disabled.", variant: "destructive" });
       return;
     }
     setGeneratingAIImage(true);
@@ -437,25 +413,6 @@ Respond with ONLY a valid JSON object containing:
             )}
           </Button>
 
-          <Button 
-            variant="outline" 
-            className="bg-indigo-50 hover:bg-indigo-100 text-indigo-950 border-indigo-200 shadow-sm rounded-xl px-4 min-w-[160px]"
-            onClick={handleRegenerateEmbeddings}
-            disabled={isRegeneratingEmbeddings}
-          >
-            {isRegeneratingEmbeddings ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Regenerating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2 text-indigo-500" />
-                Regen Embeddings
-              </>
-            )}
-          </Button>
-
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 rounded-xl px-6">
@@ -559,13 +516,13 @@ Respond with ONLY a valid JSON object containing:
                             <Label className="text-xs text-muted-foreground">High Definition Output</Label>
                             <Switch checked={isFeaturedItem} onCheckedChange={setIsFeaturedItem} />
                           </div>
-                           <Button 
+                          <Button 
                             onClick={handleAIGenerateImage} 
-                            disabled={!newItem.name || generatingAIImage || !!newItem.image_url}
+                            disabled={!newItem.name || generatingAIImage}
                             className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl shadow-lg border-0 h-10"
                           >
                             {generatingAIImage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                            {newItem.image_url ? "Image Exists" : "Generate Image"}
+                            {newItem.image_url ? "Regenerate Image" : "Generate Image"}
                           </Button>
                         </div>
                       </TabsContent>

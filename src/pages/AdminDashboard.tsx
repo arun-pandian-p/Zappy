@@ -37,7 +37,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { OrderHistory } from "@/components/admin/OrderHistory";
 import { AdsManager } from "@/components/admin/AdsManager";
-import { GoogleReviewsManager } from "@/components/admin/GoogleReviewsManager";
+import { ReputationManager } from "@/components/admin/ReputationManager";
 import { SettingsPanel } from "@/components/admin/SettingsPanel";
 import { ExportPanel } from "@/components/admin/ExportPanel";
 import { CouponManager } from "@/components/admin/CouponManager";
@@ -248,7 +248,7 @@ const AdminDashboard = () => {
   return (
     <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
     <SidebarProvider defaultOpen>
-      <div className="flex min-h-screen w-full bg-[#020817]">
+      <div className="flex min-h-screen w-full bg-muted/30">
         <AdminSidebar activeTab={activeTab} onTabChange={handleTabChange} onboardingCompleted={(restaurant as any)?.onboarding_completed ?? true} restaurantName={(restaurant as any)?.name} restaurantLogo={cacheBustUrl((restaurant as any)?.logo_url)} subscriptionTier={restaurant?.subscription_tier} adsEnabled={restaurant?.ads_enabled} featureToggles={(restaurant as any)?.feature_toggles} />
 
         <SidebarInset className="flex-1">
@@ -260,16 +260,16 @@ const AdminDashboard = () => {
           />
 
           {!isOnline && (
-            <div className="bg-red-500/20 text-red-400 px-6 py-2 flex items-center gap-2 text-xs font-semibold border-b border-red-500/20">
+            <div className="bg-destructive text-destructive-foreground px-6 py-2 flex items-center gap-2 text-xs font-semibold animate-pulse">
               <WifiOff className="w-4 h-4 shrink-0" />
-              <span>You are currently working offline. Real-time updates and active syncing are suspended until connection returns.</span>
+              <span>🔌 You are currently working offline. Real-time updates and active syncing are suspended until connection returns.</span>
             </div>
           )}
 
           {isOnline && wsStatus === "disconnected" && (
-            <div className="bg-amber-500/20 text-amber-400 px-6 py-2 flex items-center gap-2 text-xs font-semibold border-b border-amber-500/20">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>Real-time connection interrupted. Attempting to re-establish live WebSocket listener channel...</span>
+            <div className="bg-amber-500 text-white px-6 py-2 flex items-center gap-2 text-xs font-semibold">
+              <AlertCircle className="w-4 h-4 shrink-0 animate-bounce" />
+              <span>⚠️ Real-time connection interrupted. Attempting to re-establish live WebSocket listener channel...</span>
             </div>
           )}
 
@@ -436,7 +436,7 @@ const AdminDashboard = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <GoogleReviewsManager restaurantId={restaurantId} />
+                  <ReputationManager restaurantId={restaurantId} />
                 </motion.div>
               )}
 
