@@ -4,7 +4,7 @@
  * Runs 100% locally — no AI APIs used.
  */
 
-import { fixOCRTypos, extractPrice, titleCase, deduplicateItems } from "./textCleaner";
+import { fixOCRTypos, extractPrice, titleCase, deduplicateItems, isValidItemName } from "./textCleaner";
 
 export interface ParsedMenuItem {
   name: string;
@@ -222,10 +222,11 @@ function parseMenuLine(line: string, currentCategory: string): ParsedMenuItem | 
       // Clean and validate name
       name = fixOCRTypos(name.trim());
       name = name.replace(/[.…_-]+$/, "").trim(); // Remove trailing dots/dashes
+      name = name.replace(/^[=\-0\s:)]+/, "").trim(); // Remove leading junk like 0, =, :
       name = titleCase(name);
 
-      // Skip if name is too short or looks like junk
-      if (name.length < 2) continue;
+      // Skip if name is too short, looks like junk, or invalid
+      if (!isValidItemName(name)) continue;
       if (/^\d+$/.test(name)) continue; // Pure numbers
 
       const category = detectCategory(name, currentCategory);
@@ -366,12 +367,13 @@ export function parseMenuFromCSV(csvText: string): ParsedMenuItem[] {
     const cols = parseCSVLine(lines[i]);
     if (!cols || cols.length <= Math.max(nameIdx, priceIdx)) continue;
 
-    const name = fixOCRTypos(cols[nameIdx]?.trim() || "");
+    let name = fixOCRTypos(cols[nameIdx]?.trim() || "");
+    name = name.replace(/^[=\-0\s:)]+/, "").trim();
     const price = extractPrice(cols[priceIdx] || "");
     const rawCategory = catIdx >= 0 ? cols[catIdx]?.trim() || "" : "";
     const description = descIdx >= 0 ? cols[descIdx]?.trim() || "" : "";
 
-    if (!name || !price) continue;
+    if (!isValidItemName(name) || !price) continue;
 
     const category = rawCategory
       ? titleCase(rawCategory)

@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnsplashPicker } from "@/components/admin/UnsplashPicker";
+import { StorageImagePicker } from "@/components/admin/StorageImagePicker";
 import { useToast } from "@/hooks/use-toast";
 import { CategoryManager } from "@/components/admin/CategoryManager";
 import { MenuOCRImporter } from "@/components/admin/MenuOCRImporter";
@@ -87,7 +88,7 @@ export function MenuTab({
   const deleteMenuItem = useDeleteMenuItem();
   const toggleAvailability = useToggleMenuItemAvailability();
 
-  const [imageSource, setImageSource] = useState<"ai" | "unsplash" | "upload">("ai");
+  const [imageSource, setImageSource] = useState<"ai" | "unsplash" | "upload" | "storage">("ai");
   const [isFeaturedItem, setIsFeaturedItem] = useState(false);
   const [generatingAIImage, setGeneratingAIImage] = useState(false);
   const [isEnrichingText, setIsEnrichingText] = useState(false);
@@ -502,12 +503,13 @@ Respond with ONLY a valid JSON object containing:
                   <div className="md:col-span-12 space-y-3 pt-4 border-t">
                     <Label>Item Image</Label>
                     <Tabs value={imageSource} onValueChange={(v) => setImageSource(v as any)} className="w-full">
-                      <TabsList className="grid grid-cols-3 w-full bg-muted/50 p-1 rounded-xl">
+                      <TabsList className="grid grid-cols-4 w-full bg-muted/50 p-1 rounded-xl">
                         <TabsTrigger value="ai" className="rounded-lg text-xs gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white">
                           <Sparkles className="w-3 h-3" /> AI Generate
                         </TabsTrigger>
                         <TabsTrigger value="unsplash" className="rounded-lg text-xs">🔍 Unsplash</TabsTrigger>
                         <TabsTrigger value="upload" className="rounded-lg text-xs">⬆ Upload</TabsTrigger>
+                        <TabsTrigger value="storage" className="rounded-lg text-xs">📦 Storage</TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="ai" className="mt-3 space-y-3">
@@ -543,6 +545,21 @@ Respond with ONLY a valid JSON object containing:
                           onImageUploaded={(url) => setNewItem({ ...newItem, image_url: url })}
                           restaurantId={restaurantId}
                           folder="menu"
+                        />
+                      </TabsContent>
+
+                      <TabsContent value="storage" className="mt-3">
+                        <StorageImagePicker
+                          query={newItem.name}
+                          currentImageUrl={newItem.image_url}
+                          onSelect={(url, name) => {
+                            setNewItem(prev => ({ 
+                              ...prev, 
+                              image_url: url,
+                              name: prev.name || name || ""
+                            }));
+                            toast({ title: "Image selected from library!" });
+                          }}
                         />
                       </TabsContent>
                     </Tabs>

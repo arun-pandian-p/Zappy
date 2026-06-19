@@ -178,3 +178,14 @@ export function generateLocalDescription(itemName: string, category: string): st
   const desc = categoryDescs[Math.floor(Math.random() * categoryDescs.length)];
   return `${desc} — ${itemName}`;
 }
+
+/**
+ * Validate that an OCR item name is not just junk symbols.
+ * Requires at least 3 alphabetical characters.
+ */
+export function isValidItemName(name: string): boolean {
+  if (!name) return false;
+  // Check if it has at least 3 alphabetical characters
+  const alphaChars = name.match(/[a-zA-Z]/g);
+  return !!alphaChars && alphaChars.length >= 3;
+}

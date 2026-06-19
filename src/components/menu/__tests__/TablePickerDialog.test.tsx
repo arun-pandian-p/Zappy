@@ -72,7 +72,7 @@ describe("TablePickerDialog", () => {
     expect(screen.queryByText("T2")).not.toBeInTheDocument();
   });
 
-  it("displays restaurant name in welcome message", () => {
+  it("displays table selection header", () => {
     render(
       <TablePickerDialog
         open={true}
@@ -81,7 +81,7 @@ describe("TablePickerDialog", () => {
         onSelectTable={() => {}}
       />
     );
-    expect(screen.getByText(/Welcome to My Restaurant/)).toBeInTheDocument();
+    expect(screen.getByText(/Select Your Table/)).toBeInTheDocument();
   });
 
   it("shows seat capacity for each table", () => {

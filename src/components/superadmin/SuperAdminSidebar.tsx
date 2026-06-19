@@ -12,10 +12,11 @@ import {
   Settings,
   CreditCard,
   Megaphone,
-  ScrollText,
   Trophy,
   UserCircle,
   ClipboardList,
+  Database,
+  ScrollText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -46,8 +47,8 @@ const navItems: NavItem[] = [
   { title: "Subscription Plans", icon: CreditCard, value: "plans" },
   { title: "Platform Ads", icon: Megaphone, value: "ads" },
   { title: "Promotions", icon: Trophy, value: "promotions" },
-  { title: "Analytics", icon: BarChart3, value: "analytics" },
   { title: "Settings", icon: Settings, value: "settings" },
+  { title: "Image Storage", icon: Database, value: "storage" },
   { title: "System Logs", icon: ScrollText, value: "logs" },
   { title: "My Profile", icon: UserCircle, value: "profile" },
 ];

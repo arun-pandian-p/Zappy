@@ -35,6 +35,7 @@ import PromotionsOverview from '@/components/superadmin/PromotionsOverview';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminAccountsTable from '@/components/superadmin/AdminAccountsTable';
 import LeadsCRM from '@/components/superadmin/LeadsCRM';
+import StorageManager from '@/pages/Admin/StorageManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import type { Tables } from '@/integrations/supabase/types';
@@ -485,6 +486,9 @@ const SuperAdminDashboard = () => {
       case 'promotions':
         return <PromotionsOverview />;
 
+      case 'storage':
+        return <StorageManager />;
+
       case 'settings':
         return (
           <Tabs defaultValue="tax" className="space-y-4">
@@ -517,6 +521,7 @@ const SuperAdminDashboard = () => {
     promotions: { title: 'Promotions', description: 'View restaurant-wise promotion & ad status' },
     'landing-cms': { title: 'Landing Page CMS', description: 'Edit landing page content' },
     branding: { title: 'Platform Branding', description: 'White-label appearance controls' },
+    storage: { title: 'Image Storage', description: 'Global AI Menu Image Library' },
     settings: { title: 'Settings', description: 'Platform configuration' },
     logs: { title: 'System Logs', description: 'Audit trail of platform actions' },
     profile: { title: 'My Profile', description: 'Customize your admin identity' },

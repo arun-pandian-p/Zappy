@@ -23,6 +23,13 @@ Thumbs.db
 .env.development
 .env.production
 
+# Secrets & Keys
+*.key
+*.pem
+*credential*
+*secret*
+*.md.key
+
 # Logs
 logs
 *.log

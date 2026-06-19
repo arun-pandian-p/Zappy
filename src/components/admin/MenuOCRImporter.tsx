@@ -20,6 +20,7 @@ import {
   type OCRProgress,
 } from "@/services/ocrService";
 import type { ParsedMenuItem } from "@/services/menuParser";
+import { ImageMatcher } from "@/services/imageMatcher";
 
 interface OCRItem {
   name: string;
@@ -76,17 +77,23 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
         }
       );
 
-      const ocrItems: OCRItem[] = items.map(i => ({
-        name: i.name,
-        price: i.price,
-        category: i.category,
-        confidence: i.confidence,
-        description: i.description,
-        isVegetarian: i.isVegetarian,
-        isVegan: i.isVegan,
-        isJain: i.isJain,
-        isGlutenFree: i.isGlutenFree,
-      }));
+      await ImageMatcher.initialize();
+
+      const ocrItems: OCRItem[] = items.map(i => {
+        const matchUrl = ImageMatcher.findBestMatch(i.name, i.category);
+        return {
+          name: i.name,
+          price: i.price,
+          category: i.category,
+          confidence: i.confidence,
+          description: i.description,
+          isVegetarian: i.isVegetarian,
+          isVegan: i.isVegan,
+          isJain: i.isJain,
+          isGlutenFree: i.isGlutenFree,
+          image_url: matchUrl || undefined
+        };
+      });
 
       setExtractedItems(ocrItems);
       toast({
@@ -126,21 +133,27 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
       }
     );
 
+    await ImageMatcher.initialize();
+
     // Merge all successful items
     const allItems: OCRItem[] = results
       .filter(r => r.status === "completed")
       .flatMap(r =>
-        r.items.map(i => ({
-          name: i.name,
-          price: i.price,
-          category: i.category,
-          confidence: i.confidence,
-          description: i.description,
-          isVegetarian: i.isVegetarian,
-          isVegan: i.isVegan,
-          isJain: i.isJain,
-          isGlutenFree: i.isGlutenFree,
-        }))
+        r.items.map(i => {
+          const matchUrl = ImageMatcher.findBestMatch(i.name, i.category);
+          return {
+            name: i.name,
+            price: i.price,
+            category: i.category,
+            confidence: i.confidence,
+            description: i.description,
+            isVegetarian: i.isVegetarian,
+            isVegan: i.isVegan,
+            isJain: i.isJain,
+            isGlutenFree: i.isGlutenFree,
+            image_url: matchUrl || undefined
+          };
+        })
       );
 
     setExtractedItems(allItems);
@@ -412,22 +425,25 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
                   variant="outline" 
                   className="text-primary gap-1"
                   onClick={async () => {
-                    toast({ title: "Generating images...", description: "AI is creating photos for all items." });
+                    toast({ title: "Matching images...", description: "Searching Storage for matches..." });
+                    await ImageMatcher.initialize(true);
+                    let matchCount = 0;
                     const newItems = [...extractedItems];
                     for (let i = 0; i < newItems.length; i++) {
-                      try {
-                        const url = await generateFoodImage(newItems[i].name, "", restaurantId);
-                        newItems[i] = { ...newItems[i], image_url: url };
-                        setExtractedItems([...newItems]);
-                      } catch (e) {
-                        console.error("Failed to generate image for " + newItems[i].name);
+                      if (!newItems[i].image_url) {
+                        const url = ImageMatcher.findBestMatch(newItems[i].name, newItems[i].category);
+                        if (url) {
+                          newItems[i] = { ...newItems[i], image_url: url };
+                          matchCount++;
+                        }
                       }
                     }
-                    toast({ title: "All images generated!" });
+                    setExtractedItems([...newItems]);
+                    toast({ title: `Matched ${matchCount} new images!` });
                   }}
                 >
                   <Sparkles className="w-4 h-4" />
-                  AI Generate Images
+                  Auto-Match Storage Images
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => { setExtractedItems([]); setBatchResults([]); }} className="text-destructive">
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -442,6 +458,11 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
                   <Card key={idx} className="border-l-4 border-l-primary/50">
                     <CardContent className="p-3 space-y-3">
                       <div className="flex items-center justify-between gap-4">
+                        {item.image_url && (
+                          <div className="h-16 w-16 rounded-md overflow-hidden bg-muted shrink-0">
+                            <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                          </div>
+                        )}
                         <div className="flex-1 grid grid-cols-3 gap-3">
                           <div className="col-span-1">
                             <Label className="text-[10px] uppercase text-muted-foreground font-semibold">Name</Label>
