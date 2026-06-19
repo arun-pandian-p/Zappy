@@ -41,7 +41,7 @@ function QRPreviewCard({
     width: 1024,
     height: 1024,
     type: "svg",
-    margin: 10,
+    margin: 32,  // 32px quiet zone for ISO 18004 compliance
     imageOptions: { crossOrigin: "anonymous", margin: 10 }
   }));
 
@@ -49,30 +49,30 @@ function QRPreviewCard({
     qrCode.update({
       data: getQRValue(qr),
       dotsOptions: {
-        type: (meta.dots_type || (meta.qr_style === "dots" ? "dots" : "rounded")) as DotType,
-        color: !meta.use_gradient ? meta.fg_color || "#000" : undefined,
+        type: (meta.dots_type || "square") as DotType,  // square = max scan reliability
+        color: !meta.use_gradient ? (meta.fg_color || "#000000") : undefined,
         gradient: meta.use_gradient ? {
           type: "linear",
           colorStops: [
-            { offset: 0, color: meta.fg_color || "#000" },
-            { offset: 1, color: meta.gradient_color || "#f00" }
+            { offset: 0, color: meta.fg_color || "#000000" },
+            { offset: 1, color: meta.gradient_color || "#000000" }
           ]
         } : undefined
       },
-      backgroundOptions: { color: "transparent" },
-      cornersSquareOptions: { 
-        type: (meta.corners_square_type || "extra-rounded") as CornerSquareType, 
-        color: meta.fg_color || "#000" 
+      backgroundOptions: { color: meta.bg_color || "#FFFFFF" },  // always explicit white
+      cornersSquareOptions: {
+        type: (meta.corners_square_type || "square") as CornerSquareType,  // square corners = max scan reliability
+        color: meta.fg_color || "#000000"
       },
-      cornersDotOptions: { 
-        type: (meta.corners_dot_type || "dot") as CornerDotType, 
-        color: meta.fg_color || "#000" 
+      cornersDotOptions: {
+        type: (meta.corners_dot_type || "square") as CornerDotType,
+        color: meta.fg_color || "#000000"
       },
       image: meta.logo_url || undefined,
       imageOptions: {
         crossOrigin: "anonymous",
-        margin: meta.logo_excavate ?? true ? 10 : 0,
-        imageSize: meta.logo_size || 0.4
+        margin: (meta.logo_excavate ?? true) ? 10 : 0,
+        imageSize: Math.min(meta.logo_size || 0.2, 0.25)  // cap at 25% — never cover scan area
       },
       qrOptions: { errorCorrectionLevel: (meta.error_level || "H") as any }
     });
@@ -115,8 +115,9 @@ function QRPreviewCard({
       img.crossOrigin = "anonymous";
       img.onload = () => {
         try {
-          ctx.fillStyle = meta.bg_color || "#FFFFFF";
+          ctx.fillStyle = meta.bg_color || "#FFFFFF";  // always white base for print
           ctx.fillRect(0, 0, 1024, 1024);
+          // add 32px quiet zone margin around QR
           ctx.drawImage(img, 0, 0, 1024, 1024);
           
           const imgData = canvas.toDataURL("image/png");

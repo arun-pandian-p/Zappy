@@ -33,6 +33,7 @@ import { checkRateLimit, RATE_LIMITS, getRemainingCooldown } from '@/utils/rateL
 
 import { useTableByNumber, useTables } from '@/hooks/useTables';
 import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
+import { SeatPickerDialog } from '@/components/menu/SeatPickerDialog';
 import { useActiveEnterprisePromotions } from '@/hooks/useEnterprisePromotions';
 import { evaluateCartDiscounts } from '@/services/promotions/cartPricingEngine';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
@@ -126,8 +127,35 @@ const CustomerMenu = () => {
   const [dynamicTableId, setDynamicTableId] = useState(
     tableId || (restaurantId ? getPersistedTable(restaurantId) : '')
   );
+
+  // Seat persisted alongside table — 4-hour TTL
+  const getPersistedSeat = (rId: string, tNum: string): number | null => {
+    try {
+      const raw = localStorage.getItem(`qr_seat_${rId}_${tNum}`);
+      if (!raw) return null;
+      const { seatNumber, expiresAt } = JSON.parse(raw);
+      if (Date.now() > expiresAt) {
+        localStorage.removeItem(`qr_seat_${rId}_${tNum}`);
+        return null;
+      }
+      return seatNumber || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [selectedSeatNumber, setSelectedSeatNumber] = useState<number | null>(() =>
+    restaurantId && (tableId || getPersistedTable(restaurantId))
+      ? getPersistedSeat(restaurantId, tableId || getPersistedTable(restaurantId))
+      : null
+  );
+
+  // Pending table — awaiting seat confirmation before committing to state
+  const [pendingSeatTable, setPendingSeatTable] = useState<{ tableNumber: string; capacity: number } | null>(null);
+
   const isPreviewMode = false;
-  const showTablePicker = !dynamicTableId && !!restaurantId;
+  // Show table picker only when no table AND no seat-pick in progress
+  const showTablePicker = !dynamicTableId && !!restaurantId && !pendingSeatTable;
   const { toast } = useToast();
 
   // Cart session idempotency key and submission states to prevent double orders
@@ -329,6 +357,7 @@ const CustomerMenu = () => {
     staleTime: 5000,
   });
 
+  // Explicit session creation — called only from seat confirm signal
   const createTableSession = useMutation({
     mutationFn: async () => {
       if (!restaurantId || !resolvedTableId) return null;
@@ -342,7 +371,6 @@ const CustomerMenu = () => {
         })
         .select()
         .single();
-      
       if (error) throw error;
       return data;
     },
@@ -351,56 +379,61 @@ const CustomerMenu = () => {
     }
   });
 
-  // Table Session Validation & Auto-creation/stale check
+  // Signal flag — set in handleSeatConfirm, consumed once in effect below
+  const seatJustConfirmedRef = useRef(false);
+
+  // Session lifecycle:
+  //   START   — only when seatJustConfirmedRef is set by handleSeatConfirm
+  //   STOP    — billing marks status='completed' + completed_at (in BillingCounter)
+  //   STALE   — auto-expire if > 4h or linked order is completed/cancelled
+  //   REFRESH — no restart; seated_at is in DB so derived timers stay accurate
   useEffect(() => {
     if (!restaurantId || !resolvedTableId || isDataLoading) return;
 
-    const validateSession = async () => {
-      if (activeSession === null && !createTableSession.isPending) {
-        console.log('No active table session found, creating one...');
-        createTableSession.mutate();
+    const manageSession = async () => {
+      // CREATE — only on explicit seat confirmation
+      if (seatJustConfirmedRef.current) {
+        seatJustConfirmedRef.current = false;
+        if (!activeSession && !createTableSession.isPending) {
+          console.log('[Session] Seat confirmed — creating session.');
+          createTableSession.mutate();
+        }
         return;
       }
 
+      // STALE — expire sessions older than 4h
       if (activeSession) {
         const seatedTime = new Date(activeSession.seated_at || '').getTime();
-        const FOUR_HOURS = 4 * 60 * 60 * 1000;
-        
-        // If the session is older than 4 hours, mark completed and create a new one
-        if (Date.now() - seatedTime > FOUR_HOURS) {
-          console.log('Active table session is older than 4 hours, completing it and starting new one...');
+        if (Date.now() - seatedTime > 4 * 60 * 60 * 1000) {
+          console.log('[Session] > 4h — marking completed.');
           await supabase
             .from('table_sessions')
             .update({ status: 'completed', completed_at: new Date().toISOString() })
             .eq('id', activeSession.id);
-          
           refetchActiveSession();
           return;
         }
 
-        // If the session is associated with an order, check if that order is completed/cancelled.
-        // If it is, this session is stale (customer already ate and left/billed).
+        // STALE — linked order completed/cancelled
         if (activeSession.order_id) {
           const { data: orderData } = await supabase
             .from('orders')
             .select('status')
             .eq('id', activeSession.order_id)
             .single();
-
           if (orderData && (orderData.status === 'completed' || orderData.status === 'cancelled')) {
-            console.log('Order associated with table session is completed/cancelled. Completing session...');
+            console.log('[Session] Order done — closing session.');
             await supabase
               .from('table_sessions')
               .update({ status: 'completed', completed_at: new Date().toISOString() })
               .eq('id', activeSession.id);
-            
             refetchActiveSession();
           }
         }
       }
     };
 
-    validateSession();
+    manageSession();
   }, [restaurantId, resolvedTableId, isDataLoading, activeSession]);
 
   // Cart store
@@ -493,19 +526,39 @@ const CustomerMenu = () => {
     }
   }, [restaurantId, resolvedTableId]);
 
+  // Stage 1: Table selected — show seat picker, don't commit yet
   const handleTableSelect = (tableNumber: string) => {
+    // Find capacity from allTables
+    const tableData = allTables.find(t => t.table_number === tableNumber);
+    const capacity = tableData?.capacity || 4;
+    setPendingSeatTable({ tableNumber, capacity });
+  };
+
+  // Stage 2: Seat confirmed — single atomic commit of table + seat + session start
+  const handleSeatConfirm = (tableNumber: string, seatNumber: number) => {
     setDynamicTableId(tableNumber);
-    // Persist to localStorage for session survival
+    setSelectedSeatNumber(seatNumber);
+    seatJustConfirmedRef.current = true; // signal session effect to create exactly one session
+    setPendingSeatTable(null);
+    setCurrentView('home'); // ← redirect to Home immediately after confirm
+
+    // Persist table
     if (restaurantId) {
       localStorage.setItem(
         `qr_table_${restaurantId}`,
         JSON.stringify({ tableNumber, timestamp: Date.now() })
+      );
+      // Persist seat with 4h TTL
+      localStorage.setItem(
+        `qr_seat_${restaurantId}_${tableNumber}`,
+        JSON.stringify({ seatNumber, expiresAt: Date.now() + 4 * 60 * 60 * 1000 })
       );
     }
     // Update URL without reload
     const url = new URL(window.location.href);
     url.searchParams.set('table', tableNumber);
     window.history.replaceState({}, '', url.toString());
+    // Session is created in the useEffect below once resolvedTableId is available
   };
 
   // Realtime subscriptions for live sync
@@ -1564,7 +1617,7 @@ const CustomerMenu = () => {
   );
 
   // Use splash branding (fast) or restaurant data (complete) for the splash screen
-  const splashName = restaurant?.name || splashBranding?.name || 'Restaurant';
+  const splashName = restaurant?.name || splashBranding?.name || '';
   const splashLogo = cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url);
   const splashColor = primaryColor || splashBranding?.primary_color || undefined;
 
@@ -1585,8 +1638,19 @@ const CustomerMenu = () => {
       <TablePickerDialog
         open={showTablePicker}
         tables={allTables}
-        restaurantName={restaurant?.name || 'Restaurant'}
+        restaurantName={restaurant?.name || ''}
         onSelectTable={handleTableSelect}
+      />
+
+      {/* Seat Picker Overlay — shown after table selection, before committing */}
+      <SeatPickerDialog
+        open={!!pendingSeatTable}
+        tableNumber={pendingSeatTable?.tableNumber || ''}
+        capacity={pendingSeatTable?.capacity || 4}
+        logoUrl={splashLogo}
+        restaurantName={splashName || undefined}
+        primaryColor={splashColor}
+        onConfirm={handleSeatConfirm}
       />
 
       {/* Details Dialog */}
@@ -1615,9 +1679,10 @@ const CustomerMenu = () => {
 
       {/* Branded Top Bar */}
       <CustomerTopBar
-        restaurantName={restaurant?.name || splashBranding?.name || 'Restaurant'}
+        restaurantName={restaurant?.name || splashBranding?.name || ''}
         logoUrl={cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url)}
         tableNumber={tableNumber || 'Select Table'}
+        seatNumber={selectedSeatNumber ?? undefined}
         onSearchClick={() => setCurrentView('search')}
         primaryColor={primaryColor}
         branding={brandingConfig}
@@ -1636,8 +1701,9 @@ const CustomerMenu = () => {
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
-            {currentView === 'home' && renderHome()}
-            {currentView === 'search' && renderMenu()}
+            {/* Block content while seat picker is active */}
+            {!pendingSeatTable && currentView === 'home' && renderHome()}
+            {!pendingSeatTable && currentView === 'search' && renderMenu()}
             {dynamicTableId && currentView === 'cart' && renderCart()}
             {dynamicTableId && currentView === 'orders' && renderOrders()}
             {currentView === 'notifications' && renderNotifications()}

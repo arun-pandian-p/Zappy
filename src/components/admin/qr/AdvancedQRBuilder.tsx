@@ -29,9 +29,9 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
     logo_size: initialValues?.logo_size || 0.2,
     qr_type_selection: initialValues?.qr_type_selection || "custom",
     table_number: initialValues?.table_number || "",
-    dots_type: initialValues?.dots_type || "rounded",
-    corners_square_type: initialValues?.corners_square_type || "extra-rounded",
-    corners_dot_type: initialValues?.corners_dot_type || "dot",
+    dots_type: initialValues?.dots_type || "square",
+    corners_square_type: initialValues?.corners_square_type || "square",
+    corners_dot_type: initialValues?.corners_dot_type || "square",
     use_gradient: initialValues?.use_gradient || false,
     gradient_color: initialValues?.gradient_color || "#ff0000",
   });
@@ -59,7 +59,7 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
     width: 1024,
     height: 1024,
     type: "svg",
-    margin: 10,
+    margin: 32,  // 32px quiet zone
     imageOptions: { crossOrigin: "anonymous", margin: 10 }
   }));
 
@@ -77,20 +77,20 @@ export function AdvancedQRBuilder({ onSave, onDelete, isSaving, initialValues, t
           ]
         } : undefined
       },
-      backgroundOptions: { color: "transparent" },
-      cornersSquareOptions: { 
+      backgroundOptions: { color: config.bg_color || "#FFFFFF" },  // explicit white
+      cornersSquareOptions: {
         type: config.corners_square_type as CornerSquareType,
-        color: config.fg_color 
+        color: config.fg_color
       },
-      cornersDotOptions: { 
+      cornersDotOptions: {
         type: config.corners_dot_type as CornerDotType,
-        color: config.fg_color 
+        color: config.fg_color
       },
       image: config.logo_url || undefined,
       imageOptions: {
         crossOrigin: "anonymous",
         margin: config.logo_excavate ? 10 : 0,
-        imageSize: config.logo_size
+        imageSize: Math.min(config.logo_size || 0.2, 0.25)  // cap at 25%
       },
       qrOptions: { errorCorrectionLevel: config.error_level as any }
     });

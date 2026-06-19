@@ -34,7 +34,7 @@ export function TablePickerDialog({
             Select Your Table
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Welcome to {restaurantName}! Please select your table to start ordering.
+            Select your table to begin ordering.
           </p>
         </DialogHeader>
         <div className="grid grid-cols-3 gap-3 py-2 max-h-[300px] overflow-y-auto">

@@ -8,7 +8,6 @@ import ScrollProgress from '@/components/landing/ScrollProgress';
 import HeroSection from '@/components/landing/HeroSection';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import HowItWorks from '@/components/landing/HowItWorks';
-// import PricingSection from '@/components/landing/PricingSection';
 import FAQSection from '@/components/landing/FAQSection';
 import CTABanner from '@/components/landing/CTABanner';
 import Footer from '@/components/landing/Footer';
@@ -53,10 +52,6 @@ const LandingPage = () => {
   const isVisible = (key: string) => cms[key]?.visible !== false;
 
   const handleGetStarted = () => navigate('/login');
-  const handleSelectPlan = (plan: string) => {
-    console.log('Selected plan:', plan);
-    navigate('/login');
-  };
 
   const handleBookDemoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,7 +131,6 @@ const LandingPage = () => {
   const navLinks = [
     { label: 'Features', href: '#features' },
     { label: 'How It Works', href: '#how-it-works' },
-    { label: 'Pricing', href: '#pricing' },
     { label: 'FAQ', href: '#faq' }
   ];
 
@@ -245,14 +239,6 @@ const LandingPage = () => {
           </ParallaxSection>
         }
 
-        {/* 4. Pricing */}
-        {isVisible('pricing') &&
-          <ParallaxSection yOffset={30} fadeIn>
-            <div id="pricing">
-              <PricingSection onSelectPlan={handleSelectPlan} cms={cms.pricing?.content} />
-            </div>
-          </ParallaxSection>
-        }
 
         {/* 5. FAQ */}
         <ParallaxSection yOffset={20} fadeIn>

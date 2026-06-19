@@ -15,6 +15,7 @@ interface CustomerTopBarProps {
   restaurantName: string;
   logoUrl?: string | null;
   tableNumber: string;
+  seatNumber?: number;
   onSearchClick: () => void;
   primaryColor?: string;
   branding?: BrandingConfig;
@@ -29,6 +30,7 @@ export function CustomerTopBar({
   restaurantName,
   logoUrl,
   tableNumber,
+  seatNumber,
   onSearchClick,
   primaryColor,
   branding,
@@ -108,7 +110,7 @@ export function CustomerTopBar({
             className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs text-white shrink-0"
             style={{ backgroundColor: primaryColor || '#10B981' }}
           >
-            {restaurantName.charAt(0).toUpperCase()}
+            {restaurantName ? restaurantName.charAt(0).toUpperCase() : '✦'}
           </div>
         )}
         <div className="flex flex-col min-w-0">
@@ -122,6 +124,14 @@ export function CustomerTopBar({
             >
               Table {tableNumber || 'N/A'}
             </Badge>
+            {seatNumber && (
+              <Badge
+                variant="outline"
+                className="text-[8px] px-1.5 py-0 h-[14px] font-black uppercase bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20 dark:border-sky-400/20 leading-none shrink-0"
+              >
+                Seat {seatNumber}
+              </Badge>
+            )}
             {avgRating !== undefined && totalReviews !== undefined && totalReviews > 0 && (
               <span className="text-[9px] font-bold text-amber-500 dark:text-amber-400 flex items-center gap-0.5 shrink-0 leading-none">
                 ★ {avgRating.toFixed(1)} <span className="text-muted-foreground dark:text-zinc-500 font-normal">({totalReviews})</span>

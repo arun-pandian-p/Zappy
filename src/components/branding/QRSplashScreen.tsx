@@ -52,7 +52,7 @@ export function QRSplashScreen({
     return () => clearTimeout(t);
   }, []);
 
-  const displayName = restaurantName || 'Restaurant';
+  const displayName = restaurantName || '';
   const progressBarColor = primaryColor || undefined;
 
   return (
@@ -82,18 +82,20 @@ export function QRSplashScreen({
               transition={{ duration: 0.4 }}
             >
               <span className="text-4xl font-bold text-primary">
-                {displayName.charAt(0)}
+                {displayName ? displayName.charAt(0) : '✦'}
               </span>
             </motion.div>
           )}
 
-          <AnimatedHotelName
-            name={displayName}
-            animation={animation}
-            speed={speed}
-            primaryColor={primaryColor}
-            className="text-3xl font-bold tracking-tight"
-          />
+          {displayName && (
+            <AnimatedHotelName
+              name={displayName}
+              animation={animation}
+              speed={speed}
+              primaryColor={primaryColor}
+              className="text-3xl font-bold tracking-tight"
+            />
+          )}
 
           <MascotIcon mascot={mascot} size={56} primaryColor={primaryColor} />
 
@@ -109,7 +111,7 @@ export function QRSplashScreen({
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Loading {displayName !== 'Restaurant' ? displayName : 'menu'}…
+            {displayName ? `Opening ${displayName}…` : 'Opening menu…'}
           </p>
         </motion.div>
       )}
