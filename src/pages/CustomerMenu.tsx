@@ -14,7 +14,7 @@ function cacheBustUrl(url: string | null | undefined): string | undefined {
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List, MessageSquare } from 'lucide-react';
+import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List, MessageSquare, Bell, CheckCircle2, ChefHat, BellRing, Utensils, Receipt, XCircle } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCartStore } from '@/stores/cartStore';
 import { Button } from '@/components/ui/button';
@@ -60,11 +60,12 @@ import { MenuGridSkeleton, MenuListSkeleton } from '@/components/menu/MenuSkelet
 import { notificationService, type NotificationType } from '@/services/notificationService';
 import { NotificationBar } from '@/components/menu/NotificationBar';
 import { WaiterCallFAB } from '@/components/menu/WaiterCallFAB';
-import { Bell } from 'lucide-react';
+
 
 type ViewType = 'home' | 'search' | 'cart' | 'orders' | 'profile' | 'notifications';
 
 const CustomerMenu = () => {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const slug = searchParams.get('slug') || '';
@@ -129,25 +130,25 @@ const CustomerMenu = () => {
   );
 
   // Seat persisted alongside table — 4-hour TTL
-  const getPersistedSeat = (rId: string, tNum: string): number | null => {
+  const getPersistedSeats = (rId: string, tNum: string): number[] => {
     try {
       const raw = localStorage.getItem(`qr_seat_${rId}_${tNum}`);
-      if (!raw) return null;
-      const { seatNumber, expiresAt } = JSON.parse(raw);
+      if (!raw) return [];
+      const { seatNumbers, expiresAt } = JSON.parse(raw);
       if (Date.now() > expiresAt) {
         localStorage.removeItem(`qr_seat_${rId}_${tNum}`);
-        return null;
+        return [];
       }
-      return seatNumber || null;
+      return Array.isArray(seatNumbers) ? seatNumbers : (seatNumbers ? [seatNumbers] : []);
     } catch {
-      return null;
+      return [];
     }
   };
 
-  const [selectedSeatNumber, setSelectedSeatNumber] = useState<number | null>(() =>
+  const [selectedSeatNumbers, setSelectedSeatNumbers] = useState<number[]>(() =>
     restaurantId && (tableId || getPersistedTable(restaurantId))
-      ? getPersistedSeat(restaurantId, tableId || getPersistedTable(restaurantId))
-      : null
+      ? getPersistedSeats(restaurantId, tableId || getPersistedTable(restaurantId))
+      : []
   );
 
   // Pending table — awaiting seat confirmation before committing to state
@@ -170,7 +171,9 @@ const CustomerMenu = () => {
     type: NotificationType;
   } | null>(null);
 
-  const [currentView, setCurrentView] = useState<ViewType>('search');
+  const [currentView, setCurrentView] = useState<ViewType>(() => {
+    return (tableId || (restaurantId && getPersistedTable(restaurantId))) ? 'home' : 'search';
+  });
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedItemForDetails, setSelectedItemForDetails] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -357,24 +360,41 @@ const CustomerMenu = () => {
     staleTime: 5000,
   });
 
-  // Explicit session creation — called only from seat confirm signal
+  // Explicit session creation — called synchronously from seat confirm handler
   const createTableSession = useMutation({
-    mutationFn: async () => {
-      if (!restaurantId || !resolvedTableId) return null;
+    mutationFn: async (params: { restaurantId: string; tableId: string; seatNumbers: number[] }) => {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      // Get count of sessions today to generate token_no
+      const { count } = await supabase
+        .from('table_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('restaurant_id', params.restaurantId)
+        .gte('created_at', todayStart.toISOString());
+
+      const nextNo = (count || 0) + 1;
+      const tokenNo = `#${String(nextNo).padStart(3, '0')}`;
+
       const { data, error } = await supabase
         .from('table_sessions')
         .insert({
-          restaurant_id: restaurantId,
-          table_id: resolvedTableId,
+          restaurant_id: params.restaurantId,
+          table_id: params.tableId,
           status: 'seated',
           seated_at: new Date().toISOString(),
+          token_no: tokenNo,
+          seat_numbers: params.seatNumbers,
         })
         .select()
         .single();
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data) {
+        queryClient.setQueryData(['active-table-session', restaurantId, resolvedTableId], data);
+      }
       queryClient.invalidateQueries({ queryKey: ['active-table-session', restaurantId, resolvedTableId] });
     }
   });
@@ -383,24 +403,12 @@ const CustomerMenu = () => {
   const seatJustConfirmedRef = useRef(false);
 
   // Session lifecycle:
-  //   START   — only when seatJustConfirmedRef is set by handleSeatConfirm
   //   STOP    — billing marks status='completed' + completed_at (in BillingCounter)
   //   STALE   — auto-expire if > 4h or linked order is completed/cancelled
-  //   REFRESH — no restart; seated_at is in DB so derived timers stay accurate
   useEffect(() => {
     if (!restaurantId || !resolvedTableId || isDataLoading) return;
 
     const manageSession = async () => {
-      // CREATE — only on explicit seat confirmation
-      if (seatJustConfirmedRef.current) {
-        seatJustConfirmedRef.current = false;
-        if (!activeSession && !createTableSession.isPending) {
-          console.log('[Session] Seat confirmed — creating session.');
-          createTableSession.mutate();
-        }
-        return;
-      }
-
       // STALE — expire sessions older than 4h
       if (activeSession) {
         const seatedTime = new Date(activeSession.seated_at || '').getTime();
@@ -449,8 +457,7 @@ const CustomerMenu = () => {
     tableNumber 
   } = useCartStore();
 
-  // Query client for realtime invalidation
-  const queryClient = useQueryClient();
+  // Query client initialized at top of component
 
   // Set table from URL or dynamic selection
   useEffect(() => {
@@ -482,6 +489,23 @@ const CustomerMenu = () => {
     return '';
   });
 
+  const [readNotificationIds, setReadNotificationIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('zappy_read_notifications');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const markNotificationsAsRead = useCallback((ids: string[]) => {
+    setReadNotificationIds(prev => {
+      const updated = Array.from(new Set([...prev, ...ids]));
+      localStorage.setItem('zappy_read_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   useEffect(() => {
     // Generate device/customer identifier if not exists
     let deviceId = localStorage.getItem('zappy_device_id');
@@ -489,6 +513,31 @@ const CustomerMenu = () => {
       deviceId = crypto.randomUUID();
       localStorage.setItem('zappy_device_id', deviceId);
     }
+
+    // Query DB for matching profile
+    const fetchProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('customer_profiles')
+          .select('name, phone')
+          .eq('device_id', deviceId)
+          .maybeSingle();
+
+        if (data) {
+          if (data.name) setCustomerName(data.name);
+          if (data.phone) setCustomerPhone(data.phone);
+          
+          localStorage.setItem(
+            'zappy_customer_profile',
+            JSON.stringify({ name: data.name || '', phone: data.phone || '', deviceId })
+          );
+        }
+      } catch (err) {
+        console.error('Failed to fetch customer profile:', err);
+      }
+    };
+
+    fetchProfile();
   }, []);
 
   // Track category views in analytics
@@ -501,6 +550,13 @@ const CustomerMenu = () => {
       });
     }
   }, [selectedCategory, restaurantId]);
+
+  // Mark all notifications as read when the Alerts (notifications) view is active
+  useEffect(() => {
+    if (currentView === 'notifications' && tabNotifications.length > 0) {
+      markNotificationsAsRead(tabNotifications.map((n: any) => n.id));
+    }
+  }, [currentView, tabNotifications, markNotificationsAsRead]);
 
   // Log organic QR scans to database analytics
   const hasLoggedScanRef = useRef(false);
@@ -535,31 +591,63 @@ const CustomerMenu = () => {
   };
 
   // Stage 2: Seat confirmed — single atomic commit of table + seat + session start
-  const handleSeatConfirm = (tableNumber: string, seatNumber: number) => {
-    setDynamicTableId(tableNumber);
-    setSelectedSeatNumber(seatNumber);
-    seatJustConfirmedRef.current = true; // signal session effect to create exactly one session
-    setPendingSeatTable(null);
-    setCurrentView('home'); // ← redirect to Home immediately after confirm
+  const handleSeatConfirm = async (tableNumber: string, seatNumbers: number[]) => {
+    const tId = tableData?.id;
+    if (!restaurantId || !tId) {
+      toast({
+        title: 'Error',
+        description: 'Table data is not loaded yet. Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-    // Persist table
-    if (restaurantId) {
+    try {
+      // Create table session and wait for success
+      await createTableSession.mutateAsync({
+        restaurantId,
+        tableId: tId,
+        seatNumbers
+      });
+
+      setDynamicTableId(tableNumber);
+      setSelectedSeatNumbers(seatNumbers);
+      setPendingSeatTable(null);
+      setCurrentView('home'); // ← redirect to Home immediately after confirm
+
+      // Persist table
       localStorage.setItem(
         `qr_table_${restaurantId}`,
         JSON.stringify({ tableNumber, timestamp: Date.now() })
       );
-      // Persist seat with 4h TTL
+      // Persist seats with 4h TTL
       localStorage.setItem(
         `qr_seat_${restaurantId}_${tableNumber}`,
-        JSON.stringify({ seatNumber, expiresAt: Date.now() + 4 * 60 * 60 * 1000 })
+        JSON.stringify({ seatNumbers, expiresAt: Date.now() + 4 * 60 * 60 * 1000 })
       );
+      // Update URL without reload
+      const url = new URL(window.location.href);
+      url.searchParams.set('table', tableNumber);
+      window.history.replaceState({}, '', url.toString());
+    } catch (err: any) {
+      toast({
+        title: 'Session Activation Failed',
+        description: err?.message || 'Failed to start table session. Please try again.',
+        variant: 'destructive',
+      });
     }
-    // Update URL without reload
-    const url = new URL(window.location.href);
-    url.searchParams.set('table', tableNumber);
-    window.history.replaceState({}, '', url.toString());
-    // Session is created in the useEffect below once resolvedTableId is available
   };
+
+  // Effect to force seat selection if table is defined but no seats are selected
+  useEffect(() => {
+    if (dynamicTableId && selectedSeatNumbers.length === 0 && tableData && !pendingSeatTable) {
+      console.log("[QR Flow] Table detected without seat selection. Forcing SeatPickerDialog.");
+      setPendingSeatTable({
+        tableNumber: dynamicTableId,
+        capacity: tableData.capacity || 4
+      });
+    }
+  }, [dynamicTableId, selectedSeatNumbers, tableData, pendingSeatTable]);
 
   // Realtime subscriptions for live sync
   useEffect(() => {
@@ -596,6 +684,32 @@ const CustomerMenu = () => {
 
     return () => { supabase.removeChannel(channel); };
   }, [restaurantId, queryClient]);
+
+  // Realtime subscription for customer events (Alerts tab sync)
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    const channel = supabase
+      .channel(`customer-events-realtime-${restaurantId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'customer_events',
+          filter: `restaurant_id=eq.${restaurantId}`
+        },
+        (payload) => {
+          console.log('[Realtime customer_events] New event detected:', payload);
+          queryClient.invalidateQueries({ queryKey: ['notifications-tab-history', restaurantId, resolvedTableId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [restaurantId, resolvedTableId, queryClient]);
 
 
 
@@ -851,6 +965,16 @@ const CustomerMenu = () => {
       return;
     }
 
+    // Safety check to prevent RLS failure
+    if (createTableSession.isPending || (!activeSession && !isDemoMode)) {
+      toast({
+        title: 'Session not active',
+        description: 'Please wait for your table session to activate before ordering.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Rate Limit Check
     if (!checkRateLimit(`order_submit_${restaurantId}_${resolvedTableId}`, RATE_LIMITS.ORDER_SUBMIT.maxAttempts, RATE_LIMITS.ORDER_SUBMIT.windowMs)) {
       const cooldown = getRemainingCooldown(`order_submit_${restaurantId}_${resolvedTableId}`);
@@ -893,7 +1017,9 @@ const CustomerMenu = () => {
           idempotency_key: orderSessionId,
           customer_name: customerName.trim() || null,
           customer_phone: customerPhone.trim() || null,
-        },
+          token_no: activeSession?.token_no || null,
+          seat_numbers: activeSession?.seat_numbers || selectedSeatNumbers || null,
+        } as any,
         items: cartItems.map(item => ({
           name: item.name,
           quantity: item.quantity,
@@ -914,6 +1040,15 @@ const CustomerMenu = () => {
           'zappy_customer_profile',
           JSON.stringify({ name: customerName.trim(), phone: customerPhone.trim(), deviceId })
         );
+        // Upsert to database
+        supabase.from('customer_profiles').upsert({
+          device_id: deviceId,
+          name: customerName.trim(),
+          phone: customerPhone.trim(),
+          updated_at: new Date().toISOString()
+        }).then(({ error }) => {
+          if (error) console.error('Failed to upsert customer profile:', error);
+        });
       }
 
       // Save order to localStorage
@@ -939,7 +1074,7 @@ const CustomerMenu = () => {
       // Generate a new idempotency key for the next order
       setOrderSessionId(crypto.randomUUID());
       clearCart();
-      setCurrentView('orders');
+      setCurrentView('notifications');
     } catch (err: any) {
       console.error('Order placement failed:', err?.message || err);
       toast({
@@ -1116,7 +1251,7 @@ const CustomerMenu = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
-        <Card className="card-hover cursor-pointer border-primary/20" onClick={() => setCurrentView('menu')}>
+        <Card className="card-hover cursor-pointer border-primary/20" onClick={() => setCurrentView('search')}>
           <CardContent className="p-5 text-center">
             <Menu className="w-7 h-7 mx-auto mb-2 text-primary" />
             <p className="font-semibold text-sm">View Menu</p>
@@ -1149,7 +1284,7 @@ const CustomerMenu = () => {
   const renderMenu = () => (
     <div>
 
-      {/* Search + Scan QR */}
+      {/* Search */}
       <div className="sticky top-[56px] z-30 bg-background pb-3 -mx-4 px-4 pt-2 transition-all duration-300">
         <div className="flex items-center gap-3 mb-4">
           <div className="relative flex-1 flex items-center group">
@@ -1165,10 +1300,6 @@ const CustomerMenu = () => {
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
             </svg>
           </div>
-          <Button className="h-11 px-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white flex flex-col items-center justify-center gap-0.5 min-w-[64px] shadow-sm border border-emerald-500/20 active:scale-95 transition-transform">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
-            <span className="text-[9px] font-bold leading-none tracking-tight">Scan QR</span>
-          </Button>
         </div>
 
         {/* Categories */}
@@ -1475,18 +1606,6 @@ const CustomerMenu = () => {
 
   const renderOrders = () => (
     <div className="space-y-4">
-      {/* Active Order with Pipeline */}
-      {activeOrder && (
-        <div>
-          <OrderStatusPipeline currentStatus={activeOrder.status} />
-          <WaitingTimer
-            order={activeOrder}
-            estimatedMinutes={estimatedPrepTime}
-            currencySymbol={currencySymbol}
-          />
-        </div>
-      )}
-
       {displayOrders.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
@@ -1509,7 +1628,9 @@ const CustomerMenu = () => {
           <Card key={order.id} className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold">#{order.order_number}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  {order.token_no ? `TOKEN ${order.token_no}` : `#${order.order_number}`}
+                </span>
                 <Badge
                   className={
                     order.status === 'pending' ? 'bg-warning/20 text-warning border-0' :
@@ -1575,6 +1696,18 @@ const CustomerMenu = () => {
 
   const renderNotifications = () => (
     <div className="space-y-4">
+      {/* Active Order with Pipeline (Moved here from Orders view) */}
+      {activeOrder && (
+        <div className="mb-6">
+          <OrderStatusPipeline currentStatus={activeOrder.status} />
+          <WaitingTimer
+            order={activeOrder}
+            estimatedMinutes={estimatedPrepTime}
+            currencySymbol={currencySymbol}
+          />
+        </div>
+      )}
+
       <h3 className="font-extrabold text-xl tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">Notification History</h3>
       {tabNotifications.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
@@ -1586,19 +1719,39 @@ const CustomerMenu = () => {
         <div className="space-y-3">
           {tabNotifications.map((item: any) => {
             const data = item.event_data || {};
-            const isReady = item.event_type === 'notification_ready';
-            const isPreparing = item.event_type === 'notification_preparing';
-            const isDelivered = item.event_type === 'notification_delivered';
+            const type = item.event_type;
+
+            let icon = <Bell className="w-4 h-4" />;
+            let colorClass = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500';
+
+            if (type === 'notification_received') {
+              icon = <CheckCircle2 className="w-4 h-4" />;
+              colorClass = 'bg-emerald-500/10 text-emerald-500';
+            } else if (type === 'notification_preparing') {
+              icon = <ChefHat className="w-4 h-4" />;
+              colorClass = 'bg-amber-500/10 text-amber-500';
+            } else if (type === 'notification_ready') {
+              icon = <BellRing className="w-4 h-4" />;
+              colorClass = 'bg-emerald-500/10 text-emerald-500';
+            } else if (type === 'notification_delivered') {
+              icon = <Utensils className="w-4 h-4" />;
+              colorClass = 'bg-sky-500/10 text-sky-500';
+            } else if (type.includes('billing')) {
+              icon = <Receipt className="w-4 h-4" />;
+              colorClass = 'bg-purple-500/10 text-purple-500';
+            } else if (type.includes('waiter')) {
+              icon = <HandHelping className="w-4 h-4" />;
+              colorClass = 'bg-blue-500/10 text-blue-500';
+            } else if (type.includes('session_closed')) {
+              icon = <XCircle className="w-4 h-4" />;
+              colorClass = 'bg-destructive/10 text-destructive';
+            }
 
             return (
               <Card key={item.id} className="overflow-hidden border-zinc-150 dark:border-zinc-900/60 shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
                 <CardContent className="p-4 flex gap-3.5 items-start">
-                  <div className={`p-2 rounded-xl shrink-0 ${
-                    isReady ? 'bg-emerald-500/10 text-emerald-500' :
-                    isPreparing ? 'bg-amber-500/10 text-amber-500' :
-                    isDelivered ? 'bg-sky-500/10 text-sky-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
-                  }`}>
-                    <Bell className="w-4 h-4" />
+                  <div className={`p-2 rounded-xl shrink-0 ${colorClass}`}>
+                    {icon}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-1">
@@ -1682,13 +1835,15 @@ const CustomerMenu = () => {
         restaurantName={restaurant?.name || splashBranding?.name || ''}
         logoUrl={cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url)}
         tableNumber={tableNumber || 'Select Table'}
-        seatNumber={selectedSeatNumber ?? undefined}
+        seatNumber={selectedSeatNumbers.length > 0 ? selectedSeatNumbers : undefined}
         onSearchClick={() => setCurrentView('search')}
+        onAlertsClick={() => setCurrentView('notifications')}
+        onProfileClick={() => setCurrentView('profile')}
         primaryColor={primaryColor}
         branding={brandingConfig}
         restaurantId={restaurantId || undefined}
         tableId={resolvedTableId || undefined}
-        notificationCount={tabNotifications.length}
+        notificationCount={tabNotifications.filter((n: any) => !readNotificationIds.includes(n.id)).length}
       />
 
       {/* Content */}
@@ -1774,7 +1929,13 @@ const CustomerMenu = () => {
             type={activeNotification.type}
             onDismiss={() => setActiveNotification(null)}
             onActionClick={() => {
-              setCurrentView('orders');
+              if (activeNotification) {
+                markNotificationsAsRead([activeNotification.id]);
+              }
+              if (tabNotifications.length > 0) {
+                markNotificationsAsRead(tabNotifications.map((n: any) => n.id));
+              }
+              setCurrentView('notifications');
               setActiveNotification(null);
             }}
           />

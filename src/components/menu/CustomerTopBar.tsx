@@ -5,7 +5,6 @@ import { motion, useScroll } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { NotificationCenter } from "./NotificationCenter";
 
 interface BrandingConfig {
   animation_enabled?: boolean;
@@ -15,8 +14,10 @@ interface CustomerTopBarProps {
   restaurantName: string;
   logoUrl?: string | null;
   tableNumber: string;
-  seatNumber?: number;
+  seatNumber?: number | number[];
   onSearchClick: () => void;
+  onAlertsClick?: () => void;
+  onProfileClick?: () => void;
   primaryColor?: string;
   branding?: BrandingConfig;
   restaurantId?: string;
@@ -32,6 +33,8 @@ export function CustomerTopBar({
   tableNumber,
   seatNumber,
   onSearchClick,
+  onAlertsClick,
+  onProfileClick,
   primaryColor,
   branding,
   restaurantId,
@@ -129,7 +132,7 @@ export function CustomerTopBar({
                 variant="outline"
                 className="text-[8px] px-1.5 py-0 h-[14px] font-black uppercase bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20 dark:border-sky-400/20 leading-none shrink-0"
               >
-                Seat {seatNumber}
+                {Array.isArray(seatNumber) && seatNumber.length > 1 ? "Seats" : "Seat"} {Array.isArray(seatNumber) ? [...seatNumber].sort((a,b)=>a-b).join(', ') : seatNumber}
               </Badge>
             )}
             {avgRating !== undefined && totalReviews !== undefined && totalReviews > 0 && (
@@ -154,30 +157,25 @@ export function CustomerTopBar({
         </Button>
 
         {restaurantId && (
-          <NotificationCenter
-            restaurantId={restaurantId}
-            tableId={tableId}
-            trigger={
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative w-8 h-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 active:scale-95 transition-transform"
-                title="Notifications"
-              >
-                <Bell className="w-4 h-4" />
-                {notificationCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500 border border-white dark:border-zinc-950 shadow-[0_0_4px_rgba(244,63,94,0.4)]" />
-                )}
-              </Button>
-            }
-          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative w-8 h-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 active:scale-95 transition-transform"
+            onClick={onAlertsClick}
+            title="Notifications"
+          >
+            <Bell className="w-4 h-4" />
+            {notificationCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500 border border-white dark:border-zinc-950 shadow-[0_0_4px_rgba(244,63,94,0.4)]" />
+            )}
+          </Button>
         )}
 
         <img
           src={avatarUrl}
           alt=""
           className="w-7 h-7 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 object-cover cursor-pointer hover:scale-105 active:scale-95 transition-transform shrink-0"
-          onClick={() => navigate('/login')}
+          onClick={onProfileClick}
           title="Profile"
         />
       </div>

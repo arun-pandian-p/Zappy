@@ -4,9 +4,9 @@
   "description": "Smart QR-based digital menu and ordering system for restaurants",
   "icons": [
     {
-      "src": "/favicon.svg",
-      "type": "image/svg+xml",
-      "sizes": "any"
+      "src": "/favicon.png",
+      "type": "image/png",
+      "sizes": "512x512"
     },
     {
       "src": "/og-image.png",

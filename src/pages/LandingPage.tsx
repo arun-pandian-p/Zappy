@@ -6,12 +6,14 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import ScrollProgress from '@/components/landing/ScrollProgress';
 import HeroSection from '@/components/landing/HeroSection';
-import FeaturesSection from '@/components/landing/FeaturesSection';
-import HowItWorks from '@/components/landing/HowItWorks';
 import FAQSection from '@/components/landing/FAQSection';
-import CTABanner from '@/components/landing/CTABanner';
-import Footer from '@/components/landing/Footer';
 import ParallaxSection from '@/components/landing/ParallaxSection';
+import { Problem } from '@/pages/Landing/sections/Problem';
+import { Solution } from '@/pages/Landing/sections/Solution';
+import { Features } from '@/pages/Landing/sections/Features';
+import { Proof } from '@/pages/Landing/sections/Proof';
+import { CTA } from '@/pages/Landing/sections/CTA';
+import { Footer } from '@/pages/Landing/Footer';
 import { useLandingCMS } from '@/hooks/useLandingCMS';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -129,10 +131,21 @@ const LandingPage = () => {
   }, []);
 
   const navLinks = [
+    { label: 'Problem', href: '#problem' },
+    { label: 'Solution', href: '#solution' },
     { label: 'Features', href: '#features' },
-    { label: 'How It Works', href: '#how-it-works' },
+    { label: 'Results', href: '#proof' },
     { label: 'FAQ', href: '#faq' }
   ];
+
+  const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    setMobileMenuOpen(false);
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,6 +168,7 @@ const LandingPage = () => {
                 <a
                   key={link.href}
                   href={link.href}
+                  onClick={(e) => handleScrollTo(e, link.href)}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left">
                   {link.label}
                 </a>
@@ -193,8 +207,8 @@ const LandingPage = () => {
                   <a
                     key={link.href}
                     href={link.href}
-                    className="block text-sm text-muted-foreground hover:text-foreground"
-                    onClick={() => setMobileMenuOpen(false)}>
+                    onClick={(e) => handleScrollTo(e, link.href)}
+                    className="block text-sm text-muted-foreground hover:text-foreground">
                     {link.label}
                   </a>
                 )}
@@ -221,26 +235,27 @@ const LandingPage = () => {
           />
         }
 
-        {/* 2. Features */}
-        {isVisible('features') &&
-          <ParallaxSection yOffset={35} fadeIn>
-            <div id="features">
-              <FeaturesSection cms={cms.features?.content} />
-            </div>
-          </ParallaxSection>
-        }
+        {/* 2. Problem */}
+        <ParallaxSection yOffset={35} fadeIn>
+          <Problem />
+        </ParallaxSection>
 
-        {/* 3. How it works */}
-        {isVisible('how_it_works') &&
-          <ParallaxSection yOffset={30} fadeIn>
-            <div id="how-it-works">
-              <HowItWorks cms={cms.how_it_works?.content} />
-            </div>
-          </ParallaxSection>
-        }
+        {/* 3. Solution Flow */}
+        <ParallaxSection yOffset={30} fadeIn>
+          <Solution />
+        </ParallaxSection>
 
+        {/* 4. Features */}
+        <ParallaxSection yOffset={30} fadeIn>
+          <Features />
+        </ParallaxSection>
 
-        {/* 5. FAQ */}
+        {/* 5. Proof / Results */}
+        <ParallaxSection yOffset={25} fadeIn>
+          <Proof />
+        </ParallaxSection>
+
+        {/* FAQ */}
         <ParallaxSection yOffset={20} fadeIn>
           <div id="faq">
             <FAQSection />
@@ -248,13 +263,17 @@ const LandingPage = () => {
         </ParallaxSection>
 
         {/* 6. CTA Banner */}
-        {isVisible('cta_banner') &&
-          <CTABanner onGetStarted={handleGetStarted} cms={cms.cta_banner?.content} />
-        }
+        <ParallaxSection yOffset={20} fadeIn>
+          <CTA 
+            onGetStarted={handleGetStarted}
+            onBookDemo={() => setBookDemoOpen(true)}
+            onWatchTour={() => setTourOpen(true)}
+          />
+        </ParallaxSection>
       </main>
 
       {/* 9. Footer */}
-      {isVisible('footer') && <Footer cms={cms.footer?.content} />}
+      <Footer />
 
       {/* Floating Book Demo button */}
       <AnimatePresence>

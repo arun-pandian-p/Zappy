@@ -41,6 +41,8 @@ import BlogPost from "./pages/blog/BlogPost";
 
 const queryClient = new QueryClient();
 
+import { ErrorBoundary } from "./components/ErrorBoundary";
+
 // Redirect from zappy.ind.in to www.zappy.ind.in
 if (typeof window !== "undefined" && 
     window.location.hostname === "zappy.ind.in") {
@@ -48,90 +50,92 @@ if (typeof window !== "undefined" &&
 }
 
 const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ImpersonationBanner />
-        <Toaster />
-        <Sonner />
-        <Analytics />
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true,
-          }}
-        >
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/roles" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/super-admin/login" element={<SuperAdminLogin />} />
-            <Route path="/admin/login" element={<TenantAdminLogin />} />
-            <Route path="/tenant-admin/login" element={<TenantAdminLogin />} />
-            <Route path="/customer-menu" element={<CustomerMenu />} />
-            <Route path="/order" element={<CustomerMenu />} />
-            <Route path="/menu" element={<CustomerMenu />} />
-            <Route path="/feedback" element={<FeedbackPage />} />
-            <Route path="/guide" element={<UserGuide />} />
-            <Route path="/request-quote" element={<RequestQuote />} />
-            <Route path="/r/:id" element={<QRRedirect />} />
+  <ErrorBoundary>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ImpersonationBanner />
+          <Toaster />
+          <Sonner />
+          <Analytics />
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/roles" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+              <Route path="/admin/login" element={<TenantAdminLogin />} />
+              <Route path="/tenant-admin/login" element={<TenantAdminLogin />} />
+              <Route path="/customer-menu" element={<ErrorBoundary><CustomerMenu /></ErrorBoundary>} />
+              <Route path="/order" element={<ErrorBoundary><CustomerMenu /></ErrorBoundary>} />
+              <Route path="/menu" element={<ErrorBoundary><CustomerMenu /></ErrorBoundary>} />
+              <Route path="/feedback" element={<FeedbackPage />} />
+              <Route path="/guide" element={<UserGuide />} />
+              <Route path="/request-quote" element={<RequestQuote />} />
+              <Route path="/r/:id" element={<QRRedirect />} />
 
-            {/* SEO Landing Routes */}
-            <Route path="/menu-ocr" element={<MenuOCR />} />
-            <Route path="/restaurant-menu-management" element={<RestaurantMenuManagement />} />
-            <Route path="/digital-menu-software" element={<DigitalMenuSoftware />} />
-            <Route path="/restaurant-ocr" element={<RestaurantOCR />} />
-            <Route path="/ai-food-images" element={<AIFoodImages />} />
-            <Route path="/qr-menu-generator" element={<QRMenuGenerator />} />
+              {/* SEO Landing Routes */}
+              <Route path="/menu-ocr" element={<MenuOCR />} />
+              <Route path="/restaurant-menu-management" element={<RestaurantMenuManagement />} />
+              <Route path="/digital-menu-software" element={<DigitalMenuSoftware />} />
+              <Route path="/restaurant-ocr" element={<RestaurantOCR />} />
+              <Route path="/ai-food-images" element={<AIFoodImages />} />
+              <Route path="/qr-menu-generator" element={<QRMenuGenerator />} />
 
-            {/* Blog Routes */}
-            <Route path="/blog" element={<BlogIndex />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
+              {/* Blog Routes */}
+              <Route path="/blog" element={<BlogIndex />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
 
-          {/* Staff routes — role-guarded */}
-          <Route path="/kitchen" element={
-            <RoleGuard allowedRoles={['kitchen_staff', 'restaurant_admin']}>
-              <KitchenDashboard />
-            </RoleGuard>
-          } />
-          <Route path="/waiter" element={
-            <RoleGuard allowedRoles={['waiter_staff', 'restaurant_admin']}>
-              <WaiterDashboard />
-            </RoleGuard>
-          } />
-          <Route path="/billing" element={
-            <RoleGuard allowedRoles={['billing_staff', 'restaurant_admin']}>
-              <BillingCounter />
-            </RoleGuard>
-          } />
+            {/* Staff routes — role-guarded */}
+            <Route path="/kitchen" element={
+              <RoleGuard allowedRoles={['kitchen_staff', 'restaurant_admin']}>
+                <ErrorBoundary><KitchenDashboard /></ErrorBoundary>
+              </RoleGuard>
+            } />
+            <Route path="/waiter" element={
+              <RoleGuard allowedRoles={['waiter_staff', 'restaurant_admin']}>
+                <ErrorBoundary><WaiterDashboard /></ErrorBoundary>
+              </RoleGuard>
+            } />
+            <Route path="/billing" element={
+              <RoleGuard allowedRoles={['billing_staff', 'restaurant_admin']}>
+                <ErrorBoundary><BillingCounter /></ErrorBoundary>
+              </RoleGuard>
+            } />
 
-          {/* Admin routes — role-guarded */}
-          <Route path="/admin" element={
-            <RoleGuard allowedRoles={['restaurant_admin']}>
-              <AdminDashboard />
-            </RoleGuard>
-          } />
-          <Route path="/admin/onboarding" element={
-            <RoleGuard allowedRoles={['restaurant_admin']}>
-              <AdminOnboarding />
-            </RoleGuard>
-          } />
-          <Route path="/super-admin" element={
-            <RoleGuard allowedRoles={['super_admin']}>
-              <SuperAdminDashboard />
-            </RoleGuard>
-          } />
+            {/* Admin routes — role-guarded */}
+            <Route path="/admin" element={
+              <RoleGuard allowedRoles={['restaurant_admin']}>
+                <ErrorBoundary><AdminDashboard /></ErrorBoundary>
+              </RoleGuard>
+            } />
+            <Route path="/admin/onboarding" element={
+              <RoleGuard allowedRoles={['restaurant_admin']}>
+                <ErrorBoundary><AdminOnboarding /></ErrorBoundary>
+              </RoleGuard>
+            } />
+            <Route path="/super-admin" element={
+              <RoleGuard allowedRoles={['super_admin']}>
+                <ErrorBoundary><SuperAdminDashboard /></ErrorBoundary>
+              </RoleGuard>
+            } />
 
-          {/* Catch-all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-  </HelmetProvider>
+            {/* Catch-all */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+    </HelmetProvider>
+  </ErrorBoundary>
 );
 
 export default App;

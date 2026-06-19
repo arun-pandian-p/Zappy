@@ -50,7 +50,8 @@ export function NotificationBar({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -20, scale: 0.95 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="fixed top-20 left-4 right-4 z-50 max-w-md mx-auto"
+      className="fixed top-20 left-4 right-4 z-50 max-w-md mx-auto cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-transform"
+      onClick={onActionClick}
     >
       <div
         className={`${config.bgColor} border ${config.borderColor} rounded-2xl p-4 shadow-xl backdrop-blur-md flex gap-3.5 items-start relative overflow-hidden`}
@@ -71,17 +72,14 @@ export function NotificationBar({
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
             {message}
           </p>
-          <button
-            onClick={onActionClick}
-            className="flex items-center gap-1 mt-2.5 text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 active:scale-95 transition-all"
-          >
-            Track Order status <ArrowRight className="w-3.5 h-3.5" />
-          </button>
         </div>
 
         {/* Close Button */}
         <button
-          onClick={onDismiss}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDismiss();
+          }}
           className="absolute top-3.5 right-3.5 p-1 rounded-full text-zinc-400 hover:text-zinc-500 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 active:scale-90 transition-all"
         >
           <X className="w-3.5 h-3.5" />

@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { Clock, Users, AlertTriangle, CheckCircle2, ChefHat, Receipt, Timer } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useTableSessions } from "@/hooks/useTableSessions";
+import { useActiveTableSessions, useUpdateTableSession } from "@/hooks/useTableSessions";
+import { Button } from "@/components/ui/button";
 import { useTables } from "@/hooks/useTables";
 
 interface TableSessionTimersProps {
@@ -52,7 +53,8 @@ function getDurationBgColor(seconds: number, type: "wait" | "prep" | "service"):
 }
 
 export function TableSessionTimers({ restaurantId }: TableSessionTimersProps) {
-  const { data: sessions = [] } = useTableSessions(restaurantId);
+  const { data: sessions = [] } = useActiveTableSessions(restaurantId);
+  const updateSession = useUpdateTableSession();
   const { data: tables = [] } = useTables(restaurantId);
   const [now, setNow] = useState(Date.now());
 
@@ -182,8 +184,18 @@ export function TableSessionTimers({ restaurantId }: TableSessionTimersProps) {
                     {session.status || "waiting"}
                   </Badge>
                 </div>
-                <div className="text-sm font-mono text-muted-foreground">
-                  Total: {formatDuration(session.totalTime)}
+                <div className="flex items-center gap-3">
+                  <div className="text-sm font-mono text-muted-foreground">
+                    Total: {formatDuration(session.totalTime)}
+                  </div>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="h-7 px-2 text-xs font-semibold tracking-wide"
+                    onClick={() => updateSession.mutate({ id: session.id, updates: { status: 'completed', completed_at: new Date().toISOString() } })}
+                  >
+                    Kill Session
+                  </Button>
                 </div>
               </div>
 

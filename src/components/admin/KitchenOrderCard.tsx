@@ -105,13 +105,22 @@ export const KitchenOrderCard = ({
         )}
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className={`font-bold ${tableBadgeSize}`}>
-                {order.table?.table_number || 'N/A'}
-              </Badge>
-              <span className={`text-xs text-muted-foreground ${isTvMode ? 'text-sm' : ''}`}>#{order.order_number}</span>
-              {urgent && <Badge variant="destructive" className={badgeSize}>URGENT</Badge>}
-              {overdue && <Badge variant="destructive" className={`${badgeSize} animate-pulse`}>OVERDUE</Badge>}
+            <div className="flex flex-col gap-1">
+              <div className="text-lg font-black tracking-tight text-foreground">
+                {order.token_no ? `TOKEN ${order.token_no}` : `TOKEN #${String(order.order_number).padStart(3, '0')}`}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className={`font-bold ${tableBadgeSize}`}>
+                  Table {order.table?.table_number || 'N/A'}
+                </Badge>
+                {order.seat_numbers && (order.seat_numbers as number[]).length > 0 && (
+                  <Badge variant="secondary" className="font-bold">
+                    Seats {(order.seat_numbers as number[]).join(', ')}
+                  </Badge>
+                )}
+                {urgent && <Badge variant="destructive" className={badgeSize}>URGENT</Badge>}
+                {overdue && <Badge variant="destructive" className={`${badgeSize} animate-pulse`}>OVERDUE</Badge>}
+              </div>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               {prepMins !== null && (

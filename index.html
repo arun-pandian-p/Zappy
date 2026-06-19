@@ -21,11 +21,11 @@
           }
         }
 
-        // Failsafe for cached script chunk loading errors (e.g. MIME type or 404 errors)
+        // Failsafe for cached script chunk loading errors
         function clearCachesAndReload() {
           var lastReload = sessionStorage.getItem('zappy_failsafe_reload');
           var now = Date.now();
-          if (lastReload && (now - parseInt(lastReload) < 10000)) {
+          if (lastReload && (now - parseInt(lastReload) < 15000)) {
             console.error('Failsafe triggered too recently, skipping reload to prevent loop.');
             return;
           }
@@ -53,13 +53,12 @@
           if (window.caches) {
             caches.keys().then(function(keys) {
               Promise.all(keys.map(function(k) { return caches.delete(k); })).then(function() {
-                window.location.reload(true);
+                // Remove aggressive automatic reload, let user reload or gracefully fallback
+                console.warn('Caches cleared. A manual reload may be required.');
               }).catch(function() {
-                window.location.reload(true);
+                console.warn('Caches cleared (with error).');
               });
             });
-          } else {
-            window.location.reload(true);
           }
         }
 
@@ -92,14 +91,13 @@
     <title>ZAPPY — The Restaurant Operating System</title>
     <meta name="description" content="One platform for menus, orders, billing, kitchen workflows, analytics, and customer experiences. The complete Restaurant Operating System." />
     <meta name="author" content="ZAPPY" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Zappy" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet" />
 
     <meta name="keywords" content="digital menu, QR code menu, restaurant ordering system, smart menu, contactless dining" />

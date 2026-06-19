@@ -124,6 +124,49 @@ export const PostOrderReviewPrompt = ({
         redirected_to_google: overallRating >= 4 && !!googleReviewUrl,
       });
 
+      // Save to enterprise_reviews
+      const { data: revData, error: revError } = await supabase.from('enterprise_reviews').insert({
+        restaurant_id: restaurantId,
+        table_id: tableId || null,
+        order_id: orderId,
+        overall_rating: overallRating,
+        comment: comment.trim() || null,
+        redirected_to_google: overallRating >= 4 && !!googleReviewUrl,
+        source: 'qr',
+        status: 'published'
+      }).select('id').single();
+
+      if (revError) {
+        console.error('Failed to save to enterprise_reviews:', revError);
+      } else if (revData?.id) {
+        const reviewId = revData.id;
+        
+        // Save to review_ai_insights
+        const sentiment = overallRating >= 4 ? 'positive' : (overallRating === 3 ? 'neutral' : (overallRating === 2 ? 'negative' : 'angry'));
+        const { error: aiError } = await supabase.from('review_ai_insights').insert({
+          review_id: reviewId,
+          restaurant_id: restaurantId,
+          sentiment,
+          is_complaint: overallRating <= 3,
+          complaint_categories: overallRating <= 3 ? ['customer_feedback'] : [],
+          positive_highlights: overallRating >= 4 ? ['good_experience'] : [],
+          suggested_reply: overallRating >= 4 ? 'Thank you for your review! We look forward to serving you again.' : 'We are sorry to hear that. A manager will look into this immediately.'
+        });
+        if (aiError) console.error('Failed to save review_ai_insights:', aiError);
+
+        // Save to review_recoveries if rating <= 3
+        if (overallRating <= 3) {
+          const { error: recError } = await supabase.from('review_recoveries').insert({
+            review_id: reviewId,
+            restaurant_id: restaurantId,
+            status: 'pending',
+            action_type: 'apology_sent',
+            manager_notes: 'Automated recovery workflow started for low rating.'
+          });
+          if (recError) console.error('Failed to save review_recoveries:', recError);
+        }
+      }
+
       if (overallRating >= 4 && googleReviewUrl) {
         setStep('google');
       } else {

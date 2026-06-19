@@ -13,8 +13,10 @@ interface SeatPickerOverlayProps {
   restaurantName?: string;
   /** Brand primary color */
   primaryColor?: string;
-  /** Called when user confirms with table + seat — single atomic commit */
-  onConfirm: (tableNumber: string, seatNumber: number) => void;
+  /** Occupied seats to disable */
+  occupiedSeats?: number[];
+  /** Called when user confirms with table + seats — single atomic commit */
+  onConfirm: (tableNumber: string, seatNumbers: number[]) => void;
 }
 
 export function SeatPickerDialog({
@@ -25,8 +27,9 @@ export function SeatPickerDialog({
   restaurantName,
   primaryColor,
   onConfirm,
+  occupiedSeats = [],
 }: SeatPickerOverlayProps) {
-  const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [logoFailed, setLogoFailed] = useState(false);
 
   const accentColor = primaryColor || "#10b981"; // emerald-500 default
@@ -117,19 +120,29 @@ export function SeatPickerDialog({
               }}
             >
               {Array.from({ length: capacity }, (_, i) => i + 1).map((seat) => {
-                const isSelected = selectedSeat === seat;
+                const isOccupied = occupiedSeats.includes(seat);
+                const isSelected = selectedSeats.includes(seat);
                 return (
                   <motion.button
                     key={seat}
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => setSelectedSeat(seat)}
+                    whileTap={!isOccupied ? { scale: 0.92 } : undefined}
+                    onClick={() => {
+                      if (!isOccupied) {
+                        setSelectedSeats(prev => 
+                          prev.includes(seat) ? prev.filter(s => s !== seat) : [...prev, seat]
+                        );
+                      }
+                    }}
+                    disabled={isOccupied}
                     className={`h-16 rounded-2xl flex flex-col items-center justify-center gap-1 border-2 transition-all font-semibold text-sm ${
-                      isSelected
+                      isOccupied
+                        ? "bg-zinc-100 dark:bg-zinc-800 border-transparent text-zinc-400 dark:text-zinc-600 cursor-not-allowed opacity-60"
+                        : isSelected
                         ? "shadow-md"
                         : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-zinc-300"
                     }`}
                     style={
-                      isSelected
+                      isSelected && !isOccupied
                         ? {
                             background: `${accentColor}18`,
                             borderColor: accentColor,
@@ -138,7 +151,7 @@ export function SeatPickerDialog({
                         : undefined
                     }
                   >
-                    {isSelected ? (
+                    {isSelected && !isOccupied ? (
                       <CheckCircle2 className="w-5 h-5" />
                     ) : (
                       <Armchair className="w-4 h-4" />
@@ -152,15 +165,15 @@ export function SeatPickerDialog({
             <Button
               className="w-full h-14 rounded-2xl text-base font-bold transition-all"
               style={
-                selectedSeat
+                selectedSeats.length > 0
                   ? { backgroundColor: accentColor, color: "#fff", opacity: 1 }
                   : { opacity: 0.45 }
               }
-              disabled={!selectedSeat}
-              onClick={() => selectedSeat && onConfirm(tableNumber, selectedSeat)}
+              disabled={selectedSeats.length === 0}
+              onClick={() => selectedSeats.length > 0 && onConfirm(tableNumber, selectedSeats)}
             >
-              {selectedSeat
-                ? `Confirm Seat ${selectedSeat} at Table ${tableNumber}`
+              {selectedSeats.length > 0
+                ? `Confirm Seats (${[...selectedSeats].sort((a,b)=>a-b).join(',')})`
                 : "Pick a seat to continue"}
             </Button>
           </motion.div>

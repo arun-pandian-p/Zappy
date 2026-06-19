@@ -139,7 +139,7 @@ export function WaitingTimer({
                 </span>
               </div>
               <Badge variant="outline" className="border-current">
-                #{order.order_number}
+                {order.token_no ? `TOKEN ${order.token_no}` : `#${order.order_number}`}
               </Badge>
             </div>
           </div>

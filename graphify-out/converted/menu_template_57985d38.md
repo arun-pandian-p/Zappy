@@ -1,0 +1,10 @@
+<!-- converted from menu_template.xlsx -->
+
+## Sheet: Menu Template
+| Item Name | Price | Category | Description |
+| --- | --- | --- | --- |
+| Masala Dosa | 120 | Breakfast | Crispy crepe with spiced potato filling |
+| Paneer Butter Masala | 220 | Main Course | Cottage cheese cubes in rich tomato gravy |
+| Chicken Biryani | 280 | Rice & Breads | Aromatic basmati rice cooked with spiced chicken |
+| Mango Lassi | 80 | Drinks | Creamy yogurt drink with mango pulp |
+| Gulab Jamun | 60 | Desserts | Deep fried milk solid balls in sugar syrup |

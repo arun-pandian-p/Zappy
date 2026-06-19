@@ -34,7 +34,10 @@
     },
     "higgsfield": {
       "type": "http",
-      "url": "https://mcp.higgsfield.ai/mcp"
+      "url": "https://mcp.higgsfield.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer a1d1c7cd-6ab6-4ac3-b93b-db354c7e0db9"
+      }
     }
   }
 }
