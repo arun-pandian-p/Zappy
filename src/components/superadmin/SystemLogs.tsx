@@ -4,12 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useSystemLogs } from '@/hooks/useSystemLogs';
+import { useSuperAdminLogs } from '@/hooks/useSuperAdminLogs';
 import { format } from 'date-fns';
 
 export function SystemLogs() {
   const [search, setSearch] = useState('');
-  const { logs, isLoading } = useSystemLogs(search || undefined);
+  const { logs, isLoading } = useSuperAdminLogs(search || undefined);
 
   const actionColors: Record<string, string> = {
     create_tenant: 'bg-green-100 text-green-700',
