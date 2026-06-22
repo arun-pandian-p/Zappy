@@ -17,7 +17,6 @@ const Login = () => {
   const { signIn, user, role, loading: authLoading, getRouteForRole } = useAuth();
 
   const [email, setEmail] = useState('');
-  const [restaurantSlug, setRestaurantSlug] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,15 +36,7 @@ const Login = () => {
     }
     setLoading(true);
 
-    let loginEmail = email.trim();
-    if (!loginEmail.includes('@')) {
-      if (!restaurantSlug.trim()) {
-        toast({ title: 'Missing Restaurant Slug', description: 'Please enter your restaurant slug when logging in with a username.', variant: 'destructive' });
-        setLoading(false);
-        return;
-      }
-      loginEmail = `${loginEmail.toLowerCase()}@${restaurantSlug.trim().toLowerCase()}.zappy.local`;
-    }
+    const loginEmail = email.trim();
 
     const { error } = await signIn(loginEmail, password);
     if (error) {
@@ -138,21 +129,6 @@ const Login = () => {
                 />
               </div>
             </div>
-
-            {!email.includes('@') && email.length > 0 && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 ml-1">Restaurant Code / Slug</label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder="e.g. the-food-place"
-                    value={restaurantSlug}
-                    onChange={(e) => setRestaurantSlug(e.target.value)}
-                    className="h-11 bg-slate-50 border-slate-200"
-                  />
-                </div>
-              </motion.div>
-            )}
 
             <div className="space-y-2">
               <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Password</label>

@@ -13,7 +13,6 @@ import { Solution } from '@/pages/landing/sections/Solution';
 import { Features } from '@/pages/landing/sections/Features';
 import { Proof } from '@/pages/landing/sections/Proof';
 import { CTA } from '@/pages/landing/sections/CTA';
-import Footer from '@/components/landing/Footer';
 import { useLandingCMS } from '@/hooks/useLandingCMS';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -268,8 +267,6 @@ const LandingPage = () => {
         </ParallaxSection>
       </main>
 
-      {/* 9. Footer */}
-      <Footer />
 
       {/* Floating Book Demo button */}
       <AnimatePresence>

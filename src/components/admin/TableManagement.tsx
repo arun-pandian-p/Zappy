@@ -504,8 +504,8 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
                     const hasOrder = bills.some(b => b.hasOrder);
                     
                     return (
-                      <Card key={m.id} className="border border-blue-200 shadow-sm relative overflow-hidden bg-white">
-                        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[140px]">
+                      <Card key={m.id} className="border border-blue-200 shadow-sm relative overflow-hidden bg-white flex flex-col min-h-[160px]">
+                        <CardContent className="p-4 flex flex-col justify-between flex-grow">
                           <div>
                             <div className="flex justify-between items-start">
                               <span className="font-black text-lg text-blue-900">{m.name}</span>
@@ -584,11 +584,11 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
                         <Card 
                           key={table.id} 
                           onClick={() => handleSelectTable(table.id)}
-                          className={`border cursor-pointer transition-all ${
+                          className={`border cursor-pointer transition-all flex flex-col min-h-[175px] ${
                             isSelected ? "ring-2 ring-primary border-primary" : "hover:border-slate-300"
                           }`}
                         >
-                          <CardContent className="p-4 flex flex-col justify-between h-full min-h-[150px]">
+                          <CardContent className="p-4 flex flex-col justify-between flex-grow">
                             {/* Card Top */}
                             <div>
                               <div className="flex justify-between items-start">

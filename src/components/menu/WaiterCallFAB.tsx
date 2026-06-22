@@ -353,7 +353,7 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber }: WaiterCall
       {/* Slide up panel options */}
       <AnimatePresence>
         {showDrawer && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center p-4 bg-zinc-950/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 bg-zinc-950/40 backdrop-blur-sm">
             <motion.div
               initial={{ y: 200, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
