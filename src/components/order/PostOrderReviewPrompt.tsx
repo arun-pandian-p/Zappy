@@ -20,6 +20,10 @@ interface PostOrderReviewPromptProps {
   delayMs?: number;
   onClose?: () => void;
   immediate?: boolean;
+  seatSessionId?: string;
+  seatNumbers?: number[];
+  tableNumber?: string;
+  onSessionClosed?: () => void;
 }
 
 const STORAGE_KEY_PREFIX = 'enterprise_review_shown_';
@@ -32,6 +36,10 @@ export const PostOrderReviewPrompt = ({
   delayMs = 5000,
   onClose,
   immediate = false,
+  seatSessionId,
+  seatNumbers,
+  tableNumber,
+  onSessionClosed,
 }: PostOrderReviewPromptProps) => {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -42,8 +50,9 @@ export const PostOrderReviewPrompt = ({
   const [ambianceRating, setAmbianceRating] = useState(0);
   
   const [comment, setComment] = useState('');
-  const [step, setStep] = useState<'overall' | 'details' | 'feedback' | 'google' | 'done'>('overall');
+  const [step, setStep] = useState<'overall' | 'details' | 'feedback' | 'google' | 'thank_you' | 'done'>('overall');
   const [submitting, setSubmitting] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   
   const { toast } = useToast();
   const storageKey = `${STORAGE_KEY_PREFIX}${orderId}`;
@@ -57,6 +66,7 @@ export const PostOrderReviewPrompt = ({
     setStep('overall');
     setIsOpen(false);
     setSubmitting(false);
+    setCountdown(5);
   }, [orderId]);
 
   useEffect(() => {
@@ -80,6 +90,24 @@ export const PostOrderReviewPrompt = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, delayMs, immediate]);
 
+  // Countdown timer for session closing
+  useEffect(() => {
+    if (step !== 'thank_you') return;
+
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleFinalClose();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [step]);
+
   const quickChips = overallRating >= 4 
     ? ["Delicious!", "Fast Service", "Friendly Staff", "Great Ambiance"]
     : ["Cold Food", "Slow Service", "Rude Staff", "Too Spicy", "Small Portions", "Overpriced"];
@@ -96,6 +124,78 @@ export const PostOrderReviewPrompt = ({
     if (overallRating === 0) return;
     // Ask for details, but keep it short
     setStep('details');
+  };
+
+  const handleFinalClose = async () => {
+    if (step === 'done') return;
+
+    try {
+      // 1. Release occupied seats
+      if (tableId && seatNumbers && seatNumbers.length > 0) {
+        await supabase
+          .from('seat_occupancy')
+          .update({ status: 'available' })
+          .eq('table_id', tableId)
+          .in('seat_number', seatNumbers);
+      }
+
+      // 2. Update table occupancy & status
+      if (tableId) {
+        const { data: activeSeats } = await supabase
+          .from('seat_occupancy')
+          .select('id')
+          .eq('table_id', tableId)
+          .eq('status', 'occupied');
+
+        // Check if table is fully empty now and auto-close session
+        if (!activeSeats || activeSeats.length === 0) {
+          // Close all active table sessions for this table
+          await supabase
+            .from('table_sessions')
+            .update({ status: 'completed', completed_at: new Date().toISOString() })
+            .eq('table_id', tableId)
+            .neq('status', 'completed');
+
+          // Reset table status to Available
+          await supabase
+            .from('tables')
+            .update({ status: 'available' })
+            .eq('id', tableId);
+        } else {
+          // Table still has seats occupied. If it was full, downgrade to occupied.
+          const { data: tableData } = await supabase
+            .from('tables')
+            .select('status, capacity')
+            .eq('id', tableId)
+            .single();
+
+          if (tableData && tableData.status === 'full' && activeSeats.length < (tableData.capacity || 4)) {
+            await supabase
+              .from('tables')
+              .update({ status: 'occupied' })
+              .eq('id', tableId);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error during post-review session teardown:', err);
+    }
+
+    // 3. Clear local storage for seat session and table
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`reviewed_${orderId}`, 'true');
+      localStorage.setItem(storageKey, 'true');
+      if (restaurantId && tableNumber) {
+        localStorage.removeItem(`zappy_seat_session_${restaurantId}_${tableNumber}`);
+        localStorage.removeItem(`qr_table_${restaurantId}`);
+      }
+    }
+
+    setIsOpen(false);
+    setStep('done');
+    
+    if (onClose) onClose();
+    if (onSessionClosed) onSessionClosed();
   };
 
   const handleSubmitAll = useCallback(async () => {
@@ -167,16 +267,11 @@ export const PostOrderReviewPrompt = ({
         }
       }
 
-      if (overallRating >= 4 && googleReviewUrl) {
-        setStep('google');
-      } else {
-        handleClose();
-        toast({ title: 'Thank you for your feedback! 🙏' });
-      }
+      setStep('thank_you');
 
     } catch (err) {
       toast({ title: 'Error', description: 'Could not save feedback.', variant: 'destructive' });
-      handleClose();
+      handleFinalClose();
     } finally {
       setSubmitting(false);
     }
@@ -187,17 +282,11 @@ export const PostOrderReviewPrompt = ({
       window.open(googleReviewUrl, '_blank');
     }
     toast({ title: 'Thank you! 🌟', description: 'Your review means a lot to us!' });
-    handleClose();
+    handleFinalClose();
   };
 
   const handleClose = () => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(`reviewed_${orderId}`, 'true');
-      localStorage.setItem(storageKey, 'true');
-    }
-    setIsOpen(false);
-    setStep('done');
-    if (onClose) onClose();
+    handleFinalClose();
   };
 
   const isReviewed = typeof window !== 'undefined' && 
@@ -218,6 +307,7 @@ export const PostOrderReviewPrompt = ({
               {step === 'overall' && 'How was everything?'}
               {step === 'details' && 'Tell us more 💭'}
               {step === 'google' && "We're thrilled! 🎉"}
+              {step === 'thank_you' && 'Thank You! ❤️'}
             </DialogTitle>
           </div>
 
@@ -310,6 +400,28 @@ export const PostOrderReviewPrompt = ({
                   </Button>
                   <Button variant="ghost" onClick={handleClose} className="w-full rounded-xl">
                     Maybe Later
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 4: Thank You Popup with Countdown */}
+            {step === 'thank_you' && (
+              <motion.div key="thank_you" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-6 text-center space-y-6">
+                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="text-6xl my-4 animate-bounce">
+                  🙏
+                </motion.div>
+                <p className="text-sm text-muted-foreground">
+                  Your feedback has been submitted successfully.
+                </p>
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+                  <p className="text-sm font-semibold text-primary">
+                    Session will close in {countdown} seconds...
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <Button onClick={handleFinalClose} className="w-full h-12 rounded-xl text-lg font-semibold gap-2 shadow-lg hover:shadow-xl transition-all">
+                    Close
                   </Button>
                 </div>
               </motion.div>

@@ -1999,6 +1999,15 @@ const CustomerMenu = () => {
           delayMs={reviewImmediate ? 0 : 5000}
           immediate={reviewImmediate}
           onClose={() => setReviewOrderId(null)}
+          seatSessionId={seatSessionId}
+          seatNumbers={selectedSeatNumbers}
+          tableNumber={dynamicTableId}
+          onSessionClosed={() => {
+            clearCart();
+            setSeatSessionData(null);
+            setDynamicTableId('');
+            navigate('/');
+          }}
         />
       )}
 
