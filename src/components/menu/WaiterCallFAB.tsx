@@ -12,14 +12,21 @@ interface WaiterCallFABProps {
   restaurantId: string;
   tableId: string;
   tableNumber: string;
+  onDrawerStateChange?: (open: boolean) => void;
 }
 
 type CallState = 'idle' | 'sending' | 'pending' | 'acknowledged' | 'completed';
 
-export function WaiterCallFAB({ restaurantId, tableId, tableNumber }: WaiterCallFABProps) {
+export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStateChange }: WaiterCallFABProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDrawer, setShowDrawer] = useState(false);
+
+  useEffect(() => {
+    if (onDrawerStateChange) {
+      onDrawerStateChange(showDrawer);
+    }
+  }, [showDrawer, onDrawerStateChange]);
   
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);

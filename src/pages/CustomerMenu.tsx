@@ -185,6 +185,7 @@ const CustomerMenu = () => {
   const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('grid');
   const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
   const [reviewImmediate, setReviewImmediate] = useState(false);
+  const [isWaiterCallOpen, setIsWaiterCallOpen] = useState(false);
   const prevOrderStatusesRef = useRef<Record<string, string>>({});
 
   // Fetch restaurant data
@@ -1974,11 +1975,12 @@ const CustomerMenu = () => {
           restaurantId={restaurantId}
           tableId={resolvedTableId}
           tableNumber={tableNumber || ''}
+          onDrawerStateChange={setIsWaiterCallOpen}
         />
       )}
 
       {/* Bottom Navigation — Always fixed and visible at the bottom of the viewport once loaded */}
-      {!selectedItemForDetails && (
+      {!selectedItemForDetails && !isWaiterCallOpen && (
         <BottomNav
           currentView={currentView}
           onViewChange={setCurrentView}
