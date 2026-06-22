@@ -685,8 +685,8 @@
     "semantic_hash": ""
   },
   "src/components/order/PostOrderReviewPrompt.tsx": {
-    "mtime": 1782137991.472731,
-    "ast_hash": "bcbe9270b1d620bd9b0b28831b63f622",
+    "mtime": 1782143597.2895508,
+    "ast_hash": "2dcbe2d8ea18ec74d556b36772dfc87a",
     "semantic_hash": ""
   },
   "src/components/order/RatingPopup.tsx": {
@@ -1840,8 +1840,8 @@
     "semantic_hash": ""
   },
   "src/pages/BillingCounter.tsx": {
-    "mtime": 1782126129.0897255,
-    "ast_hash": "afe49dd0b71d80a6638c572d7f823b36",
+    "mtime": 1782143216.0447085,
+    "ast_hash": "3987ad0bc4605b3f4c7203f15c4eff63",
     "semantic_hash": ""
   },
   "src/pages/CustomerMenu.tsx": {

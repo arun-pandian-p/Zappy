@@ -52,10 +52,32 @@ export const PostOrderReviewPrompt = ({
   const [comment, setComment] = useState('');
   const [step, setStep] = useState<'overall' | 'details' | 'feedback' | 'google' | 'thank_you' | 'done'>('overall');
   const [submitting, setSubmitting] = useState(false);
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(65);
+  const [invoice, setInvoice] = useState<any>(null);
   
   const { toast } = useToast();
   const storageKey = `${STORAGE_KEY_PREFIX}${orderId}`;
+
+  useEffect(() => {
+    if (!isOpen || !orderId) return;
+    const fetchInvoice = async () => {
+      const { data } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('order_id', orderId)
+        .maybeSingle();
+      if (data) {
+        setInvoice(data);
+      }
+    };
+    fetchInvoice();
+  }, [isOpen, orderId]);
+
+  const formatCountdown = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const remainingSecs = secs % 60;
+    return `${mins}:${remainingSecs.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     setOverallRating(0);
@@ -66,7 +88,8 @@ export const PostOrderReviewPrompt = ({
     setStep('overall');
     setIsOpen(false);
     setSubmitting(false);
-    setCountdown(5);
+    setCountdown(65);
+    setInvoice(null);
   }, [orderId]);
 
   useEffect(() => {
@@ -414,14 +437,43 @@ export const PostOrderReviewPrompt = ({
                 <p className="text-sm text-muted-foreground">
                   Your feedback has been submitted successfully.
                 </p>
+                
+                {invoice && (
+                  <div className="border border-slate-100 rounded-2xl p-4 bg-slate-50/50 text-left space-y-2">
+                    <h4 className="font-bold text-sm text-slate-800 border-b pb-1">Billing Details</h4>
+                    <div className="flex justify-between text-xs text-slate-600">
+                      <span>Invoice Number:</span>
+                      <span className="font-mono font-medium">{invoice.invoice_number}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-600">
+                      <span>Payment Method:</span>
+                      <span className="capitalize font-medium">{invoice.payment_method}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-600">
+                      <span>Subtotal:</span>
+                      <span>₹{Number(invoice.subtotal).toFixed(2)}</span>
+                    </div>
+                    {Number(invoice.discount_amount) > 0 && (
+                      <div className="flex justify-between text-xs text-green-600">
+                        <span>Discount:</span>
+                        <span>-₹{Number(invoice.discount_amount).toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm font-bold text-slate-900 border-t pt-2 mt-2">
+                      <span>Total Paid:</span>
+                      <span>₹{Number(invoice.total_amount).toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
                   <p className="text-sm font-semibold text-primary">
-                    Session will close in {countdown} seconds...
+                    Session will close in {formatCountdown(countdown)}...
                   </p>
                 </div>
                 <div className="space-y-3">
                   <Button onClick={handleFinalClose} className="w-full h-12 rounded-xl text-lg font-semibold gap-2 shadow-lg hover:shadow-xl transition-all">
-                    Close
+                    Logout Session
                   </Button>
                 </div>
               </motion.div>
