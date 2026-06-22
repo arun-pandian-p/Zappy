@@ -1825,8 +1825,8 @@
     "semantic_hash": ""
   },
   "src/pages/AdminDashboard.tsx": {
-    "mtime": 1782119420.616708,
-    "ast_hash": "1208d86ae23846d442b9213a27525688",
+    "mtime": 1782142720.958923,
+    "ast_hash": "4b81775b1c11d753d5df2b43d2f9f774",
     "semantic_hash": ""
   },
   "src/pages/AdminOnboarding.tsx": {
@@ -1870,8 +1870,8 @@
     "semantic_hash": ""
   },
   "src/pages/LandingPage.tsx": {
-    "mtime": 1782135005.0212638,
-    "ast_hash": "6e01fe2d50199fcc50ea8d8d9113f5db",
+    "mtime": 1782142743.91396,
+    "ast_hash": "d9fd36b34bf785ffdea637d62c27f63f",
     "semantic_hash": ""
   },
   "src/pages/Login.tsx": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "src/pages/QRCenter.tsx": {
-    "mtime": 1782138976.6220715,
-    "ast_hash": "83121c71d501bf261c4470600cc6940c",
+    "mtime": 1782142493.23458,
+    "ast_hash": "7b8da79d7afa0d23ade719c73d0a8921",
     "semantic_hash": ""
   },
   "src/pages/QRRedirect.tsx": {

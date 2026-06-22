@@ -327,17 +327,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-              {activeTab === "qr-manager" && (
-                <motion.div
-                  key="qr-manager"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <QRCenter restaurantId={restaurantId} />
-                </motion.div>
-              )}
 
               {activeTab === "waiters" && (
                 <motion.div

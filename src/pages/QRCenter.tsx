@@ -93,7 +93,20 @@ function QRPreviewCard({
 
   const downloadQR = async (ext: "png" | "svg") => {
     try {
-      await qrCode.download({ extension: ext, name: `zappy-qr-${qr.qr_name.replace(/\\s+/g, '-').toLowerCase()}` });
+      const rawData = await qrCode.getRawData(ext);
+      if (!rawData) throw new Error("Could not generate raw data");
+      
+      const blob = new Blob([rawData], { type: ext === "png" ? "image/png" : "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const formattedName = qr.qr_name.replace(/\s+/g, '-').toLowerCase();
+      link.download = `zappy-qr-${formattedName}.${ext}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
       toast({ title: "Success", description: `Downloaded QR code as ${ext.toUpperCase()}` });
     } catch (e) {
       console.error("Export error", e);
@@ -136,7 +149,7 @@ function QRPreviewCard({
           pdf.setFontSize(12);
           pdf.text("Scan me!", 105, 160, { align: "center" });
           
-          pdf.save(`zappy-qr-${qr.qr_name.replace(/\\s+/g, '-').toLowerCase()}.pdf`);
+          pdf.save(`zappy-qr-${qr.qr_name.replace(/\s+/g, '-').toLowerCase()}.pdf`);
         } catch (e) {
           console.error("PDF generation error:", e);
           toast({ title: "Error", description: "Failed to generate PDF.", variant: "destructive" });

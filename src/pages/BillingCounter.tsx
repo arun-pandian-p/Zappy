@@ -250,8 +250,43 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
           .eq('seat_number', selectedOrder.seat_number);
       }
 
-      // Check if table is fully empty now and auto-close session
-      if (selectedOrder.table_id) {
+      // Check if table session should be closed
+      const tableSessionId = (selectedOrder as any).table_session_id;
+      if (tableSessionId) {
+        // Query if there are any other active/unpaid orders in this session
+        const { data: unpaidOrders } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('table_session_id', tableSessionId)
+          .neq('id', selectedOrder.id)
+          .not('status', 'in', '("completed","cancelled")');
+
+        if (!unpaidOrders || unpaidOrders.length === 0) {
+          // Close the active table session
+          await supabase
+            .from('table_sessions')
+            .update({ 
+              status: 'completed', 
+              completed_at: new Date().toISOString() 
+            })
+            .eq('id', tableSessionId);
+
+          // Release all seats for this table session
+          await supabase
+            .from('seat_occupancy')
+            .update({ status: 'available' })
+            .eq('table_session_id', tableSessionId);
+
+          // Reset table status
+          if (selectedOrder.table_id) {
+            await supabase
+              .from('tables')
+              .update({ status: 'needs_cleaning' })
+              .eq('id', selectedOrder.table_id);
+          }
+        }
+      } else if (selectedOrder.table_id) {
+        // Fallback: If table_session_id is not set, check by remaining occupied seats
         const { data: remainingSeats } = await supabase
           .from('seat_occupancy')
           .select('id')
@@ -263,7 +298,10 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
           // Close all active table sessions for this table
           await supabase
             .from('table_sessions')
-            .update({ status: 'completed' })
+            .update({ 
+              status: 'completed', 
+              completed_at: new Date().toISOString() 
+            })
             .eq('table_id', selectedOrder.table_id)
             .neq('status', 'completed');
 

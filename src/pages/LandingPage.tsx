@@ -14,6 +14,7 @@ import { Features } from '@/pages/landing/sections/Features';
 import { Proof } from '@/pages/landing/sections/Proof';
 import { CTA } from '@/pages/landing/sections/CTA';
 import { useLandingCMS } from '@/hooks/useLandingCMS';
+import Footer from '@/components/landing/Footer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -266,6 +267,9 @@ const LandingPage = () => {
           />
         </ParallaxSection>
       </main>
+
+      {/* Footer */}
+      <Footer cms={cms.footer?.content} />
 
 
       {/* Floating Book Demo button */}
