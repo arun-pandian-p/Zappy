@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from './use-toast';
 
 export type TTSLanguage = 'en' | 'ta';
@@ -7,126 +7,161 @@ interface Announcement {
   id: string;
   textEn: string;
   textTa: string;
-  repeat: boolean;
   type: 'order' | 'call';
 }
 
+// Global module-level state to coordinate across all hook instances
+const globalQueue: Announcement[] = [];
+let isSpeakingGlobal = false;
+let lastSpeakEndTime = 0;
+const COOLDOWN_MS = 4000; // 4 seconds cooldown between announcements
+const playedAnnouncementIds = new Set<string>();
+let activeUtterance: SpeechSynthesisUtterance | null = null;
+const globalStateListeners = new Set<() => void>();
+
+function notifyGlobalStateListeners() {
+  globalStateListeners.forEach(fn => fn());
+}
+
+function processQueue(language: TTSLanguage, toastFn: any) {
+  if (globalQueue.length === 0) return;
+  if (isSpeakingGlobal) return;
+
+  const now = Date.now();
+  const timeSinceLastEnd = now - lastSpeakEndTime;
+  if (timeSinceLastEnd < COOLDOWN_MS) {
+    const delay = COOLDOWN_MS - timeSinceLastEnd;
+    setTimeout(() => processQueue(language, toastFn), delay);
+    return;
+  }
+
+  const announcement = globalQueue[0];
+  isSpeakingGlobal = true;
+  notifyGlobalStateListeners();
+
+  // Stop any active utterance to prevent overlap
+  try {
+    if (activeUtterance) {
+      activeUtterance.onend = null;
+      activeUtterance.onerror = null;
+    }
+    window.speechSynthesis.cancel();
+  } catch (e) {
+    console.error('Error cancelling speech synthesis:', e);
+  }
+
+  const textToSpeak = language === 'ta' ? announcement.textTa : announcement.textEn;
+  const utterance = new SpeechSynthesisUtterance(textToSpeak);
+
+  if (language === 'ta') {
+    const voices = window.speechSynthesis.getVoices();
+    const tamilVoice = voices.find((v) => v.lang.includes('ta'));
+    if (tamilVoice) {
+      utterance.voice = tamilVoice;
+    }
+    utterance.lang = 'ta-IN';
+  } else {
+    utterance.lang = 'en-US';
+  }
+
+  const handleSpeechEnd = () => {
+    isSpeakingGlobal = false;
+    lastSpeakEndTime = Date.now();
+    activeUtterance = null;
+    
+    // Remove the finished item from the queue
+    const index = globalQueue.findIndex(a => a.id === announcement.id);
+    if (index !== -1) {
+      globalQueue.splice(index, 1);
+    }
+    notifyGlobalStateListeners();
+
+    // Process next item after the cooldown
+    setTimeout(() => processQueue(language, toastFn), COOLDOWN_MS);
+  };
+
+  utterance.onend = handleSpeechEnd;
+  utterance.onerror = (e) => {
+    console.error('Speech synthesis error:', e);
+    handleSpeechEnd();
+  };
+
+  activeUtterance = utterance;
+  window.speechSynthesis.speak(utterance);
+
+  // Trigger Toast Notification
+  toastFn({
+    title: "Voice Announcement",
+    description: textToSpeak,
+  });
+}
+
+// Global settings
+let isMutedGlobal = false;
+let languageGlobal: TTSLanguage = 'en';
+
 export function useVoiceAnnouncement() {
-  const [isMuted, setIsMuted] = useState(false);
-  const [language, setLanguage] = useState<TTSLanguage>('en');
-  const queueRef = useRef<Announcement[]>([]);
-  const isSpeakingRef = useRef(false);
-  const activeAnnouncementsRef = useRef<Map<string, Announcement>>(new Map());
   const { toast } = useToast();
+  const [, setTick] = useState(0);
 
-  const toggleMute = () => setIsMuted((prev) => !prev);
-  const toggleLanguage = () => setLanguage((prev) => (prev === 'en' ? 'ta' : 'en'));
+  const forceUpdate = useCallback(() => setTick(t => t + 1), []);
 
-  const speakNext = useCallback(() => {
-    if (isMuted || isSpeakingRef.current || queueRef.current.length === 0) return;
-
-    const announcement = queueRef.current[0];
-    isSpeakingRef.current = true;
-
-    const utterance = new SpeechSynthesisUtterance(
-      language === 'ta' ? announcement.textTa : announcement.textEn
-    );
-    
-    // Select Tamil voice if available, fallback to default
-    if (language === 'ta') {
-      const voices = window.speechSynthesis.getVoices();
-      const tamilVoice = voices.find((v) => v.lang.includes('ta'));
-      if (tamilVoice) {
-        utterance.voice = tamilVoice;
-      }
-      utterance.lang = 'ta-IN';
-    } else {
-      utterance.lang = 'en-US';
-    }
-
-    utterance.onend = () => {
-      isSpeakingRef.current = false;
-      queueRef.current.shift(); // Remove the finished announcement
-      
-      // If it's a repeating announcement, we don't immediately push it back to the queue.
-      // Instead, the 30s interval will re-evaluate pending activeAnnouncementsRef items and re-queue them.
-      
-      speakNext();
-    };
-
-    utterance.onerror = (e) => {
-      console.error('Speech synthesis error', e);
-      isSpeakingRef.current = false;
-      queueRef.current.shift();
-      speakNext();
-    };
-
-    window.speechSynthesis.speak(utterance);
-    
-    // Show Toast
-    toast({
-      title: "Voice Announcement",
-      description: language === 'ta' ? announcement.textTa : announcement.textEn,
-    });
-  }, [isMuted, language, toast]);
-
-  // Handle playing when queue changes or unmuted
   useEffect(() => {
-    if (!isMuted && !isSpeakingRef.current && queueRef.current.length > 0) {
-      speakNext();
-    }
-  }, [isMuted, language, speakNext]);
+    globalStateListeners.add(forceUpdate);
+    return () => {
+      globalStateListeners.delete(forceUpdate);
+    };
+  }, [forceUpdate]);
 
-  // 30-second repeat loop for pending items
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (isMuted) return;
-      
-      activeAnnouncementsRef.current.forEach((announcement) => {
-        // Only push if it's not already in the queue
-        if (!queueRef.current.some(a => a.id === announcement.id)) {
-          queueRef.current.push({ ...announcement });
-        }
-      });
-      
-      if (!isSpeakingRef.current && queueRef.current.length > 0) {
-        speakNext();
-      }
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [isMuted, speakNext]);
+  const toggleMute = useCallback(() => {
+    isMutedGlobal = !isMutedGlobal;
+    if (isMutedGlobal) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch {}
+      isSpeakingGlobal = false;
+    }
+    notifyGlobalStateListeners();
+  }, []);
+
+  const toggleLanguage = useCallback(() => {
+    languageGlobal = languageGlobal === 'en' ? 'ta' : 'en';
+    notifyGlobalStateListeners();
+  }, []);
 
   const announce = useCallback((id: string, textEn: string, textTa: string, repeat: boolean, type: 'order' | 'call') => {
-    // If it's not a repeating announcement (e.g. ready/served), just play it once
-    if (!repeat) {
-      queueRef.current.push({ id, textEn, textTa, repeat, type });
-      if (!isSpeakingRef.current) speakNext();
+    if (isMutedGlobal) return;
+    
+    // Prevent duplicate playback: one event = one announcement
+    if (playedAnnouncementIds.has(id)) {
       return;
     }
+    playedAnnouncementIds.add(id);
 
-    // If it is repeating (pending order/call), track it.
-    if (!activeAnnouncementsRef.current.has(id)) {
-      const announcement = { id, textEn, textTa, repeat, type };
-      activeAnnouncementsRef.current.set(id, announcement);
-      queueRef.current.push(announcement);
-      if (!isSpeakingRef.current) speakNext();
-    }
-  }, [speakNext]);
+    // Add to queue
+    globalQueue.push({ id, textEn, textTa, type });
+    notifyGlobalStateListeners();
+
+    // Trigger queue processing
+    processQueue(languageGlobal, toast);
+  }, [toast]);
 
   const clearAnnouncement = useCallback((id: string) => {
-    activeAnnouncementsRef.current.delete(id);
-    // Remove from active queue if it hasn't spoken yet
-    queueRef.current = queueRef.current.filter(a => a.id !== id);
+    const index = globalQueue.findIndex(a => a.id === id);
+    if (index !== -1) {
+      globalQueue.splice(index, 1);
+      notifyGlobalStateListeners();
+    }
   }, []);
 
   return {
-    isMuted,
+    isMuted: isMutedGlobal,
     toggleMute,
-    language,
+    language: languageGlobal,
     toggleLanguage,
     announce,
     clearAnnouncement,
-    activeAnnouncementsRef
+    isSpeaking: isSpeakingGlobal,
+    queue: globalQueue
   };
 }

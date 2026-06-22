@@ -638,6 +638,31 @@ const CustomerMenu = () => {
     }
 
     try {
+      const capacityLimit = tableData?.capacity || 4;
+
+      // Check if any seat we selected is already occupied
+      const occupiedSeatNums = seatOccupancy.map(s => s.seat_number);
+      const isAnySeatTaken = seatNumbers.some(seat => occupiedSeatNums.includes(seat));
+      if (isAnySeatTaken) {
+        toast({
+          title: 'Seat Already Taken',
+          description: 'One or more of the selected seats have been taken by another guest.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Check table capacity limits
+      const totalProjectedOccupancy = occupiedSeatNums.length + seatNumbers.length;
+      if (totalProjectedOccupancy > capacityLimit) {
+        toast({
+          title: 'Table Capacity Exceeded',
+          description: `Selecting these seats would exceed the table capacity of ${capacityLimit}.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Create table session if one doesn't exist yet
       let sessionId = activeSession?.id;
       if (!sessionId) {
@@ -716,6 +741,20 @@ const CustomerMenu = () => {
       });
     }
   };
+
+  // Validate seat session against active table session in DB
+  useEffect(() => {
+    if (isDataLoading) return;
+    
+    // If there is no active table session in the DB, clear our local seat session
+    if (!activeSession && seatSessionData) {
+      console.log("[QR Flow] No active table session found. Clearing local seat session.");
+      setSeatSessionData(null);
+      if (restaurantId && dynamicTableId) {
+        localStorage.removeItem(`zappy_seat_session_${restaurantId}_${dynamicTableId}`);
+      }
+    }
+  }, [activeSession, seatSessionData, isDataLoading, restaurantId, dynamicTableId]);
 
   // Effect to force seat selection if table is defined but no seats are selected
   useEffect(() => {
@@ -1976,6 +2015,7 @@ const CustomerMenu = () => {
           tableId={resolvedTableId}
           tableNumber={tableNumber || ''}
           onDrawerStateChange={setIsWaiterCallOpen}
+          seatNumber={selectedSeatNumbers.length > 0 ? selectedSeatNumbers[0] : null}
         />
       )}
 

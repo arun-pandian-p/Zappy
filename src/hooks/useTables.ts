@@ -108,7 +108,14 @@ export function useCreateTable() {
     mutationFn: async (table: TableInsert) => {
       const { data, error } = await supabase
         .from("tables")
-        .insert(table)
+        .upsert(
+          {
+            ...table,
+            is_active: true,
+            deleted_at: null,
+          },
+          { onConflict: "restaurant_id,table_number" }
+        )
         .select()
         .single();
 
@@ -193,7 +200,6 @@ export function useUpdateTableStatus() {
   });
 }
 
-// Seat Occupancy Hooks
 export function useSeatOccupancy(restaurantId?: string, tableSessionId?: string) {
   const queryClient = useQueryClient();
 
@@ -204,10 +210,11 @@ export function useSeatOccupancy(restaurantId?: string, tableSessionId?: string)
       
       const { data, error } = await supabase
         .from("seat_occupancy")
-        .select("*")
+        .select("*, table_sessions!inner(status)")
         .eq("restaurant_id", restaurantId)
         .eq("table_session_id", tableSessionId)
-        .eq("status", "occupied");
+        .eq("status", "occupied")
+        .neq("table_sessions.status", "completed");
 
       if (error) {
         console.error("Error fetching seat occupancy:", error);
@@ -257,9 +264,10 @@ export function useAllSeatOccupancy(restaurantId?: string) {
       
       const { data, error } = await supabase
         .from("seat_occupancy")
-        .select("*")
+        .select("*, table_sessions!inner(status)")
         .eq("restaurant_id", restaurantId)
-        .eq("status", "occupied");
+        .eq("status", "occupied")
+        .neq("table_sessions.status", "completed");
 
       if (error) {
         console.error("Error fetching all seat occupancy:", error);

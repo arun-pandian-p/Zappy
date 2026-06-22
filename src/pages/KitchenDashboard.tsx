@@ -236,9 +236,10 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
 
   const waiterCallsCount = waiterCalls.length;
 
+
+
   // Track previous state for Voice Announcements diffing
   const prevOrdersRef = useRef<OrderWithItems[]>([]);
-  const prevWaiterCallsRef = useRef<WaiterCallWithTable[]>([]);
 
   useEffect(() => {
     const prevOrders = prevOrdersRef.current;
@@ -246,52 +247,43 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
     orders.forEach(order => {
       const prevOrder = prevOrders.find(o => o.id === order.id);
       const tableStr = order.table?.table_number ? `Table ${order.table.table_number}` : 'Unknown Table';
+      const seatStr = order.seat_number ? ` Seat ${order.seat_number}` : '';
+      const seatStrTa = order.seat_number ? ` இருக்கை ${order.seat_number}` : '';
       
       if (!prevOrder) {
         if (order.status === 'pending' || order.status === 'confirmed') {
-          announce(`order-${order.id}-new`, `New order received from ${tableStr}.`, `${tableStr} லிருந்து புதிய ஆர்டர் வந்துள்ளது.`, true, 'order');
+          announce(
+            `order-${order.id}-new`,
+            `New order received from ${tableStr}${seatStr}`,
+            `${tableStr}${seatStrTa} லிருந்து புதிய ஆர்டர் வந்துள்ளது.`,
+            false,
+            'order'
+          );
         }
       } else if (prevOrder.status !== order.status) {
-        clearAnnouncement(`order-${order.id}-new`); // Clear pending repetition loop
-        if (order.status === 'preparing') {
-          announce(`order-${order.id}-prep`, `Order for ${tableStr} is now being prepared.`, `${tableStr} க்கான ஆர்டர் தயாராகிறது.`, false, 'order');
-        } else if (order.status === 'ready') {
-          announce(`order-${order.id}-ready`, `Order ready for ${tableStr}.`, `${tableStr} க்கான ஆர்டர் தயாராக உள்ளது.`, false, 'order');
+        clearAnnouncement(`order-${order.id}-new`);
+        if (order.status === 'ready') {
+          announce(
+            `order-${order.id}-ready`,
+            `Order ready for ${tableStr}`,
+            `${tableStr} க்கான ஆர்டர் தயாராக உள்ளது.`,
+            false,
+            'order'
+          );
         } else if (order.status === 'served') {
-          announce(`order-${order.id}-served`, `Order served to ${tableStr}.`, `${tableStr} க்கான ஆர்டர் வழங்கப்பட்டது.`, false, 'order');
+          announce(
+            `order-${order.id}-served`,
+            `Order served for ${tableStr}`,
+            `${tableStr} க்கான ஆர்டர் வழங்கப்பட்டது.`,
+            false,
+            'order'
+          );
         }
       }
     });
 
     prevOrdersRef.current = orders;
   }, [orders, announce, clearAnnouncement]);
-
-  useEffect(() => {
-    const prevCalls = prevWaiterCallsRef.current;
-
-    waiterCalls.forEach(call => {
-      const prevCall = prevCalls.find(c => c.id === call.id);
-      const tableStr = call.table?.table_number ? `Table ${call.table.table_number}` : 'Unknown Table';
-      
-      if (!prevCall && call.status === 'pending') {
-        const reason = call.reason?.toLowerCase() || '';
-        if (reason.includes('bill') || reason.includes('payment') || reason.includes('pay')) {
-          announce(`call-${call.id}`, `Billing requested from ${tableStr}.`, `${tableStr} லிருந்து பில் கேட்கப்பட்டுள்ளது.`, true, 'call');
-        } else {
-          announce(`call-${call.id}`, `Attention staff. Waiter calling from ${tableStr}.`, `${tableStr} லிருந்து பணியாளர் அழைக்கப்படுகிறார்.`, true, 'call');
-        }
-      }
-    });
-
-    // Handle cleared calls (acknowledged or resolved)
-    prevCalls.forEach(prevCall => {
-      if (!waiterCalls.find(c => c.id === prevCall.id)) {
-        clearAnnouncement(`call-${prevCall.id}`);
-      }
-    });
-
-    prevWaiterCallsRef.current = waiterCalls;
-  }, [waiterCalls, announce, clearAnnouncement]);
 
   const { isConnected: printerConnected, printKitchenOrder } = usePrinter(restaurantId);
 

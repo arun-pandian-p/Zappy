@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "src/components/admin/QRCodeManager.tsx": {
-    "mtime": 1782119420.4219358,
-    "ast_hash": "1c396b0e566058be0a5bb64a4cd00c23",
+    "mtime": 1782138992.6902392,
+    "ast_hash": "c36993e08f330185d62a03ec68560faa",
     "semantic_hash": ""
   },
   "src/components/admin/RecentOrdersTable.tsx": {
@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "src/components/admin/TableManagement.tsx": {
-    "mtime": 1782135396.2685273,
-    "ast_hash": "7a14cdca3a793167a5d72d663349ef2a",
+    "mtime": 1782138953.350456,
+    "ast_hash": "baef86fec40a8c19eaabefbed65e63bf",
     "semantic_hash": ""
   },
   "src/components/admin/TableSessionTimers.tsx": {
@@ -670,8 +670,8 @@
     "semantic_hash": ""
   },
   "src/components/menu/WaiterCallFAB.tsx": {
-    "mtime": 1782135999.4511786,
-    "ast_hash": "447cf8d1f5ee8004cef489daeb9aa934",
+    "mtime": 1782141041.8809216,
+    "ast_hash": "0c173b21890dab156d6a50459b9c9e6f",
     "semantic_hash": ""
   },
   "src/components/menu/__tests__/TablePickerDialog.test.tsx": {
@@ -1760,8 +1760,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useTables.ts": {
-    "mtime": 1782125758.297115,
-    "ast_hash": "68133c3c06edf35e0d57b3423245d772",
+    "mtime": 1782141199.2170327,
+    "ast_hash": "41dc1b7609166d75c064cd8706692eb5",
     "semantic_hash": ""
   },
   "src/hooks/useVariants.ts": {
@@ -1770,8 +1770,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useVoiceAnnouncement.ts": {
-    "mtime": 1782124396.7974446,
-    "ast_hash": "29503f72d8b2e0b45f2e0d086f9e4e85",
+    "mtime": 1782141066.116667,
+    "ast_hash": "d59c8741e21bb585e69a977226344f37",
     "semantic_hash": ""
   },
   "src/hooks/useWaiterCalls.ts": {
@@ -1795,8 +1795,8 @@
     "semantic_hash": ""
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1782127954.4991038,
-    "ast_hash": "6577177d41b6fdc95f44d944fbdcd908",
+    "mtime": 1782138911.4988332,
+    "ast_hash": "5543a093af10eca0fc67d65ad1f6d406",
     "semantic_hash": ""
   },
   "src/lib/printer/bluetooth.ts": {
@@ -1845,8 +1845,8 @@
     "semantic_hash": ""
   },
   "src/pages/CustomerMenu.tsx": {
-    "mtime": 1782137996.6774485,
-    "ast_hash": "5c1fccf7248b9888ae77b366e065ed45",
+    "mtime": 1782141217.7111413,
+    "ast_hash": "ea32478196af1f99db1d1672f664085b",
     "semantic_hash": ""
   },
   "src/pages/FeedbackPage.tsx": {
@@ -1865,8 +1865,8 @@
     "semantic_hash": ""
   },
   "src/pages/KitchenDashboard.tsx": {
-    "mtime": 1782124450.3302045,
-    "ast_hash": "7eaff2b521af2a5ec6845afdcae0f312",
+    "mtime": 1782141084.2262595,
+    "ast_hash": "311fc068988ead78402a4954347dd9ca",
     "semantic_hash": ""
   },
   "src/pages/LandingPage.tsx": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "src/pages/QRCenter.tsx": {
-    "mtime": 1782119420.6271172,
-    "ast_hash": "625b1e8946ee1c5dd2dce64fe8789085",
+    "mtime": 1782138976.6220715,
+    "ast_hash": "83121c71d501bf261c4470600cc6940c",
     "semantic_hash": ""
   },
   "src/pages/QRRedirect.tsx": {
@@ -1925,8 +1925,8 @@
     "semantic_hash": ""
   },
   "src/pages/WaiterDashboard.tsx": {
-    "mtime": 1782119420.6311865,
-    "ast_hash": "6e8f99a6125639e0cab9eda32c1f88ac",
+    "mtime": 1782141121.952324,
+    "ast_hash": "e50f4e5a905c2471812c9de0c1ff5a53",
     "semantic_hash": ""
   },
   "src/pages/__tests__/QRRedirect.test.tsx": {
@@ -4917,6 +4917,26 @@
   "src/ZAPPY_logo_liquid_morph_glitch_202606131133.mp4": {
     "mtime": 1782119420.3890533,
     "ast_hash": "7963bd9f478a627a8a7fae942099ea5a",
+    "semantic_hash": ""
+  },
+  "src/components/admin/TableDeleteConfirmDialog.tsx": {
+    "mtime": 1782138939.1704385,
+    "ast_hash": "26ebc5e0d86e2aef14a784958ff58625",
+    "semantic_hash": ""
+  },
+  "src/utils/tableDependencies.ts": {
+    "mtime": 1782138932.4277883,
+    "ast_hash": "f2615975d1134ae00858090ea4ceba70",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260622000002_soft_delete_tables.sql": {
+    "mtime": 1782138424.9470723,
+    "ast_hash": "4bc37a9e41e6ca7dd3fb32fadab98b50",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260622000003_audit_rls_fixes.sql": {
+    "mtime": 1782139277.7579012,
+    "ast_hash": "04481ea9cd40aaa5c12e14a4741accdc",
     "semantic_hash": ""
   }
 }

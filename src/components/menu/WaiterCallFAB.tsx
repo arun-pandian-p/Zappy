@@ -13,11 +13,12 @@ interface WaiterCallFABProps {
   tableId: string;
   tableNumber: string;
   onDrawerStateChange?: (open: boolean) => void;
+  seatNumber?: number | null;
 }
 
 type CallState = 'idle' | 'sending' | 'pending' | 'acknowledged' | 'completed';
 
-export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStateChange }: WaiterCallFABProps) {
+export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStateChange, seatNumber }: WaiterCallFABProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDrawer, setShowDrawer] = useState(false);
@@ -95,8 +96,9 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStat
           restaurant_id: restaurantId,
           table_id: tableId,
           reason,
-          status: 'pending'
-        })
+          status: 'pending',
+          seat_number: seatNumber || null
+        } as any)
         .select()
         .single();
       

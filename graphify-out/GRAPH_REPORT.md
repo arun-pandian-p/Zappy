@@ -1,16 +1,16 @@
 # Graph Report - Zappy  (2026-06-22)
 
 ## Corpus Check
-- 565 files · ~12,093,427 words
+- 569 files · ~12,094,705 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 11057 nodes · 14552 edges · 214 communities (179 shown, 35 thin omitted)
+- 11068 nodes · 14590 edges · 214 communities (179 shown, 35 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 5 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1f0224d6`
+- Built from commit: `40d9393f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -218,9 +218,9 @@
 - [[_COMMUNITY_Community 200|Community 200]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `Button` - 121 edges
+1. `Button` - 122 edges
 2. `useToast()` - 115 edges
-3. `supabase` - 102 edges
+3. `supabase` - 103 edges
 4. `cn()` - 89 edges
 5. `Card` - 82 edges
 6. `CardContent` - 81 edges
@@ -230,38 +230,38 @@
 10. `Input` - 58 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `LeadsCRM()` --calls--> `useToast()`  [EXTRACTED]
-  src/components/superadmin/LeadsCRM.tsx → src/hooks/use-toast.ts
+- `CategoryImageUpload()` --calls--> `useToast()`  [EXTRACTED]
+  src/components/admin/CategoryManager.tsx → src/hooks/use-toast.ts
+- `BrandingUploadField()` --calls--> `useToast()`  [EXTRACTED]
+  src/components/superadmin/EditHotelProfile.tsx → src/hooks/use-toast.ts
+- `LogoUploadField()` --calls--> `useToast()`  [EXTRACTED]
+  src/components/superadmin/PlatformBrandingPanel.tsx → src/hooks/use-toast.ts
 - `BreadcrumbSeparator()` --calls--> `cn()`  [EXTRACTED]
   src/components/ui/breadcrumb.tsx → src/lib/utils.ts
 - `BreadcrumbEllipsis()` --calls--> `cn()`  [EXTRACTED]
   src/components/ui/breadcrumb.tsx → src/lib/utils.ts
-- `CommandShortcut()` --calls--> `cn()`  [EXTRACTED]
-  src/components/ui/command.tsx → src/lib/utils.ts
-- `ContextMenuShortcut()` --calls--> `cn()`  [EXTRACTED]
-  src/components/ui/context-menu.tsx → src/lib/utils.ts
 
 ## Import Cycles
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/invoices.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/ads.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/newsletter_subscribers.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/printer_queue.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/email_templates.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/staff_profiles.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/sessions.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/user_roles.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/commonInputTypes.ts -> src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/commonInputTypes.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/addon_groups.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/addon_options.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/ai_enrichments.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/analytics_daily.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/analytics_events.ts -> src/generated/prisma/internal/prismaNamespace.ts`
 - 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/audit_log_entries.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/audit_logs.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/campaign_events.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/categories.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/coupon_redemptions.ts -> src/generated/prisma/internal/prismaNamespace.ts`
-- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/coupons.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/orders.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/flow_state.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/analytics_events.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/messages.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/email_templates.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/notification_logs.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/sso_domains.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/ai_enrichments.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/schema_migrations.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/employee_assignments.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/mfa_challenges.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/system_logs.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/sso_providers.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/super_admin_profile.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/ocr_imports.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/staff_profiles.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/thread_members.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/promotion_analytics.ts -> src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `src/generated/prisma/internal/prismaNamespace.ts -> src/generated/prisma/models.ts -> src/generated/prisma/models/feedback.ts -> src/generated/prisma/internal/prismaNamespace.ts`
 
 ## Communities (214 total, 35 thin omitted)
 
@@ -303,11 +303,11 @@ Nodes (140): AggregateEnterprise_reviews, enterprise_reviews$ordersArgs, enterpr
 
 ### Community 9 - "Community 9"
 Cohesion: 0.04
-Nodes (86): FeedbackManagerProps, FoodGraphReasoningProps, SuggestedPairing, GoogleReviewsManager(), KitchenOrderCardProps, MarketingAnalyticsDashboardProps, OverviewTab(), OverviewTabProps (+78 more)
+Nodes (47): AdsManager(), GoogleReviewsManager(), MarketingAnalyticsDashboardProps, PlatformAdsReadOnly(), ReportsPanel(), ZappyLogo, ZappyLogoProps, AdInsert (+39 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.05
-Nodes (98): AdFormData, AdsManagerProps, defaultFormData, CustomerManagementProps, CustomerRecord, ImageUpload(), OrderHistoryProps, statusColors (+90 more)
+Cohesion: 0.06
+Nodes (79): CustomerManagementProps, CustomerRecord, FeedbackManagerProps, FoodGraphReasoningProps, SuggestedPairing, KitchenOrderCardProps, OrderHistoryProps, statusColors (+71 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.02
@@ -323,7 +323,7 @@ Nodes (126): AggregateSessions, GetSessionsAggregateType, GetSessionsGroupByPayl
 
 ### Community 14 - "Community 14"
 Cohesion: 0.03
-Nodes (84): AdminHeader(), AdminSidebar(), AdminSidebarProps, allNavItems, NavItem, onboardingNavItems, SubscriptionTier, CustomerManagement() (+76 more)
+Nodes (101): AdminHeader(), AdminSidebar(), AdminSidebarProps, allNavItems, NavItem, onboardingNavItems, SubscriptionTier, CustomerManagement() (+93 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.02
@@ -363,7 +363,7 @@ Nodes (106): AggregateWaiter_calls, GetWaiter_callsAggregateType, GetWaiter_call
 
 ### Community 24 - "Community 24"
 Cohesion: 0.04
-Nodes (59): BulkMenuImporterProps, ParsedMenuItem, CANCEL_REASONS, CancelOrderDialogProps, createImage(), getCroppedBlob(), ImageCropDialog(), ImageCropDialogProps (+51 more)
+Nodes (92): AdFormData, AdsManagerProps, defaultFormData, BannerLogoUploader(), BannerLogoUploaderProps, EditMenuItemDialog(), EditMenuItemDialogProps, createImage() (+84 more)
 
 ### Community 25 - "Community 25"
 Cohesion: 0.02
@@ -483,7 +483,7 @@ Nodes (90): addon_groups, addon_options, ads, ai_enrichments, analytics_daily, a
 
 ### Community 54 - "Community 54"
 Cohesion: 0.04
-Nodes (65): StatCard(), DiscountButtonsProps, NavLink, NavLinkCompatProps, sizeClasses, StarRatingProps, usePushNotifications(), cn() (+57 more)
+Nodes (55): BulkMenuImporterProps, ParsedMenuItem, CANCEL_REASONS, CancelOrderDialogProps, iconColorClasses, StatCard(), StatCardProps, DiscountButtonsProps (+47 more)
 
 ### Community 55 - "Community 55"
 Cohesion: 0.02
@@ -491,7 +491,7 @@ Nodes (89): addon_groups, addon_options, ads, ai_enrichments, analytics_daily, a
 
 ### Community 56 - "Community 56"
 Cohesion: 0.04
-Nodes (60): AdsManager(), PlatformAdsReadOnly(), AdInsert, AdUpdate, useActiveAds(), useAds(), useCreateAd(), useDeleteAd() (+52 more)
+Nodes (51): OffersManager(), useCustomerOrders(), fetchLegacyOffers(), fetchPromotions(), useActiveEnterprisePromotions(), useCreateEnterprisePromotion(), useDeleteOffer(), useEnterprisePromotions() (+43 more)
 
 ### Community 57 - "Community 57"
 Cohesion: 0.02
@@ -594,12 +594,8 @@ Cohesion: 0.03
 Nodes (67): AdsAggregateArgs, AdsAvgAggregateInputType, AdsAvgAggregateOutputType, adsAvgOrderByAggregateInput, AdsCountAggregateInputType, AdsCountAggregateOutputType, adsCountArgs, adsCountOrderByAggregateInput (+59 more)
 
 ### Community 82 - "Community 82"
-Cohesion: 0.05
-Nodes (51): CancelOrderDialog(), KitchenOrderCard, KitchenStation, KitchenStationFilter(), KitchenStationFilterProps, KitchenTVMode(), KitchenTVModeProps, OrderHistory() (+43 more)
-
-### Community 83 - "Community 83"
-Cohesion: 0.05
-Nodes (40): EditMenuItemDialog(), EditMenuItemDialogProps, MenuOCRImporter(), OCRItem, MenuPreviewCard(), MenuPreviewCardProps, MenuTab(), MenuTabProps (+32 more)
+Cohesion: 0.04
+Nodes (77): CancelOrderDialog(), FoodGraphReasoning(), KitchenOrderCard, KitchenStation, KitchenStationFilter(), KitchenStationFilterProps, KitchenTVMode(), KitchenTVModeProps (+69 more)
 
 ### Community 84 - "Community 84"
 Cohesion: 0.03
@@ -615,7 +611,7 @@ Nodes (61): AggregateSubscription_plans, Enumsubscription_tierFieldUpdateOperati
 
 ### Community 87 - "Community 87"
 Cohesion: 0.05
-Nodes (50): BannerLogoUploader(), BannerLogoUploaderProps, CategoryImageUpload(), CategoryManager(), CategoryManagerProps, DatePreset, ExportPanel(), ExportPanelProps (+42 more)
+Nodes (39): DatePreset, ExportPanel(), ExportPanelProps, Action, ActionType, actionTypes, addToRemoveQueue(), dispatch() (+31 more)
 
 ### Community 88 - "Community 88"
 Cohesion: 0.03
@@ -671,23 +667,23 @@ Nodes (54): AggregateSystem_logs, GetSystem_logsAggregateType, GetSystem_logsGro
 
 ### Community 101 - "Community 101"
 Cohesion: 0.08
-Nodes (38): debouncedEmbedding(), OpenAIEmbeddingService, OpenAIImageService, OpenAIModerationService, OpenAIOcrService, OpenAITranslationService, generateAndSaveMenuEmbedding(), regenerateAllMenuEmbeddings() (+30 more)
+Nodes (37): OpenAIEmbeddingService, OpenAIImageService, OpenAIModerationService, OpenAIOcrService, OpenAITranslationService, getOpenAIEmbedding(), regenerateAllMenuEmbeddings(), checkCircuitBreaker() (+29 more)
 
 ### Community 102 - "Community 102"
-Cohesion: 0.11
-Nodes (31): Recommendation, analyzeCart(), CartIntelligenceResult, CUISINE_MAP, detectCuisine(), cosineSimilarity(), DOCUMENT_FREQ, generateEmbedding() (+23 more)
+Cohesion: 0.14
+Nodes (23): Recommendation, analyzeCart(), CartIntelligenceResult, CUISINE_MAP, detectCuisine(), cosineSimilarity(), generateEmbedding(), EXPLICIT_EDGES (+15 more)
 
 ### Community 103 - "Community 103"
-Cohesion: 0.11
-Nodes (23): QRCodeManager(), TableManagement(), QRScanAnalytics(), QRCode, ScanAnalytic, useAllScanAnalytics(), useCreateQRCode(), useDeleteQRCode() (+15 more)
+Cohesion: 0.07
+Nodes (40): QRCodeManager(), TableDeleteConfirmDialog(), TableDeleteConfirmDialogProps, TableManagement(), TableManagementProps, TableSessionTimers(), TableSessionTimersProps, WaiterManagementPanel() (+32 more)
 
 ### Community 104 - "Community 104"
-Cohesion: 0.10
-Nodes (20): CouponFormData, CouponManager(), CouponManagerProps, defaultFormData, Coupon, CouponInsert, CouponUpdate, useCoupons() (+12 more)
+Cohesion: 0.18
+Nodes (14): CouponFormData, CouponManager(), CouponManagerProps, defaultFormData, Coupon, CouponInsert, CouponUpdate, useCoupons() (+6 more)
 
 ### Community 105 - "Community 105"
-Cohesion: 0.12
-Nodes (7): blogPosts, GuestExperience(), MarketingLayoutProps, QRMenuGenerator(), PrivacyPolicy(), SEO(), SEOProps
+Cohesion: 0.17
+Nodes (3): MarketingLayoutProps, SEO(), SEOProps
 
 ### Community 106 - "Community 106"
 Cohesion: 0.08
@@ -698,20 +694,20 @@ Cohesion: 0.08
 Nodes (23): compilerOptions, allowImportingTsExtensions, isolatedModules, jsx, lib, module, moduleDetection, moduleResolution (+15 more)
 
 ### Community 108 - "Community 108"
-Cohesion: 0.11
-Nodes (8): AICacheService, CacheTTL, TTL_MAP, FileType, OCROptions, parseMenuFile(), processMenuFile(), processMenuFilesBatch()
+Cohesion: 0.09
+Nodes (28): AICacheService, CacheTTL, TTL_MAP, CATEGORY_KEYWORDS, detectCategory(), IGNORE_PATTERNS, isCategoryHeader(), parseCSVLine() (+20 more)
 
 ### Community 110 - "Community 110"
-Cohesion: 0.24
-Nodes (18): CATEGORY_KEYWORDS, detectCategory(), IGNORE_PATTERNS, isCategoryHeader(), parseCSVLine(), parseMenuFromCSV(), parseMenuFromText(), parseMenuLine() (+10 more)
+Cohesion: 0.05
+Nodes (41): CategoryImageUpload(), CategoryManager(), CategoryManagerProps, MenuPreviewCard(), MenuPreviewCardProps, MenuTab(), Category, CategoryInsert (+33 more)
 
 ### Community 111 - "Community 111"
 Cohesion: 0.19
 Nodes (16): AdminHeaderProps, BrandingConfig, RestaurantSettings, AnimatedHotelName(), AnimatedHotelNameProps, AnimationSpeed, LetterAnimation, speedMultiplier (+8 more)
 
 ### Community 112 - "Community 112"
-Cohesion: 0.12
-Nodes (10): BlogPost(), AboutUs(), Features(), featuresList, CookiePolicy(), NotFound(), App(), queryClient (+2 more)
+Cohesion: 0.09
+Nodes (15): AppRole, RoleGuard(), RoleGuardProps, AboutUs(), Features(), featuresList, GuestExperience(), QRMenuGenerator() (+7 more)
 
 ### Community 113 - "Community 113"
 Cohesion: 0.10
@@ -722,8 +718,8 @@ Cohesion: 0.21
 Nodes (14): addToOfflineQueue(), BillingTransactionParams, getOfflineQueue(), OfflineQueueEntry, removeFromOfflineQueue(), setOfflineQueue(), useAtomicBilling(), checkRateLimit() (+6 more)
 
 ### Community 115 - "Community 115"
-Cohesion: 0.17
-Nodes (13): InventoryManager(), InventoryManagerProps, PurchaseOrder, Supplier, WasteLog, InventoryItem, RecipeMapping, useCreateInventoryItem() (+5 more)
+Cohesion: 0.19
+Nodes (11): InventoryManager(), InventoryManagerProps, PurchaseOrder, Supplier, WasteLog, InventoryItem, RecipeMapping, useCreateInventoryItem() (+3 more)
 
 ### Community 116 - "Community 116"
 Cohesion: 0.11
@@ -738,8 +734,8 @@ Cohesion: 0.12
 Nodes (16): aliases, components, hooks, lib, ui, utils, rsc, $schema (+8 more)
 
 ### Community 119 - "Community 119"
-Cohesion: 0.23
-Nodes (12): useTrackAdClick(), useTrackAdImpression(), CategoryDividerAd(), CategoryDividerAdProps, FooterPromoAd(), FooterPromoAdProps, HeaderBannerAd(), HeaderBannerAdProps (+4 more)
+Cohesion: 0.10
+Nodes (20): useTrackAdClick(), useTrackAdImpression(), FinalCTAProps, Ad, AdsPopupProps, CategoryDividerAd(), CategoryDividerAdProps, FooterPromoAd() (+12 more)
 
 ### Community 120 - "Community 120"
 Cohesion: 0.12
@@ -770,7 +766,7 @@ Cohesion: 0.24
 Nodes (8): evaluateCartDiscounts(), CartItem, CartPricingResult, DiscountResult, EnterprisePromotion, PromotionOrigin, PromotionStatus, PromotionType
 
 ### Community 127 - "Community 127"
-Cohesion: 0.24
+Cohesion: 0.27
 Nodes (6): discoverFoodImage(), EnrichedMenuData, enrichMenuItem(), generateDishDescriptions(), getUpsellRecommendations(), syncImageToSupabase()
 
 ### Community 128 - "Community 128"
@@ -814,7 +810,7 @@ Cohesion: 0.24
 Nodes (10): Toast, ToastAction, ToastActionElement, ToastClose, ToastDescription, ToastProps, ToastTitle, toastVariants (+2 more)
 
 ### Community 138 - "Community 138"
-Cohesion: 0.20
+Cohesion: 0.17
 Nodes (6): PrinterQueue, PrinterState, PrinterType, COMMANDS, ReceiptData, ReceiptItem
 
 ### Community 139 - "Community 139"
@@ -830,8 +826,8 @@ Cohesion: 0.18
 Nodes (9): Command, CommandDialogProps, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator (+1 more)
 
 ### Community 142 - "Community 142"
-Cohesion: 0.40
-Nodes (8): OffersManager(), OffersManagerProps, fetchLegacyOffers(), fetchPromotions(), useCreateEnterprisePromotion(), useDeleteOffer(), useEnterprisePromotions(), useUpdateEnterprisePromotion()
+Cohesion: 0.24
+Nodes (9): debouncedEmbedding(), DOCUMENT_FREQ, generateAndSaveMenuEmbedding(), IDF, NODE_EMBEDDINGS, processNodeForVocab(), tokenize(), Vector (+1 more)
 
 ### Community 143 - "Community 143"
 Cohesion: 0.24
@@ -902,8 +898,8 @@ Cohesion: 0.40
 Nodes (3): stats, testimonialsRow1, testimonialsRow2
 
 ### Community 166 - "Community 166"
-Cohesion: 0.40
-Nodes (4): BottomNav(), BottomNavProps, navItems, ViewType
+Cohesion: 0.29
+Nodes (7): Announcement, globalQueue, globalStateListeners, notifyGlobalStateListeners(), playedAnnouncementIds, processQueue(), TTSLanguage
 
 ### Community 167 - "Community 167"
 Cohesion: 0.40
@@ -914,8 +910,8 @@ Cohesion: 0.40
 Nodes (4): InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot
 
 ### Community 172 - "Community 172"
-Cohesion: 0.50
-Nodes (3): OrderStatusPipeline(), OrderStatusPipelineProps, STEPS
+Cohesion: 0.40
+Nodes (4): BottomNav(), BottomNavProps, navItems, ViewType
 
 ### Community 173 - "Community 173"
 Cohesion: 0.50
@@ -925,26 +921,30 @@ Nodes (3): OrderItem, ReceiptProps, ThermalReceipt
 Cohesion: 0.67
 Nodes (3): generateImageWithGemini(), run(), supabase
 
+### Community 175 - "Community 175"
+Cohesion: 0.50
+Nodes (3): Proof(), stats, testimonials
+
 ### Community 176 - "Community 176"
 Cohesion: 0.67
 Nodes (3): calculateShiftStats(), formatMinutes(), ShiftCalcParams
 
 ## Knowledge Gaps
-- **9748 isolated node(s):** `supabase`, `uvx`, `@toolbox-sdk/server`, `twilio-docs`, `@playwright/mcp` (+9743 more)
+- **9751 isolated node(s):** `supabase`, `uvx`, `@toolbox-sdk/server`, `twilio-docs`, `@playwright/mcp` (+9746 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **35 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `supabase` connect `Community 14` to `Community 129`, `Community 133`, `Community 9`, `Community 10`, `Community 138`, `Community 142`, `Community 143`, `Community 150`, `Community 24`, `Community 54`, `Community 56`, `Community 82`, `Community 83`, `Community 87`, `Community 101`, `Community 102`, `Community 103`, `Community 104`, `Community 108`, `Community 114`, `Community 115`, `Community 116`, `Community 121`, `Community 127`?**
+- **Why does `supabase` connect `Community 9` to `Community 129`, `Community 133`, `Community 10`, `Community 138`, `Community 14`, `Community 143`, `Community 150`, `Community 24`, `Community 54`, `Community 56`, `Community 82`, `Community 87`, `Community 101`, `Community 102`, `Community 103`, `Community 104`, `Community 108`, `Community 110`, `Community 114`, `Community 115`, `Community 116`, `Community 121`, `Community 127`?**
   _High betweenness centrality (0.002) - this node is a cross-community bridge._
-- **Why does `cn()` connect `Community 54` to `Community 128`, `Community 135`, `Community 136`, `Community 9`, `Community 10`, `Community 137`, `Community 140`, `Community 141`, `Community 14`, `Community 147`, `Community 151`, `Community 24`, `Community 153`, `Community 152`, `Community 156`, `Community 158`, `Community 167`, `Community 168`, `Community 83`, `Community 122`?**
+- **Why does `cn()` connect `Community 54` to `Community 128`, `Community 135`, `Community 136`, `Community 9`, `Community 10`, `Community 137`, `Community 140`, `Community 141`, `Community 14`, `Community 147`, `Community 151`, `Community 24`, `Community 153`, `Community 152`, `Community 156`, `Community 158`, `Community 167`, `Community 168`, `Community 103`, `Community 119`, `Community 122`?**
   _High betweenness centrality (0.002) - this node is a cross-community bridge._
 - **Why does `BluetoothPrinter` connect `Community 149` to `Community 138`, `Community 131`?**
   _High betweenness centrality (0.002) - this node is a cross-community bridge._
 - **What connects `supabase`, `uvx`, `@toolbox-sdk/server` to the rest of the system?**
-  _9748 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _9751 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.004106776180698152 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
