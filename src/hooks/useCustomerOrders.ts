@@ -9,14 +9,18 @@ import type { OrderWithItems } from "@/hooks/useOrders";
  * - Short polling (5s) as fallback
  * - Realtime subscription for instant updates
  */
-export function useCustomerOrders(restaurantId?: string, tableId?: string) {
+export function useCustomerOrders(
+  restaurantId?: string, 
+  tableId?: string, 
+  seatSessionId?: string
+) {
   const queryClient = useQueryClient();
-  const queryKey = ["customer-orders", restaurantId, tableId];
+  const queryKey = ["customer-orders", restaurantId, tableId, seatSessionId];
 
   const query = useQuery({
     queryKey,
     queryFn: async () => {
-      if (!restaurantId || !tableId) return [];
+      if (!restaurantId || !tableId || !seatSessionId) return [];
 
       const { data, error } = await supabase
         .from("orders")
@@ -27,31 +31,31 @@ export function useCustomerOrders(restaurantId?: string, tableId?: string) {
         `)
         .eq("restaurant_id", restaurantId)
         .eq("table_id", tableId)
-        .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .eq("seat_session_id", seatSessionId)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (error) throw error;
       return (data || []) as OrderWithItems[];
     },
-    enabled: !!restaurantId && !!tableId,
+    enabled: !!restaurantId && !!tableId && !!seatSessionId,
     staleTime: 3_000,
     refetchInterval: 5_000, // Poll every 5s as fallback
   });
 
   // Realtime subscription for instant order status updates
   useEffect(() => {
-    if (!restaurantId || !tableId) return;
+    if (!restaurantId || !tableId || !seatSessionId) return;
 
     const channel = supabase
-      .channel(`customer-orders-${tableId}`)
+      .channel(`customer-orders-${seatSessionId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "orders",
-          filter: `table_id=eq.${tableId}`,
+          filter: `seat_session_id=eq.${seatSessionId}`,
         },
         () => {
           queryClient.invalidateQueries({ queryKey });
@@ -62,7 +66,7 @@ export function useCustomerOrders(restaurantId?: string, tableId?: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [restaurantId, tableId, queryClient]);
+  }, [restaurantId, tableId, seatSessionId, queryClient, queryKey]);
 
   return query;
 }

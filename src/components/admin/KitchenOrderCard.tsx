@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { Clock, Play, Check, UtensilsCrossed, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -16,7 +17,7 @@ interface KitchenOrderCardProps {
   isTvMode?: boolean;
 }
 
-export const KitchenOrderCard = ({
+export const KitchenOrderCard = forwardRef<HTMLDivElement, KitchenOrderCardProps>(({
   order,
   showActions,
   isUpdating,
@@ -25,7 +26,7 @@ export const KitchenOrderCard = ({
   onMarkServed,
   onCancelClick,
   isTvMode = false,
-}: KitchenOrderCardProps) => {
+}, ref) => {
   const getPrepTimer = (order: OrderWithItems) => {
     if (order.status !== 'preparing' || !order.started_preparing_at) return null;
     const diff = Date.now() - new Date(order.started_preparing_at).getTime();
@@ -74,6 +75,7 @@ export const KitchenOrderCard = ({
 
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ 
@@ -113,9 +115,9 @@ export const KitchenOrderCard = ({
                 <Badge variant="outline" className={`font-bold ${tableBadgeSize}`}>
                   Table {order.table?.table_number || 'N/A'}
                 </Badge>
-                {order.seat_numbers && (order.seat_numbers as number[]).length > 0 && (
+                {order.seat_number && (
                   <Badge variant="secondary" className="font-bold">
-                    Seats {(order.seat_numbers as number[]).join(', ')}
+                    Seat {order.seat_number}
                   </Badge>
                 )}
                 {urgent && <Badge variant="destructive" className={badgeSize}>URGENT</Badge>}
@@ -199,4 +201,4 @@ export const KitchenOrderCard = ({
       </Card>
     </motion.div>
   );
-};
+});

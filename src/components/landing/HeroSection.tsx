@@ -117,7 +117,7 @@ const HeroSection = ({ onGetStarted, onBookDemo, onWatchTour, cms }: HeroSection
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full sm:w-auto px-6 py-6 text-base rounded-full border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-foreground font-semibold"
+                className="w-full sm:w-auto px-6 py-6 text-base rounded-full border-primary-foreground/20 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-foreground font-semibold"
                 onClick={onWatchTour}>
                 <Play className="w-4 h-4 mr-1.5 fill-current" />
                 Watch Tour

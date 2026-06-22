@@ -2,9 +2,6 @@ import { useState, useRef } from "react";
 import {
   Plus,
   Trash2,
-  Edit2,
-  Save,
-  X,
   GripVertical,
   Loader2,
   ImageIcon,
@@ -134,8 +131,6 @@ export const CategoryManager = ({ restaurantId }: CategoryManagerProps) => {
   const { toast } = useToast();
 
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState("");
 
   const handleAddCategory = async () => {
     const name = newCategoryName.trim();
@@ -168,48 +163,7 @@ export const CategoryManager = ({ restaurantId }: CategoryManagerProps) => {
     }
   };
 
-  const handleStartEdit = (category: Category) => {
-    setEditingId(category.id);
-    setEditingName(category.name);
-  };
 
-  const handleSaveEdit = async () => {
-    if (!editingId) return;
-
-    const name = editingName.trim();
-    if (!name) {
-      toast({
-        title: "Enter a name",
-        description: "Category name cannot be empty.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await updateCategory.mutateAsync({
-        id: editingId,
-        updates: { name },
-      });
-      setEditingId(null);
-      setEditingName("");
-      toast({
-        title: "Category updated",
-        description: "Changes have been saved.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update category.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditingName("");
-  };
 
   const handleDelete = async (category: Category) => {
     if (
@@ -318,66 +272,23 @@ export const CategoryManager = ({ restaurantId }: CategoryManagerProps) => {
                 onUploaded={(url) => handleImageUploaded(category.id, url)}
               />
 
-              {editingId === category.id ? (
-                <>
-                  <Input
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    className="flex-1 h-8"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSaveEdit();
-                      if (e.key === "Escape") handleCancelEdit();
-                    }}
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
-                    onClick={handleSaveEdit}
-                    disabled={updateCategory.isPending}
-                  >
-                    {updateCategory.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4" />
-                    )}
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
-                    onClick={handleCancelEdit}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <span className="flex-1 font-medium">{category.name}</span>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
-                    onClick={() => handleStartEdit(category)}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(category)}
-                    disabled={deleteCategory.isPending}
-                  >
-                    {deleteCategory.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
-                  </Button>
-                </>
-              )}
+              {/* Category name and delete button */}
+              <>
+                <span className="flex-1 font-medium">{category.name}</span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={() => handleDelete(category)}
+                  disabled={deleteCategory.isPending}
+                >
+                  {deleteCategory.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </Button>
+              </>
             </div>
           ))}
 

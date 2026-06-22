@@ -40,8 +40,9 @@ Transform Zappy into a premium restaurant OS with unified UX across landing, cus
 |------|--------|---------|
 | Notifications | ✅ Done | Gutted `NotificationCenter.tsx` sheet; bell in `CustomerTopBar.tsx` now routes to `notifications` view; removed push notification toggle (VAPID broken); removed `onNotificationClick` prop |
 | Orders | ✅ Clean | `renderOrders()` already minimal — shows items, qty, price, status, timeline. No waiter/notification noise. |
-| QR Seat Selection | ✅ Done | Created `SeatPickerDialog.tsx` — shows seat 1-N (based on table capacity) after table selection; stores seat in `localStorage`; seat shown in profile |
+| QR Seat Selection | ✅ Done | Migrated to DB-backed `seat_occupancy`. Seat 1-N derived from table capacity. |
 | Search | ✅ OK | Already sticky (`sticky top-[56px]`), realtime filtering, category slider, mobile-optimized |
+| Session Isolation | ✅ Done | Migrated from raw arrays to cryptographic `seat_session_id` tokens bound directly to `orders`. Complete cross-talk immunity. Added Postgres triggers for source-of-truth table statuses. |
 
 ### P1 Queue
 - [ ] Higgsfield premium mobile UI (FoodCard, MenuItemRow, ItemDetailsDialog, empty/loading)

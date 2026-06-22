@@ -106,12 +106,22 @@ export function SeatPickerDialog({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.22 }}
           >
-            <div className="flex items-center gap-2 mb-4">
-              <Armchair className="w-4 h-4" style={{ color: accentColor }} />
-              <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                Select your seat
-              </span>
-            </div>
+            {capacity > 0 && occupiedSeats.length >= capacity ? (
+              <div className="flex flex-col items-center justify-center p-6 bg-red-50 dark:bg-red-950/30 rounded-2xl border border-red-100 dark:border-red-900 mb-6">
+                <Armchair className="w-10 h-10 text-red-500 mb-3 opacity-50" />
+                <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-1">Table Full</h3>
+                <p className="text-sm text-center text-red-500/80 dark:text-red-400/80">
+                  There are no available seats at this table.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-4">
+                  <Armchair className="w-4 h-4" style={{ color: accentColor }} />
+                  <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                    Select your seat
+                  </span>
+                </div>
 
             <div
               className="grid gap-3 mb-6"
@@ -162,6 +172,9 @@ export function SeatPickerDialog({
               })}
             </div>
 
+              </>
+            )}
+
             <Button
               className="w-full h-14 rounded-2xl text-base font-bold transition-all"
               style={
@@ -169,10 +182,12 @@ export function SeatPickerDialog({
                   ? { backgroundColor: accentColor, color: "#fff", opacity: 1 }
                   : { opacity: 0.45 }
               }
-              disabled={selectedSeats.length === 0}
+              disabled={selectedSeats.length === 0 || occupiedSeats.length >= capacity}
               onClick={() => selectedSeats.length > 0 && onConfirm(tableNumber, selectedSeats)}
             >
-              {selectedSeats.length > 0
+              {occupiedSeats.length >= capacity 
+                ? "Table Full" 
+                : selectedSeats.length > 0
                 ? `Confirm Seats (${[...selectedSeats].sort((a,b)=>a-b).join(',')})`
                 : "Pick a seat to continue"}
             </Button>

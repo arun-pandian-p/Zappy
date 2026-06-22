@@ -39,6 +39,15 @@ import QRMenuGenerator from "./pages/landing/QRMenuGenerator";
 import BlogIndex from "./pages/blog/BlogIndex";
 import BlogPost from "./pages/blog/BlogPost";
 
+// Legal & Company
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfService from "./pages/legal/TermsOfService";
+import CookiePolicy from "./pages/legal/CookiePolicy";
+import AboutUs from "./pages/landing/AboutUs";
+import Careers from "./pages/landing/Careers";
+import Features from "./pages/landing/Features";
+import GuestExperience from "./pages/landing/GuestExperience";
+
 const queryClient = new QueryClient();
 
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -83,16 +92,26 @@ const App = () => (
               <Route path="/r/:id" element={<QRRedirect />} />
 
               {/* SEO Landing Routes */}
-              <Route path="/menu-ocr" element={<MenuOCR />} />
-              <Route path="/restaurant-menu-management" element={<RestaurantMenuManagement />} />
-              <Route path="/digital-menu-software" element={<DigitalMenuSoftware />} />
+              <Route path="/ai-menu-ocr" element={<MenuOCR />} />
+              <Route path="/menu-management" element={<RestaurantMenuManagement />} />
+              <Route path="/digital-menu" element={<DigitalMenuSoftware />} />
               <Route path="/restaurant-ocr" element={<RestaurantOCR />} />
               <Route path="/ai-food-images" element={<AIFoodImages />} />
-              <Route path="/qr-menu-generator" element={<QRMenuGenerator />} />
+              <Route path="/qr-generator" element={<QRMenuGenerator />} />
 
               {/* Blog Routes */}
               <Route path="/blog" element={<BlogIndex />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+
+              {/* Company & Legal Routes */}
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/guest-experience" element={<GuestExperience />} />
+              <Route path="/contact-sales" element={<RequestQuote />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/cookie-policy" element={<CookiePolicy />} />
 
             {/* Staff routes — role-guarded */}
             <Route path="/kitchen" element={

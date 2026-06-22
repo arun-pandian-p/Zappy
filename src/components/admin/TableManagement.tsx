@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useTables, useCreateTable, useUpdateTable, useDeleteTable } from "@/hooks/useTables";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useTables, useCreateTable, useUpdateTable, useDeleteTable, useAllSeatOccupancy } from "@/hooks/useTables";
 import { useOrders } from "@/hooks/useOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/services/auditLogger";
@@ -12,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { 
   Grid3X3, Plus, Trash2, Combine, Split, UserPlus, 
   Clock, Coffee, Info, Loader2, AlertCircle, RefreshCw,
-  LayoutGrid
+  LayoutGrid, Users, DollarSign
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,14 +28,13 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
   const createTable = useCreateTable();
   const updateTable = useUpdateTable();
   const deleteTable = useDeleteTable();
+  const { data: allSeatOccupancy = [] } = useAllSeatOccupancy(restaurantId);
 
   const [newTableNumber, setNewTableNumber] = useState("");
   const [newCapacity, setNewCapacity] = useState("4");
   const [newSection, setNewSection] = useState("Main Hall");
 
-  // Local state for assignments and mock layout details
-  const [waiters, setWaiters] = useState<any[]>([]);
-  const [assignments, setAssignments] = useState<Record<string, string>>({}); // tableId -> waiterName
+  // Local state for layout details
   const [sectionsMap, setSectionsMap] = useState<Record<string, string>>({}); // tableId -> Section
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
   const [mergedTables, setMergedTables] = useState<Array<{ id: string; tableIds: string[]; name: string }>>([]);
@@ -49,36 +49,48 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
   const [reservationTime, setReservationTime] = useState("");
   const [reservationName, setReservationName] = useState("");
 
-  // Load waiters and assignments
-  useEffect(() => {
-    async function loadWorkforceData() {
-      if (!restaurantId) return;
-      try {
-        const { data: empData } = await supabase
-          .from("employees")
-          .select("*")
-          .eq("restaurant_id", restaurantId)
-          .eq("role", "WAITER");
-        setWaiters(empData || []);
+  // Load waiters and assignments via useQuery for realtime invalidation
+  const { data: waiters = [] } = useQuery({
+    queryKey: ["waiters", restaurantId],
+    queryFn: async () => {
+      if (!restaurantId) return [];
+      const { data } = await supabase.from("employees").select("*").eq("restaurant_id", restaurantId).eq("role", "WAITER");
+      return data || [];
+    },
+    enabled: !!restaurantId
+  });
 
-        const { data: assignData } = await supabase
-          .from("employee_assignments")
-          .select("*, employees(full_name)")
-          .eq("restaurant_id", restaurantId)
-          .is("unassigned_at", null);
-        
-        const mapping: Record<string, string> = {};
-        assignData?.forEach((as: any) => {
-          if (as.table_id && as.employees?.full_name) {
-            mapping[as.table_id] = as.employees.full_name;
-          }
-        });
-        setAssignments(mapping);
-      } catch (e) {
-        console.error("Error loading workforce data", e);
+  const { data: assignmentsData = [], refetch: refetchAssignments } = useQuery({
+    queryKey: ["employee_assignments", restaurantId],
+    queryFn: async () => {
+      if (!restaurantId) return [];
+      const { data } = await supabase.from("employee_assignments").select("*, employees(full_name)").eq("restaurant_id", restaurantId).is("unassigned_at", null);
+      return data || [];
+    },
+    enabled: !!restaurantId
+  });
+
+  const assignments = useMemo(() => {
+    const mapping: Record<string, string> = {};
+    assignmentsData.forEach((as: any) => {
+      if (as.table_id && as.employees?.full_name) {
+        mapping[as.table_id] = as.employees.full_name;
       }
-    }
-    loadWorkforceData();
+    });
+    return mapping;
+  }, [assignmentsData]);
+
+  // Real-time subscription for employee_assignments
+  useEffect(() => {
+    if (!restaurantId) return;
+    const channel = supabase.channel(`assignments-${restaurantId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "employee_assignments", filter: `restaurant_id=eq.${restaurantId}` }, () => {
+        refetchAssignments();
+      }).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [restaurantId, refetchAssignments]);
+
+  useEffect(() => {
 
     // Load sections & merges from localStorage
     const savedSections = localStorage.getItem(`zappy_sections_${restaurantId}`);
@@ -345,7 +357,7 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
           });
 
         if (error) throw error;
-        setAssignments(prev => ({ ...prev, [tableId]: waiter.full_name }));
+        refetchAssignments();
 
         logActivity({
           restaurantId,
@@ -357,9 +369,7 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
 
         toast({ title: "Waiter Assigned", description: `${waiter.full_name} assigned to Table ${selectedTableForAssign.table_number}` });
       } else {
-        const updated = { ...assignments };
-        delete updated[tableId];
-        setAssignments(updated);
+        refetchAssignments();
 
         logActivity({
           restaurantId,
@@ -382,15 +392,17 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
     const activeOrder = orders.find(
       (o) => o.table_id === tableId && o.status !== "completed" && o.status !== "cancelled"
     );
-    if (!activeOrder) return { hasOrder: false, bill: 0, time: "" };
+    if (!activeOrder) return { hasOrder: false, bill: 0, time: "", since: "" };
     
     const minutes = Math.floor((Date.now() - new Date(activeOrder.created_at).getTime()) / 60000);
     const duration = minutes < 1 ? "Just seated" : `${minutes}m ago`;
+    const since = new Date(activeOrder.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     return {
       hasOrder: true,
       bill: Number(activeOrder.total_amount || 0),
-      time: duration
+      time: duration,
+      since: since
     };
   };
 
@@ -401,24 +413,73 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
   const mergedIdsList = mergedTables.flatMap(m => m.tableIds);
   const standaloneTables = tables.filter(t => !mergedIdsList.includes(t.id));
 
+  // Summary Metrics Calculations
+  const totalTablesCount = tables.length;
+  const availableCount = tables.filter(t => t.status === "available" || !t.status).length;
+  const occupiedCount = tables.filter(t => t.status === "occupied").length;
+  const fullCount = tables.filter(t => t.status === "full").length;
+  const reservedCount = tables.filter(t => t.status === "reserved").length;
+  
+  const activeGuestsCount = allSeatOccupancy.length;
+  const totalCapacity = tables.reduce((sum, t) => sum + (t.capacity || 0), 0);
+  const occupancyPercent = totalCapacity > 0 ? Math.round((activeGuestsCount / totalCapacity) * 100) : 0;
+
   return (
     <div className="space-y-6">
       {/* Floor Header Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-6 border rounded-3xl shadow-sm">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Visual Floor Plan</h2>
-          <p className="text-sm text-muted-foreground">Manage real-time table occupancy, assignments, and merges.</p>
+          <p className="text-sm text-muted-foreground">Manage real-time table occupancy, assignments, and merges. Data synchronizes instantly.</p>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {selectedTableIds.length >= 2 && (
-            <Button onClick={handleMergeTables} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl gap-1">
+            <Button onClick={handleMergeTables} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl gap-1 shadow-md shadow-blue-500/20">
               <Combine className="w-4 h-4" /> Merge ({selectedTableIds.length})
             </Button>
           )}
-          <Button variant="outline" onClick={() => refetchTables()} className="rounded-xl gap-1.5">
-            <RefreshCw className="w-4 h-4" /> Refresh
-          </Button>
+          <Badge variant="outline" className="h-10 px-4 rounded-xl gap-2 font-medium bg-green-50 text-green-700 border-green-200">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Live Sync Active
+          </Badge>
         </div>
+      </div>
+
+      {/* Summary Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Card className="bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 shadow-sm rounded-2xl">
+          <CardContent className="p-4 flex flex-col justify-center">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Tables</span>
+            <span className="text-2xl font-black mt-1">{totalTablesCount}</span>
+          </CardContent>
+        </Card>
+        <Card className="bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-900/50 shadow-sm rounded-2xl">
+          <CardContent className="p-4 flex flex-col justify-center">
+            <span className="text-xs font-bold text-green-600 dark:text-green-500 uppercase tracking-wider">Available</span>
+            <span className="text-2xl font-black text-green-700 dark:text-green-400 mt-1">{availableCount}</span>
+          </CardContent>
+        </Card>
+        <Card className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50 shadow-sm rounded-2xl">
+          <CardContent className="p-4 flex flex-col justify-center">
+            <span className="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-wider">Occupied</span>
+            <span className="text-2xl font-black text-blue-700 dark:text-blue-400 mt-1">{occupiedCount}</span>
+          </CardContent>
+        </Card>
+        <Card className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50 shadow-sm rounded-2xl">
+          <CardContent className="p-4 flex flex-col justify-center">
+            <span className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-wider">Reserved</span>
+            <span className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1">{reservedCount}</span>
+          </CardContent>
+        </Card>
+        <Card className="bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/50 shadow-sm rounded-2xl relative overflow-hidden">
+          <CardContent className="p-4 flex flex-col justify-center relative z-10">
+            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-500 uppercase tracking-wider">Active Guests</span>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-2xl font-black text-indigo-700 dark:text-indigo-400">{activeGuestsCount}</span>
+              <span className="text-sm font-bold text-indigo-400 dark:text-indigo-600">/ {totalCapacity}</span>
+            </div>
+          </CardContent>
+          <div className="absolute bottom-0 left-0 h-1.5 bg-indigo-500 transition-all duration-1000 ease-out" style={{ width: `${occupancyPercent}%` }} />
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -500,12 +561,17 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
                       const billInfo = getTableBillInfo(table.id);
                       const waiterName = assignments[table.id];
                       
+                      const tableSeatsOccupied = allSeatOccupancy.filter(s => s.table_id === table.id).length;
+                      
                       // Status mapping colors
                       let statusBg = "bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400";
                       let indicatorColor = "bg-green-500";
                       if (table.status === "occupied") {
                         statusBg = "bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-400";
                         indicatorColor = "bg-blue-500";
+                      } else if (table.status === "full") {
+                        statusBg = "bg-purple-500/10 border-purple-500/20 text-purple-700 dark:text-purple-400";
+                        indicatorColor = "bg-purple-500";
                       } else if (table.status === "reserved") {
                         statusBg = "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400";
                         indicatorColor = "bg-amber-500";
@@ -527,22 +593,33 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
                             <div>
                               <div className="flex justify-between items-start">
                                 <span className="font-extrabold text-lg">Table {table.table_number}</span>
-                                <Badge variant="outline" className={`text-[10px] capitalize font-bold gap-1 px-2 ${statusBg}`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${indicatorColor}`} />
+                                <Badge variant="outline" className={`text-[10px] capitalize font-bold gap-1.5 px-2.5 h-6 rounded-full border-2 ${statusBg}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${indicatorColor} ${table.status === 'occupied' || table.status === 'reserved' || table.status === 'full' ? 'animate-pulse' : ''}`} />
                                   {table.status?.replace('_', ' ') || "available"}
                                 </Badge>
                               </div>
-                              <div className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
-                                <Coffee className="w-3.5 h-3.5" /> {table.capacity} Seats
+                              <div className="text-xs font-semibold text-muted-foreground mt-2 flex items-center gap-2">
+                                <Users className="w-3.5 h-3.5" /> 
+                                {(() => {
+                                  return (
+                                    <span className={tableSeatsOccupied > 0 ? "text-slate-900 dark:text-slate-100" : ""}>
+                                      {tableSeatsOccupied}/{table.capacity}
+                                    </span>
+                                  );
+                                })()} Guests
                               </div>
                             </div>
 
                             {/* Card Bill Info */}
                             {billInfo.hasOrder && (
-                              <div className="border-t pt-2 mt-2">
-                                <div className="flex justify-between text-xs font-semibold text-slate-800 dark:text-slate-200">
-                                  <span>Bill: ₹{billInfo.bill.toFixed(0)}</span>
-                                  <span className="text-muted-foreground flex items-center gap-0.5"><Clock className="w-3 h-3" /> {billInfo.time}</span>
+                              <div className="border-t pt-3 mt-3 bg-slate-50/50 dark:bg-slate-900/50 -mx-4 px-4 pb-2">
+                                <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  <span className="flex items-center text-emerald-600 dark:text-emerald-400">
+                                    <DollarSign className="w-3.5 h-3.5 mr-0.5" /> {billInfo.bill.toFixed(2)}
+                                  </span>
+                                  <span className="text-slate-500 flex items-center gap-1">
+                                    <Clock className="w-3 h-3 text-blue-500" /> Since {billInfo.since}
+                                  </span>
                                 </div>
                               </div>
                             )}

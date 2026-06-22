@@ -545,9 +545,6 @@ const SuperAdminDashboard = () => {
                   <p className="text-sm text-muted-foreground">{currentPage?.description}</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
-                Back to Admin
-              </Button>
             </div>
           </header>
           <main className="p-6">

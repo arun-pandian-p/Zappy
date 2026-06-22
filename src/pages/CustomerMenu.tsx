@@ -31,7 +31,7 @@ import { useCreateWaiterCall } from '@/hooks/useWaiterCalls';
 import { useRecentOrders, addRecentOrderId } from '@/hooks/useRecentOrders';
 import { checkRateLimit, RATE_LIMITS, getRemainingCooldown } from '@/utils/rateLimiter';
 
-import { useTableByNumber, useTables } from '@/hooks/useTables';
+import { useTableByNumber, useTables, useSeatOccupancy } from '@/hooks/useTables';
 import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
 import { SeatPickerDialog } from '@/components/menu/SeatPickerDialog';
 import { useActiveEnterprisePromotions } from '@/hooks/useEnterprisePromotions';
@@ -129,27 +129,30 @@ const CustomerMenu = () => {
     tableId || (restaurantId ? getPersistedTable(restaurantId) : '')
   );
 
-  // Seat persisted alongside table — 4-hour TTL
-  const getPersistedSeats = (rId: string, tNum: string): number[] => {
+  // Seat session persisted alongside table — 4-hour TTL
+  const getPersistedSeatSession = (rId: string, tNum: string) => {
     try {
-      const raw = localStorage.getItem(`qr_seat_${rId}_${tNum}`);
-      if (!raw) return [];
-      const { seatNumbers, expiresAt } = JSON.parse(raw);
-      if (Date.now() > expiresAt) {
-        localStorage.removeItem(`qr_seat_${rId}_${tNum}`);
-        return [];
+      const raw = localStorage.getItem(`zappy_seat_session_${rId}_${tNum}`);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (Date.now() > data.expiresAt) {
+        localStorage.removeItem(`zappy_seat_session_${rId}_${tNum}`);
+        return null;
       }
-      return Array.isArray(seatNumbers) ? seatNumbers : (seatNumbers ? [seatNumbers] : []);
+      return data;
     } catch {
-      return [];
+      return null;
     }
   };
 
-  const [selectedSeatNumbers, setSelectedSeatNumbers] = useState<number[]>(() =>
+  const [seatSessionData, setSeatSessionData] = useState<{seatSessionId: string, seatNumbers: number[]} | null>(() =>
     restaurantId && (tableId || getPersistedTable(restaurantId))
-      ? getPersistedSeats(restaurantId, tableId || getPersistedTable(restaurantId))
-      : []
+      ? getPersistedSeatSession(restaurantId, tableId || getPersistedTable(restaurantId))
+      : null
   );
+
+  const selectedSeatNumbers = seatSessionData?.seatNumbers || [];
+  const seatSessionId = seatSessionData?.seatSessionId;
 
   // Pending table — awaiting seat confirmation before committing to state
   const [pendingSeatTable, setPendingSeatTable] = useState<{ tableNumber: string; capacity: number } | null>(null);
@@ -289,8 +292,41 @@ const CustomerMenu = () => {
   const resolvedTableId = tableData?.id;
   const isDataLoading = restaurantLoading || menuLoading || (dynamicTableId && tableLoading);
 
+  // Fetch active table session for the table
+  const { data: activeSession, refetch: refetchActiveSession } = useQuery({
+    queryKey: ['active-table-session', restaurantId, resolvedTableId],
+    queryFn: async () => {
+      if (!restaurantId || !resolvedTableId) return null;
+      const { data, error } = await supabase
+        .from('table_sessions')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .eq('table_id', resolvedTableId)
+        .neq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) {
+        console.error('Error fetching table session:', error);
+        return null;
+      }
+      return data && data.length > 0 ? data[0] : null;
+    },
+    enabled: !!restaurantId && !!resolvedTableId,
+    staleTime: 5000,
+  });
+
+  // Debug logs for session state tracking
+  console.log("[QR Flow] activeSession:", activeSession?.id);
+  console.log("[QR Flow] tableSessionId:", activeSession?.id);
+  console.log("[QR Flow] seatSessionId:", seatSessionId);
+
   // Fetch customer orders for this table (with realtime)
-  const { data: customerOrders = [] } = useCustomerOrders(restaurantId, resolvedTableId);
+  const { data: customerOrders = [] } = useCustomerOrders(
+    restaurantId,
+    resolvedTableId,
+    seatSessionId
+  );
 
   // Fetch recent orders stored in localStorage
   const { data: recentOrdersData = [], refreshIds: refreshRecentOrderIds } = useRecentOrders(restaurantId || undefined);
@@ -336,29 +372,10 @@ const CustomerMenu = () => {
   const createOrder = useCreateOrder();
   const createWaiterCall = useCreateWaiterCall();
 
-  // Fetch active table session for the table
-  const { data: activeSession, refetch: refetchActiveSession } = useQuery({
-    queryKey: ['active-table-session', restaurantId, resolvedTableId],
-    queryFn: async () => {
-      if (!restaurantId || !resolvedTableId) return null;
-      const { data, error } = await supabase
-        .from('table_sessions')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .eq('table_id', resolvedTableId)
-        .neq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(1);
-      
-      if (error) {
-        console.error('Error fetching table session:', error);
-        return null;
-      }
-      return data && data.length > 0 ? data[0] : null;
-    },
-    enabled: !!restaurantId && !!resolvedTableId,
-    staleTime: 5000,
-  });
+
+
+  const { data: seatOccupancy = [] } = useSeatOccupancy(restaurantId, activeSession?.id);
+  const occupiedSeatNumbers = useMemo(() => seatOccupancy.map(s => s.seat_number), [seatOccupancy]);
 
   // Explicit session creation — called synchronously from seat confirm handler
   const createTableSession = useMutation({
@@ -383,12 +400,29 @@ const CustomerMenu = () => {
           table_id: params.tableId,
           status: 'seated',
           seated_at: new Date().toISOString(),
-          token_no: tokenNo,
-          seat_numbers: params.seatNumbers,
         })
         .select()
         .single();
       if (error) throw error;
+
+      // Also mark these seats as occupied in the seat_occupancy table
+      if (params.seatNumbers && params.seatNumbers.length > 0) {
+        const seatInserts = params.seatNumbers.map(seat => ({
+          restaurant_id: params.restaurantId,
+          table_id: params.tableId,
+          table_session_id: data.id,
+          seat_number: seat,
+          status: 'occupied'
+        }));
+        await supabase.from('seat_occupancy').insert(seatInserts);
+
+        // Update the table status to occupied so Admin Floor Plan updates correctly
+        await supabase
+          .from('tables')
+          .update({ status: 'occupied' })
+          .eq('id', params.tableId);
+      }
+
       return data;
     },
     onSuccess: (data) => {
@@ -603,15 +637,57 @@ const CustomerMenu = () => {
     }
 
     try {
-      // Create table session and wait for success
-      await createTableSession.mutateAsync({
-        restaurantId,
-        tableId: tId,
-        seatNumbers
-      });
+      // Create table session if one doesn't exist yet
+      let sessionId = activeSession?.id;
+      if (!sessionId) {
+        const newSession = await createTableSession.mutateAsync({
+          restaurantId,
+          tableId: tId,
+          seatNumbers
+        });
+        sessionId = newSession.id;
+      }
+
+      let primarySeatSessionId = "";
+
+      // Explicitly claim the seats in the seat_occupancy table
+      if (sessionId && seatNumbers.length > 0) {
+        const occupancyRecords = seatNumbers.map(seat => ({
+          restaurant_id: restaurantId,
+          table_id: tId,
+          table_session_id: sessionId,
+          seat_number: seat,
+          status: 'occupied'
+        }));
+        
+        const { data: seatData, error: seatError } = await supabase.from('seat_occupancy').insert(occupancyRecords).select();
+        if (seatError && seatError.code !== '23505') {
+          console.error("Failed to insert seat occupancy:", seatError);
+          throw new Error("Could not reserve seats. They might be occupied already.");
+        }
+        
+        // Grab the ID of the first seat as the primary session token
+        if (seatData && seatData.length > 0) {
+          primarySeatSessionId = seatData[0].id;
+        } else {
+          const { data: existingSeats, error: fetchError } = await supabase
+            .from('seat_occupancy')
+            .select('id')
+            .eq('table_session_id', sessionId)
+            .in('seat_number', seatNumbers)
+            .order('seat_number', { ascending: true });
+          
+          if (!fetchError && existingSeats && existingSeats.length > 0) {
+            primarySeatSessionId = existingSeats[0].id;
+          }
+        }
+      }
 
       setDynamicTableId(tableNumber);
-      setSelectedSeatNumbers(seatNumbers);
+      setSeatSessionData({
+        seatSessionId: primarySeatSessionId,
+        seatNumbers: seatNumbers
+      });
       setPendingSeatTable(null);
       setCurrentView('home'); // ← redirect to Home immediately after confirm
 
@@ -620,11 +696,13 @@ const CustomerMenu = () => {
         `qr_table_${restaurantId}`,
         JSON.stringify({ tableNumber, timestamp: Date.now() })
       );
-      // Persist seats with 4h TTL
+      // Persist seat session with 4h TTL
       localStorage.setItem(
-        `qr_seat_${restaurantId}_${tableNumber}`,
-        JSON.stringify({ seatNumbers, expiresAt: Date.now() + 4 * 60 * 60 * 1000 })
+        `zappy_seat_session_${restaurantId}_${tableNumber}`,
+        JSON.stringify({ seatSessionId: primarySeatSessionId, seatNumbers, expiresAt: Date.now() + 4 * 60 * 60 * 1000 })
       );
+      // Remove old qr_seat format if it exists
+      localStorage.removeItem(`qr_seat_${restaurantId}_${tableNumber}`);
       // Update URL without reload
       const url = new URL(window.location.href);
       url.searchParams.set('table', tableNumber);
@@ -1018,7 +1096,9 @@ const CustomerMenu = () => {
           customer_name: customerName.trim() || null,
           customer_phone: customerPhone.trim() || null,
           token_no: activeSession?.token_no || null,
-          seat_numbers: activeSession?.seat_numbers || selectedSeatNumbers || null,
+          table_session_id: activeSession?.id || null,
+          seat_session_id: seatSessionId || null,
+          seat_number: selectedSeatNumbers.length > 0 ? selectedSeatNumbers[0] : null,
         } as any,
         items: cartItems.map(item => ({
           name: item.name,
@@ -1803,6 +1883,7 @@ const CustomerMenu = () => {
         logoUrl={splashLogo}
         restaurantName={splashName || undefined}
         primaryColor={splashColor}
+        occupiedSeats={occupiedSeatNumbers}
         onConfirm={handleSeatConfirm}
       />
 

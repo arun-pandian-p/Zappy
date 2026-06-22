@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChefHat, Volume2, VolumeX, Clock, Play, Check, ArrowLeft, Bell, RefreshCw, AlertCircle, UtensilsCrossed, XCircle, Eye } from 'lucide-react';
+import { ChefHat, Volume2, VolumeX, Clock, Play, Check, Bell, RefreshCw, AlertCircle, UtensilsCrossed, XCircle, Eye } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,9 +9,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useSound, SOUNDS } from '@/hooks/useSound';
 import { useOrders, useKitchenOrderActions, type OrderWithItems } from '@/hooks/useOrders';
 import { usePendingWaiterCalls, useAcknowledgeWaiterCall, useResolveWaiterCall } from '@/hooks/useWaiterCalls';
+import type { WaiterCallWithTable } from '@/hooks/useWaiterCalls';
 import { useRestaurantDetails } from '@/hooks/useRestaurant';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { useVoiceAnnouncement } from '@/hooks/useVoiceAnnouncement';
 
 const VoicePlayer = ({ url }: { url: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -153,8 +155,9 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
 
   const [lastOrderCount, setLastOrderCount] = useState(0);
   const [cancelOrder, setCancelOrder] = useState<{ id: string; number: number } | null>(null);
-  const { play: playNewOrderSound, isMuted, toggleMute } = useSound(SOUNDS.NEW_ORDER);
-  const { play: playWaiterCallSound } = useSound(SOUNDS.WAITER_CALL);
+  
+  // Replace basic useSound with robust TTS
+  const { isMuted, toggleMute, language, toggleLanguage, announce, clearAnnouncement } = useVoiceAnnouncement();
 
   // KDS UI State
   const [isTvMode, setIsTvMode] = useState(false);
@@ -233,25 +236,62 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
 
   const waiterCallsCount = waiterCalls.length;
 
-  // Play sound on new orders
-  useEffect(() => {
-    const currentPendingCount = pendingOrders.length;
-    if (currentPendingCount > lastOrderCount && !isMuted && lastOrderCount > 0) {
-      playNewOrderSound();
-      toast({
-        title: '🔔 New Order!',
-        description: `${currentPendingCount - lastOrderCount} new order(s) received`,
-      });
-    }
-    setLastOrderCount(currentPendingCount);
-  }, [pendingOrders.length, lastOrderCount, isMuted, playNewOrderSound, toast]);
+  // Track previous state for Voice Announcements diffing
+  const prevOrdersRef = useRef<OrderWithItems[]>([]);
+  const prevWaiterCallsRef = useRef<WaiterCallWithTable[]>([]);
 
-  // Play waiter call sound
   useEffect(() => {
-    if (waiterCallsCount > 0 && !isMuted) {
-      playWaiterCallSound();
-    }
-  }, [waiterCallsCount, isMuted, playWaiterCallSound]);
+    const prevOrders = prevOrdersRef.current;
+    
+    orders.forEach(order => {
+      const prevOrder = prevOrders.find(o => o.id === order.id);
+      const tableStr = order.table?.table_number ? `Table ${order.table.table_number}` : 'Unknown Table';
+      
+      if (!prevOrder) {
+        if (order.status === 'pending' || order.status === 'confirmed') {
+          announce(`order-${order.id}-new`, `New order received from ${tableStr}.`, `${tableStr} லிருந்து புதிய ஆர்டர் வந்துள்ளது.`, true, 'order');
+        }
+      } else if (prevOrder.status !== order.status) {
+        clearAnnouncement(`order-${order.id}-new`); // Clear pending repetition loop
+        if (order.status === 'preparing') {
+          announce(`order-${order.id}-prep`, `Order for ${tableStr} is now being prepared.`, `${tableStr} க்கான ஆர்டர் தயாராகிறது.`, false, 'order');
+        } else if (order.status === 'ready') {
+          announce(`order-${order.id}-ready`, `Order ready for ${tableStr}.`, `${tableStr} க்கான ஆர்டர் தயாராக உள்ளது.`, false, 'order');
+        } else if (order.status === 'served') {
+          announce(`order-${order.id}-served`, `Order served to ${tableStr}.`, `${tableStr} க்கான ஆர்டர் வழங்கப்பட்டது.`, false, 'order');
+        }
+      }
+    });
+
+    prevOrdersRef.current = orders;
+  }, [orders, announce, clearAnnouncement]);
+
+  useEffect(() => {
+    const prevCalls = prevWaiterCallsRef.current;
+
+    waiterCalls.forEach(call => {
+      const prevCall = prevCalls.find(c => c.id === call.id);
+      const tableStr = call.table?.table_number ? `Table ${call.table.table_number}` : 'Unknown Table';
+      
+      if (!prevCall && call.status === 'pending') {
+        const reason = call.reason?.toLowerCase() || '';
+        if (reason.includes('bill') || reason.includes('payment') || reason.includes('pay')) {
+          announce(`call-${call.id}`, `Billing requested from ${tableStr}.`, `${tableStr} லிருந்து பில் கேட்கப்பட்டுள்ளது.`, true, 'call');
+        } else {
+          announce(`call-${call.id}`, `Attention staff. Waiter calling from ${tableStr}.`, `${tableStr} லிருந்து பணியாளர் அழைக்கப்படுகிறார்.`, true, 'call');
+        }
+      }
+    });
+
+    // Handle cleared calls (acknowledged or resolved)
+    prevCalls.forEach(prevCall => {
+      if (!waiterCalls.find(c => c.id === prevCall.id)) {
+        clearAnnouncement(`call-${prevCall.id}`);
+      }
+    });
+
+    prevWaiterCallsRef.current = waiterCalls;
+  }, [waiterCalls, announce, clearAnnouncement]);
 
   const { isConnected: printerConnected, printKitchenOrder } = usePrinter(restaurantId);
 
@@ -376,9 +416,6 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => navigate('/roles')}>
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
                     <ChefHat className="w-6 h-6 text-warning" />
@@ -411,7 +448,10 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
                   <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                   <span className="hidden sm:inline">Refresh</span>
                 </Button>
-                <Button variant={isMuted ? 'outline' : 'default'} size="icon" onClick={toggleMute}>
+                <Button variant="outline" size="icon" onClick={toggleLanguage} title={`Switch to ${language === 'en' ? 'Tamil' : 'English'}`}>
+                  {language === 'en' ? <span className="font-bold text-xs">EN</span> : <span className="font-bold text-xs">TA</span>}
+                </Button>
+                <Button variant={isMuted ? 'outline' : 'default'} size="icon" onClick={toggleMute} title={isMuted ? "Unmute Voice Announcements" : "Mute Voice Announcements"}>
                   {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                 </Button>
                 <Button variant="outline" size="icon" onClick={handleLogout} title="Logout">

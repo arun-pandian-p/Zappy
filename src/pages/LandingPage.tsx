@@ -13,7 +13,7 @@ import { Solution } from '@/pages/landing/sections/Solution';
 import { Features } from '@/pages/landing/sections/Features';
 import { Proof } from '@/pages/landing/sections/Proof';
 import { CTA } from '@/pages/landing/sections/CTA';
-import { Footer } from '@/pages/landing/Footer';
+import Footer from '@/components/landing/Footer';
 import { useLandingCMS } from '@/hooks/useLandingCMS';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { invokeFunction } from '@/integrations/supabase/functions';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
+import { emailService } from '@/services/emailService';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -77,24 +78,19 @@ const LandingPage = () => {
 
       if (dbError) throw dbError;
 
-      // 2. Trigger notification Edge function
-      const { error } = await invokeFunction('notify-quote', {
-        body: {
-          name: demoForm.name,
-          email: demoForm.email,
-          phone: demoForm.phone || null,
-          restaurant_name: demoForm.restaurantName,
-          city: demoForm.city || null,
-          num_tables: 0,
-          current_system: 'demo_request',
-          features_needed: [`Branches: ${demoForm.branches}`],
-          message: `Demo request from Zappy landing page. City: ${demoForm.city}, Branches: ${demoForm.branches}.`,
-          is_demo_request: true,
-          branches: demoForm.branches
-        }
-      });
+      // 2. Send emails using Resend (via our custom fetch service)
+      const emailData = {
+        name: demoForm.name,
+        email: demoForm.email,
+        phone: demoForm.phone,
+        restaurant_name: demoForm.restaurantName,
+        city: demoForm.city,
+        branches: demoForm.branches
+      };
 
-      if (error) throw error;
+      // Fire and forget emails to not block UI success
+      emailService.sendDemoNotification(emailData).catch(err => console.error('Failed to send notification email', err));
+      emailService.sendDemoConfirmation(emailData).catch(err => console.error('Failed to send confirmation email', err));
 
       setDemoSubmitted(true);
       toast({ title: 'Request Submitted!', description: 'We will contact you shortly.' });

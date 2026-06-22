@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CreditCard, Volume2, VolumeX, BarChart3, Receipt, Clock, ArrowLeft,
+  CreditCard, Volume2, VolumeX, BarChart3, Receipt, Clock,
   FileText, Banknote, Smartphone, CreditCard as CardIcon, Printer,
   AlertCircle, RefreshCw, Users, TrendingUp, Percent, Eye, ChevronDown, ChevronUp,
   User, Phone, Hash, Calendar, IndianRupee, Wallet, Split, Search, Keyboard
@@ -172,7 +172,52 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
       : undefined;
 
     try {
-      // Attempt atomic billing transaction (single DB call)
+      const isMerged = selectedOrder.id.startsWith('MERGED-');
+      const mergedOrderIds = (selectedOrder as any).merged_order_ids as string[] | undefined;
+
+      if (isMerged && mergedOrderIds) {
+        // Fallback approach for merged orders (RPC doesn't support array of order IDs yet)
+        const invoiceItems = selectedOrder.order_items?.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: Number(item.price),
+          total: Number(item.price) * item.quantity,
+        })) || [];
+
+        // Update all associated orders
+        await supabase
+          .from('orders')
+          .update({
+            status: 'completed',
+            payment_method: selectedPaymentMethod,
+            payment_status: 'paid',
+          })
+          .in('id', mergedOrderIds);
+
+        // Create one master invoice linked to the first order ID
+        await supabase
+          .from('invoices')
+          .insert({
+            restaurant_id: restaurantId,
+            order_id: mergedOrderIds[0],
+            invoice_number: generateInvoiceNumber(restaurantId),
+            subtotal: Number(selectedOrder.subtotal) || 0,
+            tax_amount: Number(selectedOrder.tax_amount) || 0,
+            service_charge: Number(selectedOrder.service_charge) || 0,
+            discount_amount: discountAmount,
+            total_amount: adjustedTotal,
+            payment_method: selectedPaymentMethod,
+            payment_status: 'paid',
+            items: invoiceItems as any,
+            customer_name: customerName.trim() || null,
+            customer_phone: customerPhone.trim() || null,
+            notes: splitNote ? `MERGED BILL | ${splitNote}` : 'MERGED BILL',
+          });
+
+        refetchOrders();
+      } else {
+        // Attempt atomic billing transaction (single DB call)
       await completeBilling.mutateAsync({
         orderId: selectedOrder.id,
         paymentMethod: selectedPaymentMethod,
@@ -186,6 +231,50 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
       if (!isMuted) playSound();
 
+      // Auto-release seats for billed orders
+      if (isMerged && mergedOrderIds) {
+        const billedOrders = readyOrders.filter(o => mergedOrderIds.includes(o.id));
+        const seatsToRelease = billedOrders.map(o => o.seat_number).filter(Boolean) as number[];
+        if (seatsToRelease.length > 0 && selectedOrder.table_id) {
+          await supabase
+            .from('seat_occupancy')
+            .update({ status: 'available' })
+            .eq('table_id', selectedOrder.table_id)
+            .in('seat_number', seatsToRelease);
+        }
+      } else if (selectedOrder.seat_number && selectedOrder.table_id) {
+        await supabase
+          .from('seat_occupancy')
+          .update({ status: 'available' })
+          .eq('table_id', selectedOrder.table_id)
+          .eq('seat_number', selectedOrder.seat_number);
+      }
+
+      // Check if table is fully empty now and auto-close session
+      if (selectedOrder.table_id) {
+        const { data: remainingSeats } = await supabase
+          .from('seat_occupancy')
+          .select('id')
+          .eq('table_id', selectedOrder.table_id)
+          .eq('status', 'occupied')
+          .limit(1);
+
+        if (!remainingSeats || remainingSeats.length === 0) {
+          // Close all active table sessions for this table
+          await supabase
+            .from('table_sessions')
+            .update({ status: 'completed' })
+            .eq('table_id', selectedOrder.table_id)
+            .neq('status', 'completed');
+
+          // Reset table status
+          await supabase
+            .from('tables')
+            .update({ status: 'needs_cleaning' })
+            .eq('id', selectedOrder.table_id);
+        }
+      }
+
       toast({
         title: '✅ Payment Completed',
         description: `Order #${selectedOrder.order_number} paid via ${selectedPaymentMethod}. Total: ${currencySymbol}${adjustedTotal.toFixed(2)}`,
@@ -195,6 +284,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
       setShowReceiptPreview(true);
       setSelectedOrder(null);
       setSelectedDiscount(0);
+      }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
 
@@ -383,9 +473,6 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => navigate('/roles')}>
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
                     <CreditCard className="w-6 h-6 text-success" />
@@ -526,11 +613,59 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
               {/* Ready Orders */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-success" />
-                    Ready for Billing
-                    <Badge variant="secondary" className="ml-auto">{readyOrders.length}</Badge>
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-success" />
+                      Ready for Billing
+                      <Badge variant="secondary">{readyOrders.length}</Badge>
+                    </CardTitle>
+                    {selectedTableFilter && readyOrders.length > 1 && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => {
+                          const mergedItems = readyOrders.flatMap(o => o.order_items || []);
+                          const mergedSubtotal = readyOrders.reduce((sum, o) => sum + Number(o.subtotal || 0), 0);
+                          const mergedTax = readyOrders.reduce((sum, o) => sum + Number(o.tax_amount || 0), 0);
+                          const mergedServiceCharge = readyOrders.reduce((sum, o) => sum + Number(o.service_charge || 0), 0);
+                          const mergedTotal = readyOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+
+                          setSelectedOrder({
+                            id: 'MERGED-' + selectedTableFilter,
+                            restaurant_id: restaurantId!,
+                            table_id: selectedTableFilter,
+                            table: readyOrders[0].table,
+                            order_number: readyOrders[0].order_number,
+                            subtotal: mergedSubtotal,
+                            tax_amount: mergedTax,
+                            service_charge: mergedServiceCharge,
+                            total_amount: mergedTotal,
+                            status: 'ready',
+                            order_items: mergedItems,
+                            created_at: new Date().toISOString(),
+                            seat_number: null,
+                            payment_status: 'pending',
+                            payment_method: null,
+                            cancel_reason: null,
+                            cancelled_at: null,
+                            customer_name: null,
+                            customer_phone: null,
+                            estimated_ready_at: null,
+                            ready_at: null,
+                            special_instructions: 'Merged Table Bill',
+                            started_preparing_at: null,
+                            updated_at: new Date().toISOString(),
+                            // Store original IDs for completion
+                            merged_order_ids: readyOrders.map(o => o.id)
+                          } as any);
+                          setSelectedDiscount(0);
+                        }}
+                      >
+                        <Split className="w-4 h-4 mr-2" />
+                        Merge {readyOrders.length} Orders
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3 max-h-[65vh] overflow-y-auto">
                   <AnimatePresence>
@@ -572,6 +707,11 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                                     <Badge variant="outline" className="font-bold">
                                       {order.table?.table_number || 'Takeaway'}
                                     </Badge>
+                                    {order.seat_number && (
+                                      <Badge variant="secondary" className="text-[10px] font-bold">
+                                        Seat {order.seat_number}
+                                      </Badge>
+                                    )}
                                     <Badge variant="secondary" className="text-[10px]">
                                       #{order.order_number}
                                     </Badge>

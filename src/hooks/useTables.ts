@@ -190,3 +190,141 @@ export function useUpdateTableStatus() {
     },
   });
 }
+
+// Seat Occupancy Hooks
+export function useSeatOccupancy(restaurantId?: string, tableSessionId?: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ["seat-occupancy", restaurantId, tableSessionId],
+    queryFn: async () => {
+      if (!restaurantId || !tableSessionId) return [];
+      
+      const { data, error } = await supabase
+        .from("seat_occupancy")
+        .select("*")
+        .eq("restaurant_id", restaurantId)
+        .eq("table_session_id", tableSessionId)
+        .eq("status", "occupied");
+
+      if (error) {
+        console.error("Error fetching seat occupancy:", error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!restaurantId && !!tableSessionId,
+    staleTime: 5000,
+  });
+
+  // Real-time subscription for seat occupancy
+  useEffect(() => {
+    if (!restaurantId || !tableSessionId) return;
+
+    const channel = supabase
+      .channel(`seat-occupancy-${tableSessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "seat_occupancy",
+          filter: `table_session_id=eq.${tableSessionId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["seat-occupancy", restaurantId, tableSessionId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [restaurantId, tableSessionId, queryClient]);
+
+  return query;
+}
+
+export function useAllSeatOccupancy(restaurantId?: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ["seat-occupancy-all", restaurantId],
+    queryFn: async () => {
+      if (!restaurantId) return [];
+      
+      const { data, error } = await supabase
+        .from("seat_occupancy")
+        .select("*")
+        .eq("restaurant_id", restaurantId)
+        .eq("status", "occupied");
+
+      if (error) {
+        console.error("Error fetching all seat occupancy:", error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!restaurantId,
+    staleTime: 5000,
+  });
+
+  // Real-time subscription for all seat occupancy
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    const channel = supabase
+      .channel(`seat-occupancy-all-${restaurantId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "seat_occupancy",
+          filter: `restaurant_id=eq.${restaurantId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["seat-occupancy-all", restaurantId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [restaurantId, queryClient]);
+
+  return query;
+}
+
+export function useOccupySeats() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { 
+      restaurantId: string; 
+      tableId: string; 
+      tableSessionId: string; 
+      seatNumbers: number[] 
+    }) => {
+      const inserts = params.seatNumbers.map(seat => ({
+        restaurant_id: params.restaurantId,
+        table_id: params.tableId,
+        table_session_id: params.tableSessionId,
+        seat_number: seat,
+        status: 'occupied'
+      }));
+
+      const { data, error } = await supabase
+        .from("seat_occupancy")
+        .insert(inserts)
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["seat-occupancy", variables.restaurantId, variables.tableSessionId] });
+    }
+  });
+}
