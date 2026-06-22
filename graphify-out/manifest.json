@@ -1,0 +1,4922 @@
+{
+  ".mcp.json": {
+    "mtime": 1782119419.4566932,
+    "ast_hash": "c62fca308780cb7631d3ba55ad86393f",
+    "semantic_hash": ""
+  },
+  ".vscode/settings.json": {
+    "mtime": 1782119419.4577005,
+    "ast_hash": "4aa85c6acde752675b31b354987521ce",
+    "semantic_hash": ""
+  },
+  "components.json": {
+    "mtime": 1782119419.4577005,
+    "ast_hash": "237367fea9ecc053a2edc802502d67ae",
+    "semantic_hash": ""
+  },
+  "eslint.config.js": {
+    "mtime": 1782119419.4577005,
+    "ast_hash": "65c5220e325ec032889304a7c539e4eb",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1782120433.8339093,
+    "ast_hash": "d8841447debe2e77e8f3a2d19fd6d28f",
+    "semantic_hash": ""
+  },
+  "postcss.config.js": {
+    "mtime": 1782119419.4646413,
+    "ast_hash": "33fad9c02cb0ec6d6030369ef6347d57",
+    "semantic_hash": ""
+  },
+  "prisma.config.ts": {
+    "mtime": 1782119419.4646413,
+    "ast_hash": "444647e41040b623b99346e28373e2b7",
+    "semantic_hash": ""
+  },
+  "public/manifest.json": {
+    "mtime": 1782119419.4993787,
+    "ast_hash": "214b45f82914affe3211a2cb2117d0fb",
+    "semantic_hash": ""
+  },
+  "public/store/items_mapping.json": {
+    "mtime": 1782119419.8026042,
+    "ast_hash": "60f8895ec7cf8c0d7628f98fa3e009f7",
+    "semantic_hash": ""
+  },
+  "public/sw.js": {
+    "mtime": 1782119420.2350168,
+    "ast_hash": "20b56b52f504ca8dbb6445b9bb448d9a",
+    "semantic_hash": ""
+  },
+  "scripts/generate_images_gemini.js": {
+    "mtime": 1782119420.3778992,
+    "ast_hash": "d10bf65dfd02ac49f0500fdae3793417",
+    "semantic_hash": ""
+  },
+  "scripts/items.json": {
+    "mtime": 1782119420.3778992,
+    "ast_hash": "745e5e6ce2b0d478af8c855554aed58c",
+    "semantic_hash": ""
+  },
+  "scripts/test_query.js": {
+    "mtime": 1782119420.3778992,
+    "ast_hash": "59c59bde0acec3d7fb9a35cc459b511d",
+    "semantic_hash": ""
+  },
+  "skills-lock.json": {
+    "mtime": 1782119420.3778992,
+    "ast_hash": "bb5f09294699b425d5e755732c7c2170",
+    "semantic_hash": ""
+  },
+  "src/App.tsx": {
+    "mtime": 1782123427.703583,
+    "ast_hash": "1f735c0c980d8077456f6c5b066810ff",
+    "semantic_hash": ""
+  },
+  "src/components/ErrorBoundary.tsx": {
+    "mtime": 1782119420.4060805,
+    "ast_hash": "b43fd497b8750f341887bb105ad18eb8",
+    "semantic_hash": ""
+  },
+  "src/components/NavLink.tsx": {
+    "mtime": 1782119420.4072297,
+    "ast_hash": "889a81fd2eb948eb406c9ccabe175918",
+    "semantic_hash": ""
+  },
+  "src/components/admin/AdminHeader.tsx": {
+    "mtime": 1782119420.4072297,
+    "ast_hash": "5a547b507a6af698df81a11297a5fb1a",
+    "semantic_hash": ""
+  },
+  "src/components/admin/AdminSidebar.tsx": {
+    "mtime": 1782119420.4072297,
+    "ast_hash": "59b24d0ff928e20ef32af47cbe2caa9c",
+    "semantic_hash": ""
+  },
+  "src/components/admin/AdsManager.tsx": {
+    "mtime": 1782119420.4072297,
+    "ast_hash": "88ab530cd81732240e8d41f4aeca47a3",
+    "semantic_hash": ""
+  },
+  "src/components/admin/BannerLogoUploader.tsx": {
+    "mtime": 1782119420.4095578,
+    "ast_hash": "108535f860c5d9fae0f5e7b95d796592",
+    "semantic_hash": ""
+  },
+  "src/components/admin/BulkMenuImporter.tsx": {
+    "mtime": 1782119420.4095578,
+    "ast_hash": "070f9fe4181ee7ab8415315f31c62959",
+    "semantic_hash": ""
+  },
+  "src/components/admin/CancelOrderDialog.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "b125f328723e5b917df16bd7271b7938",
+    "semantic_hash": ""
+  },
+  "src/components/admin/CategoryManager.tsx": {
+    "mtime": 1782126369.5384202,
+    "ast_hash": "ee3ffcb489403e64857d11db7f25d8b2",
+    "semantic_hash": ""
+  },
+  "src/components/admin/CouponManager.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "03027de051f4d21e2d4d67ea719a915b",
+    "semantic_hash": ""
+  },
+  "src/components/admin/CustomerManagement.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "e170b9f819df20a4e5ea7cd6a6f25916",
+    "semantic_hash": ""
+  },
+  "src/components/admin/EditMenuItemDialog.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "56aa3770c0bba22077da3ce4ab92dc4d",
+    "semantic_hash": ""
+  },
+  "src/components/admin/ExportPanel.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "d1bc17589ef8011d7ede71636833ee12",
+    "semantic_hash": ""
+  },
+  "src/components/admin/FeatureLockedModal.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "8af8bd31793641368d16fcf47e69cfca",
+    "semantic_hash": ""
+  },
+  "src/components/admin/FeedbackManager.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "9767591fa0bd1f1040fe01a69c107937",
+    "semantic_hash": ""
+  },
+  "src/components/admin/FoodGraphReasoning.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "7de9e3b5ad7a301d57eeda0f2ed9da42",
+    "semantic_hash": ""
+  },
+  "src/components/admin/GoogleReviewsManager.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "8126676a44f057182c6ca60a80076c77",
+    "semantic_hash": ""
+  },
+  "src/components/admin/ImageCropDialog.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "c4be20abfd6f9f421981a9923fa8e38d",
+    "semantic_hash": ""
+  },
+  "src/components/admin/ImageUpload.tsx": {
+    "mtime": 1782119420.4109805,
+    "ast_hash": "b278652864a42523a0bca24cb7dec261",
+    "semantic_hash": ""
+  },
+  "src/components/admin/InventoryManager.tsx": {
+    "mtime": 1782119420.416918,
+    "ast_hash": "9a05c1150d65a2dc45c62a775ac3f5c8",
+    "semantic_hash": ""
+  },
+  "src/components/admin/KitchenOrderCard.tsx": {
+    "mtime": 1782129400.0048578,
+    "ast_hash": "f8338b8a0c6b7ec3933c7631339df138",
+    "semantic_hash": ""
+  },
+  "src/components/admin/KitchenStationFilter.tsx": {
+    "mtime": 1782119420.4180481,
+    "ast_hash": "1e9ecc4b8bce33f542f6a3541d791957",
+    "semantic_hash": ""
+  },
+  "src/components/admin/KitchenTVMode.tsx": {
+    "mtime": 1782119420.4180481,
+    "ast_hash": "bdb2107d28ac34ff7369c11cd1cc39ca",
+    "semantic_hash": ""
+  },
+  "src/components/admin/MarketingAnalyticsDashboard.tsx": {
+    "mtime": 1782119420.4180481,
+    "ast_hash": "017278e0c7735d16c2ec9ef26e274eb9",
+    "semantic_hash": ""
+  },
+  "src/components/admin/MenuOCRImporter.tsx": {
+    "mtime": 1782119420.4180481,
+    "ast_hash": "31be90df1a7ad39627bcea75312a3217",
+    "semantic_hash": ""
+  },
+  "src/components/admin/MenuPreviewCard.tsx": {
+    "mtime": 1782119420.419932,
+    "ast_hash": "916cae88e4b97abb0c0ad009473bb3a9",
+    "semantic_hash": ""
+  },
+  "src/components/admin/MenuTab.tsx": {
+    "mtime": 1782119420.419932,
+    "ast_hash": "61618a75306661b72506da0c79dba359",
+    "semantic_hash": ""
+  },
+  "src/components/admin/OffersManager.tsx": {
+    "mtime": 1782119420.419932,
+    "ast_hash": "1d74978c53c01137b35a5d854f24a20c",
+    "semantic_hash": ""
+  },
+  "src/components/admin/OrderHistory.tsx": {
+    "mtime": 1782119420.419932,
+    "ast_hash": "4efb5a72957dd22f57329f89900ffae5",
+    "semantic_hash": ""
+  },
+  "src/components/admin/OverviewTab.tsx": {
+    "mtime": 1782119420.4219358,
+    "ast_hash": "cd03b309f5df2d8b9dc92f7545334731",
+    "semantic_hash": ""
+  },
+  "src/components/admin/PlatformAdsReadOnly.tsx": {
+    "mtime": 1782119420.4219358,
+    "ast_hash": "de6e61a1e4eadcdf37b30350a75cf221",
+    "semantic_hash": ""
+  },
+  "src/components/admin/PreviewTabContent.tsx": {
+    "mtime": 1782119420.4219358,
+    "ast_hash": "4f14e18d74d3458493513753ff4163d7",
+    "semantic_hash": ""
+  },
+  "src/components/admin/QRCodeManager.tsx": {
+    "mtime": 1782119420.4219358,
+    "ast_hash": "1c396b0e566058be0a5bb64a4cd00c23",
+    "semantic_hash": ""
+  },
+  "src/components/admin/RecentOrdersTable.tsx": {
+    "mtime": 1782119420.4219358,
+    "ast_hash": "bbd9b7e1e8ed36fb0db85f9adbf0e026",
+    "semantic_hash": ""
+  },
+  "src/components/admin/ReportsPanel.tsx": {
+    "mtime": 1782119420.4219358,
+    "ast_hash": "70bff64133cce5e82d408982a23e2c14",
+    "semantic_hash": ""
+  },
+  "src/components/admin/ReputationManager.tsx": {
+    "mtime": 1782119420.4219358,
+    "ast_hash": "ff4caafdb0faabfa6bdc20c784046177",
+    "semantic_hash": ""
+  },
+  "src/components/admin/SalesAnalytics.tsx": {
+    "mtime": 1782119420.4219358,
+    "ast_hash": "c30be0c26df9d51d634268224bc134a5",
+    "semantic_hash": ""
+  },
+  "src/components/admin/SettingsPanel.tsx": {
+    "mtime": 1782119420.4219358,
+    "ast_hash": "88e6db9e79d8bbf6fe4c1a351c159b3a",
+    "semantic_hash": ""
+  },
+  "src/components/admin/ShiftLogs.tsx": {
+    "mtime": 1782119420.4219358,
+    "ast_hash": "e68c83bea054da0d32c2864b3d5217c1",
+    "semantic_hash": ""
+  },
+  "src/components/admin/StaffManagement.tsx": {
+    "mtime": 1782119420.4274545,
+    "ast_hash": "8eee92b1d0002800ef2225920d53077d",
+    "semantic_hash": ""
+  },
+  "src/components/admin/StatCard.tsx": {
+    "mtime": 1782119420.4274545,
+    "ast_hash": "e7914a4223ec1f85eff72b3d96485e28",
+    "semantic_hash": ""
+  },
+  "src/components/admin/StorageImagePicker.tsx": {
+    "mtime": 1782119420.4274545,
+    "ast_hash": "e5436d17a2ff7fb3196ad040f4606bb6",
+    "semantic_hash": ""
+  },
+  "src/components/admin/TableManagement.tsx": {
+    "mtime": 1782135396.2685273,
+    "ast_hash": "7a14cdca3a793167a5d72d663349ef2a",
+    "semantic_hash": ""
+  },
+  "src/components/admin/TableSessionTimers.tsx": {
+    "mtime": 1782119420.4274545,
+    "ast_hash": "955c4e68576496720d88d475bb678934",
+    "semantic_hash": ""
+  },
+  "src/components/admin/TenantThemeProvider.tsx": {
+    "mtime": 1782119420.4274545,
+    "ast_hash": "96ffc82abce482916ecb09f7f2d19920",
+    "semantic_hash": ""
+  },
+  "src/components/admin/UnsplashPicker.tsx": {
+    "mtime": 1782119420.4274545,
+    "ast_hash": "933103501779ee6c14bb58feb17f4b5b",
+    "semantic_hash": ""
+  },
+  "src/components/admin/UserManagement.tsx": {
+    "mtime": 1782119420.4274545,
+    "ast_hash": "1f403129ddd22f6e867607d925324475",
+    "semantic_hash": ""
+  },
+  "src/components/admin/WaiterManagement.tsx": {
+    "mtime": 1782119420.4274545,
+    "ast_hash": "a9aae82c34966988df054dee18938eb8",
+    "semantic_hash": ""
+  },
+  "src/components/admin/WaiterManagementPanel.tsx": {
+    "mtime": 1782119420.4274545,
+    "ast_hash": "5c1ebc88ba013131c7649997ba183619",
+    "semantic_hash": ""
+  },
+  "src/components/admin/WorkforceDashboard.tsx": {
+    "mtime": 1782119420.431931,
+    "ast_hash": "259e2df393612b4fa7469d754cbc3ee1",
+    "semantic_hash": ""
+  },
+  "src/components/admin/qr/AdvancedQRBuilder.tsx": {
+    "mtime": 1782119420.431931,
+    "ast_hash": "fa3490e4147f2be9f73fd8c5460b30b6",
+    "semantic_hash": ""
+  },
+  "src/components/admin/qr/QRPrintCenter.tsx": {
+    "mtime": 1782119420.431931,
+    "ast_hash": "cf615212aebf39cdefaafad8324f97ba",
+    "semantic_hash": ""
+  },
+  "src/components/analytics/CustomerBehaviorPanel.tsx": {
+    "mtime": 1782119420.431931,
+    "ast_hash": "cb79c3db64c321f9fca675a617048f5b",
+    "semantic_hash": ""
+  },
+  "src/components/analytics/DashboardStats.tsx": {
+    "mtime": 1782119420.431931,
+    "ast_hash": "cee1d104c16f291dd40d6dcfec9e8e9b",
+    "semantic_hash": ""
+  },
+  "src/components/analytics/OrdersTable.tsx": {
+    "mtime": 1782119420.4348953,
+    "ast_hash": "bc2202c66b70895a15309994b3d8fccf",
+    "semantic_hash": ""
+  },
+  "src/components/analytics/QRScanAnalytics.tsx": {
+    "mtime": 1782119420.4348953,
+    "ast_hash": "8da221fec97ed76a18ad838b8584b3ca",
+    "semantic_hash": ""
+  },
+  "src/components/analytics/RevenueChart.tsx": {
+    "mtime": 1782119420.4348953,
+    "ast_hash": "030218eb87a6b7ca02d0d216207c1c80",
+    "semantic_hash": ""
+  },
+  "src/components/analytics/RevenueTrends.tsx": {
+    "mtime": 1782119420.4348953,
+    "ast_hash": "88068379ab37d72b8d30784f73262ded",
+    "semantic_hash": ""
+  },
+  "src/components/auth/RoleGuard.tsx": {
+    "mtime": 1782119420.4348953,
+    "ast_hash": "88567c03fb899e870d9dd9d3bf751860",
+    "semantic_hash": ""
+  },
+  "src/components/billing/DiscountButtons.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "3ca0ddad528fa7a1954260c6f7e41077",
+    "semantic_hash": ""
+  },
+  "src/components/billing/NumberPad.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "dcc860945c3db97bef2b6029401dd377",
+    "semantic_hash": ""
+  },
+  "src/components/billing/PrinterStatus.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "3341a8e4ed7ab00ab552aa3ec7a5005f",
+    "semantic_hash": ""
+  },
+  "src/components/billing/SplitPaymentPanel.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "7c114a8b29a51b3a0964328eca605244",
+    "semantic_hash": ""
+  },
+  "src/components/billing/TableSelector.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "728a23ec98d4a8602a87dc2e440cc866",
+    "semantic_hash": ""
+  },
+  "src/components/branding/AnimatedHotelName.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "08f959434c58bea9f6a9c8e157ba6781",
+    "semantic_hash": ""
+  },
+  "src/components/branding/BrandingAnimationSettings.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "ff4bf1377c9779ec7a0b95f4642b674c",
+    "semantic_hash": ""
+  },
+  "src/components/branding/MascotIcon.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "0c9f7b1f0829334643ea2aaa8342f86e",
+    "semantic_hash": ""
+  },
+  "src/components/branding/QRSplashScreen.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "950ff81718eb86a28bb3d414294aead0",
+    "semantic_hash": ""
+  },
+  "src/components/branding/ZappyLogo.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "d37f830285f616fc7229b7c14080fce7",
+    "semantic_hash": ""
+  },
+  "src/components/feedback/StarRating.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "cbcaf4ef8d2375112ea0f5940d04f760",
+    "semantic_hash": ""
+  },
+  "src/components/landing/BrandStrip.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "22f611314df3e25c421c5b4d87a8fff0",
+    "semantic_hash": ""
+  },
+  "src/components/landing/CTABanner.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "87e8ffc034d4691f80fdc864dd9f721d",
+    "semantic_hash": ""
+  },
+  "src/components/landing/DailyChallenge.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "d39c9ad35bf3d5cb2be186010b755a01",
+    "semantic_hash": ""
+  },
+  "src/components/landing/DashboardCarousel.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "71eef1963f4cfe0ce97aad0dbc98f05d",
+    "semantic_hash": ""
+  },
+  "src/components/landing/Ecosystem.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "5c566103876028165c20de9b7b3d9a7e",
+    "semantic_hash": ""
+  },
+  "src/components/landing/FAQSection.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "52f4e2b5b6ac544c3bab2a44d4eb7cbc",
+    "semantic_hash": ""
+  },
+  "src/components/landing/FeaturesSection.tsx": {
+    "mtime": 1782119420.4379244,
+    "ast_hash": "bc366774200a8f97a2784c387fcd091b",
+    "semantic_hash": ""
+  },
+  "src/components/landing/FinalCTA.tsx": {
+    "mtime": 1782119420.4479105,
+    "ast_hash": "dd5e9f9849161d53cc433e24c49df61f",
+    "semantic_hash": ""
+  },
+  "src/components/landing/Footer.tsx": {
+    "mtime": 1782123451.503601,
+    "ast_hash": "6158bc0736642e6dfced94a3232e3b5d",
+    "semantic_hash": ""
+  },
+  "src/components/landing/HeroSection.tsx": {
+    "mtime": 1782119659.155748,
+    "ast_hash": "185a6dd713faec236a0585d4ffe30db4",
+    "semantic_hash": ""
+  },
+  "src/components/landing/HowItWorks.tsx": {
+    "mtime": 1782119420.4479105,
+    "ast_hash": "4dd80873c59568a7cb1957439dd264b8",
+    "semantic_hash": ""
+  },
+  "src/components/landing/IntegrationsCloud.tsx": {
+    "mtime": 1782119420.4479105,
+    "ast_hash": "b9f1649387007b6fb9ae0756c2be7c7c",
+    "semantic_hash": ""
+  },
+  "src/components/landing/LiveDashboardSection.tsx": {
+    "mtime": 1782119420.4479105,
+    "ast_hash": "bc5ddf7f016474cbf606ea823ef0c5fd",
+    "semantic_hash": ""
+  },
+  "src/components/landing/LiveDashboardTeaser.tsx": {
+    "mtime": 1782119420.4479105,
+    "ast_hash": "d10a9cebf9f69a7f794099418c3830cb",
+    "semantic_hash": ""
+  },
+  "src/components/landing/MarketingLayout.tsx": {
+    "mtime": 1782135052.4715815,
+    "ast_hash": "8c0d8e87baf4aa9121bab266d2fbce9b",
+    "semantic_hash": ""
+  },
+  "src/components/landing/MealStory.tsx": {
+    "mtime": 1782119420.4479105,
+    "ast_hash": "ff1c560c23a3e99823cc549b8846cc08",
+    "semantic_hash": ""
+  },
+  "src/components/landing/ModernRestaurants.tsx": {
+    "mtime": 1782119420.4479105,
+    "ast_hash": "b4e8d110edfbb316072e22a2776602b5",
+    "semantic_hash": ""
+  },
+  "src/components/landing/ParallaxSection.tsx": {
+    "mtime": 1782119420.4479105,
+    "ast_hash": "4a963a1f720ecee286db1a4f7f09f8a9",
+    "semantic_hash": ""
+  },
+  "src/components/landing/ProductDemo.tsx": {
+    "mtime": 1782119420.4479105,
+    "ast_hash": "12f08967ad4c3dca249fe3cbcb4e42a4",
+    "semantic_hash": ""
+  },
+  "src/components/landing/ProductExperience.tsx": {
+    "mtime": 1782119420.4479105,
+    "ast_hash": "264c49986c1a8e33569d770c32733bf2",
+    "semantic_hash": ""
+  },
+  "src/components/landing/ScrollProgress.tsx": {
+    "mtime": 1782119420.4539776,
+    "ast_hash": "a746aeb1df116c5c782e2b75abe80484",
+    "semantic_hash": ""
+  },
+  "src/components/landing/TestimonialsSection.tsx": {
+    "mtime": 1782119420.4539776,
+    "ast_hash": "93e566da5ef2858ec8c3a3d72f7fe399",
+    "semantic_hash": ""
+  },
+  "src/components/landing/Transformation.tsx": {
+    "mtime": 1782119420.4550312,
+    "ast_hash": "efa44dc37bff35c38d9dffd91f05d641",
+    "semantic_hash": ""
+  },
+  "src/components/landing/TrustCounters.tsx": {
+    "mtime": 1782119420.4550312,
+    "ast_hash": "76ef392b73c60d18e509ce66857dd22e",
+    "semantic_hash": ""
+  },
+  "src/components/landing/TrustResults.tsx": {
+    "mtime": 1782119420.4550312,
+    "ast_hash": "9735f36b6f3648bec150101d857193fa",
+    "semantic_hash": ""
+  },
+  "src/components/menu/AddedToCartToast.tsx": {
+    "mtime": 1782119420.4550312,
+    "ast_hash": "a4b8f8f20f231c3140f6c7eccc6103ce",
+    "semantic_hash": ""
+  },
+  "src/components/menu/AdsPopup.tsx": {
+    "mtime": 1782119420.4570677,
+    "ast_hash": "bd994916e1039a8e52d0a4e50015e6df",
+    "semantic_hash": ""
+  },
+  "src/components/menu/BottomNav.tsx": {
+    "mtime": 1782119420.4570677,
+    "ast_hash": "eec54693206965c2da7e570523f16cb2",
+    "semantic_hash": ""
+  },
+  "src/components/menu/CategoryDividerAd.tsx": {
+    "mtime": 1782119420.4570677,
+    "ast_hash": "bf1d0d42e93573d4dffe8f9b110ff4c2",
+    "semantic_hash": ""
+  },
+  "src/components/menu/CategorySlider.tsx": {
+    "mtime": 1782119420.4570677,
+    "ast_hash": "2d86fa91301f0af531bd65ca4346541a",
+    "semantic_hash": ""
+  },
+  "src/components/menu/CustomerTopBar.tsx": {
+    "mtime": 1782119420.459423,
+    "ast_hash": "ef516d606c76a868c455f358eb3f5629",
+    "semantic_hash": ""
+  },
+  "src/components/menu/FloatingCartBar.tsx": {
+    "mtime": 1782119420.459423,
+    "ast_hash": "576ed44c19018bd0149e0df43e233333",
+    "semantic_hash": ""
+  },
+  "src/components/menu/FoodCard.tsx": {
+    "mtime": 1782119420.459423,
+    "ast_hash": "622d7c62aa11de22891f20f55e81518b",
+    "semantic_hash": ""
+  },
+  "src/components/menu/FooterPromoAd.tsx": {
+    "mtime": 1782119420.459423,
+    "ast_hash": "df685bba845efe8b7de6f8d56f7a884a",
+    "semantic_hash": ""
+  },
+  "src/components/menu/HeaderBannerAd.tsx": {
+    "mtime": 1782119420.459423,
+    "ast_hash": "8482434dabbb5d01c1b0aba8fce5b9ec",
+    "semantic_hash": ""
+  },
+  "src/components/menu/ItemCustomizationSheet.tsx": {
+    "mtime": 1782119420.4614403,
+    "ast_hash": "beb00475569e52c098ac94927259e753",
+    "semantic_hash": ""
+  },
+  "src/components/menu/ItemDetailsDialog.tsx": {
+    "mtime": 1782119420.4614403,
+    "ast_hash": "ca8ac97f6b90aa4b36031952828dace5",
+    "semantic_hash": ""
+  },
+  "src/components/menu/MenuItemRow.tsx": {
+    "mtime": 1782119420.4614403,
+    "ast_hash": "fd82f5c715e003aabb16991a6454aa96",
+    "semantic_hash": ""
+  },
+  "src/components/menu/MenuSkeletons.tsx": {
+    "mtime": 1782119420.4614403,
+    "ast_hash": "45a0490f23cc63c82825ca3939ea245a",
+    "semantic_hash": ""
+  },
+  "src/components/menu/NotificationBar.tsx": {
+    "mtime": 1782119420.4634917,
+    "ast_hash": "32b707bb0d3dbb73db6222f4c836f3d3",
+    "semantic_hash": ""
+  },
+  "src/components/menu/NotificationCenter.tsx": {
+    "mtime": 1782119420.4634917,
+    "ast_hash": "687e22c0be0956970ce7471c85324e85",
+    "semantic_hash": ""
+  },
+  "src/components/menu/OffersSlider.tsx": {
+    "mtime": 1782119420.4634917,
+    "ast_hash": "9fd0662656ee928df5290e5c832ebab9",
+    "semantic_hash": ""
+  },
+  "src/components/menu/OrderStatusPipeline.tsx": {
+    "mtime": 1782119420.4653127,
+    "ast_hash": "0d15f47279e0301837303b0db3d0c9f5",
+    "semantic_hash": ""
+  },
+  "src/components/menu/PromotionBanner.tsx": {
+    "mtime": 1782119420.4653127,
+    "ast_hash": "0e41f7b3445e75728d1db27a2ef15740",
+    "semantic_hash": ""
+  },
+  "src/components/menu/PromotionCarousel.tsx": {
+    "mtime": 1782119420.4653127,
+    "ast_hash": "e48125007fd5aee4c15b3efe6e11d5f6",
+    "semantic_hash": ""
+  },
+  "src/components/menu/RecommendationsSection.tsx": {
+    "mtime": 1782119420.4667685,
+    "ast_hash": "5e2238261006379c457484080aed47cb",
+    "semantic_hash": ""
+  },
+  "src/components/menu/RecommendedSlider.tsx": {
+    "mtime": 1782119420.4667685,
+    "ast_hash": "c04b4479820034c017365aa46a051fe3",
+    "semantic_hash": ""
+  },
+  "src/components/menu/SeatPickerDialog.tsx": {
+    "mtime": 1782125197.6664526,
+    "ast_hash": "50001b627a88c56116d69b0add0a03d0",
+    "semantic_hash": ""
+  },
+  "src/components/menu/TablePickerDialog.tsx": {
+    "mtime": 1782119420.4667685,
+    "ast_hash": "f5383a23540a60891a0173408cca3e55",
+    "semantic_hash": ""
+  },
+  "src/components/menu/WaiterCallFAB.tsx": {
+    "mtime": 1782135999.4511786,
+    "ast_hash": "447cf8d1f5ee8004cef489daeb9aa934",
+    "semantic_hash": ""
+  },
+  "src/components/menu/__tests__/TablePickerDialog.test.tsx": {
+    "mtime": 1782119420.4667685,
+    "ast_hash": "ce0b523c8833a9e10b170fe367034aea",
+    "semantic_hash": ""
+  },
+  "src/components/order/CouponInput.tsx": {
+    "mtime": 1782119420.4700706,
+    "ast_hash": "9e29c6eb67d93032f2fedc5f54fa6360",
+    "semantic_hash": ""
+  },
+  "src/components/order/PostOrderReviewPrompt.tsx": {
+    "mtime": 1782137991.472731,
+    "ast_hash": "bcbe9270b1d620bd9b0b28831b63f622",
+    "semantic_hash": ""
+  },
+  "src/components/order/RatingPopup.tsx": {
+    "mtime": 1782119420.4700706,
+    "ast_hash": "2e6c82d6f1baf3b2adacc32803340f2b",
+    "semantic_hash": ""
+  },
+  "src/components/order/WaitingTimer.tsx": {
+    "mtime": 1782119420.472319,
+    "ast_hash": "521f14a0773d900ad4f7ad0e548ca274",
+    "semantic_hash": ""
+  },
+  "src/components/receipt/ThermalReceipt.tsx": {
+    "mtime": 1782119420.472319,
+    "ast_hash": "c2a5490342e34c830e6680bb44d0a7f4",
+    "semantic_hash": ""
+  },
+  "src/components/seo/SEO.tsx": {
+    "mtime": 1782119420.472319,
+    "ast_hash": "5362c01fcddbd50dac326b1709319c25",
+    "semantic_hash": ""
+  },
+  "src/components/shared/SafeImage.tsx": {
+    "mtime": 1782119420.472319,
+    "ast_hash": "f0fa79efbe2c41fc4fa40af6b36737ff",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/AdAnalyticsPanel.tsx": {
+    "mtime": 1782119420.472319,
+    "ast_hash": "3400bbffaff8a4cf4fa7ab55248de449",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/AdminAccountsTable.tsx": {
+    "mtime": 1782119420.472319,
+    "ast_hash": "edb0303ee2a4ab0509d644e5776c0f02",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/CampaignForm.tsx": {
+    "mtime": 1782119420.472319,
+    "ast_hash": "81a529db7096624988c321e696aa8cc2",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/CreateHotelForm.tsx": {
+    "mtime": 1782119420.472319,
+    "ast_hash": "afe3f532f2b8b78083b811f69dcab3ab",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/DefaultTaxSettings.tsx": {
+    "mtime": 1782119420.472319,
+    "ast_hash": "7ae724116e72cb8920c269fdd105ffda",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/EditHotelProfile.tsx": {
+    "mtime": 1782119420.472319,
+    "ast_hash": "ccccf96995780e5da997fa6a90114008",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/EmailTemplateManager.tsx": {
+    "mtime": 1782119420.4781532,
+    "ast_hash": "c564633e420562d6f498dd7b1e811acc",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/ImpersonationBanner.tsx": {
+    "mtime": 1782119420.4781532,
+    "ast_hash": "f54be8bddac8b809efb8ba219da16af7",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/LandingCMS.tsx": {
+    "mtime": 1782119420.4781532,
+    "ast_hash": "b08a6b7e97a582eb3deba0d004eecadd",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/Leaderboard.tsx": {
+    "mtime": 1782119420.4781532,
+    "ast_hash": "33025de54005613509f3ee0746ac1078",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/LeadsCRM.tsx": {
+    "mtime": 1782119420.4781532,
+    "ast_hash": "bf65defb3ecf3d002ecba512e8f0302f",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/MonthlyTrendChart.tsx": {
+    "mtime": 1782119420.4807117,
+    "ast_hash": "0318ec6a629db8aec73240064bea04a7",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/PlatformAdsManager.tsx": {
+    "mtime": 1782119420.4807117,
+    "ast_hash": "05335fe32fa7a44086c7d987de84444d",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/PlatformBrandingPanel.tsx": {
+    "mtime": 1782119420.481717,
+    "ast_hash": "dd2545448216caf19f639eb109cd01b6",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/PlatformSettings.tsx": {
+    "mtime": 1782119420.4822333,
+    "ast_hash": "943a9f8f1df6d7ee8d4e396f56610838",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/PromotionsOverview.tsx": {
+    "mtime": 1782119420.4822333,
+    "ast_hash": "8e2ac8e6bae4db2b065d22af64390964",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/SubscriptionPlansManager.tsx": {
+    "mtime": 1782119420.4822333,
+    "ast_hash": "cf0c404b08a7b5d704cc46de2bd4125e",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/SuperAdminProfileEditor.tsx": {
+    "mtime": 1782119420.4822333,
+    "ast_hash": "c72986d795436f7ed150d440431d3dda",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/SuperAdminSidebar.tsx": {
+    "mtime": 1782119420.4822333,
+    "ast_hash": "e9fa147c67375f0f43a88c73662754ff",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/SystemLogs.tsx": {
+    "mtime": 1782119420.4822333,
+    "ast_hash": "c02b77f196663996a3ff2fb8492f8f1a",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/TenantPreviewCard.tsx": {
+    "mtime": 1782119420.4822333,
+    "ast_hash": "431d55cc4764ef2819496f3686efe420",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/TenantStats.tsx": {
+    "mtime": 1782119420.4858863,
+    "ast_hash": "d4b8e9db17326314ed254f05433d66aa",
+    "semantic_hash": ""
+  },
+  "src/components/superadmin/TenantTable.tsx": {
+    "mtime": 1782119420.4858863,
+    "ast_hash": "e9c9bd86d77a8f231811f6e9e41a6ed4",
+    "semantic_hash": ""
+  },
+  "src/components/ui/ZButton.tsx": {
+    "mtime": 1782119420.4858863,
+    "ast_hash": "b09fd86a2a56d0f924cb0c63db3cf8f0",
+    "semantic_hash": ""
+  },
+  "src/components/ui/ZCard.tsx": {
+    "mtime": 1782119420.4858863,
+    "ast_hash": "d25dee37bac3cb5f4bbde9bee4ccdfb4",
+    "semantic_hash": ""
+  },
+  "src/components/ui/ZSection.tsx": {
+    "mtime": 1782119420.4879987,
+    "ast_hash": "f0be0edaf14bda9e97b271c1a09c52d8",
+    "semantic_hash": ""
+  },
+  "src/components/ui/accordion.tsx": {
+    "mtime": 1782119420.4879987,
+    "ast_hash": "ff8f54b79a7a2bc4fed8c092dd7a1f4b",
+    "semantic_hash": ""
+  },
+  "src/components/ui/alert-dialog.tsx": {
+    "mtime": 1782120268.5463703,
+    "ast_hash": "08674a9809df89388fad14efa90d1c3e",
+    "semantic_hash": ""
+  },
+  "src/components/ui/alert.tsx": {
+    "mtime": 1782119420.4879987,
+    "ast_hash": "eba34d3096d7c23bcdf5dfb1e725ecff",
+    "semantic_hash": ""
+  },
+  "src/components/ui/aspect-ratio.tsx": {
+    "mtime": 1782119420.4879987,
+    "ast_hash": "14c12661aad8c80328c86a18b506c088",
+    "semantic_hash": ""
+  },
+  "src/components/ui/avatar.tsx": {
+    "mtime": 1782119420.4906142,
+    "ast_hash": "7b447f617f7d654c70050259fbf6dbc0",
+    "semantic_hash": ""
+  },
+  "src/components/ui/badge.tsx": {
+    "mtime": 1782119420.4906142,
+    "ast_hash": "5ff602fa3719d7a01a6a3b900a569ccc",
+    "semantic_hash": ""
+  },
+  "src/components/ui/breadcrumb.tsx": {
+    "mtime": 1782119420.4906142,
+    "ast_hash": "c277fb2bb0886444a6c8a00296ad924e",
+    "semantic_hash": ""
+  },
+  "src/components/ui/button.tsx": {
+    "mtime": 1782119420.4906142,
+    "ast_hash": "0f955aa3c49cd8a862d3ca9eaca20df2",
+    "semantic_hash": ""
+  },
+  "src/components/ui/calendar.tsx": {
+    "mtime": 1782119420.4906142,
+    "ast_hash": "1a2e76319e667991b06dc99e74b9b631",
+    "semantic_hash": ""
+  },
+  "src/components/ui/card.tsx": {
+    "mtime": 1782119420.4906142,
+    "ast_hash": "0e2d94c650cf4fae76b4c5e0f14dd858",
+    "semantic_hash": ""
+  },
+  "src/components/ui/carousel.tsx": {
+    "mtime": 1782119420.4906142,
+    "ast_hash": "7d3e5a6ed21d4690d498e8a60b52868a",
+    "semantic_hash": ""
+  },
+  "src/components/ui/chart.tsx": {
+    "mtime": 1782119420.4906142,
+    "ast_hash": "4360d46060e32c8aafbc140a482a03fa",
+    "semantic_hash": ""
+  },
+  "src/components/ui/checkbox.tsx": {
+    "mtime": 1782119420.4941947,
+    "ast_hash": "76ca6b8de39bdac0ff7620b301077963",
+    "semantic_hash": ""
+  },
+  "src/components/ui/collapsible.tsx": {
+    "mtime": 1782119420.4941947,
+    "ast_hash": "72fafa9d8b58f83ec9b7c8f141bfdd42",
+    "semantic_hash": ""
+  },
+  "src/components/ui/command.tsx": {
+    "mtime": 1782119420.4941947,
+    "ast_hash": "26c0fe8e43d8336094c2f77c35d86009",
+    "semantic_hash": ""
+  },
+  "src/components/ui/context-menu.tsx": {
+    "mtime": 1782120321.4001591,
+    "ast_hash": "9b230621e94922d28fb20fc9b0203cd4",
+    "semantic_hash": ""
+  },
+  "src/components/ui/dialog.tsx": {
+    "mtime": 1782120264.3351045,
+    "ast_hash": "378c3f4c7693e8725bd57e93c60bab24",
+    "semantic_hash": ""
+  },
+  "src/components/ui/drawer.tsx": {
+    "mtime": 1782120270.5578096,
+    "ast_hash": "7d4873d6e8eabb5ec0d272991187aca1",
+    "semantic_hash": ""
+  },
+  "src/components/ui/dropdown-menu.tsx": {
+    "mtime": 1782120293.6508741,
+    "ast_hash": "9b6a2b437fdfbd2a60e7571a91dfa0e1",
+    "semantic_hash": ""
+  },
+  "src/components/ui/form.tsx": {
+    "mtime": 1782119420.497015,
+    "ast_hash": "4d27bc8211e0505103bbd930275570c6",
+    "semantic_hash": ""
+  },
+  "src/components/ui/hover-card.tsx": {
+    "mtime": 1782120323.42243,
+    "ast_hash": "d05eeabf17af21352df3e5dcee9f3651",
+    "semantic_hash": ""
+  },
+  "src/components/ui/input-otp.tsx": {
+    "mtime": 1782119420.497015,
+    "ast_hash": "7217a7c6bceca8030298e2252204ae40",
+    "semantic_hash": ""
+  },
+  "src/components/ui/input.tsx": {
+    "mtime": 1782119420.497015,
+    "ast_hash": "c9e808ff72f69a97513b516a31d5705a",
+    "semantic_hash": ""
+  },
+  "src/components/ui/label.tsx": {
+    "mtime": 1782119420.497015,
+    "ast_hash": "a8c075269b5971c2ab072603b5166cc2",
+    "semantic_hash": ""
+  },
+  "src/components/ui/menubar.tsx": {
+    "mtime": 1782120325.4468155,
+    "ast_hash": "34120c17fb6b0d296e884543b2282bfa",
+    "semantic_hash": ""
+  },
+  "src/components/ui/navigation-menu.tsx": {
+    "mtime": 1782119420.497015,
+    "ast_hash": "2d91ffeee8627f37b4733949b3373a23",
+    "semantic_hash": ""
+  },
+  "src/components/ui/pagination.tsx": {
+    "mtime": 1782119420.5008562,
+    "ast_hash": "4d09c500f83dd4b754b74d03b79527ba",
+    "semantic_hash": ""
+  },
+  "src/components/ui/popover.tsx": {
+    "mtime": 1782120295.6697843,
+    "ast_hash": "f7268818689f23d992d844c39e555b8a",
+    "semantic_hash": ""
+  },
+  "src/components/ui/progress.tsx": {
+    "mtime": 1782119420.5018623,
+    "ast_hash": "b0d4b1791f1da120f5eed107f235edce",
+    "semantic_hash": ""
+  },
+  "src/components/ui/radio-group.tsx": {
+    "mtime": 1782119420.5018623,
+    "ast_hash": "6c2a4c39fb3f889fe94b854b7198b5ed",
+    "semantic_hash": ""
+  },
+  "src/components/ui/resizable.tsx": {
+    "mtime": 1782119420.5018623,
+    "ast_hash": "ed49053e380e461e2ca75f7a3fe67236",
+    "semantic_hash": ""
+  },
+  "src/components/ui/scroll-area.tsx": {
+    "mtime": 1782119420.5018623,
+    "ast_hash": "f86e3f716ed7c692309c1a48d85ce2c9",
+    "semantic_hash": ""
+  },
+  "src/components/ui/select.tsx": {
+    "mtime": 1782120297.6873398,
+    "ast_hash": "44fdee1ad151282567c7273d86dbb397",
+    "semantic_hash": ""
+  },
+  "src/components/ui/separator.tsx": {
+    "mtime": 1782119420.5018623,
+    "ast_hash": "1810b24a008c00cd43c0b5ad9f3e4c6b",
+    "semantic_hash": ""
+  },
+  "src/components/ui/sheet.tsx": {
+    "mtime": 1782120266.5260372,
+    "ast_hash": "733176b3d82112c94c683e62dbc00251",
+    "semantic_hash": ""
+  },
+  "src/components/ui/sidebar.tsx": {
+    "mtime": 1782119420.5018623,
+    "ast_hash": "47158040377f0ab1d4610e976529ef9c",
+    "semantic_hash": ""
+  },
+  "src/components/ui/skeleton.tsx": {
+    "mtime": 1782119420.5056121,
+    "ast_hash": "6433d7c535e132083b2c1bcb57373fff",
+    "semantic_hash": ""
+  },
+  "src/components/ui/slider.tsx": {
+    "mtime": 1782119420.5056121,
+    "ast_hash": "977286428ad957ed73e428525450f9cb",
+    "semantic_hash": ""
+  },
+  "src/components/ui/sonner.tsx": {
+    "mtime": 1782119420.5056121,
+    "ast_hash": "f375774f847d020348cd21d524d28c75",
+    "semantic_hash": ""
+  },
+  "src/components/ui/switch.tsx": {
+    "mtime": 1782119420.5056121,
+    "ast_hash": "57fa755b8dcfe75538bc523ac3e0bb0e",
+    "semantic_hash": ""
+  },
+  "src/components/ui/table.tsx": {
+    "mtime": 1782119420.5071182,
+    "ast_hash": "d73905fa73678181cb9f8baa91b3f222",
+    "semantic_hash": ""
+  },
+  "src/components/ui/tabs.tsx": {
+    "mtime": 1782119420.5071182,
+    "ast_hash": "7e093ffc9840ce415b02f1a223046094",
+    "semantic_hash": ""
+  },
+  "src/components/ui/textarea.tsx": {
+    "mtime": 1782119420.5071182,
+    "ast_hash": "8e822e21c7011a523c9872934b443e50",
+    "semantic_hash": ""
+  },
+  "src/components/ui/toast.tsx": {
+    "mtime": 1782120290.0700698,
+    "ast_hash": "3140bc3f072feb1e093849d64886dbe1",
+    "semantic_hash": ""
+  },
+  "src/components/ui/toaster.tsx": {
+    "mtime": 1782119420.5092041,
+    "ast_hash": "0f5d0fdbcc2d4611e59994af4393e27e",
+    "semantic_hash": ""
+  },
+  "src/components/ui/toggle-group.tsx": {
+    "mtime": 1782119420.5092041,
+    "ast_hash": "fc5bff5bf4bb6714e6eaf85dcdeb65b9",
+    "semantic_hash": ""
+  },
+  "src/components/ui/toggle.tsx": {
+    "mtime": 1782119420.5092041,
+    "ast_hash": "2342cfa40b5b31148997f87d1642359e",
+    "semantic_hash": ""
+  },
+  "src/components/ui/tooltip.tsx": {
+    "mtime": 1782120316.497982,
+    "ast_hash": "c02fc2484f789ecdc91851cd9b1c4fa5",
+    "semantic_hash": ""
+  },
+  "src/components/ui/use-toast.ts": {
+    "mtime": 1782119420.5092041,
+    "ast_hash": "5bff9ea3904b15a9e1908b128c88e75f",
+    "semantic_hash": ""
+  },
+  "src/contexts/TenantBrandingContext.tsx": {
+    "mtime": 1782119420.5092041,
+    "ast_hash": "eed1a3f31c18cff640ea523c37bb0117",
+    "semantic_hash": ""
+  },
+  "src/data/mockData.ts": {
+    "mtime": 1782119420.5092041,
+    "ast_hash": "dd7d6c385523802f6935fdaecc6dd59f",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/browser.ts": {
+    "mtime": 1782119420.5143757,
+    "ast_hash": "697b9fd89e5a2569da33c49f330b08aa",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/client.ts": {
+    "mtime": 1782119420.5143757,
+    "ast_hash": "5c7f74d608edf644a18f90b7a12887e7",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/commonInputTypes.ts": {
+    "mtime": 1782119420.5143757,
+    "ast_hash": "c614bf426b406781b99588ed40321fbf",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/enums.ts": {
+    "mtime": 1782119420.5172777,
+    "ast_hash": "c0b4a6cf6fb69cf6faa767f202caebcb",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/internal/class.ts": {
+    "mtime": 1782119420.519285,
+    "ast_hash": "22c463429dd14aff2bfada8aa5238840",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/internal/prismaNamespace.ts": {
+    "mtime": 1782119420.5226793,
+    "ast_hash": "16400bf9014129887312dd7c23abe515",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/internal/prismaNamespaceBrowser.ts": {
+    "mtime": 1782119420.5226793,
+    "ast_hash": "eeb95cfd038a4c305d0611dfd4725834",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models.ts": {
+    "mtime": 1782119420.5226793,
+    "ast_hash": "eb6da9c47c7f173e27d2f21c083e6552",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/addon_groups.ts": {
+    "mtime": 1782119420.5226793,
+    "ast_hash": "1154014211d89f1d0ed63b17c90ec8b0",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/addon_options.ts": {
+    "mtime": 1782119420.5226793,
+    "ast_hash": "e2f8156aa9d9bca21391dc4898819f56",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/ads.ts": {
+    "mtime": 1782119420.5226793,
+    "ast_hash": "a59c0d15c2605498333b37b5c7ae19e0",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/ai_enrichments.ts": {
+    "mtime": 1782119420.5226793,
+    "ast_hash": "93282b47f5fea0520946d2f016944069",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/analytics_daily.ts": {
+    "mtime": 1782119420.5226793,
+    "ast_hash": "69850ac2ca3654b0df3a6fc2e647154b",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/analytics_events.ts": {
+    "mtime": 1782119420.5297854,
+    "ast_hash": "c8b17e3dc755df23b2b4ca9cdd4ecd04",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/audit_log_entries.ts": {
+    "mtime": 1782119420.5297854,
+    "ast_hash": "3891f4db0940693027400bd1a2ff7578",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/audit_logs.ts": {
+    "mtime": 1782119420.5297854,
+    "ast_hash": "56168617e9ee5ce50571801ebfb7b95f",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/campaign_events.ts": {
+    "mtime": 1782119420.5297854,
+    "ast_hash": "a7f6c177af930829176f33ee097fac4f",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/categories.ts": {
+    "mtime": 1782119420.5297854,
+    "ast_hash": "63e4436d735fcf541384e3a70e6d7e07",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/coupon_redemptions.ts": {
+    "mtime": 1782119420.533121,
+    "ast_hash": "414fc2e2c26e91a3d258f3bb993208b8",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/coupons.ts": {
+    "mtime": 1782119420.533121,
+    "ast_hash": "72a7c2134e3aa710a8f6429a10291266",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/custom_oauth_providers.ts": {
+    "mtime": 1782119420.5351284,
+    "ast_hash": "be6be1b2d11e2dd0b6b116af99daeadd",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/customer_events.ts": {
+    "mtime": 1782119420.5351284,
+    "ast_hash": "cb3d76d077411b227a1f5b9e5af3e6b6",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/customer_satisfaction_scores.ts": {
+    "mtime": 1782119420.5351284,
+    "ast_hash": "18097527c6e8e35aff8b5fc35ee55ce6",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/default_tax_settings.ts": {
+    "mtime": 1782119420.5373316,
+    "ast_hash": "0aac026e40e5281417c9d5c6711fedb8",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/email_templates.ts": {
+    "mtime": 1782119420.5373316,
+    "ast_hash": "b72f31424361901cfe9f785cb86e6658",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/employee_assignments.ts": {
+    "mtime": 1782119420.5373316,
+    "ast_hash": "5c6036f8a0b735daf2c9cece642db9ea",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/employee_attendance.ts": {
+    "mtime": 1782119420.5394733,
+    "ast_hash": "296ec23876c24af3268ee1e7b892be54",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/employee_breaks.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "44235fc14f96f726462396116fd2ae1d",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/employee_shifts.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "9191b58d3e6ec82ca05b2ef2e57c307c",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/employees.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "b46209a403d7d0a601a2d9dc7d5fa4bd",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/enterprise_promotions.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "7fa62bd39c28d7d770e57d3fa82d0c65",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/enterprise_reviews.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "f800d33362cf275475f1e6ca29db5853",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/feedback.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "9a1c048551c1def60ce022d5818484ce",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/flow_state.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "4928e1e6356829c7203a2d8239419571",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/identities.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "d233d7ba7922f5f518a46fb59e517cbb",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/image_discoveries.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "23e03af3b164bc899659c2c47032be2c",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/instances.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "373be34d8233840ba07a4036c5142108",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/inventory_items.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "9a66a6f76c795d44e82b1e2138c40dd4",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/invoice_sync_log.ts": {
+    "mtime": 1782119420.5403676,
+    "ast_hash": "51ec2a0012de4bf9696598b6a5393b60",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/invoices.ts": {
+    "mtime": 1782119420.5491478,
+    "ast_hash": "15cd02ab5280db6471de964351eff7bd",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/landing_page_sections.ts": {
+    "mtime": 1782119420.5491478,
+    "ast_hash": "ddf590b2cabde2d2d6386bb9884cf588",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/menu_items.ts": {
+    "mtime": 1782119420.5491478,
+    "ast_hash": "634a1e79e3f8e08380d72cd64427c8e3",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/messages.ts": {
+    "mtime": 1782119420.5491478,
+    "ast_hash": "3a1a6a326ff3cff67d0388806d6dee1f",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/mfa_amr_claims.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "aa7bfe0d96a581ce514504f70afa093e",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/mfa_challenges.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "d09017c2f028a0b52d3a6af55512431f",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/mfa_factors.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "482e826a7fca7f5a459a4d355a0bd94a",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/newsletter_subscribers.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "32b3cc0b513e7fd8b0a23b6af4b2fe56",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/notification_logs.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "e3125bc414640a1f673e96b3729e4660",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/notification_preferences.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "6314a5f843d0a2bfb6d21e773e3267f4",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/notification_queue.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "4ed6dab97cbe42eb67a66b181e29637e",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/notification_subscriptions.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "d0adf466d33568749724345207acaa4b",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/oauth_authorizations.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "4e8cd4dd4db93f7df5e00b501f7e7eb8",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/oauth_client_states.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "9121b10e9feede18fa3a01848d2a40fc",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/oauth_clients.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "7df12c25b3e4068ab75423aef6b4459f",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/oauth_consents.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "bf2f67b31e9047092373378240475881",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/ocr_analytics_metrics.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "11c0c5557a4750b9c184fcca0ba028f1",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/ocr_imports.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "696ccdcf695daffab4c95990c647f246",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/offers.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "068b7474e03b6e004f45bd147e34c83d",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/order_items.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "2405522c0f9b345062fac492cc0962f3",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/orders.ts": {
+    "mtime": 1782119420.5522423,
+    "ast_hash": "b044ab47cb11f4c990b9de80a437daba",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/pages.ts": {
+    "mtime": 1782119420.5652628,
+    "ast_hash": "2d8851ba648f5b04723bcab41bc1872e",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/platform_settings.ts": {
+    "mtime": 1782119420.5652628,
+    "ast_hash": "01f4a7f8e0f538410a86a3fd9bebe9f9",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/printer_queue.ts": {
+    "mtime": 1782119420.5652628,
+    "ast_hash": "c2b223623d4e8555164d730c942efc82",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/profiles.ts": {
+    "mtime": 1782119420.5652628,
+    "ast_hash": "4c2e5ead68c3c9594ffe5cfebe36b3b8",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/promotion_analytics.ts": {
+    "mtime": 1782119420.5652628,
+    "ast_hash": "0fb66525186ea48d2e63139eb109fca7",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/qr_codes.ts": {
+    "mtime": 1782119420.5652628,
+    "ast_hash": "1db2d1d84e013f272bf63b0e9a937ea6",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/qr_scan_logs.ts": {
+    "mtime": 1782119420.5697026,
+    "ast_hash": "16aee4699b7abccc2e679ac6e9ed50ac",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/quote_requests.ts": {
+    "mtime": 1782119420.5697026,
+    "ast_hash": "2e438003b300e91e5c82a7f0cad81488",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/recipe_mappings.ts": {
+    "mtime": 1782119420.5697026,
+    "ast_hash": "6c999c4cb1108692db4468a2d39e7453",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/restaurants.ts": {
+    "mtime": 1782119420.5730782,
+    "ast_hash": "00b68bc3272d030c847a351df4666126",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/review_ai_insights.ts": {
+    "mtime": 1782119420.575618,
+    "ast_hash": "b5b3f76e0445fc6bce5bbdba25cd01ea",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/review_recoveries.ts": {
+    "mtime": 1782119420.575618,
+    "ast_hash": "82a510c2a26c5c9007152061d9b125ab",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/saml_providers.ts": {
+    "mtime": 1782119420.575618,
+    "ast_hash": "53f772f7b10ed14b7ec57b4050f9f447",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/saml_relay_states.ts": {
+    "mtime": 1782119420.575618,
+    "ast_hash": "d6c24bd33f8de697d804266b2cbdab6f",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/scan_analytics.ts": {
+    "mtime": 1782119420.575618,
+    "ast_hash": "fe63e60714d0f26490af6ff9f7c2b8a4",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/schema_migrations.ts": {
+    "mtime": 1782119420.575618,
+    "ast_hash": "f1f1d0e15a37855a0f2267dfee6e635e",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/sessions.ts": {
+    "mtime": 1782119420.575618,
+    "ast_hash": "65f061b97e67d47f32775b08c80079ba",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/sso_domains.ts": {
+    "mtime": 1782119420.5800128,
+    "ast_hash": "4ce2213476c447523ffd1e7e48334ec5",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/sso_providers.ts": {
+    "mtime": 1782119420.5810196,
+    "ast_hash": "08ca20ea178bf3f583bd222f37ac7358",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/staff_profiles.ts": {
+    "mtime": 1782119420.5810196,
+    "ast_hash": "ed8e6cff6da056ecfa9cb4dfdcc03448",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/subscription_plans.ts": {
+    "mtime": 1782119420.5810196,
+    "ast_hash": "2320a84aa3b4263bbf64bdcd5ad37f20",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/super_admin_profile.ts": {
+    "mtime": 1782119420.5828695,
+    "ast_hash": "44fad198741d4ce8666357cbba009a28",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/system_logs.ts": {
+    "mtime": 1782119420.5828695,
+    "ast_hash": "d268cc51fd4c11fbf7ceb7dab756e5b2",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/table_sessions.ts": {
+    "mtime": 1782119420.5828695,
+    "ast_hash": "322914b2e8b1cb686ecd1d89a02b4e54",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/tables.ts": {
+    "mtime": 1782119420.5846496,
+    "ast_hash": "2e9940fb69de8ddce8c298371feff048",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/thread_members.ts": {
+    "mtime": 1782119420.5846496,
+    "ast_hash": "14d3bc707460311ec4b88749a51b7558",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/thread_summaries.ts": {
+    "mtime": 1782119420.5846496,
+    "ast_hash": "84a367230e0dfe97a0c3276d333c91f3",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/threads.ts": {
+    "mtime": 1782119420.5867233,
+    "ast_hash": "5f95a272e8e633af911a8d20bc8bdc75",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/user_roles.ts": {
+    "mtime": 1782119420.5867233,
+    "ast_hash": "5ec69aecbfd235234f8caa412cf5ac42",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/users.ts": {
+    "mtime": 1782119420.5887296,
+    "ast_hash": "a52ac892ff825764b9cfb082b1af9e26",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/variant_groups.ts": {
+    "mtime": 1782119420.5887296,
+    "ast_hash": "1ed0cf98dbf6f702d1edf54ae9d3bce1",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/variant_options.ts": {
+    "mtime": 1782119420.5887296,
+    "ast_hash": "1bd826d2aefe0b720fe2d012b3a04e54",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/waiter_calls.ts": {
+    "mtime": 1782119420.5887296,
+    "ast_hash": "7526022815582f07546b0a6777c5e299",
+    "semantic_hash": ""
+  },
+  "src/generated/prisma/models/webauthn_challenges.ts": {
+    "mtime": 1782119420.5912354,
+    "ast_hash": "bdd8b600b2dffc0ef40ff2f7e41cce8f",
+    "semantic_hash": ""
+  },
+  "src/hooks/use-mobile.tsx": {
+    "mtime": 1782119420.5912354,
+    "ast_hash": "1bb3ebac7752b497a78d34e341975bbd",
+    "semantic_hash": ""
+  },
+  "src/hooks/use-toast.ts": {
+    "mtime": 1782119420.5912354,
+    "ast_hash": "895be3e18021c7c5cd4fac68ea522dd4",
+    "semantic_hash": ""
+  },
+  "src/hooks/useAddons.ts": {
+    "mtime": 1782119420.5912354,
+    "ast_hash": "5f32ca4daaca159d9dd7a2587a18612c",
+    "semantic_hash": ""
+  },
+  "src/hooks/useAds.ts": {
+    "mtime": 1782119420.5912354,
+    "ast_hash": "20ecc5405f5119a564bb8b2a19030b8e",
+    "semantic_hash": ""
+  },
+  "src/hooks/useAtomicBilling.test.ts": {
+    "mtime": 1782119420.5912354,
+    "ast_hash": "888fb281c78fd178de109e1e9b7b0394",
+    "semantic_hash": ""
+  },
+  "src/hooks/useAtomicBilling.ts": {
+    "mtime": 1782119420.5957496,
+    "ast_hash": "0cb018c87e13ac0de4b4622a642b14c1",
+    "semantic_hash": ""
+  },
+  "src/hooks/useAuth.ts": {
+    "mtime": 1782119420.5957496,
+    "ast_hash": "e6d219f52fa9e91b0a738a03a14015b9",
+    "semantic_hash": ""
+  },
+  "src/hooks/useCategories.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "c6fab58fded5ab83b14c386f8c252694",
+    "semantic_hash": ""
+  },
+  "src/hooks/useCoupons.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "0cd433a85486bff8c0fb9703192a27ae",
+    "semantic_hash": ""
+  },
+  "src/hooks/useCustomerEvents.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "410e8cae448170af7dde6efeafa11f01",
+    "semantic_hash": ""
+  },
+  "src/hooks/useCustomerOrders.ts": {
+    "mtime": 1782128425.10041,
+    "ast_hash": "cc69ca51d282385fcaa85004c3671b36",
+    "semantic_hash": ""
+  },
+  "src/hooks/useDefaultTaxSettings.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "0594b94723399c72ab18f1132bab5126",
+    "semantic_hash": ""
+  },
+  "src/hooks/useEmailTemplates.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "003601ca43c7ebe0a857ed598540db36",
+    "semantic_hash": ""
+  },
+  "src/hooks/useEnterprisePromotions.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "5fc66225645bffb4fa3daf6c127fcbe0",
+    "semantic_hash": ""
+  },
+  "src/hooks/useExports.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "b9dcc29ad64aafef0b19703385fe9de0",
+    "semantic_hash": ""
+  },
+  "src/hooks/useFeatureGate.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "ddbf29d3754def987b97cd3b22af2292",
+    "semantic_hash": ""
+  },
+  "src/hooks/useGoogleReviews.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "17e6f5a6d3b967ff10e7c7be19386bd1",
+    "semantic_hash": ""
+  },
+  "src/hooks/useInventory.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "1f39dd060646a3734e9c519bc7438c9f",
+    "semantic_hash": ""
+  },
+  "src/hooks/useInvoices.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "968bf6e1d458803afb51e1072e097816",
+    "semantic_hash": ""
+  },
+  "src/hooks/useLandingCMS.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "a2fb928d8458836d96915ebd41be38a0",
+    "semantic_hash": ""
+  },
+  "src/hooks/useLeaderboard.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "43f428d209c469a6f8c875e3f0adcab8",
+    "semantic_hash": ""
+  },
+  "src/hooks/useMenuItems.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "14c87426043014d044c42a63ec8269fa",
+    "semantic_hash": ""
+  },
+  "src/hooks/useOffers.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "0e16b7fb72b7d4c9d0ea8c51cc4aa283",
+    "semantic_hash": ""
+  },
+  "src/hooks/useOrders.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "e59162c1b435b9430133046b8a68025f",
+    "semantic_hash": ""
+  },
+  "src/hooks/usePlatformSettings.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "8d57e7b575b41a26adeb63ba468569f5",
+    "semantic_hash": ""
+  },
+  "src/hooks/usePrinter.test.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "00a828309165acbee007c14425d2c58b",
+    "semantic_hash": ""
+  },
+  "src/hooks/usePrinter.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "2bbe50301fc7b7f2dc663af1fc7f2df7",
+    "semantic_hash": ""
+  },
+  "src/hooks/usePushNotifications.ts": {
+    "mtime": 1782119420.5967562,
+    "ast_hash": "ac17cf885cf24fff456470e2976321e2",
+    "semantic_hash": ""
+  },
+  "src/hooks/useQRCodes.ts": {
+    "mtime": 1782119420.6073766,
+    "ast_hash": "53c1b812f880b3dd20d7dd2ae3104911",
+    "semantic_hash": ""
+  },
+  "src/hooks/useRecentOrders.ts": {
+    "mtime": 1782119420.6073766,
+    "ast_hash": "374d2270d76b1724220dbaa3aeece809",
+    "semantic_hash": ""
+  },
+  "src/hooks/useRecommendations.ts": {
+    "mtime": 1782119420.608392,
+    "ast_hash": "6f2f1d0d425b9bae98f93916eacadc9b",
+    "semantic_hash": ""
+  },
+  "src/hooks/useRestaurant.ts": {
+    "mtime": 1782119420.608392,
+    "ast_hash": "b6873632cf396610b3bfcee53cf17b27",
+    "semantic_hash": ""
+  },
+  "src/hooks/useSound.ts": {
+    "mtime": 1782119420.608392,
+    "ast_hash": "acf2f0f221b9b8572dfc6d49fed13cba",
+    "semantic_hash": ""
+  },
+  "src/hooks/useSubscriptionPlans.ts": {
+    "mtime": 1782119420.608392,
+    "ast_hash": "672303cc76bc2e40d084c951a82e8fe6",
+    "semantic_hash": ""
+  },
+  "src/hooks/useSuperAdminLogs.ts": {
+    "mtime": 1782119420.608392,
+    "ast_hash": "8b3bdf3685bc1f0842d7118d56352b3d",
+    "semantic_hash": ""
+  },
+  "src/hooks/useSuperAdminProfile.ts": {
+    "mtime": 1782119420.608392,
+    "ast_hash": "e8bec1baddde509ece0ea9ffb70c28fa",
+    "semantic_hash": ""
+  },
+  "src/hooks/useSystemLogs.ts": {
+    "mtime": 1782119420.608392,
+    "ast_hash": "5e0f9bfa40837761d047cbf491323141",
+    "semantic_hash": ""
+  },
+  "src/hooks/useTableSessions.ts": {
+    "mtime": 1782119420.608392,
+    "ast_hash": "27e50d8b1186e388263f2c9a4d35936f",
+    "semantic_hash": ""
+  },
+  "src/hooks/useTables.ts": {
+    "mtime": 1782125758.297115,
+    "ast_hash": "68133c3c06edf35e0d57b3423245d772",
+    "semantic_hash": ""
+  },
+  "src/hooks/useVariants.ts": {
+    "mtime": 1782119420.6124315,
+    "ast_hash": "b7da134daf5530f51b260ba778978ed9",
+    "semantic_hash": ""
+  },
+  "src/hooks/useVoiceAnnouncement.ts": {
+    "mtime": 1782124396.7974446,
+    "ast_hash": "29503f72d8b2e0b45f2e0d086f9e4e85",
+    "semantic_hash": ""
+  },
+  "src/hooks/useWaiterCalls.ts": {
+    "mtime": 1782119420.6129885,
+    "ast_hash": "3cc81117356ae6aa0d7d6586c4bf229d",
+    "semantic_hash": ""
+  },
+  "src/integrations/lovable/index.ts": {
+    "mtime": 1782119420.6129885,
+    "ast_hash": "f63d0c08e41f972412f76dd37f7663f3",
+    "semantic_hash": ""
+  },
+  "src/integrations/supabase/client.ts": {
+    "mtime": 1782119420.6129885,
+    "ast_hash": "dd31ff5b5b0cff1d7dcf85cc4325db6b",
+    "semantic_hash": ""
+  },
+  "src/integrations/supabase/functions.ts": {
+    "mtime": 1782119420.6129885,
+    "ast_hash": "b0fd7a43501c8d284980af52086c4e7e",
+    "semantic_hash": ""
+  },
+  "src/integrations/supabase/types.ts": {
+    "mtime": 1782127954.4991038,
+    "ast_hash": "6577177d41b6fdc95f44d944fbdcd908",
+    "semantic_hash": ""
+  },
+  "src/lib/printer/bluetooth.ts": {
+    "mtime": 1782119420.616708,
+    "ast_hash": "50e6a51758b18f58d2047c53c7bc3e8f",
+    "semantic_hash": ""
+  },
+  "src/lib/printer/escpos.ts": {
+    "mtime": 1782119420.616708,
+    "ast_hash": "306a00a4630d388501bfaf8ebf0a7779",
+    "semantic_hash": ""
+  },
+  "src/lib/printer/usb.ts": {
+    "mtime": 1782119420.616708,
+    "ast_hash": "b7791b4dd3489d9e562fd6f58adc6176",
+    "semantic_hash": ""
+  },
+  "src/lib/utils.ts": {
+    "mtime": 1782119420.616708,
+    "ast_hash": "e3f848f1b39f863e6164cf58b5a8e752",
+    "semantic_hash": ""
+  },
+  "src/main.tsx": {
+    "mtime": 1782119420.616708,
+    "ast_hash": "dfe52980b175f88ef0628723a2e4293a",
+    "semantic_hash": ""
+  },
+  "src/pages/AdminDashboard.tsx": {
+    "mtime": 1782119420.616708,
+    "ast_hash": "1208d86ae23846d442b9213a27525688",
+    "semantic_hash": ""
+  },
+  "src/pages/AdminOnboarding.tsx": {
+    "mtime": 1782119420.6217175,
+    "ast_hash": "77e873fb7ad89ea233741d8b5ae28e03",
+    "semantic_hash": ""
+  },
+  "src/pages/Admin/StorageManager.tsx": {
+    "mtime": 1782119420.616708,
+    "ast_hash": "5e992e1530f5960e78b32185063c164b",
+    "semantic_hash": ""
+  },
+  "src/pages/BillingCounter.tsx": {
+    "mtime": 1782126129.0897255,
+    "ast_hash": "afe49dd0b71d80a6638c572d7f823b36",
+    "semantic_hash": ""
+  },
+  "src/pages/CustomerMenu.tsx": {
+    "mtime": 1782137996.6774485,
+    "ast_hash": "5c1fccf7248b9888ae77b366e065ed45",
+    "semantic_hash": ""
+  },
+  "src/pages/FeedbackPage.tsx": {
+    "mtime": 1782119420.6217175,
+    "ast_hash": "1236af7860d9dc84e57e80955074f879",
+    "semantic_hash": ""
+  },
+  "src/pages/ForgotPassword.tsx": {
+    "mtime": 1782119420.6217175,
+    "ast_hash": "bf28fc01253f7559251c20726e1abdd5",
+    "semantic_hash": ""
+  },
+  "src/pages/Index.tsx": {
+    "mtime": 1782119420.6217175,
+    "ast_hash": "cd0dd2d062adb6a98dad47810fe25941",
+    "semantic_hash": ""
+  },
+  "src/pages/KitchenDashboard.tsx": {
+    "mtime": 1782124450.3302045,
+    "ast_hash": "7eaff2b521af2a5ec6845afdcae0f312",
+    "semantic_hash": ""
+  },
+  "src/pages/LandingPage.tsx": {
+    "mtime": 1782135005.0212638,
+    "ast_hash": "6e01fe2d50199fcc50ea8d8d9113f5db",
+    "semantic_hash": ""
+  },
+  "src/pages/Login.tsx": {
+    "mtime": 1782135113.7775514,
+    "ast_hash": "6095b4e6e4e603cf0f9ae180bb419e0e",
+    "semantic_hash": ""
+  },
+  "src/pages/NotFound.tsx": {
+    "mtime": 1782119420.6271172,
+    "ast_hash": "56c0e8759328865e67fc2c480b916804",
+    "semantic_hash": ""
+  },
+  "src/pages/QRCenter.tsx": {
+    "mtime": 1782119420.6271172,
+    "ast_hash": "625b1e8946ee1c5dd2dce64fe8789085",
+    "semantic_hash": ""
+  },
+  "src/pages/QRRedirect.tsx": {
+    "mtime": 1782119420.6281247,
+    "ast_hash": "b3f1c2e0c79b803dac4e707001459945",
+    "semantic_hash": ""
+  },
+  "src/pages/RequestQuote.tsx": {
+    "mtime": 1782119420.6281247,
+    "ast_hash": "65a3973fa38188c7dec88b7ad96f788f",
+    "semantic_hash": ""
+  },
+  "src/pages/ResetPassword.tsx": {
+    "mtime": 1782119420.6291795,
+    "ast_hash": "b060256c5faf302bbdd07979bab9685f",
+    "semantic_hash": ""
+  },
+  "src/pages/SuperAdminDashboard.tsx": {
+    "mtime": 1782120468.9708126,
+    "ast_hash": "dc3eecc51c1099e720dcd2b42f40ef9e",
+    "semantic_hash": ""
+  },
+  "src/pages/SuperAdminLogin.tsx": {
+    "mtime": 1782119420.6291795,
+    "ast_hash": "02df405db0413e01a28762fc3e662844",
+    "semantic_hash": ""
+  },
+  "src/pages/TenantAdminLogin.tsx": {
+    "mtime": 1782119420.6291795,
+    "ast_hash": "3a26ee960185cace71bd5bb91684fe1a",
+    "semantic_hash": ""
+  },
+  "src/pages/UserGuide.tsx": {
+    "mtime": 1782119420.6311865,
+    "ast_hash": "c8355707ef7196743916e85c7cf4f3a4",
+    "semantic_hash": ""
+  },
+  "src/pages/WaiterDashboard.tsx": {
+    "mtime": 1782119420.6311865,
+    "ast_hash": "6e8f99a6125639e0cab9eda32c1f88ac",
+    "semantic_hash": ""
+  },
+  "src/pages/__tests__/QRRedirect.test.tsx": {
+    "mtime": 1782119420.6311865,
+    "ast_hash": "0a588a231087c49f499b7129688f763a",
+    "semantic_hash": ""
+  },
+  "src/pages/__tests__/SessionIsolationAudit.test.tsx": {
+    "mtime": 1782135588.8056705,
+    "ast_hash": "b61b8e5f3ffad47eaa5c46aa5fc9370c",
+    "semantic_hash": ""
+  },
+  "src/pages/__tests__/SuperAdminDashboard.test.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "6689508905721e63ec6e4006d2aef4f9",
+    "semantic_hash": ""
+  },
+  "src/pages/blog/BlogIndex.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "ffcce1cd75a8426932edd5821f7e0d4c",
+    "semantic_hash": ""
+  },
+  "src/pages/blog/BlogPost.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "2a272a9983b78ec45b6ce869cbbb0cb7",
+    "semantic_hash": ""
+  },
+  "src/pages/blog/blogData.ts": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "b9b42c64d398e986b0b81ecaf00c84b7",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/AIFoodImages.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "d66c6107309b13c84cf8e6ef03930884",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/AboutUs.tsx": {
+    "mtime": 1782124116.3439012,
+    "ast_hash": "47d431a5d4be290230cba5073385f43b",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/Careers.tsx": {
+    "mtime": 1782123602.96872,
+    "ast_hash": "7c160eb7be8337edb93a78db50f9b196",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/DigitalMenuSoftware.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "817d788bf1322d54e4beaa4360e97682",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/Features.tsx": {
+    "mtime": 1782123585.9724686,
+    "ast_hash": "cfe521d76e0a7c83a24944a0c50ce5a7",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/GuestExperience.tsx": {
+    "mtime": 1782123591.0448062,
+    "ast_hash": "d4c034a22cdf5d1c2eea532e96aa5f50",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/MenuOCR.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "39c2bc6eda13977f24c1a77a7ab6f40d",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/QRMenuGenerator.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "933af87b6d027e7244e73519ca2cb5a1",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/RestaurantMenuManagement.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "fe2b7c9f680a0b9f8960598fdf70c129",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/RestaurantOCR.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "bc93998ec14361afc004cd0ca99883c5",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/sections/CTA.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "5f9ec4e0526aeeb81aed01a1e828324e",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/sections/Features.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "7d7bd42666481c2af9ef6f2472284940",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/sections/Problem.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "a0002d7626a87b4ce4f3ba66600af061",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/sections/Proof.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "9ba1cc7dce8baaee08960607bb0470b3",
+    "semantic_hash": ""
+  },
+  "src/pages/landing/sections/Solution.tsx": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "ad9eaa6c15ff03e5bc57d1d729c614b1",
+    "semantic_hash": ""
+  },
+  "src/pages/legal/CookiePolicy.tsx": {
+    "mtime": 1782123557.2562618,
+    "ast_hash": "fb0200e290f91d87e1051248c8dfdf7a",
+    "semantic_hash": ""
+  },
+  "src/pages/legal/PrivacyPolicy.tsx": {
+    "mtime": 1782123553.258737,
+    "ast_hash": "e2ac33f711d93776df72ccf293942283",
+    "semantic_hash": ""
+  },
+  "src/pages/legal/TermsOfService.tsx": {
+    "mtime": 1782123548.4778943,
+    "ast_hash": "efdeb6032cb2e4f21a8ea90117428d7e",
+    "semantic_hash": ""
+  },
+  "src/services/aiCacheService.ts": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "0054fc01f8bfa15908f8afd63919be77",
+    "semantic_hash": ""
+  },
+  "src/services/aiCostOptimizer.ts": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "8c7233cfd40b6386b44395a299e21343",
+    "semantic_hash": ""
+  },
+  "src/services/aiQueueService.ts": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "a94ba10a7c98305efb6b96c047f902f2",
+    "semantic_hash": ""
+  },
+  "src/services/analyticsService.ts": {
+    "mtime": 1782119420.6329625,
+    "ast_hash": "37ba63277a7e924d6e6214074595cffc",
+    "semantic_hash": ""
+  },
+  "src/services/auditLogger.ts": {
+    "mtime": 1782119420.6439612,
+    "ast_hash": "8d77967ef2dc51628064b98f9c280689",
+    "semantic_hash": ""
+  },
+  "src/services/emailService.ts": {
+    "mtime": 1782121093.9776814,
+    "ast_hash": "44c01571bc706820d8c372c71504f4fc",
+    "semantic_hash": ""
+  },
+  "src/services/imageDiscoveryService.ts": {
+    "mtime": 1782119420.6439612,
+    "ast_hash": "b1066b16a3df6466caf8758e7fdb65c3",
+    "semantic_hash": ""
+  },
+  "src/services/imageGenService.ts": {
+    "mtime": 1782119420.6439612,
+    "ast_hash": "b262d163a6b7195ee548f18ba1991b9f",
+    "semantic_hash": ""
+  },
+  "src/services/imageMatcher.ts": {
+    "mtime": 1782119420.6439612,
+    "ast_hash": "e888271e1936c61142a7c4cd6037d801",
+    "semantic_hash": ""
+  },
+  "src/services/menuParser.test.ts": {
+    "mtime": 1782119420.6439612,
+    "ast_hash": "8d59bcdb84a73347ed58ab3c04991fc9",
+    "semantic_hash": ""
+  },
+  "src/services/menuParser.ts": {
+    "mtime": 1782119420.6439612,
+    "ast_hash": "de12365bf9fc686b6ba5f7b529c087e8",
+    "semantic_hash": ""
+  },
+  "src/services/notificationService.ts": {
+    "mtime": 1782119420.6439612,
+    "ast_hash": "8525fe9f19da3442133af35b8f8e3f4f",
+    "semantic_hash": ""
+  },
+  "src/services/ocrService.ts": {
+    "mtime": 1782119420.647269,
+    "ast_hash": "c00f1376fabbf498fed7cb06e8f665bd",
+    "semantic_hash": ""
+  },
+  "src/services/ocr/ocrService.ts": {
+    "mtime": 1782119420.647269,
+    "ast_hash": "80f6007d2579c25b1cdf9b25b4e46784",
+    "semantic_hash": ""
+  },
+  "src/services/openaiService.ts": {
+    "mtime": 1782119420.649045,
+    "ast_hash": "47a9b0432985361f0fcdc833ac80430c",
+    "semantic_hash": ""
+  },
+  "src/services/openai/client.ts": {
+    "mtime": 1782119420.647269,
+    "ast_hash": "f578f58ece9657a3dfa1ed4b88608915",
+    "semantic_hash": ""
+  },
+  "src/services/openai/embedding.ts": {
+    "mtime": 1782119420.649045,
+    "ast_hash": "81e75d3a95ad2f97b09789fefcbc003c",
+    "semantic_hash": ""
+  },
+  "src/services/openai/image.ts": {
+    "mtime": 1782119420.649045,
+    "ast_hash": "dbf4f55cd7c4264e4130c3101080037d",
+    "semantic_hash": ""
+  },
+  "src/services/openai/moderation.ts": {
+    "mtime": 1782119420.649045,
+    "ast_hash": "80daa3215c13ec3269978d8d58e47db8",
+    "semantic_hash": ""
+  },
+  "src/services/openai/ocr.ts": {
+    "mtime": 1782119420.649045,
+    "ast_hash": "cac41636935d6641f5f8bfabe3ca5089",
+    "semantic_hash": ""
+  },
+  "src/services/openai/translation.ts": {
+    "mtime": 1782119420.649045,
+    "ast_hash": "08acdb1a31e52d53da06b569ddb99e8f",
+    "semantic_hash": ""
+  },
+  "src/services/promotions/cartPricingEngine.test.ts": {
+    "mtime": 1782119420.6515377,
+    "ast_hash": "abe7062be7a1d57324d57dfbefaa76de",
+    "semantic_hash": ""
+  },
+  "src/services/promotions/cartPricingEngine.ts": {
+    "mtime": 1782119420.6515377,
+    "ast_hash": "70618469ec99cad228fc948f7da0663b",
+    "semantic_hash": ""
+  },
+  "src/services/promotions/index.ts": {
+    "mtime": 1782119420.6515377,
+    "ast_hash": "98e32d8a3a0ebe69ce4963ee150e1c68",
+    "semantic_hash": ""
+  },
+  "src/services/promotions/types.ts": {
+    "mtime": 1782119420.6515377,
+    "ast_hash": "6362258372826aa1b3021eaeba871db8",
+    "semantic_hash": ""
+  },
+  "src/services/recipeService.ts": {
+    "mtime": 1782119420.6515377,
+    "ast_hash": "ae56a39efebbce4f6e78b1d11e04f120",
+    "semantic_hash": ""
+  },
+  "src/services/recommendationService.ts": {
+    "mtime": 1782119420.6515377,
+    "ast_hash": "694f98a150a5be58a71ab181eda36efa",
+    "semantic_hash": ""
+  },
+  "src/services/recommendations/cartIntelligence.ts": {
+    "mtime": 1782119420.6515377,
+    "ast_hash": "b40ce5871f606b7716f3a7dd33573c9e",
+    "semantic_hash": ""
+  },
+  "src/services/recommendations/cuisineDetector.ts": {
+    "mtime": 1782119420.6515377,
+    "ast_hash": "472a642360796f83059a94a593bb03bb",
+    "semantic_hash": ""
+  },
+  "src/services/recommendations/embeddingService.ts": {
+    "mtime": 1782119420.6515377,
+    "ast_hash": "e5af6c764aacb932fc05ed650d7d27d2",
+    "semantic_hash": ""
+  },
+  "src/services/recommendations/foodGraph.ts": {
+    "mtime": 1782119420.6515377,
+    "ast_hash": "8fddac60482a20efa17cfff84f36e8d4",
+    "semantic_hash": ""
+  },
+  "src/services/recommendations/index.ts": {
+    "mtime": 1782119420.6571498,
+    "ast_hash": "8eaa378010f2da482f1cdaf2009d0226",
+    "semantic_hash": ""
+  },
+  "src/services/recommendations/recommendations.test.ts": {
+    "mtime": 1782119420.6571498,
+    "ast_hash": "f1914d3f4d9a9aa1a078e11c2d27ff6b",
+    "semantic_hash": ""
+  },
+  "src/services/recommendations/scoringEngine.ts": {
+    "mtime": 1782119420.6571498,
+    "ast_hash": "42be1fe887637796cdff50a99955edea",
+    "semantic_hash": ""
+  },
+  "src/services/recommendations/types.ts": {
+    "mtime": 1782119420.6571498,
+    "ast_hash": "8812b2158e12d578c02cce5d7e4f8e6b",
+    "semantic_hash": ""
+  },
+  "src/services/reviews/index.ts": {
+    "mtime": 1782119420.6571498,
+    "ast_hash": "d5c0123b08500df0ff6464dae5640e50",
+    "semantic_hash": ""
+  },
+  "src/services/reviews/recoveryEngine.test.ts": {
+    "mtime": 1782119420.659864,
+    "ast_hash": "cb13be6f42b3f1facaf668b4e1f2c97d",
+    "semantic_hash": ""
+  },
+  "src/services/reviews/recoveryEngine.ts": {
+    "mtime": 1782119420.659864,
+    "ast_hash": "2cb110bf6f72ccf189f89fb840768fd4",
+    "semantic_hash": ""
+  },
+  "src/services/reviews/sentimentAnalysisService.test.ts": {
+    "mtime": 1782119420.659864,
+    "ast_hash": "62d459941b225775023673ed8eb26463",
+    "semantic_hash": ""
+  },
+  "src/services/reviews/sentimentAnalysisService.ts": {
+    "mtime": 1782119420.659864,
+    "ast_hash": "5e343faa9be04597b9dcaca66ca9bce8",
+    "semantic_hash": ""
+  },
+  "src/services/reviews/types.ts": {
+    "mtime": 1782119420.661379,
+    "ast_hash": "8f5fdcd70f0a7569d4bf147d74077844",
+    "semantic_hash": ""
+  },
+  "src/services/storageService.ts": {
+    "mtime": 1782119420.661379,
+    "ast_hash": "ac87e8b1ab411abf3dba9454ad3b17fc",
+    "semantic_hash": ""
+  },
+  "src/services/telemetry.ts": {
+    "mtime": 1782119420.661379,
+    "ast_hash": "30f9c56f4fc1f523b164df464c746ef0",
+    "semantic_hash": ""
+  },
+  "src/services/textCleaner.ts": {
+    "mtime": 1782119420.661379,
+    "ast_hash": "f5d77edc41011d19b0f65041cad9af2d",
+    "semantic_hash": ""
+  },
+  "src/stores/cartStore.ts": {
+    "mtime": 1782119420.661379,
+    "ast_hash": "3a9e13ed581aaf74949048c239392998",
+    "semantic_hash": ""
+  },
+  "src/styles/design-system.ts": {
+    "mtime": 1782119420.661379,
+    "ast_hash": "a2ab5afb304d03879caac5d70e732f4e",
+    "semantic_hash": ""
+  },
+  "src/test/example.test.ts": {
+    "mtime": 1782119420.661379,
+    "ast_hash": "e642f1652217133f4a61efc15d87242b",
+    "semantic_hash": ""
+  },
+  "src/test/setup.ts": {
+    "mtime": 1782119420.661379,
+    "ast_hash": "e70c804c294f3f04e80e7a8351de899e",
+    "semantic_hash": ""
+  },
+  "src/utils/rateLimiter.test.ts": {
+    "mtime": 1782119420.6663444,
+    "ast_hash": "e71d65e58e451cfe6db17e563f589e83",
+    "semantic_hash": ""
+  },
+  "src/utils/rateLimiter.ts": {
+    "mtime": 1782119420.6663444,
+    "ast_hash": "2025e75dcbba3b3e9cbc34b6095da172",
+    "semantic_hash": ""
+  },
+  "src/utils/sanitize.ts": {
+    "mtime": 1782119420.6663444,
+    "ast_hash": "f487fb6cb56b07f03fb9f1c3beab280c",
+    "semantic_hash": ""
+  },
+  "src/utils/shiftCalculations.ts": {
+    "mtime": 1782119420.6663444,
+    "ast_hash": "f002a8c2c8cf8eaf81a8d80a9be1c756",
+    "semantic_hash": ""
+  },
+  "src/utils/url.ts": {
+    "mtime": 1782119420.6663444,
+    "ast_hash": "4a328ecf8e5b69d84d18e0fdac6b8b88",
+    "semantic_hash": ""
+  },
+  "src/vite-env.d.ts": {
+    "mtime": 1782119420.6663444,
+    "ast_hash": "8f68c27c3fc38817b2726b20e2d4f1ee",
+    "semantic_hash": ""
+  },
+  "supabase/.temp/linked-project.json": {
+    "mtime": 1782119421.3780396,
+    "ast_hash": "aaab755310e62720c3283cd50055a73f",
+    "semantic_hash": ""
+  },
+  "supabase/functions/create-tenant/index.ts": {
+    "mtime": 1782119421.3939717,
+    "ast_hash": "4ec1e9efe0e08d3f8bb910f84e42be24",
+    "semantic_hash": ""
+  },
+  "supabase/functions/evict-ai-cache/index.ts": {
+    "mtime": 1782119421.3949778,
+    "ast_hash": "9a17e0ddd0cdcd1d5711b39d41e58fbe",
+    "semantic_hash": ""
+  },
+  "supabase/functions/google-places/index.ts": {
+    "mtime": 1782119421.3949778,
+    "ast_hash": "ba39943265c5a7f98a93275e9d0b6a46",
+    "semantic_hash": ""
+  },
+  "supabase/functions/manage-qr/index.ts": {
+    "mtime": 1782119421.3949778,
+    "ast_hash": "9fd0b71c9645be45cf61779ebc42a3ee",
+    "semantic_hash": ""
+  },
+  "supabase/functions/manage-staff/index.ts": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "035f0612f92a9cf5f1640a0a96b3f7d4",
+    "semantic_hash": ""
+  },
+  "supabase/functions/manage-super-admins/index.ts": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "1342af55d808f6c67edd779a4f021907",
+    "semantic_hash": ""
+  },
+  "supabase/functions/notify-quote/index.ts": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "20988c546e154d485053defa2f92a5a4",
+    "semantic_hash": ""
+  },
+  "supabase/functions/ocr-menu/index.ts": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "00afbf5370ad1552af5ad26bcb5d39a6",
+    "semantic_hash": ""
+  },
+  "supabase/functions/push-invoice/index.ts": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "09003d5c9b83527162981a8e1577a727",
+    "semantic_hash": ""
+  },
+  "supabase/functions/push-sender/index.ts": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "1ec13747d8a68cfe4b2ff92977d30223",
+    "semantic_hash": ""
+  },
+  "supabase/functions/qr-redirect/index.test.ts": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "f9435815fc065e64059deca2f0e570bd",
+    "semantic_hash": ""
+  },
+  "supabase/functions/qr-redirect/index.ts": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "f1fa19f8d19a47023018938da42836e2",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260204044737_2afcdf2b-fd46-4087-b242-c1f00a9ac5b4.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "5c918a3803be0378e3f7d1b6d3337b8e",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260204054640_5725e4a2-ad8a-441d-b743-808a03dff216.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "ab01615f6a50924cb121de21ccb27144",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260204062138_37aef81a-5b5e-4de0-9181-aba265d24dcf.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "3f4466cf05f038d3b8fcb29626bece7f",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260204063230_b79e597d-87e6-4329-81e3-e86e1c4b6b57.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "bdb631230fbc85be84c70f5e2d320a99",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260204063601_168a0a4c-f114-4938-b614-cb28827e72d4.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "a582352c9fe6aebbe17a5e8911130c72",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260206052630_1ad35c14-17a0-44d0-8d8e-9b98433b341f.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "45dbf89e7554316e32d54f20a565adf1",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260206061942_8848de02-ea6f-4df7-87af-11e590fb436a.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "4bf419887f5996832fdb4037d8aed367",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260206062103_a20b5a03-5902-4d99-8403-37049c06e334.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "a9c3a0493ee8fb445dc104aa9518526f",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260212090625_d876fd8a-8d30-4520-9eb1-b994fe255bb0.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "77342862d5bd617c309ee6ddb98b49bc",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260212092421_850b68bb-1e3d-4196-8151-3b9c59703517.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "1b60f942f5b03075f02cc2dc005a0a88",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260212123401_08fdea4b-6e5f-41f5-ab9a-79a1258ae403.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "105eb1d480b7a1cb8ea5c5ff35f6b31f",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260212125755_21f9ae0b-faf0-4e92-85ac-2c180f3615b7.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "24d6e719e08f2431ef2d353a2da511a3",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260212135034_4ef92179-413d-45aa-9aaa-ebafff7bc2b3.sql": {
+    "mtime": 1782119421.3976693,
+    "ast_hash": "42fabb65eccb3ce9b9e3f262000c6062",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260212142805_42bcbd57-9fc1-496e-965f-3a5570560bd7.sql": {
+    "mtime": 1782119421.4081233,
+    "ast_hash": "04f5e63a16c5fe69ef0256bde9868018",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260212150950_b8487ef2-20f4-418b-9959-f5c1375bda2a.sql": {
+    "mtime": 1782119421.4081233,
+    "ast_hash": "030b99f9aa0da80a8026022d5ef69633",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260213062751_057fe091-707d-46fe-83f5-2dfb3bdd8887.sql": {
+    "mtime": 1782119421.4081233,
+    "ast_hash": "d6f1b7c3f3fec3c40bb9af2d1da6e074",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260213065118_30d4ffa2-ab10-4958-ba10-d39e73e1c8e3.sql": {
+    "mtime": 1782119421.4081233,
+    "ast_hash": "4e21d265802c550c18f6b0c344f03339",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260213065129_1ffbd54d-774a-4975-9a06-9d087765e440.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "2670d683e101b58e03c599148fd4a6fa",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260213065328_917aff3f-d858-49ab-b167-85667629d7e8.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "9df959de9b80b05d4e5bc0893ba25ef6",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260214070315_85b73b79-f0fa-4dab-95c9-82228fc72f15.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "d1cc79a72af3c18e763a59ff94d4f73f",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260214125852_c4bf1869-a08c-4195-a526-3699e254dd51.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "eee0e57297a0eea8b3ddafc6bc63e719",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260214141623_d4ea1298-4baf-4dfd-81bf-48929e3c7807.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "65d21bfa5734739e86493eba6ba6c3ee",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260214143935_993ce933-b7fa-44ec-99a4-bc991445a2c7.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "5e8a5e735684004fea7c38a49bf0508a",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260216155122_e35b9077-42bc-4c0a-a728-588c45a9665e.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "254c5bfe04b4a6d3b17b79a8e84993c9",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260217055738_a5616988-b835-4a3e-bba2-0975a76e2760.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "c46ddfda036bbcd9b6f433e27eb26aa8",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260226031809_016afd81-5ba3-42b9-b8b9-d39584917c91.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "1980e913da6d255a8cdfc1cbb13c2c59",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260226045214_e277ee59-5658-4d73-9efa-86f3793d95f4.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "552969c5c7830ef7a534b53f6c74b55a",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260228073837_637639c7-dc70-47fe-a9e3-d5e9ee32d7b5.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "ae516bfff09c3b7026f7f533abfc6576",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260228073848_b21447a8-0e5a-4d5c-a659-f10d6ee08f59.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "c6c0dcf990ba3f7e9b363b2d6a002d4b",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260228074024_f630f2c1-4e69-454a-a68c-92aa88ec42dc.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "84cbe2c57b202fe966b1fe8832aafd51",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260310171427_19c2afc8-1b68-450b-9b7f-2992d404dbc0.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "51b308979448eddb21f70b12b444331e",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260312061202_a3dbe3bf-a628-42ce-ae1a-06b664fde8c4.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "2ff96a171eef038f766b0b1e4f24e3a2",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260312061433_c97030e5-4b4e-4d58-abd7-5c333a76aeed.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "814451677eda50f923e217e16a8ed082",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260313131133_dfeff1d2-4d68-43a3-9af3-af3163169137.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "07bfda5a6d2e2cdc2519d987898685cf",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260315104314_41a1d895-c196-4ba9-8721-8dfa784511f2.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "4799875a56ade7b89f3e73afa6b7f84a",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260315112128_6a30e87b-9d31-4f4f-a711-cad0515f0331.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "d48d0dd2e34ca43a80ae64c1faa088ab",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260315113139_1c1ded5c-73a0-43ac-9f39-42045118ae3b.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "d1c0ca12a795547fbd64b566d6f056e1",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260315133352_fce664b4-26ae-4509-8f34-1db05cc9cf11.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "46fa41d843417ef56dde570b62e8342f",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260315133936_5b85898e-9541-4a41-ac88-dc2753f7c5b9.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "0428aa1bbb7be1bb2f8a0dc1f8544713",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260316162440_ac2f1b9d-d043-404a-84d8-c9d12325dfc3.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "32a5b55ea0a3424027946206b93af91f",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260329132944_563961e9-39c9-44e2-8e51-dfc456b3f020.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "7b336d6223298a4cf1a99341555de4fb",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260329132954_52b70540-700d-417a-91ca-85aa8ab4690a.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "bc8d75ed533ca9d727b5b6e7be5b2831",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260329135229_88179409-e43b-45d9-bc8a-466952bfcf78.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "471101f26b1eac0bad1221eea0561d29",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260329142838_f980685a-3587-43ce-9d4c-85a5aa3a8322.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "e288fb511365adfb31759af1d9033919",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260329143659_1dee61eb-c784-40be-b20b-80f662d687cd.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "8ecd239fe6541dbc776c7c07cacc17ca",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260329144331_8a45d4bd-9b09-4f87-86a1-f689c5917dee.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "e583bee3bcd9f37d619c009b384c42e7",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260329144659_d58be0a3-673f-40f9-aed3-28cf3285bca5.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "0f33fe2322ebc19fa0a986b6502d41e1",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260329144720_b6b461e0-51db-48ba-8a13-53ac9738db0e.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "bb8f36ba46aab1197917092c459349b5",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260515120000_enterprise_promotions.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "a84d24ab93b4328a3160cb89ff89518b",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260515130000_enterprise_reviews.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "5e3c72576f081895d3eea732db11a484",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260518060000_ads_realtime_and_rls.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "e2f8ee5ca61879ea3ce320a932728420",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260518070000_campaign_analytics_events.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "0556434f907b809d961662ec3bcc1c40",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260605000000_production_sprint_fixes.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "51ba981932aaaf3828c9cdf2b2431e72",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260605010000_ai_menu_enrichment_schema.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "d113f1d5e1531526b5c19eaa857fafa3",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260605020000_fix_review_rls_for_customers.sql": {
+    "mtime": 1782119421.4098718,
+    "ast_hash": "f9d39f8340b5eaa42762546925bbb6ae",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260606000000_push_notifications_schema.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "20288071ad0e93775f003ad34e4054cc",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260606000000_workforce_management.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "8287c60212e3b59b45b95a508ea2ed4e",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260606034123_billing_and_kds_remediation.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "f233e36d2a19742845193f1960555deb",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260606050000_security_hardening_rls.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "edf07d4b4a20deb00b511f46f28efe12",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260606204626_enterprise_qr_center.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "8037d7752107a9acc2f59d171ab61376",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260607000000_ensure_mv_restaurant_ratings.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "f72f9716a7c8b429233572598a02be44",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260607000000_waiter_calls_buckets.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "61412f7f425e0986b7f87f0d28127b16",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260613151500_harden_restaurants_public_security_invoker.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "7a4bfb50a8b9d0a6c824fbe0bb31bf5b",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260613153000_add_order_idempotency_key.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "ee8ed897d12320eb491c280a5a3b8170",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260614120000_add_google_places.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "33c4d7ca1c12c24b3da4890f15a3e273",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260614130000_add_menu_embeddings.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "feeecbb9a695af51845ac596b84ebaab",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260614140000_add_ai_cache_and_global_assets.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "41c8b8ba1ebfc7084116ca1382646d9a",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260614150000_rebrand_footer_to_zappy.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "4bb1ad2af3b4b0e5c29dafea48065e99",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260618000000_ai_cost_optimization.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "ca090546927f4e361f73fb792af929a2",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260619000000_image_library_schema.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "da4253f41b42b3f2edf4b9f205048162",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260619000001_add_audit_log_fields.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "012f5b1cfeddb8dfbfafc1bdcbe58ee5",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260622000000_smart_table_occupancy.sql": {
+    "mtime": 1782124919.5286334,
+    "ast_hash": "746d0564e72b43ffae4be67032ce7aa6",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260622000001_order_session_isolation.sql": {
+    "mtime": 1782126032.2985864,
+    "ast_hash": "797b766c3318ea4afa7ab396bd85f9af",
+    "semantic_hash": ""
+  },
+  "supabase/seeds/hotel-chennai.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "d02ca20a30ae4603408fb03b7fd7e6ab",
+    "semantic_hash": ""
+  },
+  "supabase/seeds/hotel-madurai.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "59abfa17fd20c407b413f3a16aca260b",
+    "semantic_hash": ""
+  },
+  "supabase/seeds/hotel-tamilnadu.sql": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "913b3d91b7b5babb3aeb9e206c22711f",
+    "semantic_hash": ""
+  },
+  "tailwind.config.ts": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "d24021fc7024d3c55633d91abe86af30",
+    "semantic_hash": ""
+  },
+  "tsconfig.app.json": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "cfee0df0093e06cda8f4d97149074a0a",
+    "semantic_hash": ""
+  },
+  "tsconfig.json": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "941963f07e098f081b0793707b88eaf8",
+    "semantic_hash": ""
+  },
+  "tsconfig.node.json": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "ea3b5c2d9c1cc5d2b3fb3af706f2ca1a",
+    "semantic_hash": ""
+  },
+  "vercel.json": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "b9abca368e7597031555eed9b27ef3a4",
+    "semantic_hash": ""
+  },
+  "vite.config.ts": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "be6e7b97ae445a4187afed23dd5d9df1",
+    "semantic_hash": ""
+  },
+  "vitest.config.ts": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "8800905cca6b71b675e406a15d2d5b13",
+    "semantic_hash": ""
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1782119419.4510007,
+    "ast_hash": "4e93256da7ce5a090772219454481fc0",
+    "semantic_hash": ""
+  },
+  ".github/workflows/deploy-manage-qr.yml": {
+    "mtime": 1782119419.4510007,
+    "ast_hash": "2103293826db8fabdc405f404370c5cf",
+    "semantic_hash": ""
+  },
+  ".github/workflows/deploy-supabase-functions.yml": {
+    "mtime": 1782119419.4510007,
+    "ast_hash": "2c5b9c202b269f003c6adb0149dc8752",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1782128238.8936503,
+    "ast_hash": "87f5b87c02a3b94aa91c0f5855e4a562",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1782119419.4577005,
+    "ast_hash": "7ff2778d49d9d71948ae2269dcb243eb",
+    "semantic_hash": ""
+  },
+  "docker-compose.yml": {
+    "mtime": 1782119419.4577005,
+    "ast_hash": "1a2d794d2d543bfe38ecc1c49395b1ea",
+    "semantic_hash": ""
+  },
+  "graphify-out/converted/menu_template_27933c75.md": {
+    "mtime": 1782138134.2184415,
+    "ast_hash": "561f6e0d1d7fc83fa1c5799e87d8033e",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1782119419.4577005,
+    "ast_hash": "2baf23ac5e8354a95e44795a079a4527",
+    "semantic_hash": ""
+  },
+  "public/googlef1638b4608420752.html": {
+    "mtime": 1782119419.4993787,
+    "ast_hash": "32012b13ddee60a5dbc08ed395a7ce7c",
+    "semantic_hash": ""
+  },
+  "public/robots.txt": {
+    "mtime": 1782119419.5053089,
+    "ast_hash": "8e81e80d23bd6854e72320f3fe6deb12",
+    "semantic_hash": ""
+  },
+  "supabase_audit/phase1_report.md": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "2154543f2cdc0ca75d051bbb6c9778fe",
+    "semantic_hash": ""
+  },
+  "tools.yaml": {
+    "mtime": 1782119421.4256546,
+    "ast_hash": "b93af6d9c4cd24906d9799db3ed4f4be",
+    "semantic_hash": ""
+  },
+  "update.md": {
+    "mtime": 1782129656.8734052,
+    "ast_hash": "51fd01c480b73e20c29507b5c80e5e16",
+    "semantic_hash": ""
+  },
+  "public/favicon.png": {
+    "mtime": 1782119419.4716358,
+    "ast_hash": "fbb1bdebe72e7de35588ef093262f040",
+    "semantic_hash": ""
+  },
+  "public/favicon.svg": {
+    "mtime": 1782119419.4719968,
+    "ast_hash": "a5a7e79e02df4787b4be15b7ba48b3fc",
+    "semantic_hash": ""
+  },
+  "public/food/brownie.jpg": {
+    "mtime": 1782119419.4719968,
+    "ast_hash": "bc259552cbf5da47aec035cff78d8f2f",
+    "semantic_hash": ""
+  },
+  "public/food/butter-chicken.jpg": {
+    "mtime": 1782119419.4719968,
+    "ast_hash": "b5d3bb3fb3731b1bfcde7c7c86936b34",
+    "semantic_hash": ""
+  },
+  "public/food/chicken-65.jpg": {
+    "mtime": 1782119419.4719968,
+    "ast_hash": "659272bc128eaddcd9d904b8a528f420",
+    "semantic_hash": ""
+  },
+  "public/food/chicken-biryani.jpg": {
+    "mtime": 1782119419.4719968,
+    "ast_hash": "a66269c125c53e56a69a0be749576c07",
+    "semantic_hash": ""
+  },
+  "public/food/chicken-noodles.jpg": {
+    "mtime": 1782119419.4719968,
+    "ast_hash": "b2859c0c816ff6d42d8abbc720e7b936",
+    "semantic_hash": ""
+  },
+  "public/food/chocolate-cake.jpg": {
+    "mtime": 1782119419.4719968,
+    "ast_hash": "d8b98b8d999039d451594d9a7f9e9acd",
+    "semantic_hash": ""
+  },
+  "public/food/cold-coffee.jpg": {
+    "mtime": 1782119419.4775226,
+    "ast_hash": "7e629cd1c81488661c52798dfd385460",
+    "semantic_hash": ""
+  },
+  "public/food/french-fries.jpg": {
+    "mtime": 1782119419.4775226,
+    "ast_hash": "639604209f87aa8e12bb06f625df3884",
+    "semantic_hash": ""
+  },
+  "public/food/garlic-bread.jpg": {
+    "mtime": 1782119419.4785404,
+    "ast_hash": "8713174a65a5b4491108ec8ad719e01a",
+    "semantic_hash": ""
+  },
+  "public/food/generated/blue-lagoon-mocktail.jpg": {
+    "mtime": 1782119419.4785404,
+    "ast_hash": "2483a56d71475ae674c8cde413146223",
+    "semantic_hash": ""
+  },
+  "public/food/generated/butter-chicken.jpg": {
+    "mtime": 1782119419.4802966,
+    "ast_hash": "c22ca035f1677b3b40581923e04f8c34",
+    "semantic_hash": ""
+  },
+  "public/food/generated/chicken-curry.jpg": {
+    "mtime": 1782119419.4802966,
+    "ast_hash": "d18d9889b3a25b7a9c75c49425d079ad",
+    "semantic_hash": ""
+  },
+  "public/food/generated/chicken-wings-bbq.jpg": {
+    "mtime": 1782119419.4802966,
+    "ast_hash": "27542c88c72b391e626cdf79909e1a94",
+    "semantic_hash": ""
+  },
+  "public/food/generated/chocolate-lava-cake.jpg": {
+    "mtime": 1782119419.4802966,
+    "ast_hash": "64a9ad805fd88f63e74274893278e7b9",
+    "semantic_hash": ""
+  },
+  "public/food/generated/dal-makhani.jpg": {
+    "mtime": 1782119419.4802966,
+    "ast_hash": "72a4801317087ffafadc1ce3356ffe3a",
+    "semantic_hash": ""
+  },
+  "public/food/generated/fish-and-chips.jpg": {
+    "mtime": 1782119419.4802966,
+    "ast_hash": "231d1b6f2aa45995097dffca93297717",
+    "semantic_hash": ""
+  },
+  "public/food/generated/gulab-jamun.jpg": {
+    "mtime": 1782119419.4802966,
+    "ast_hash": "8160877e0ad62cd93e7c58c647e70e06",
+    "semantic_hash": ""
+  },
+  "public/food/generated/loaded-nachos.jpg": {
+    "mtime": 1782119419.4844775,
+    "ast_hash": "9abd3bceb1bbe65ba8af7c1a09b1a436",
+    "semantic_hash": ""
+  },
+  "public/food/generated/long-island-iced-tea.jpg": {
+    "mtime": 1782119419.4844775,
+    "ast_hash": "1f671ae2e41c104731fcd17c4fd3349d",
+    "semantic_hash": ""
+  },
+  "public/food/generated/mango-tango.jpg": {
+    "mtime": 1782119419.4857345,
+    "ast_hash": "127d916fa30d19b8109718f79240c3bb",
+    "semantic_hash": ""
+  },
+  "public/food/generated/masala-chai.jpg": {
+    "mtime": 1782119419.4862406,
+    "ast_hash": "0ba8191229cb3d0f8a2efc4eef067e14",
+    "semantic_hash": ""
+  },
+  "public/food/generated/mojito-classic.jpg": {
+    "mtime": 1782119419.4862406,
+    "ast_hash": "7aa053c895c844cdb13177dae26fca2b",
+    "semantic_hash": ""
+  },
+  "public/food/generated/paneer-butter-masala.jpg": {
+    "mtime": 1782119419.4862406,
+    "ast_hash": "a7aa12fcbc041efab328ed3083204ad4",
+    "semantic_hash": ""
+  },
+  "public/food/generated/paneer-tikka.jpg": {
+    "mtime": 1782119419.4862406,
+    "ast_hash": "20eb5c2ea411f16dfa27bc9f536f40df",
+    "semantic_hash": ""
+  },
+  "public/food/generated/pani-puri.jpg": {
+    "mtime": 1782119419.4862406,
+    "ast_hash": "9703ee8f1630c8e778232990f0c1e3be",
+    "semantic_hash": ""
+  },
+  "public/food/generated/tiramisu.jpg": {
+    "mtime": 1782119419.4862406,
+    "ast_hash": "f370b7acf28d652062be6ac4a676fe91",
+    "semantic_hash": ""
+  },
+  "public/food/generated/vada-pav.jpg": {
+    "mtime": 1782119419.4862406,
+    "ast_hash": "fd52d400006eceead30c9076f0171057",
+    "semantic_hash": ""
+  },
+  "public/food/generated/veggie-burger.jpg": {
+    "mtime": 1782119419.4862406,
+    "ast_hash": "315d33feeedcd566dfd1b97be159c64e",
+    "semantic_hash": ""
+  },
+  "public/food/generated/virgin-pina-colada.jpg": {
+    "mtime": 1782119419.4914224,
+    "ast_hash": "589f0013843b5d995de71b400151a166",
+    "semantic_hash": ""
+  },
+  "public/food/generated/water-bottle.jpg": {
+    "mtime": 1782119419.4914224,
+    "ast_hash": "5514af57c0ed175ecebe2970c856e6ba",
+    "semantic_hash": ""
+  },
+  "public/food/generated/whiskey-sour.jpg": {
+    "mtime": 1782119419.4924417,
+    "ast_hash": "7b1d23a4eb5498e36c6a2b29dbbca896",
+    "semantic_hash": ""
+  },
+  "public/food/gulab-jamun.jpg": {
+    "mtime": 1782119419.4924417,
+    "ast_hash": "e9d7ecdb4ffdaaedbc36925684d05c6c",
+    "semantic_hash": ""
+  },
+  "public/food/ice-cream.jpg": {
+    "mtime": 1782119419.4924417,
+    "ast_hash": "a012ce46d3c3d7921a86a1796f40d8ad",
+    "semantic_hash": ""
+  },
+  "public/food/lime-soda.jpg": {
+    "mtime": 1782119419.4924417,
+    "ast_hash": "071b13dcee41df06f7e000a07a26d549",
+    "semantic_hash": ""
+  },
+  "public/food/mango-juice.jpg": {
+    "mtime": 1782119419.4924417,
+    "ast_hash": "31a4536ff66f0aacc3702bf635b96a5b",
+    "semantic_hash": ""
+  },
+  "public/food/masala-chai.jpg": {
+    "mtime": 1782119419.4924417,
+    "ast_hash": "2b092781b923ece3c7d1474de7365d88",
+    "semantic_hash": ""
+  },
+  "public/food/mutton-biryani.jpg": {
+    "mtime": 1782119419.4924417,
+    "ast_hash": "ba5b7b2239fd7ca3a882aa0433918b85",
+    "semantic_hash": ""
+  },
+  "public/food/paneer-butter-masala.jpg": {
+    "mtime": 1782119419.4924417,
+    "ast_hash": "b8a1893a668d9cfc46843e89483a302a",
+    "semantic_hash": ""
+  },
+  "public/food/paneer-tikka.jpg": {
+    "mtime": 1782119419.4924417,
+    "ast_hash": "67ebffff667fdc8f25ba5f9ae80bd7d9",
+    "semantic_hash": ""
+  },
+  "public/food/rasmalai.jpg": {
+    "mtime": 1782119419.4924417,
+    "ast_hash": "a6b93006aecd7163f1606d2a1d5a5140",
+    "semantic_hash": ""
+  },
+  "public/food/spring-rolls.jpg": {
+    "mtime": 1782119419.4983451,
+    "ast_hash": "c65545652900f95989b8214dab9fc346",
+    "semantic_hash": ""
+  },
+  "public/food/veg-fried-rice.jpg": {
+    "mtime": 1782119419.4993787,
+    "ast_hash": "b52bde3f1ea460999bd6ecfba954b0cc",
+    "semantic_hash": ""
+  },
+  "public/og-image.png": {
+    "mtime": 1782119419.4993787,
+    "ast_hash": "b074881fa040d64b6e11b0243c991333",
+    "semantic_hash": ""
+  },
+  "public/placeholder.svg": {
+    "mtime": 1782119419.5053089,
+    "ast_hash": "35707bd9960ba5281c72af927b79291f",
+    "semantic_hash": ""
+  },
+  "public/qr-logo.svg": {
+    "mtime": 1782119419.5053089,
+    "ast_hash": "e94d532c2c354f401d405925ec057918",
+    "semantic_hash": ""
+  },
+  "public/store/ada_pradhaman.png": {
+    "mtime": 1782119419.5066247,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/adai.png": {
+    "mtime": 1782119419.5148585,
+    "ast_hash": "7dc21b139727d5ace81fc0a7266786e3",
+    "semantic_hash": ""
+  },
+  "public/store/adhirasam.png": {
+    "mtime": 1782119419.5206158,
+    "ast_hash": "dacdcc39b5b5c76853d858400df226b6",
+    "semantic_hash": ""
+  },
+  "public/store/akki_roti.png": {
+    "mtime": 1782119419.5206158,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/andhra_meals.png": {
+    "mtime": 1782119419.536326,
+    "ast_hash": "3d3ae2a1f7d9857942b731657e764141",
+    "semantic_hash": ""
+  },
+  "public/store/appam.png": {
+    "mtime": 1782119419.5415053,
+    "ast_hash": "e8d1a0b7494f98178677ad6565eec17c",
+    "semantic_hash": ""
+  },
+  "public/store/arachuvitta_sambar.png": {
+    "mtime": 1782119419.5490792,
+    "ast_hash": "08e0f24c35285551bd18ed983533d626",
+    "semantic_hash": ""
+  },
+  "public/store/avial.png": {
+    "mtime": 1782119419.5550747,
+    "ast_hash": "2f17e0883f3b2d813b9e2a2e5c75335c",
+    "semantic_hash": ""
+  },
+  "public/store/banana_bajji.png": {
+    "mtime": 1782119419.5550747,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/banana_chips.png": {
+    "mtime": 1782119419.5596447,
+    "ast_hash": "fbb8b8aafa45420bb261f51c0899d63f",
+    "semantic_hash": ""
+  },
+  "public/store/banana_halwa.png": {
+    "mtime": 1782119419.5596447,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/banana_leaf_meals.png": {
+    "mtime": 1782119419.5698898,
+    "ast_hash": "8d6c00681ff3bc6ec6b56e7468b280f5",
+    "semantic_hash": ""
+  },
+  "public/store/beans_poriyal.png": {
+    "mtime": 1782119419.5758333,
+    "ast_hash": "79d8482d967e4337d736c070642da05c",
+    "semantic_hash": ""
+  },
+  "public/store/beans_usili.png": {
+    "mtime": 1782119419.5769196,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/beetroot_poriyal.png": {
+    "mtime": 1782119419.581694,
+    "ast_hash": "1a317aeca916711d84568416f76cb76d",
+    "semantic_hash": ""
+  },
+  "public/store/bisi_bele_bath.png": {
+    "mtime": 1782119419.5871887,
+    "ast_hash": "c1ab448a6d050509c2e3126abba87194",
+    "semantic_hash": ""
+  },
+  "public/store/bisibele_bath_rice.png": {
+    "mtime": 1782119419.5871887,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/bonda_soup.png": {
+    "mtime": 1782119419.5886893,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/boondi_laddu.png": {
+    "mtime": 1782119419.5886893,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/brinjal_sambar.png": {
+    "mtime": 1782119419.596691,
+    "ast_hash": "5b4183ffa5233941fbe34eb0759af3da",
+    "semantic_hash": ""
+  },
+  "public/store/buttermilk.png": {
+    "mtime": 1782119419.602542,
+    "ast_hash": "a812afaf8ef7e6da27626cc2c4b276de",
+    "semantic_hash": ""
+  },
+  "public/store/cabbage_poriyal.png": {
+    "mtime": 1782119419.607082,
+    "ast_hash": "772e6b483e3be82082f0c08c4ba4f786",
+    "semantic_hash": ""
+  },
+  "public/store/cafe_filter_coffee_snacks_combo.png": {
+    "mtime": 1782119419.607082,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/carrot_chutney.png": {
+    "mtime": 1782119419.6085882,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/carrot_poriyal.png": {
+    "mtime": 1782119419.6136477,
+    "ast_hash": "1db7684f1b6addbaf64d750f22f08468",
+    "semantic_hash": ""
+  },
+  "public/store/chana_dal_chutney.png": {
+    "mtime": 1782119419.6147695,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/cheese_dosa.png": {
+    "mtime": 1782119419.6205907,
+    "ast_hash": "53f131f8d9fd902d0c3295584c50bde3",
+    "semantic_hash": ""
+  },
+  "public/store/chennai_filter_coffee_combo.png": {
+    "mtime": 1782119419.6205907,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/chettinad_chicken_curry.png": {
+    "mtime": 1782119419.6216192,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/chettinad_special_thali.png": {
+    "mtime": 1782119419.628741,
+    "ast_hash": "8f7618fb4ca2a1c98b86ad7d573677aa",
+    "semantic_hash": ""
+  },
+  "public/store/chicken_65.png": {
+    "mtime": 1782119419.628741,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/chicken_biryani.png": {
+    "mtime": 1782119419.6346407,
+    "ast_hash": "7a8194a4ddb9461a939452721f00c70c",
+    "semantic_hash": ""
+  },
+  "public/store/chicken_chettinad.png": {
+    "mtime": 1782119419.635736,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/cluster_beans_poriyal.png": {
+    "mtime": 1782119419.6415427,
+    "ast_hash": "79d8482d967e4337d736c070642da05c",
+    "semantic_hash": ""
+  },
+  "public/store/coconut_burfi.png": {
+    "mtime": 1782119419.6415427,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/coconut_chutney.png": {
+    "mtime": 1782119419.6495836,
+    "ast_hash": "a41aba625d200683cceab06f3f14c1ee",
+    "semantic_hash": ""
+  },
+  "public/store/coconut_ginger_chutney.png": {
+    "mtime": 1782119419.6495836,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/coconut_milk_rice.png": {
+    "mtime": 1782119419.650596,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/coconut_rice.png": {
+    "mtime": 1782119419.6555712,
+    "ast_hash": "69e743325f88356c669b9a410cb83742",
+    "semantic_hash": ""
+  },
+  "public/store/combo_tiffin_plate.png": {
+    "mtime": 1782119419.6649835,
+    "ast_hash": "a053577edb9551e7a30e0696fb662a0f",
+    "semantic_hash": ""
+  },
+  "public/store/coriander_chutney.png": {
+    "mtime": 1782119419.6730397,
+    "ast_hash": "738e46046bcbd8425534211a3c264a7e",
+    "semantic_hash": ""
+  },
+  "public/store/curd_rice.png": {
+    "mtime": 1782119419.6790402,
+    "ast_hash": "5fa37e546361d72119256f010e4f0260",
+    "semantic_hash": ""
+  },
+  "public/store/curd_rice_with_pomegranate.png": {
+    "mtime": 1782119419.680017,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/curd_vada_with_rice.png": {
+    "mtime": 1782119419.680017,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/curry_leaves_chutney.png": {
+    "mtime": 1782119419.6856432,
+    "ast_hash": "736dd439532473bb9ebf6b6c80c0f5a3",
+    "semantic_hash": ""
+  },
+  "public/store/curry_leaves_rasam.png": {
+    "mtime": 1782119419.697659,
+    "ast_hash": "f33ced1afa364bb982f11ded87d89f28",
+    "semantic_hash": ""
+  },
+  "public/store/dahi_vada.png": {
+    "mtime": 1782119419.7066958,
+    "ast_hash": "ed053f6fa3ad7428585e9dfb8d2dff6e",
+    "semantic_hash": ""
+  },
+  "public/store/dal_rasam.png": {
+    "mtime": 1782119419.7147439,
+    "ast_hash": "a0a244c910ab856bd08f97dd18ffcc3c",
+    "semantic_hash": ""
+  },
+  "public/store/dosa_with_chutney_sambar.png": {
+    "mtime": 1782119419.7157607,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/drumstick_sambar.png": {
+    "mtime": 1782119419.7230077,
+    "ast_hash": "7c7b74f580dcae8a8e2ad79a40fed940",
+    "semantic_hash": ""
+  },
+  "public/store/egg_curry.png": {
+    "mtime": 1782119419.7240162,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/egg_roast.png": {
+    "mtime": 1782119419.7240162,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/erissery.png": {
+    "mtime": 1782119419.7324636,
+    "ast_hash": "de65641651fde04d1f1555d407b5aa34",
+    "semantic_hash": ""
+  },
+  "public/store/family_pack_dosa_combo.png": {
+    "mtime": 1782119419.7324636,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/filter_coffee.png": {
+    "mtime": 1782119419.740541,
+    "ast_hash": "86d2836489b40135470592016300749e",
+    "semantic_hash": ""
+  },
+  "public/store/fish_moilee.png": {
+    "mtime": 1782119419.741414,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/garlic_chutney.png": {
+    "mtime": 1782119419.7462418,
+    "ast_hash": "b732bf8cb8f00e4f79a6abee0130edff",
+    "semantic_hash": ""
+  },
+  "public/store/garlic_rasam.png": {
+    "mtime": 1782119419.7534375,
+    "ast_hash": "3165be0db27abdb5cd124f86327dbed7",
+    "semantic_hash": ""
+  },
+  "public/store/ghee_rice.png": {
+    "mtime": 1782119419.7564278,
+    "ast_hash": "d06a97ebd89b7fdbf237ee170a2768f0",
+    "semantic_hash": ""
+  },
+  "public/store/ghee_roast_dosa_special.png": {
+    "mtime": 1782119419.7665598,
+    "ast_hash": "8bdca3ccdbc84ea2c2143cc041039dbf",
+    "semantic_hash": ""
+  },
+  "public/store/ginger_chutney.png": {
+    "mtime": 1782119419.773513,
+    "ast_hash": "2a3d76eebf6a2a6b5219163ca93cb478",
+    "semantic_hash": ""
+  },
+  "public/store/ginger_rasam.png": {
+    "mtime": 1782119419.7830684,
+    "ast_hash": "142064a62996061e0362c0257c458c4b",
+    "semantic_hash": ""
+  },
+  "public/store/green_gram_dosa.png": {
+    "mtime": 1782119419.7892036,
+    "ast_hash": "26790458390e4ed6ef5bcc2d0cf404e2",
+    "semantic_hash": ""
+  },
+  "public/store/halwa.png": {
+    "mtime": 1782119419.7903357,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/hotel_saravana_bhavan_special_dosa.png": {
+    "mtime": 1782119419.7903357,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/hotel_style_sambar.png": {
+    "mtime": 1782119419.7964106,
+    "ast_hash": "07a08b95a75d25107a9d22d6bf9f2b1a",
+    "semantic_hash": ""
+  },
+  "public/store/hyderabadi_south_indian_fusion_biryani.png": {
+    "mtime": 1782119419.79699,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/idiyappam.png": {
+    "mtime": 1782119419.79699,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/idli.png": {
+    "mtime": 1782119419.8010976,
+    "ast_hash": "c3a17a13af0f50bbd9653f9793307bf5",
+    "semantic_hash": ""
+  },
+  "public/store/jangiri.png": {
+    "mtime": 1782119419.8075125,
+    "ast_hash": "9ec21d9bf6199698ee42dade5e2f346f",
+    "semantic_hash": ""
+  },
+  "public/store/jeera_rice.png": {
+    "mtime": 1782119419.8075125,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/jigarthanda.png": {
+    "mtime": 1782119419.8119466,
+    "ast_hash": "f1e073d6cfc496bf5e645a300f9c60ab",
+    "semantic_hash": ""
+  },
+  "public/store/kalan_sadam.png": {
+    "mtime": 1782119419.8129628,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/kara_boondi.png": {
+    "mtime": 1782119419.8178492,
+    "ast_hash": "b2e62f9dff4fbdb570c4c4eb11778edb",
+    "semantic_hash": ""
+  },
+  "public/store/kara_sadam.png": {
+    "mtime": 1782119419.8178492,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/kerala_fish_curry.png": {
+    "mtime": 1782119419.8178492,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/kerala_sadya.png": {
+    "mtime": 1782119419.8279378,
+    "ast_hash": "9ddb4bce0a5579fc9c26c0ce183ee764",
+    "semantic_hash": ""
+  },
+  "public/store/khichdi.png": {
+    "mtime": 1782119419.8279378,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/kongunadu_special_meals.png": {
+    "mtime": 1782119419.8279378,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/kootu.png": {
+    "mtime": 1782119419.836731,
+    "ast_hash": "740b39429c93b4ef496c5aa325460c8d",
+    "semantic_hash": ""
+  },
+  "public/store/kozhi_varutharacha_curry.png": {
+    "mtime": 1782119419.8376737,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/lemon_rasam.png": {
+    "mtime": 1782119419.8437314,
+    "ast_hash": "c59130569f2beaacb5398052ef41782b",
+    "semantic_hash": ""
+  },
+  "public/store/lemon_rice.png": {
+    "mtime": 1782119419.848633,
+    "ast_hash": "b51b9c8f1a745e0d922716f8da357c4b",
+    "semantic_hash": ""
+  },
+  "public/store/madras_curry_special.png": {
+    "mtime": 1782119419.852518,
+    "ast_hash": "7dd2852eae54325d1df18d86151e923d",
+    "semantic_hash": ""
+  },
+  "public/store/madurai_special_mutton_curry.png": {
+    "mtime": 1782119419.852518,
+    "ast_hash": "a129e20e531b4cfb970bf5a4d6d85d6e",
+    "semantic_hash": ""
+  },
+  "public/store/mango_rice.png": {
+    "mtime": 1782119419.852518,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/masala_chai.png": {
+    "mtime": 1782119419.867368,
+    "ast_hash": "68a98fc5caf6ace0a5bbf9c84efa380c",
+    "semantic_hash": ""
+  },
+  "public/store/masala_dosa.png": {
+    "mtime": 1782119419.867368,
+    "ast_hash": "3c9bd2aba3c72f4837383f95103adc00",
+    "semantic_hash": ""
+  },
+  "public/store/masala_vada.png": {
+    "mtime": 1782119419.867368,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/meen_pollichathu.png": {
+    "mtime": 1782119419.867368,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/mini_idli.png": {
+    "mtime": 1782119419.8832548,
+    "ast_hash": "76ea3bdc8ebd4f045bba8e5b430fe8d1",
+    "semantic_hash": ""
+  },
+  "public/store/mini_idli_sambar_bowl.png": {
+    "mtime": 1782119419.888196,
+    "ast_hash": "446e067a20530e1f8e94004933f0592e",
+    "semantic_hash": ""
+  },
+  "public/store/mini_tiffin_platter.png": {
+    "mtime": 1782119419.899275,
+    "ast_hash": "5bea2706c444970ab135dffc924e9480",
+    "semantic_hash": ""
+  },
+  "public/store/mint_chutney.png": {
+    "mtime": 1782119419.899275,
+    "ast_hash": "93b8bb820978679ff538161dca527059",
+    "semantic_hash": ""
+  },
+  "public/store/mirchi_bajji.png": {
+    "mtime": 1782119419.899275,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/mixed_vegetable_sambar.png": {
+    "mtime": 1782119419.9149973,
+    "ast_hash": "bafd61befb75b73f5553da44dca24901",
+    "semantic_hash": ""
+  },
+  "public/store/mor_kuzhambu.png": {
+    "mtime": 1782119419.9149973,
+    "ast_hash": "6c573c3f43944c3fb4ab8247a2a7ee35",
+    "semantic_hash": ""
+  },
+  "public/store/murukku.png": {
+    "mtime": 1782119419.934824,
+    "ast_hash": "32537a2d431a83a03d3b69ff2f0c403c",
+    "semantic_hash": ""
+  },
+  "public/store/mutton_biryani.png": {
+    "mtime": 1782119419.9362676,
+    "ast_hash": "3f07840c5f8630e709a63487decab04e",
+    "semantic_hash": ""
+  },
+  "public/store/mutton_chukka.png": {
+    "mtime": 1782119419.9362676,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/mutton_kuzhambu.png": {
+    "mtime": 1782119419.9362676,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/mysore_bonda.png": {
+    "mtime": 1782119419.9362676,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/mysore_pak.png": {
+    "mtime": 1782119419.9467783,
+    "ast_hash": "3bede720267b40ee7a598eea02f618e7",
+    "semantic_hash": ""
+  },
+  "public/store/mysore_rasam.png": {
+    "mtime": 1782119419.9467783,
+    "ast_hash": "e30a8d91fbe44d86cf3a88625d2a4887",
+    "semantic_hash": ""
+  },
+  "public/store/nannari_sherbet.png": {
+    "mtime": 1782119419.9467783,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/neer_dosa.png": {
+    "mtime": 1782119419.9625187,
+    "ast_hash": "34ed7b5155fa2cedf995663917a14488",
+    "semantic_hash": ""
+  },
+  "public/store/olan.png": {
+    "mtime": 1782119419.9625187,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/onion_bajji.png": {
+    "mtime": 1782119419.9625187,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/onion_chutney.png": {
+    "mtime": 1782119419.9625187,
+    "ast_hash": "32d6b98a02e810532c7d701802c1156d",
+    "semantic_hash": ""
+  },
+  "public/store/onion_dosa.png": {
+    "mtime": 1782119419.9811134,
+    "ast_hash": "843b34999430c7c228dd61a9dedb172d",
+    "semantic_hash": ""
+  },
+  "public/store/onion_rava_masala_dosa.png": {
+    "mtime": 1782119419.9811134,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/onion_sambar.png": {
+    "mtime": 1782119419.9884984,
+    "ast_hash": "0eaca486919354ed4aade6521724482b",
+    "semantic_hash": ""
+  },
+  "public/store/pachadi.png": {
+    "mtime": 1782119419.9884984,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/pakoda.png": {
+    "mtime": 1782119419.9963658,
+    "ast_hash": "38e4b9f1fd73dd74ce799709c9524ad8",
+    "semantic_hash": ""
+  },
+  "public/store/pal_kova.png": {
+    "mtime": 1782119419.9963658,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/panakam.png": {
+    "mtime": 1782119419.9963658,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/paneer_dosa.png": {
+    "mtime": 1782119419.9963658,
+    "ast_hash": "34ed7b5155fa2cedf995663917a14488",
+    "semantic_hash": ""
+  },
+  "public/store/paper_dosa.png": {
+    "mtime": 1782119420.0071995,
+    "ast_hash": "78da11732c024d40bef25bf3fbe8f72c",
+    "semantic_hash": ""
+  },
+  "public/store/paruppu_sambar.png": {
+    "mtime": 1782119420.0102396,
+    "ast_hash": "499150a4b8fbccf904d4c6c55d632c86",
+    "semantic_hash": ""
+  },
+  "public/store/payasam.png": {
+    "mtime": 1782119420.0184832,
+    "ast_hash": "022a6d55ab4340d96a209fac23c65ae2",
+    "semantic_hash": ""
+  },
+  "public/store/peanut_chutney.png": {
+    "mtime": 1782119420.029581,
+    "ast_hash": "38e59a522b8a9f095472c6bef135516b",
+    "semantic_hash": ""
+  },
+  "public/store/pepper_rasam.png": {
+    "mtime": 1782119420.0320704,
+    "ast_hash": "5574e3cfc20e7fefb208e5375b868613",
+    "semantic_hash": ""
+  },
+  "public/store/pineapple_rasam.png": {
+    "mtime": 1782119420.0419314,
+    "ast_hash": "d4e4cbabb399b24c449bee28984dbb9f",
+    "semantic_hash": ""
+  },
+  "public/store/plain_dosa.png": {
+    "mtime": 1782119420.0419314,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/pongal.png": {
+    "mtime": 1782119420.0419314,
+    "ast_hash": "798f55b1924167391779a6dace271fcf",
+    "semantic_hash": ""
+  },
+  "public/store/potato_bonda.png": {
+    "mtime": 1782119420.0419314,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/potato_masala.png": {
+    "mtime": 1782119420.0419314,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/prawn_roast.png": {
+    "mtime": 1782119420.0419314,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/pudina_coconut_chutney.png": {
+    "mtime": 1782119420.0419314,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/pumpkin_kootu.png": {
+    "mtime": 1782119420.0419314,
+    "ast_hash": "740b39429c93b4ef496c5aa325460c8d",
+    "semantic_hash": ""
+  },
+  "public/store/pumpkin_sambar.png": {
+    "mtime": 1782119420.0578935,
+    "ast_hash": "26e94f7578bb6b526a84ffdbbc2f4016",
+    "semantic_hash": ""
+  },
+  "public/store/puttu.png": {
+    "mtime": 1782119420.0616598,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/rasam_rice.png": {
+    "mtime": 1782119420.0616598,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/rasam_vada.png": {
+    "mtime": 1782119420.0616598,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/rasgulla.png": {
+    "mtime": 1782119420.0616598,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/rava_dosa.png": {
+    "mtime": 1782119420.0616598,
+    "ast_hash": "d4d02cbb310cef7bda8d1abe70d81164",
+    "semantic_hash": ""
+  },
+  "public/store/rava_idli.png": {
+    "mtime": 1782119420.069384,
+    "ast_hash": "c3a17a13af0f50bbd9653f9793307bf5",
+    "semantic_hash": ""
+  },
+  "public/store/rava_kesari.png": {
+    "mtime": 1782119420.073908,
+    "ast_hash": "ce943b4786e3f93e59ad37e448cabdbd",
+    "semantic_hash": ""
+  },
+  "public/store/red_chili_chutney.png": {
+    "mtime": 1782119420.081126,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/rose_milk.png": {
+    "mtime": 1782119420.0866737,
+    "ast_hash": "95c14487bf5b177d1a47f2f66f8ef695",
+    "semantic_hash": ""
+  },
+  "public/store/sambar_rice.png": {
+    "mtime": 1782119420.0866737,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/sambar_vada.png": {
+    "mtime": 1782119420.0896928,
+    "ast_hash": "8118d3fad9b6dfa4f5b7374fa46a8eb2",
+    "semantic_hash": ""
+  },
+  "public/store/sambharam.png": {
+    "mtime": 1782119420.0896928,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/schezwan_dosa.png": {
+    "mtime": 1782119420.097,
+    "ast_hash": "aeb1d021e02961e08665708b47de8ad7",
+    "semantic_hash": ""
+  },
+  "public/store/semiya_payasam.png": {
+    "mtime": 1782119420.107055,
+    "ast_hash": "022a6d55ab4340d96a209fac23c65ae2",
+    "semantic_hash": ""
+  },
+  "public/store/set_dosa.png": {
+    "mtime": 1782119420.109269,
+    "ast_hash": "adaf722e660919d9ea8634db19270af2",
+    "semantic_hash": ""
+  },
+  "public/store/snake_gourd_poriyal.png": {
+    "mtime": 1782119420.109269,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/south_indian_breakfast_buffet.png": {
+    "mtime": 1782119420.109269,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/south_indian_filter_coffee_float.png": {
+    "mtime": 1782119420.11633,
+    "ast_hash": "5c1ea31e355e6e50c5ea381c2d10d786",
+    "semantic_hash": ""
+  },
+  "public/store/south_indian_thali.png": {
+    "mtime": 1782119420.1213484,
+    "ast_hash": "8d6c00681ff3bc6ec6b56e7468b280f5",
+    "semantic_hash": ""
+  },
+  "public/store/special_sunday_brunch_thali.png": {
+    "mtime": 1782119420.1213484,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/sukku_coffee.png": {
+    "mtime": 1782119420.1213484,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/sundal.png": {
+    "mtime": 1782119420.1371534,
+    "ast_hash": "e1cdf058a9d6c5454bc3e590622482a4",
+    "semantic_hash": ""
+  },
+  "public/store/sweet_pongal.png": {
+    "mtime": 1782119420.1431646,
+    "ast_hash": "798f55b1924167391779a6dace271fcf",
+    "semantic_hash": ""
+  },
+  "public/store/tamarind_chutney.png": {
+    "mtime": 1782119420.1431646,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/tamarind_rice.png": {
+    "mtime": 1782119420.151178,
+    "ast_hash": "62007ee234dc8df095297cb364efa036",
+    "semantic_hash": ""
+  },
+  "public/store/tender_coconut_water.png": {
+    "mtime": 1782119420.156929,
+    "ast_hash": "0b7574ea774281ba41b80c5709469931",
+    "semantic_hash": ""
+  },
+  "public/store/thattai.png": {
+    "mtime": 1782119420.1649413,
+    "ast_hash": "45a65b2f899fe7891a0da290b69bcc26",
+    "semantic_hash": ""
+  },
+  "public/store/thoran.png": {
+    "mtime": 1782119420.1744971,
+    "ast_hash": "d0dcbed2c853f311b6b73a3ea7a5fcd8",
+    "semantic_hash": ""
+  },
+  "public/store/tiffin_center_special.png": {
+    "mtime": 1782119420.1744971,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/tomato_chutney.png": {
+    "mtime": 1782119420.1744971,
+    "ast_hash": "3590b76070549eeda3e87a7df5280478",
+    "semantic_hash": ""
+  },
+  "public/store/tomato_rasam.png": {
+    "mtime": 1782119420.1845648,
+    "ast_hash": "ed78a218e761471a0c920733b8010bd8",
+    "semantic_hash": ""
+  },
+  "public/store/tomato_rice.png": {
+    "mtime": 1782119420.1923907,
+    "ast_hash": "0079b53e49c38335474ddd5cdb71766c",
+    "semantic_hash": ""
+  },
+  "public/store/udupi_sambar.png": {
+    "mtime": 1782119420.1974144,
+    "ast_hash": "fc0935c6ee9354671341075f91a4537c",
+    "semantic_hash": ""
+  },
+  "public/store/unniyappam.png": {
+    "mtime": 1782119420.2024355,
+    "ast_hash": "e8d1a0b7494f98178677ad6565eec17c",
+    "semantic_hash": ""
+  },
+  "public/store/upma.png": {
+    "mtime": 1782119420.206949,
+    "ast_hash": "ad8494754283bcf4cd2245ebd8283227",
+    "semantic_hash": ""
+  },
+  "public/store/uttapam.png": {
+    "mtime": 1782119420.219962,
+    "ast_hash": "bb0f33d3ccc51e0ddd78e02babdc3442",
+    "semantic_hash": ""
+  },
+  "public/store/vada.png": {
+    "mtime": 1782119420.2239733,
+    "ast_hash": "8118d3fad9b6dfa4f5b7374fa46a8eb2",
+    "semantic_hash": ""
+  },
+  "public/store/vadai.png": {
+    "mtime": 1782119420.225978,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/vatha_kuzhambu.png": {
+    "mtime": 1782119420.225978,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/vazhakkai_poriyal.png": {
+    "mtime": 1782119420.225978,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/vegetable_biryani.png": {
+    "mtime": 1782119420.2317061,
+    "ast_hash": "63ee64a55df5169893e29c2cf86199da",
+    "semantic_hash": ""
+  },
+  "public/store/vegetable_kurma.png": {
+    "mtime": 1782119420.2317061,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/store/vegetable_pulao.png": {
+    "mtime": 1782119420.2350168,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/zappy-uploads/01a16090-f571-48b6-b6a5-c69fbe372418.jpg": {
+    "mtime": 1782119420.374728,
+    "ast_hash": "6eda7ba470458579e91d5c9d7d58f6e8",
+    "semantic_hash": ""
+  },
+  "public/zappy-uploads/53e47e43-08ad-46f9-a01e-426fd946553a.png": {
+    "mtime": 1782119420.374728,
+    "ast_hash": "fbb1bdebe72e7de35588ef093262f040",
+    "semantic_hash": ""
+  },
+  "public/zappy-uploads/zappy-logo-white.png": {
+    "mtime": 1782119420.3778992,
+    "ast_hash": "fbb1bdebe72e7de35588ef093262f040",
+    "semantic_hash": ""
+  },
+  "src/assets/cta-banner-bg.jpg": {
+    "mtime": 1782119420.3910978,
+    "ast_hash": "461d634e66698d517945644cc0c0fea8",
+    "semantic_hash": ""
+  },
+  "src/assets/dashboard-admin.png": {
+    "mtime": 1782119420.3910978,
+    "ast_hash": "316c974ebe77a29c7bace9d0408e9fdc",
+    "semantic_hash": ""
+  },
+  "src/assets/dashboard-billing.png": {
+    "mtime": 1782119420.392872,
+    "ast_hash": "7a54a1bce5246d05403c7637610dd585",
+    "semantic_hash": ""
+  },
+  "src/assets/dashboard-kitchen.png": {
+    "mtime": 1782119420.392872,
+    "ast_hash": "1e0e25818d7aa9f8e62887973e8be960",
+    "semantic_hash": ""
+  },
+  "src/assets/dashboard-super-admin.png": {
+    "mtime": 1782119420.392872,
+    "ast_hash": "e0969fac81687563d315685a7cba0aec",
+    "semantic_hash": ""
+  },
+  "src/assets/tech-stack-visual.png": {
+    "mtime": 1782119420.392872,
+    "ast_hash": "147f9d77a900c8681dd9a77a6b4026ab",
+    "semantic_hash": ""
+  },
+  "src/assets/zappy-hero-logo-light.png": {
+    "mtime": 1782119420.398805,
+    "ast_hash": "187ca8f1d83b938fc299f89581010ff9",
+    "semantic_hash": ""
+  },
+  "src/assets/zappy-hero-logo.png": {
+    "mtime": 1782119420.404052,
+    "ast_hash": "a9bd9a0a4f90ba001ace6370c0f112ce",
+    "semantic_hash": ""
+  },
+  "src/assets/zappy-logo.svg": {
+    "mtime": 1782119420.404052,
+    "ast_hash": "f40bd388569a4191421d650182c744e7",
+    "semantic_hash": ""
+  },
+  "store/ada_pradhaman.png": {
+    "mtime": 1782119420.6663444,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/adai.png": {
+    "mtime": 1782119420.6756458,
+    "ast_hash": "7dc21b139727d5ace81fc0a7266786e3",
+    "semantic_hash": ""
+  },
+  "store/adhirasam.png": {
+    "mtime": 1782119420.6756458,
+    "ast_hash": "dacdcc39b5b5c76853d858400df226b6",
+    "semantic_hash": ""
+  },
+  "store/akki_roti.png": {
+    "mtime": 1782119420.6756458,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/andhra_meals.png": {
+    "mtime": 1782119420.6927722,
+    "ast_hash": "3d3ae2a1f7d9857942b731657e764141",
+    "semantic_hash": ""
+  },
+  "store/appam.png": {
+    "mtime": 1782119420.6982567,
+    "ast_hash": "e8d1a0b7494f98178677ad6565eec17c",
+    "semantic_hash": ""
+  },
+  "store/arachuvitta_sambar.png": {
+    "mtime": 1782119420.6994946,
+    "ast_hash": "08e0f24c35285551bd18ed983533d626",
+    "semantic_hash": ""
+  },
+  "store/avial.png": {
+    "mtime": 1782119420.708485,
+    "ast_hash": "2f17e0883f3b2d813b9e2a2e5c75335c",
+    "semantic_hash": ""
+  },
+  "store/banana_bajji.png": {
+    "mtime": 1782119420.708485,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/banana_chips.png": {
+    "mtime": 1782119420.708485,
+    "ast_hash": "fbb8b8aafa45420bb261f51c0899d63f",
+    "semantic_hash": ""
+  },
+  "store/banana_halwa.png": {
+    "mtime": 1782119420.708485,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/banana_leaf_meals.png": {
+    "mtime": 1782119420.7251947,
+    "ast_hash": "8d6c00681ff3bc6ec6b56e7468b280f5",
+    "semantic_hash": ""
+  },
+  "store/beans_poriyal.png": {
+    "mtime": 1782119420.7299316,
+    "ast_hash": "79d8482d967e4337d736c070642da05c",
+    "semantic_hash": ""
+  },
+  "store/beans_usili.png": {
+    "mtime": 1782119420.7309358,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/beetroot_poriyal.png": {
+    "mtime": 1782119420.73581,
+    "ast_hash": "1a317aeca916711d84568416f76cb76d",
+    "semantic_hash": ""
+  },
+  "store/bisi_bele_bath.png": {
+    "mtime": 1782119420.741297,
+    "ast_hash": "c1ab448a6d050509c2e3126abba87194",
+    "semantic_hash": ""
+  },
+  "store/bisibele_bath_rice.png": {
+    "mtime": 1782119420.7418146,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/bonda_soup.png": {
+    "mtime": 1782119420.7421505,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/boondi_laddu.png": {
+    "mtime": 1782119420.7435894,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/brinjal_sambar.png": {
+    "mtime": 1782119420.749818,
+    "ast_hash": "5b4183ffa5233941fbe34eb0759af3da",
+    "semantic_hash": ""
+  },
+  "store/buttermilk.png": {
+    "mtime": 1782119420.7556405,
+    "ast_hash": "a812afaf8ef7e6da27626cc2c4b276de",
+    "semantic_hash": ""
+  },
+  "store/cabbage_poriyal.png": {
+    "mtime": 1782119420.7597592,
+    "ast_hash": "772e6b483e3be82082f0c08c4ba4f786",
+    "semantic_hash": ""
+  },
+  "store/cafe_filter_coffee_snacks_combo.png": {
+    "mtime": 1782119420.7597592,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/carrot_chutney.png": {
+    "mtime": 1782119420.7612705,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/carrot_poriyal.png": {
+    "mtime": 1782119420.7656581,
+    "ast_hash": "1db7684f1b6addbaf64d750f22f08468",
+    "semantic_hash": ""
+  },
+  "store/chana_dal_chutney.png": {
+    "mtime": 1782119420.7666633,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/cheese_dosa.png": {
+    "mtime": 1782119420.7725847,
+    "ast_hash": "53f131f8d9fd902d0c3295584c50bde3",
+    "semantic_hash": ""
+  },
+  "store/chennai_filter_coffee_combo.png": {
+    "mtime": 1782119420.7725847,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/chettinad_chicken_curry.png": {
+    "mtime": 1782119420.7735865,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/chettinad_special_thali.png": {
+    "mtime": 1782119420.7806602,
+    "ast_hash": "8f7618fb4ca2a1c98b86ad7d573677aa",
+    "semantic_hash": ""
+  },
+  "store/chicken_65.png": {
+    "mtime": 1782119420.7819214,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/chicken_biryani.png": {
+    "mtime": 1782119420.7874548,
+    "ast_hash": "7a8194a4ddb9461a939452721f00c70c",
+    "semantic_hash": ""
+  },
+  "store/chicken_chettinad.png": {
+    "mtime": 1782119420.7884572,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/cluster_beans_poriyal.png": {
+    "mtime": 1782119420.793688,
+    "ast_hash": "79d8482d967e4337d736c070642da05c",
+    "semantic_hash": ""
+  },
+  "store/coconut_burfi.png": {
+    "mtime": 1782119420.7946932,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/coconut_chutney.png": {
+    "mtime": 1782119420.8023117,
+    "ast_hash": "a41aba625d200683cceab06f3f14c1ee",
+    "semantic_hash": ""
+  },
+  "store/coconut_ginger_chutney.png": {
+    "mtime": 1782119420.8023117,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/coconut_milk_rice.png": {
+    "mtime": 1782119420.8032095,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/coconut_rice.png": {
+    "mtime": 1782119420.8079097,
+    "ast_hash": "69e743325f88356c669b9a410cb83742",
+    "semantic_hash": ""
+  },
+  "store/combo_tiffin_plate.png": {
+    "mtime": 1782119420.8172119,
+    "ast_hash": "a053577edb9551e7a30e0696fb662a0f",
+    "semantic_hash": ""
+  },
+  "store/coriander_chutney.png": {
+    "mtime": 1782119420.8247447,
+    "ast_hash": "738e46046bcbd8425534211a3c264a7e",
+    "semantic_hash": ""
+  },
+  "store/curd_rice.png": {
+    "mtime": 1782119420.8317544,
+    "ast_hash": "5fa37e546361d72119256f010e4f0260",
+    "semantic_hash": ""
+  },
+  "store/curd_rice_with_pomegranate.png": {
+    "mtime": 1782119420.8320725,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/curd_vada_with_rice.png": {
+    "mtime": 1782119420.8320725,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/curry_leaves_chutney.png": {
+    "mtime": 1782119420.8390124,
+    "ast_hash": "736dd439532473bb9ebf6b6c80c0f5a3",
+    "semantic_hash": ""
+  },
+  "store/curry_leaves_rasam.png": {
+    "mtime": 1782119420.8525317,
+    "ast_hash": "f33ced1afa364bb982f11ded87d89f28",
+    "semantic_hash": ""
+  },
+  "store/dahi_vada.png": {
+    "mtime": 1782119420.862915,
+    "ast_hash": "ed053f6fa3ad7428585e9dfb8d2dff6e",
+    "semantic_hash": ""
+  },
+  "store/dal_rasam.png": {
+    "mtime": 1782119420.8695202,
+    "ast_hash": "a0a244c910ab856bd08f97dd18ffcc3c",
+    "semantic_hash": ""
+  },
+  "store/dosa_with_chutney_sambar.png": {
+    "mtime": 1782119420.8705227,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/drumstick_sambar.png": {
+    "mtime": 1782119420.8759365,
+    "ast_hash": "7c7b74f580dcae8a8e2ad79a40fed940",
+    "semantic_hash": ""
+  },
+  "store/egg_curry.png": {
+    "mtime": 1782119420.8774297,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/egg_roast.png": {
+    "mtime": 1782119420.8774297,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/erissery.png": {
+    "mtime": 1782119420.8836648,
+    "ast_hash": "de65641651fde04d1f1555d407b5aa34",
+    "semantic_hash": ""
+  },
+  "store/family_pack_dosa_combo.png": {
+    "mtime": 1782119420.8848805,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/filter_coffee.png": {
+    "mtime": 1782119420.8925862,
+    "ast_hash": "86d2836489b40135470592016300749e",
+    "semantic_hash": ""
+  },
+  "store/fish_moilee.png": {
+    "mtime": 1782119420.8925862,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/garlic_chutney.png": {
+    "mtime": 1782119420.8976386,
+    "ast_hash": "b732bf8cb8f00e4f79a6abee0130edff",
+    "semantic_hash": ""
+  },
+  "store/garlic_rasam.png": {
+    "mtime": 1782119420.905683,
+    "ast_hash": "3165be0db27abdb5cd124f86327dbed7",
+    "semantic_hash": ""
+  },
+  "store/ghee_rice.png": {
+    "mtime": 1782119420.9125814,
+    "ast_hash": "d06a97ebd89b7fdbf237ee170a2768f0",
+    "semantic_hash": ""
+  },
+  "store/ghee_roast_dosa_special.png": {
+    "mtime": 1782119420.919076,
+    "ast_hash": "8bdca3ccdbc84ea2c2143cc041039dbf",
+    "semantic_hash": ""
+  },
+  "store/ginger_chutney.png": {
+    "mtime": 1782119420.926654,
+    "ast_hash": "2a3d76eebf6a2a6b5219163ca93cb478",
+    "semantic_hash": ""
+  },
+  "store/ginger_rasam.png": {
+    "mtime": 1782119420.936683,
+    "ast_hash": "142064a62996061e0362c0257c458c4b",
+    "semantic_hash": ""
+  },
+  "store/green_gram_dosa.png": {
+    "mtime": 1782119420.9437847,
+    "ast_hash": "26790458390e4ed6ef5bcc2d0cf404e2",
+    "semantic_hash": ""
+  },
+  "store/halwa.png": {
+    "mtime": 1782119420.9437847,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/hotel_saravana_bhavan_special_dosa.png": {
+    "mtime": 1782119420.9449008,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/hotel_style_sambar.png": {
+    "mtime": 1782119420.9507658,
+    "ast_hash": "07a08b95a75d25107a9d22d6bf9f2b1a",
+    "semantic_hash": ""
+  },
+  "store/hyderabadi_south_indian_fusion_biryani.png": {
+    "mtime": 1782119420.951923,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/idiyappam.png": {
+    "mtime": 1782119420.951923,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/idli.png": {
+    "mtime": 1782119420.957662,
+    "ast_hash": "c3a17a13af0f50bbd9653f9793307bf5",
+    "semantic_hash": ""
+  },
+  "store/jangiri.png": {
+    "mtime": 1782119420.9617577,
+    "ast_hash": "9ec21d9bf6199698ee42dade5e2f346f",
+    "semantic_hash": ""
+  },
+  "store/jeera_rice.png": {
+    "mtime": 1782119420.963689,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/jigarthanda.png": {
+    "mtime": 1782119420.9677265,
+    "ast_hash": "f1e073d6cfc496bf5e645a300f9c60ab",
+    "semantic_hash": ""
+  },
+  "store/kalan_sadam.png": {
+    "mtime": 1782119420.9677265,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/kara_boondi.png": {
+    "mtime": 1782119420.9733305,
+    "ast_hash": "b2e62f9dff4fbdb570c4c4eb11778edb",
+    "semantic_hash": ""
+  },
+  "store/kara_sadam.png": {
+    "mtime": 1782119420.9743373,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/kerala_fish_curry.png": {
+    "mtime": 1782119420.9743373,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/kerala_sadya.png": {
+    "mtime": 1782119420.9854991,
+    "ast_hash": "9ddb4bce0a5579fc9c26c0ce183ee764",
+    "semantic_hash": ""
+  },
+  "store/khichdi.png": {
+    "mtime": 1782119420.9865353,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/kongunadu_special_meals.png": {
+    "mtime": 1782119420.987536,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/kootu.png": {
+    "mtime": 1782119420.993176,
+    "ast_hash": "740b39429c93b4ef496c5aa325460c8d",
+    "semantic_hash": ""
+  },
+  "store/kozhi_varutharacha_curry.png": {
+    "mtime": 1782119420.993176,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/lemon_rasam.png": {
+    "mtime": 1782119420.999374,
+    "ast_hash": "c59130569f2beaacb5398052ef41782b",
+    "semantic_hash": ""
+  },
+  "store/lemon_rice.png": {
+    "mtime": 1782119421.0038815,
+    "ast_hash": "b51b9c8f1a745e0d922716f8da357c4b",
+    "semantic_hash": ""
+  },
+  "store/madras_curry_special.png": {
+    "mtime": 1782119421.01078,
+    "ast_hash": "7dd2852eae54325d1df18d86151e923d",
+    "semantic_hash": ""
+  },
+  "store/madurai_special_mutton_curry.png": {
+    "mtime": 1782119421.0165133,
+    "ast_hash": "a129e20e531b4cfb970bf5a4d6d85d6e",
+    "semantic_hash": ""
+  },
+  "store/mango_rice.png": {
+    "mtime": 1782119421.0175145,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/masala_chai.png": {
+    "mtime": 1782119421.022675,
+    "ast_hash": "68a98fc5caf6ace0a5bbf9c84efa380c",
+    "semantic_hash": ""
+  },
+  "store/masala_dosa.png": {
+    "mtime": 1782119421.0306454,
+    "ast_hash": "3c9bd2aba3c72f4837383f95103adc00",
+    "semantic_hash": ""
+  },
+  "store/masala_vada.png": {
+    "mtime": 1782119421.0306454,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/meen_pollichathu.png": {
+    "mtime": 1782119421.0306454,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/mini_idli.png": {
+    "mtime": 1782119421.0367312,
+    "ast_hash": "76ea3bdc8ebd4f045bba8e5b430fe8d1",
+    "semantic_hash": ""
+  },
+  "store/mini_idli_sambar_bowl.png": {
+    "mtime": 1782119421.0437927,
+    "ast_hash": "446e067a20530e1f8e94004933f0592e",
+    "semantic_hash": ""
+  },
+  "store/mini_tiffin_platter.png": {
+    "mtime": 1782119421.051548,
+    "ast_hash": "5bea2706c444970ab135dffc924e9480",
+    "semantic_hash": ""
+  },
+  "store/mint_chutney.png": {
+    "mtime": 1782119421.0579634,
+    "ast_hash": "93b8bb820978679ff538161dca527059",
+    "semantic_hash": ""
+  },
+  "store/mirchi_bajji.png": {
+    "mtime": 1782119421.058971,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/mixed_vegetable_sambar.png": {
+    "mtime": 1782119421.0609038,
+    "ast_hash": "bafd61befb75b73f5553da44dca24901",
+    "semantic_hash": ""
+  },
+  "store/mor_kuzhambu.png": {
+    "mtime": 1782119421.076085,
+    "ast_hash": "6c573c3f43944c3fb4ab8247a2a7ee35",
+    "semantic_hash": ""
+  },
+  "store/murukku.png": {
+    "mtime": 1782119421.076085,
+    "ast_hash": "32537a2d431a83a03d3b69ff2f0c403c",
+    "semantic_hash": ""
+  },
+  "store/mutton_biryani.png": {
+    "mtime": 1782119421.0933561,
+    "ast_hash": "3f07840c5f8630e709a63487decab04e",
+    "semantic_hash": ""
+  },
+  "store/mutton_chukka.png": {
+    "mtime": 1782119421.0933561,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/mutton_kuzhambu.png": {
+    "mtime": 1782119421.0933561,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/mysore_bonda.png": {
+    "mtime": 1782119421.0973773,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/mysore_pak.png": {
+    "mtime": 1782119421.0973773,
+    "ast_hash": "3bede720267b40ee7a598eea02f618e7",
+    "semantic_hash": ""
+  },
+  "store/mysore_rasam.png": {
+    "mtime": 1782119421.1078987,
+    "ast_hash": "e30a8d91fbe44d86cf3a88625d2a4887",
+    "semantic_hash": ""
+  },
+  "store/nannari_sherbet.png": {
+    "mtime": 1782119421.1078987,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/neer_dosa.png": {
+    "mtime": 1782119421.1078987,
+    "ast_hash": "34ed7b5155fa2cedf995663917a14488",
+    "semantic_hash": ""
+  },
+  "store/olan.png": {
+    "mtime": 1782119421.1078987,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/onion_bajji.png": {
+    "mtime": 1782119421.1078987,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/onion_chutney.png": {
+    "mtime": 1782119421.1285546,
+    "ast_hash": "32d6b98a02e810532c7d701802c1156d",
+    "semantic_hash": ""
+  },
+  "store/onion_dosa.png": {
+    "mtime": 1782119421.1401212,
+    "ast_hash": "843b34999430c7c228dd61a9dedb172d",
+    "semantic_hash": ""
+  },
+  "store/onion_rava_masala_dosa.png": {
+    "mtime": 1782119421.1401212,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/onion_sambar.png": {
+    "mtime": 1782119421.1401212,
+    "ast_hash": "0eaca486919354ed4aade6521724482b",
+    "semantic_hash": ""
+  },
+  "store/pachadi.png": {
+    "mtime": 1782119421.1401212,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/pakoda.png": {
+    "mtime": 1782119421.1560462,
+    "ast_hash": "38e4b9f1fd73dd74ce799709c9524ad8",
+    "semantic_hash": ""
+  },
+  "store/pal_kova.png": {
+    "mtime": 1782119421.1560462,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/panakam.png": {
+    "mtime": 1782119421.1560462,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/paneer_dosa.png": {
+    "mtime": 1782119421.1560462,
+    "ast_hash": "34ed7b5155fa2cedf995663917a14488",
+    "semantic_hash": ""
+  },
+  "store/paper_dosa.png": {
+    "mtime": 1782119421.1560462,
+    "ast_hash": "78da11732c024d40bef25bf3fbe8f72c",
+    "semantic_hash": ""
+  },
+  "store/paruppu_sambar.png": {
+    "mtime": 1782119421.1730382,
+    "ast_hash": "499150a4b8fbccf904d4c6c55d632c86",
+    "semantic_hash": ""
+  },
+  "store/payasam.png": {
+    "mtime": 1782119421.1730382,
+    "ast_hash": "022a6d55ab4340d96a209fac23c65ae2",
+    "semantic_hash": ""
+  },
+  "store/peanut_chutney.png": {
+    "mtime": 1782119421.1875503,
+    "ast_hash": "38e59a522b8a9f095472c6bef135516b",
+    "semantic_hash": ""
+  },
+  "store/pepper_rasam.png": {
+    "mtime": 1782119421.193838,
+    "ast_hash": "5574e3cfc20e7fefb208e5375b868613",
+    "semantic_hash": ""
+  },
+  "store/pineapple_rasam.png": {
+    "mtime": 1782119421.2032182,
+    "ast_hash": "d4e4cbabb399b24c449bee28984dbb9f",
+    "semantic_hash": ""
+  },
+  "store/plain_dosa.png": {
+    "mtime": 1782119421.2032182,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/pongal.png": {
+    "mtime": 1782119421.2077987,
+    "ast_hash": "798f55b1924167391779a6dace271fcf",
+    "semantic_hash": ""
+  },
+  "store/potato_bonda.png": {
+    "mtime": 1782119421.2077987,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/potato_masala.png": {
+    "mtime": 1782119421.2077987,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/prawn_roast.png": {
+    "mtime": 1782119421.2077987,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/pudina_coconut_chutney.png": {
+    "mtime": 1782119421.2077987,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/pumpkin_kootu.png": {
+    "mtime": 1782119421.2077987,
+    "ast_hash": "740b39429c93b4ef496c5aa325460c8d",
+    "semantic_hash": ""
+  },
+  "store/pumpkin_sambar.png": {
+    "mtime": 1782119421.2192492,
+    "ast_hash": "26e94f7578bb6b526a84ffdbbc2f4016",
+    "semantic_hash": ""
+  },
+  "store/puttu.png": {
+    "mtime": 1782119421.2192492,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/rasam_rice.png": {
+    "mtime": 1782119421.2192492,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/rasam_vada.png": {
+    "mtime": 1782119421.2192492,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/rasgulla.png": {
+    "mtime": 1782119421.2192492,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/rava_dosa.png": {
+    "mtime": 1782119421.2192492,
+    "ast_hash": "d4d02cbb310cef7bda8d1abe70d81164",
+    "semantic_hash": ""
+  },
+  "store/rava_idli.png": {
+    "mtime": 1782119421.2192492,
+    "ast_hash": "c3a17a13af0f50bbd9653f9793307bf5",
+    "semantic_hash": ""
+  },
+  "store/rava_kesari.png": {
+    "mtime": 1782119421.2349775,
+    "ast_hash": "ce943b4786e3f93e59ad37e448cabdbd",
+    "semantic_hash": ""
+  },
+  "store/red_chili_chutney.png": {
+    "mtime": 1782119421.2349775,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/rose_milk.png": {
+    "mtime": 1782119421.2349775,
+    "ast_hash": "95c14487bf5b177d1a47f2f66f8ef695",
+    "semantic_hash": ""
+  },
+  "store/sambar_rice.png": {
+    "mtime": 1782119421.2349775,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/sambar_vada.png": {
+    "mtime": 1782119421.2473326,
+    "ast_hash": "8118d3fad9b6dfa4f5b7374fa46a8eb2",
+    "semantic_hash": ""
+  },
+  "store/sambharam.png": {
+    "mtime": 1782119421.2473326,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/schezwan_dosa.png": {
+    "mtime": 1782119421.2508507,
+    "ast_hash": "aeb1d021e02961e08665708b47de8ad7",
+    "semantic_hash": ""
+  },
+  "store/semiya_payasam.png": {
+    "mtime": 1782119421.2508507,
+    "ast_hash": "022a6d55ab4340d96a209fac23c65ae2",
+    "semantic_hash": ""
+  },
+  "store/set_dosa.png": {
+    "mtime": 1782119421.2666116,
+    "ast_hash": "adaf722e660919d9ea8634db19270af2",
+    "semantic_hash": ""
+  },
+  "store/snake_gourd_poriyal.png": {
+    "mtime": 1782119421.2666116,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/south_indian_breakfast_buffet.png": {
+    "mtime": 1782119421.2666116,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/south_indian_filter_coffee_float.png": {
+    "mtime": 1782119421.2666116,
+    "ast_hash": "5c1ea31e355e6e50c5ea381c2d10d786",
+    "semantic_hash": ""
+  },
+  "store/south_indian_thali.png": {
+    "mtime": 1782119421.2823608,
+    "ast_hash": "8d6c00681ff3bc6ec6b56e7468b280f5",
+    "semantic_hash": ""
+  },
+  "store/special_sunday_brunch_thali.png": {
+    "mtime": 1782119421.2823608,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/sukku_coffee.png": {
+    "mtime": 1782119421.2823608,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/sundal.png": {
+    "mtime": 1782119421.2823608,
+    "ast_hash": "e1cdf058a9d6c5454bc3e590622482a4",
+    "semantic_hash": ""
+  },
+  "store/sweet_pongal.png": {
+    "mtime": 1782119421.2980115,
+    "ast_hash": "798f55b1924167391779a6dace271fcf",
+    "semantic_hash": ""
+  },
+  "store/tamarind_chutney.png": {
+    "mtime": 1782119421.2980115,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/tamarind_rice.png": {
+    "mtime": 1782119421.2980115,
+    "ast_hash": "62007ee234dc8df095297cb364efa036",
+    "semantic_hash": ""
+  },
+  "store/tender_coconut_water.png": {
+    "mtime": 1782119421.3081062,
+    "ast_hash": "0b7574ea774281ba41b80c5709469931",
+    "semantic_hash": ""
+  },
+  "store/thattai.png": {
+    "mtime": 1782119421.3141177,
+    "ast_hash": "45a65b2f899fe7891a0da290b69bcc26",
+    "semantic_hash": ""
+  },
+  "store/thoran.png": {
+    "mtime": 1782119421.3141177,
+    "ast_hash": "d0dcbed2c853f311b6b73a3ea7a5fcd8",
+    "semantic_hash": ""
+  },
+  "store/tiffin_center_special.png": {
+    "mtime": 1782119421.3141177,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/tomato_chutney.png": {
+    "mtime": 1782119421.3300326,
+    "ast_hash": "3590b76070549eeda3e87a7df5280478",
+    "semantic_hash": ""
+  },
+  "store/tomato_rasam.png": {
+    "mtime": 1782119421.3324268,
+    "ast_hash": "ed78a218e761471a0c920733b8010bd8",
+    "semantic_hash": ""
+  },
+  "store/tomato_rice.png": {
+    "mtime": 1782119421.3374355,
+    "ast_hash": "0079b53e49c38335474ddd5cdb71766c",
+    "semantic_hash": ""
+  },
+  "store/udupi_sambar.png": {
+    "mtime": 1782119421.3478527,
+    "ast_hash": "fc0935c6ee9354671341075f91a4537c",
+    "semantic_hash": ""
+  },
+  "store/unniyappam.png": {
+    "mtime": 1782119421.3583412,
+    "ast_hash": "e8d1a0b7494f98178677ad6565eec17c",
+    "semantic_hash": ""
+  },
+  "store/upma.png": {
+    "mtime": 1782119421.3619266,
+    "ast_hash": "ad8494754283bcf4cd2245ebd8283227",
+    "semantic_hash": ""
+  },
+  "store/uttapam.png": {
+    "mtime": 1782119421.37053,
+    "ast_hash": "bb0f33d3ccc51e0ddd78e02babdc3442",
+    "semantic_hash": ""
+  },
+  "store/vada.png": {
+    "mtime": 1782119421.3780396,
+    "ast_hash": "8118d3fad9b6dfa4f5b7374fa46a8eb2",
+    "semantic_hash": ""
+  },
+  "store/vadai.png": {
+    "mtime": 1782119421.3780396,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/vatha_kuzhambu.png": {
+    "mtime": 1782119421.3780396,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/vazhakkai_poriyal.png": {
+    "mtime": 1782119421.3780396,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/vegetable_biryani.png": {
+    "mtime": 1782119421.3780396,
+    "ast_hash": "63ee64a55df5169893e29c2cf86199da",
+    "semantic_hash": ""
+  },
+  "store/vegetable_kurma.png": {
+    "mtime": 1782119421.3780396,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "store/vegetable_pulao.png": {
+    "mtime": 1782119421.3780396,
+    "ast_hash": "91e42db1c66c0b276abf6234dc50b2eb",
+    "semantic_hash": ""
+  },
+  "public/videos/brand-identity-2.mp4": {
+    "mtime": 1782119420.2956963,
+    "ast_hash": "411218dd49679bde7e3d970937896792",
+    "semantic_hash": ""
+  },
+  "public/videos/brand-identity.mp4": {
+    "mtime": 1782119420.3630338,
+    "ast_hash": "411218dd49679bde7e3d970937896792",
+    "semantic_hash": ""
+  },
+  "public/videos/zappy-logo-animated.mp4": {
+    "mtime": 1782119420.3710494,
+    "ast_hash": "7963bd9f478a627a8a7fae942099ea5a",
+    "semantic_hash": ""
+  },
+  "src/ZAPPY_logo_liquid_morph_glitch_202606131133.mp4": {
+    "mtime": 1782119420.3890533,
+    "ast_hash": "7963bd9f478a627a8a7fae942099ea5a",
+    "semantic_hash": ""
+  }
+}

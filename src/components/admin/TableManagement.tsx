@@ -4,6 +4,8 @@ import { useTables, useCreateTable, useUpdateTable, useDeleteTable, useAllSeatOc
 import { useOrders } from "@/hooks/useOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/services/auditLogger";
+import { checkTableDependencies } from "@/utils/tableDependencies";
+import { TableDeleteConfirmDialog } from "@/components/admin/TableDeleteConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +40,11 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
   const [sectionsMap, setSectionsMap] = useState<Record<string, string>>({}); // tableId -> Section
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
   const [mergedTables, setMergedTables] = useState<Array<{ id: string; tableIds: string[]; name: string }>>([]);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [tableToDelete, setTableToDelete] = useState<any | null>(null);
+  const [dependencyCounts, setDependencyCounts] = useState<any | null>(null);
+  const [deletingTableInProgress, setDeletingTableInProgress] = useState(false);
 
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedTableForAssign, setSelectedTableForAssign] = useState<any | null>(null);
@@ -227,22 +234,38 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
   };
 
   const handleDeleteTable = async (table: any) => {
-    if (!confirm(`Delete table ${table.table_number}?`)) return;
     try {
-      await deleteTable.mutateAsync({ id: table.id, restaurantId });
+      setTableToDelete(table);
+      const counts = await checkTableDependencies(table.id);
+      setDependencyCounts(counts);
+      setDeleteConfirmOpen(true);
+    } catch (e: any) {
+      toast({ title: "Error checking dependencies", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleConfirmDeleteTable = async () => {
+    if (!tableToDelete) return;
+    setDeletingTableInProgress(true);
+    try {
+      await deleteTable.mutateAsync({ id: tableToDelete.id, restaurantId });
 
       logActivity({
         restaurantId,
-        action: `Deleted table ${table.table_number}`,
+        action: `Archived table ${tableToDelete.table_number}`,
         tableName: "tables",
-        recordId: table.id,
-        oldValues: table
+        recordId: tableToDelete.id,
+        oldValues: tableToDelete
       });
 
-      toast({ title: "Table Deleted" });
-      setSelectedTableIds(prev => prev.filter(id => id !== table.id));
+      toast({ title: "Table Archived Successfully" });
+      setSelectedTableIds(prev => prev.filter(id => id !== tableToDelete.id));
+      setDeleteConfirmOpen(false);
+      setTableToDelete(null);
     } catch (e: any) {
       toast({ title: "Failed to delete table", description: e.message, variant: "destructive" });
+    } finally {
+      setDeletingTableInProgress(false);
     }
   };
 
@@ -822,6 +845,15 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <TableDeleteConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDeleteTable}
+        tableNumber={tableToDelete?.table_number || ""}
+        loading={deletingTableInProgress}
+        dependencyCounts={dependencyCounts}
+      />
     </div>
   );
 }

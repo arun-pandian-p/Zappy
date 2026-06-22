@@ -19,6 +19,7 @@ export function useTableByNumber(restaurantId?: string, tableNumber?: string) {
         .select("*")
         .eq("restaurant_id", restaurantId)
         .ilike("table_number", tableNumber)
+        .eq("is_active", true)
         .single();
 
       if (error) {
@@ -43,6 +44,7 @@ export function useTables(restaurantId?: string) {
         .from("tables")
         .select("*")
         .eq("restaurant_id", restaurantId)
+        .eq("is_active", true)
         .order("table_number");
 
       if (error) throw error;
@@ -147,7 +149,7 @@ export function useDeleteTable() {
     mutationFn: async ({ id, restaurantId }: { id: string; restaurantId: string }) => {
       const { error } = await supabase
         .from("tables")
-        .delete()
+        .update({ is_active: false, deleted_at: new Date().toISOString() })
         .eq("id", id);
 
       if (error) throw new Error(error.message || JSON.stringify(error));

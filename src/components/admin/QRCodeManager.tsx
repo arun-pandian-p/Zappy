@@ -58,6 +58,8 @@ import { useRestaurantDetails } from "@/hooks/useRestaurant";
 import { format } from "date-fns";
 
 import { getAppOrigin } from "@/utils/url";
+import { checkTableDependencies } from "@/utils/tableDependencies";
+import { TableDeleteConfirmDialog } from "@/components/admin/TableDeleteConfirmDialog";
 
 const DEFAULT_BASE_URL = getAppOrigin();
 const REDIRECT_BASE = `${DEFAULT_BASE_URL}/r`;
@@ -119,6 +121,11 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
   // Table form state
   const [newTableNumber, setNewTableNumber] = useState("");
   const [newTableCapacity, setNewTableCapacity] = useState("4");
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [tableToDelete, setTableToDelete] = useState<any | null>(null);
+  const [dependencyCounts, setDependencyCounts] = useState<any | null>(null);
+  const [deletingTableInProgress, setDeletingTableInProgress] = useState(false);
 
   // Refs to prevent re-creating QRs in loops
   const baseQRCreated = useRef(false);
@@ -255,15 +262,27 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
   };
 
   const handleDeleteTable = async (table: Table) => {
-    if (!confirm(`Delete table ${table.table_number}? Its QR code will be deactivated.`)) return;
     try {
-      console.log('UI_DELETE_CLICK', { component: 'QRCodeManager', handler: 'handleDeleteTable', tableId: table.id, restaurantId });
-      const dtRes = await deleteTable.mutateAsync({ id: table.id, restaurantId });
-      console.log('UI_DELETE_TABLE_RESULT', { tableId: table.id, dtRes });
+      setTableToDelete(table);
+      const counts = await checkTableDependencies(table.id);
+      setDependencyCounts(counts);
+      setDeleteConfirmOpen(true);
+    } catch (e: any) {
+      toast({ title: "Error checking dependencies", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleConfirmDeleteTable = async () => {
+    if (!tableToDelete) return;
+    setDeletingTableInProgress(true);
+    try {
+      console.log('UI_DELETE_CLICK', { component: 'QRCodeManager', handler: 'handleDeleteTable', tableId: tableToDelete.id, restaurantId });
+      const dtRes = await deleteTable.mutateAsync({ id: tableToDelete.id, restaurantId });
+      console.log('UI_DELETE_TABLE_RESULT', { tableId: tableToDelete.id, dtRes });
 
       // Deactivate matching QR code
       const matchingQR = activeQRCodes.find(
-        (q) => (q.metadata as any)?.table_id === table.id
+        (q) => (q.metadata as any)?.table_id === tableToDelete.id
       );
       if (matchingQR) {
         console.log('UI_DELETE_TRIGGER_QR', { matchingQRId: matchingQR.id, restaurantId });
@@ -271,9 +290,13 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
         console.log('UI_DELETE_QR_RESULT', { matchingQRId: matchingQR.id, qrRes });
       }
 
-      toast({ title: "Table Deleted", description: `Table ${table.table_number} removed.` });
+      toast({ title: "Table Archived", description: `Table ${tableToDelete.table_number} archived.` });
+      setDeleteConfirmOpen(false);
+      setTableToDelete(null);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setDeletingTableInProgress(false);
     }
   };
 
@@ -876,6 +899,15 @@ export function QRCodeManager({ restaurantId }: QRCodeManagerProps) {
           })()}
         </DialogContent>
       </Dialog>
+
+      <TableDeleteConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDeleteTable}
+        tableNumber={tableToDelete?.table_number || ""}
+        loading={deletingTableInProgress}
+        dependencyCounts={dependencyCounts}
+      />
     </motion.div>
   );
 }
