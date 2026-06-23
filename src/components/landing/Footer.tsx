@@ -156,14 +156,7 @@ const Footer = ({ cms }: FooterProps) => {
             <Link to="/cookie-policy" className="hover:text-white transition-colors">Cookie Policy</Link>
           </div>
 
-          <div className="w-full lg:w-auto flex justify-center">
-            <Button 
-              onClick={() => navigate('/request-quote')}
-              className="bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-full px-8 h-12 lg:h-10 font-semibold w-full sm:w-auto"
-            >
-              Book Demo
-            </Button>
-          </div>
+
         </div>
       </div>
     </footer>
