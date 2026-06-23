@@ -8,15 +8,11 @@
 **QR ordering • Dynamic promotions • AI-driven food pairing • Live kitchen ops — all in one platform.**
 
 <br/>
-<img width="1907" height="836" alt="image" src="https://github.com/user-attachments/assets/3fafd302-92b9-4e9e-b3fd-26b23c088450" />
-<img width="1907" height="883" alt="image" src="https://github.com/user-attachments/assets/328d9686-e76d-465c-8a9b-0c901a59dfdd" />
-<img width="1910" height="863" alt="image" src="https://github.com/user-attachments/assets/ee765190-9ec0-4c0b-8ab8-0a6844513958" />
-
-
 
 ![Multi-Tenant](https://img.shields.io/badge/⚡_MULTI--TENANT-000000?style=for-the-badge)
 ![SaaS Platform](https://img.shields.io/badge/SAAS_PLATFORM-FF5722?style=for-the-badge)
 ![Status](https://img.shields.io/badge/STATUS-ACTIVE-2EA44F?style=for-the-badge)
+
 
 <br/>
 
@@ -28,7 +24,9 @@
 ![License](https://img.shields.io/github/license/shadow-byte-warrior/Zappy?style=flat-square&label=License&color=lightgrey)
 
 </div>
-
+<img width="1907" height="836" alt="image" src="https://github.com/user-attachments/assets/3fafd302-92b9-4e9e-b3fd-26b23c088450" />
+<img width="1907" height="883" alt="image" src="https://github.com/user-attachments/assets/328d9686-e76d-465c-8a9b-0c901a59dfdd" />
+<img width="1910" height="863" alt="image" src="https://github.com/user-attachments/assets/ee765190-9ec0-4c0b-8ab8-0a6844513958" />
 <br/>
 
 ## 📋 Table of Contents
