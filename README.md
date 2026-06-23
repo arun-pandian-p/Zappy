@@ -296,7 +296,7 @@ This project is licensed under the terms specified in the [LICENSE](LICENSE) fil
 
 <div align="center">
 
-**Built with ❤️ for restaurants everywhere**
+**Built with Shine for restaurants everywhere**
 
 ![Made with React](https://img.shields.io/badge/Made_with-React-61DAFB?style=flat-square&logo=react&logoColor=black)
 
