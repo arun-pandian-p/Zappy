@@ -157,7 +157,7 @@ export const PostOrderReviewPrompt = ({
       if (tableId && seatNumbers && seatNumbers.length > 0) {
         await supabase
           .from('seat_occupancy')
-          .update({ status: 'available' })
+          .update({ status: 'vacant' } as any)
           .eq('table_id', tableId)
           .in('seat_number', seatNumbers);
       }

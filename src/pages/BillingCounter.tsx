@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, Volume2, VolumeX, BarChart3, Receipt, Clock,
@@ -31,6 +32,8 @@ import DiscountButtons from '@/components/billing/DiscountButtons';
 import SplitPaymentPanel from '@/components/billing/SplitPaymentPanel';
 import { format } from 'date-fns';
 import { useAtomicBilling } from '@/hooks/useAtomicBilling';
+import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
+import { terminateTableSessionDb } from '@/services/sessionCleanupService';
 
 import { useAuth } from '@/hooks/useAuth';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
@@ -44,6 +47,7 @@ interface BillingCounterProps {
 
 const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: BillingCounterProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const { restaurantId: authRestaurantId, signOut } = useAuth();
 
@@ -66,6 +70,8 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   );
   const { data: todayInvoices = [] } = useTodayInvoices(restaurantId);
   const { data: invoiceStats } = useInvoiceStats(restaurantId);
+  const { data: waiterCalls = [], refetch: refetchWaiterCalls } = usePendingWaiterCalls(restaurantId);
+  const billRequests = useMemo(() => waiterCalls.filter(c => c.reason === 'Bill requested'), [waiterCalls]);
 
   const updatePayment = useUpdateOrderPayment();
   const createInvoice = useCreateInvoice();
@@ -229,6 +235,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
         notes: splitNote || null,
         invoiceNumber: generateInvoiceNumber(restaurantId),
       });
+      }
 
       if (!isMuted) playSound();
 
@@ -239,19 +246,21 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
         if (seatsToRelease.length > 0 && selectedOrder.table_id) {
           await supabase
             .from('seat_occupancy')
-            .update({ status: 'available' })
+            .update({ status: 'vacant' } as any)
             .eq('table_id', selectedOrder.table_id)
             .in('seat_number', seatsToRelease);
         }
       } else if (selectedOrder.seat_number && selectedOrder.table_id) {
         await supabase
           .from('seat_occupancy')
-          .update({ status: 'available' })
+          .update({ status: 'vacant' } as any)
           .eq('table_id', selectedOrder.table_id)
           .eq('seat_number', selectedOrder.seat_number);
       }
 
-      // Check if table session should be closed
+
+
+      // Check if table session should be completed
       const tableSessionId = (selectedOrder as any).table_session_id;
       if (tableSessionId) {
         // Query if there are any other active/unpaid orders in this session
@@ -263,7 +272,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
           .not('status', 'in', '("completed","cancelled")');
 
         if (!unpaidOrders || unpaidOrders.length === 0) {
-          // Close the active table session
+          // Set the active table session to completed (triggers customer receipt/review modals)
           await supabase
             .from('table_sessions')
             .update({ 
@@ -271,48 +280,35 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
               completed_at: new Date().toISOString() 
             })
             .eq('id', tableSessionId);
-
-          // Release all seats for this table session
-          await supabase
-            .from('seat_occupancy')
-            .update({ status: 'available' })
-            .eq('table_session_id', tableSessionId);
-
-          // Reset table status
-          if (selectedOrder.table_id) {
-            await supabase
-              .from('tables')
-              .update({ status: 'needs_cleaning' })
-              .eq('id', selectedOrder.table_id);
-          }
         }
       } else if (selectedOrder.table_id) {
-        // Fallback: If table_session_id is not set, check by remaining occupied seats
-        const { data: remainingSeats } = await supabase
-          .from('seat_occupancy')
-          .select('id')
+        // Fallback: If table_session_id is not set, set table sessions to completed
+        await supabase
+          .from('table_sessions')
+          .update({ 
+            status: 'completed', 
+            completed_at: new Date().toISOString() 
+          })
           .eq('table_id', selectedOrder.table_id)
-          .eq('status', 'occupied')
-          .limit(1);
-
-        if (!remainingSeats || remainingSeats.length === 0) {
-          // Close all active table sessions for this table
-          await supabase
-            .from('table_sessions')
-            .update({ 
-              status: 'completed', 
-              completed_at: new Date().toISOString() 
-            })
-            .eq('table_id', selectedOrder.table_id)
-            .neq('status', 'completed');
-
-          // Reset table status
-          await supabase
-            .from('tables')
-            .update({ status: 'needs_cleaning' })
-            .eq('id', selectedOrder.table_id);
-        }
+          .in('status', ['seated', 'ordering', 'preparing', 'dining', 'served', 'billing']);
       }
+
+      // Resolve any pending waiter calls for this table with reason 'Bill requested'
+      if (selectedOrder.table_id) {
+        await supabase
+          .from('waiter_calls')
+          .update({ status: 'resolved', responded_at: new Date().toISOString() })
+          .eq('table_id', selectedOrder.table_id)
+          .eq('reason', 'Bill requested')
+          .eq('status', 'pending');
+        refetchWaiterCalls();
+      }
+
+      // Invalidate related query caches to refresh Admin UI and Table State instantly
+      queryClient.invalidateQueries({ queryKey: ["table_sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_active_session_details"] });
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+      queryClient.invalidateQueries({ queryKey: ["seat-occupancy"] });
 
       toast({
         title: '✅ Payment Completed',
@@ -323,7 +319,6 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
       setShowReceiptPreview(true);
       setSelectedOrder(null);
       setSelectedDiscount(0);
-      }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
 
@@ -379,6 +374,17 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
           });
 
           if (!isMuted) playSound();
+
+          // Resolve any pending waiter calls for this table with reason 'Bill requested'
+          if (selectedOrder.table_id) {
+            await supabase
+              .from('waiter_calls')
+              .update({ status: 'resolved', responded_at: new Date().toISOString() })
+              .eq('table_id', selectedOrder.table_id)
+              .eq('reason', 'Bill requested')
+              .eq('status', 'pending');
+            refetchWaiterCalls();
+          }
 
           toast({
             title: '✅ Payment Completed',
@@ -720,6 +726,42 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                 </div>
               </div>
             )}
+            {billRequests.length > 0 && (
+              <div className="mb-6 space-y-2">
+                <h3 className="text-sm font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4" />
+                  Pending Bill Requests ({billRequests.length})
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {billRequests.map((call) => (
+                    <Card key={call.id} className="border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20">
+                      <CardContent className="p-3 flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-sm">Table {call.table?.table_number || 'Unknown'}</p>
+                          <p className="text-xs text-muted-foreground">{getTimeAgo(call.created_at)}</p>
+                        </div>
+                        <Button 
+                          size="sm"
+                          variant="ghost"
+                          className="text-xs text-amber-700 hover:text-amber-800 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/50 font-bold"
+                          onClick={() => {
+                            if (call.table_id) {
+                              setSelectedTableFilter(call.table_id);
+                              const orderForTable = readyOrders.find(o => o.table_id === call.table_id);
+                              if (orderForTable) {
+                                setSelectedOrder(orderForTable);
+                              }
+                            }
+                          }}
+                        >
+                          View Bill &rarr;
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Ready Orders */}
@@ -746,6 +788,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                             id: 'MERGED-' + selectedTableFilter,
                             restaurant_id: restaurantId!,
                             table_id: selectedTableFilter,
+                            table_session_id: readyOrders[0].table_session_id,
                             table: readyOrders[0].table,
                             order_number: readyOrders[0].order_number,
                             subtotal: mergedSubtotal,

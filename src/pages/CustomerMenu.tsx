@@ -34,9 +34,11 @@ import { checkRateLimit, RATE_LIMITS, getRemainingCooldown } from '@/utils/rateL
 import { useTableByNumber, useTables, useSeatOccupancy } from '@/hooks/useTables';
 import { TablePickerDialog } from '@/components/menu/TablePickerDialog';
 import { SeatPickerDialog } from '@/components/menu/SeatPickerDialog';
+import { CheckoutFlowModals } from '@/components/menu/CheckoutFlowModals';
 import { useActiveEnterprisePromotions } from '@/hooks/useEnterprisePromotions';
 import { evaluateCartDiscounts } from '@/services/promotions/cartPricingEngine';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
+import { useSessionCleanup } from '@/hooks/useSessionCleanup';
 import { PromotionCarousel } from '@/components/menu/PromotionCarousel';
 
 import { BottomNav } from '@/components/menu/BottomNav';
@@ -129,6 +131,25 @@ const CustomerMenu = () => {
     tableId || (restaurantId ? getPersistedTable(restaurantId) : '')
   );
 
+  // Resolve table number to table UUID
+  const { data: tableData, isLoading: tableLoading } = useTableByNumber(restaurantId, dynamicTableId || undefined);
+  const resolvedTableId = tableData?.id;
+
+  // Cart store
+  const { 
+    items: cartItems, 
+    addItem, 
+    removeItem, 
+    updateQuantity, 
+    getTotalItems, 
+    getTotalPrice, 
+    clearCart, 
+    setTableNumber, 
+    tableNumber 
+  } = useCartStore();
+
+  const { performClientCleanup, handleEndSessionFlow } = useSessionCleanup();
+
   // Seat session persisted alongside table — 4-hour TTL
   const getPersistedSeatSession = (rId: string, tNum: string) => {
     try {
@@ -153,6 +174,64 @@ const CustomerMenu = () => {
 
   const selectedSeatNumbers = seatSessionData?.seatNumbers || [];
   const seatSessionId = seatSessionData?.seatSessionId;
+
+  // Fetch the current seat session occupancy record to know our table_session_id
+  const { data: currentSeatOccupancy } = useQuery({
+    queryKey: ['current-seat-occupancy', seatSessionId],
+    queryFn: async () => {
+      if (!seatSessionId) return null;
+      const { data, error } = await supabase
+        .from('seat_occupancy')
+        .select('*, table_sessions(*)')
+        .eq('id', seatSessionId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+    enabled: !!seatSessionId,
+    refetchInterval: 5000,
+  });
+
+  // Fetch customer orders for this table (with realtime)
+  const { data: customerOrders = [] } = useCustomerOrders(
+    restaurantId,
+    resolvedTableId,
+    seatSessionId
+  );
+
+  // Fetch recent orders stored in localStorage
+  const { data: recentOrdersData = [], refreshIds: refreshRecentOrderIds } = useRecentOrders(restaurantId || undefined);
+
+  // Unified display orders for this customer (merges table and device localStorage orders)
+  const displayOrders = useMemo(() => {
+    const merged = [...customerOrders];
+    recentOrdersData.forEach((ro) => {
+      if (!merged.some((co) => co.id === ro.id)) {
+        merged.push(ro);
+      }
+    });
+    return merged.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  }, [customerOrders, recentOrdersData]);
+
+  const sessionOrders = useMemo(() => {
+    return displayOrders.filter(o => o.seat_session_id === seatSessionId && o.status !== 'cancelled');
+  }, [displayOrders, seatSessionId]);
+
+  const sessionBilling = useMemo(() => {
+    let subtotal = 0;
+    let tax = 0;
+    let serviceCharge = 0;
+    let total = 0;
+    
+    sessionOrders.forEach(o => {
+      subtotal += Number(o.subtotal || 0);
+      tax += Number(o.tax_amount || 0);
+      serviceCharge += Number(o.service_charge || 0);
+      total += Number(o.total_amount || 0);
+    });
+    
+    return { subtotal, tax, serviceCharge, total };
+  }, [sessionOrders]);
 
   // Pending table — awaiting seat confirmation before committing to state
   const [pendingSeatTable, setPendingSeatTable] = useState<{ tableNumber: string; capacity: number } | null>(null);
@@ -190,7 +269,161 @@ const CustomerMenu = () => {
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [isNewCustomerThisSession, setIsNewCustomerThisSession] = useState(false);
-  const [isSessionEnded, setIsSessionEnded] = useState(false);
+  const [isSessionEnded, setIsSessionEnded] = useState(() => {
+    return sessionStorage.getItem('zappy_session_thank_you') === 'true';
+  });
+  const [sessionFullyEnded, setSessionFullyEnded] = useState(() => {
+    return sessionStorage.getItem('zappy_session_fully_ended') === 'true';
+  });
+  const [sessionTerminatedByRestaurant, setSessionTerminatedByRestaurant] = useState(() => {
+    return sessionStorage.getItem('zappy_session_terminated') === 'true';
+  });
+  const [checkoutFlowStep, setCheckoutFlowStep] = useState<'none' | 'receipt' | 'review'>('none');
+  const [checkoutSummary, setCheckoutSummary] = useState<{ totalPaid: number; invoiceNumber: string; paymentMethod: string; totalItems: number } | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('zappy_checkout_summary');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [thankYouCountdown, setThankYouCountdown] = useState(30);
+
+  useEffect(() => {
+    if (searchParams.get('table') || searchParams.get('r')) {
+      sessionStorage.removeItem('zappy_session_thank_you');
+      sessionStorage.removeItem('zappy_checkout_summary');
+      sessionStorage.removeItem('zappy_session_terminated');
+      sessionStorage.removeItem('zappy_session_fully_ended');
+      setIsSessionEnded(false);
+      setSessionTerminatedByRestaurant(false);
+      setSessionFullyEnded(false);
+      setThankYouCountdown(30);
+    }
+  }, [searchParams]);
+
+  const handleCheckoutComplete = async (summary: { totalPaid: number; invoiceNumber: string; paymentMethod: string; totalItems: number }) => {
+    sessionStorage.setItem('zappy_checkout_summary', JSON.stringify(summary));
+    sessionStorage.setItem('zappy_session_thank_you', 'true');
+    
+    setCheckoutSummary(summary);
+    setIsSessionEnded(true);
+    setCheckoutFlowStep('none');
+    
+    performClientCleanup({
+      restaurantId: restaurantId || '',
+      tableId: resolvedTableId || '',
+      tableNumber: dynamicTableId || '',
+      seatSessionId: seatSessionId || '',
+      clearCart,
+      setSeatSessionData,
+      setDynamicTableId,
+      setIsSessionEnded,
+      setSessionFullyEnded,
+      setCheckoutSummary,
+      setCheckoutFlowStep,
+    });
+  };
+
+  const handleFinalEndSession = async () => {
+    if (sessionFullyEnded) return;
+    
+    await handleEndSessionFlow({
+      restaurantId: restaurantId || '',
+      tableId: resolvedTableId || '',
+      tableNumber: dynamicTableId || '',
+      seatSessionId: seatSessionId || '',
+      clearCart,
+      setSeatSessionData,
+      setDynamicTableId,
+      setIsSessionEnded,
+      setSessionFullyEnded,
+      setCheckoutSummary,
+      setCheckoutFlowStep,
+      sessionStorageItemSet: (key, val) => sessionStorage.setItem(key, val),
+    });
+  };
+
+  // Countdown timer for auto-close on Thank You screen
+  useEffect(() => {
+    if (!isSessionEnded || sessionFullyEnded) return;
+
+    const interval = setInterval(() => {
+      setThankYouCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleFinalEndSession();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isSessionEnded, sessionFullyEnded, seatSessionId, resolvedTableId]);
+
+  const handleManualEndSession = async () => {
+    if (!seatSessionId) return;
+    try {
+      await supabase
+        .from('table_sessions')
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
+        .eq('id', seatSessionId);
+      
+      setCheckoutFlowStep('receipt');
+      toast({
+        title: 'Session Ending',
+        description: 'Initiating final checkout and review.',
+      });
+    } catch (err) {
+      console.error('Failed to end session manually:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to end session. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Listen for table session completed status from database (via admin billing counter)
+  const sessionStatus = currentSeatOccupancy?.table_sessions?.status;
+  useEffect(() => {
+    if (sessionStatus === 'completed' && checkoutFlowStep === 'none' && !isSessionEnded) {
+      if (sessionOrders.length > 0) {
+        console.log("[Checkout Flow] Table session status updated to completed in DB. Launching checkout/review popups.");
+        setCheckoutFlowStep('receipt');
+      } else {
+        console.log("[Checkout Flow] Table session completed with no orders. Ending session directly.");
+        handleFinalEndSession();
+      }
+    }
+  }, [sessionStatus, sessionOrders.length, checkoutFlowStep, isSessionEnded]);
+
+  // Realtime subscription for current table session changes
+  useEffect(() => {
+    if (!restaurantId || !seatSessionId) return;
+
+    const channel = supabase
+      .channel(`current-session-realtime-${seatSessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'table_sessions',
+          filter: `restaurant_id=eq.${restaurantId}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['current-seat-occupancy', seatSessionId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [restaurantId, seatSessionId, queryClient]);
 
   // Check feedback and skip review prompt if already submitted
   const checkFeedbackAndTrigger = async (orderId: string, immediate: boolean) => {
@@ -251,35 +484,14 @@ const CustomerMenu = () => {
     refetchInterval: 5000,
   });
 
-  // Auto-logout within 1 minute of session completion
+  // Trigger receipt & checkout modal flow when session is completed
   useEffect(() => {
     if (!seatSessionId || !currentSessionStatusData) return;
 
-    if (currentSessionStatusData.status === 'completed') {
-      const completedTime = currentSessionStatusData.completed_at 
-        ? new Date(currentSessionStatusData.completed_at).getTime() 
-        : Date.now();
-      
-      const timeElapsedMs = Date.now() - completedTime;
-      const timeLeftMs = Math.max(0, 60000 - timeElapsedMs);
-
-      console.log(`[Session Completed] Time elapsed: ${Math.round(timeElapsedMs / 1000)}s. Logging out in ${Math.round(timeLeftMs / 1000)}s.`);
-
-      const timer = setTimeout(() => {
-        console.log('[Session] Auto-logout triggered after 1 minute of session completion.');
-        if (restaurantId && dynamicTableId) {
-          localStorage.removeItem(`zappy_seat_session_${restaurantId}_${dynamicTableId}`);
-          localStorage.removeItem(`qr_table_${restaurantId}`);
-        }
-        clearCart();
-        setSeatSessionData(null);
-        setDynamicTableId('');
-        setIsSessionEnded(true);
-      }, timeLeftMs);
-
-      return () => clearTimeout(timer);
+    if (currentSessionStatusData.status === 'completed' && checkoutFlowStep === 'none' && !isSessionEnded) {
+      setCheckoutFlowStep('receipt');
     }
-  }, [currentSessionStatusData, seatSessionId, restaurantId, dynamicTableId, navigate]);
+  }, [currentSessionStatusData, seatSessionId, checkoutFlowStep, isSessionEnded]);
 
   // Fetch restaurant data
   // Fetch restaurant - try authenticated first, fall back to public view for anon users
@@ -372,6 +584,52 @@ const CustomerMenu = () => {
     };
   }, [restaurantId, refetchPromotions]);
 
+  // Realtime subscription for session termination from restaurant side (Kill Session)
+  useEffect(() => {
+    if (!seatSessionId) return;
+
+    console.log(`[Realtime] Subscribing to customer_events for session ${seatSessionId}...`);
+    const channel = supabase
+      .channel(`session-termination-${seatSessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'customer_events',
+          filter: `session_id=eq.${seatSessionId}`
+        },
+        (payload) => {
+          if (payload.new && payload.new.event_type === 'session_terminated') {
+            console.log('[Realtime] Session terminated by restaurant!');
+            // Clear cart & session locally
+            if (restaurantId && dynamicTableId) {
+              localStorage.removeItem(`zappy_seat_session_${restaurantId}_${dynamicTableId}`);
+              localStorage.removeItem(`qr_table_${restaurantId}`);
+            }
+            clearCart();
+            setSeatSessionData(null);
+            setDynamicTableId('');
+
+            sessionStorage.setItem('zappy_session_terminated', 'true');
+            setSessionTerminatedByRestaurant(true);
+            // Clear search parameters from URL so refreshes don't reset the terminated screen
+            navigate(window.location.pathname, { replace: true });
+            toast({
+              title: "Session Closed",
+              description: "Your session was closed by the restaurant.",
+              variant: "destructive",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [seatSessionId, restaurantId, dynamicTableId, clearCart, toast]);
+
   // Fetch menu items
   const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(restaurantId);
 
@@ -381,9 +639,6 @@ const CustomerMenu = () => {
   // Fetch all tables for picker
   const { data: allTables = [] } = useTables(restaurantId);
 
-  // Resolve table number to table UUID
-  const { data: tableData, isLoading: tableLoading } = useTableByNumber(restaurantId, dynamicTableId || undefined);
-  const resolvedTableId = tableData?.id;
   const isDataLoading = restaurantLoading || menuLoading || (dynamicTableId && tableLoading);
 
   // Fetch active table session for the table
@@ -415,16 +670,6 @@ const CustomerMenu = () => {
   console.log("[QR Flow] tableSessionId:", activeSession?.id);
   console.log("[QR Flow] seatSessionId:", seatSessionId);
 
-  // Fetch customer orders for this table (with realtime)
-  const { data: customerOrders = [] } = useCustomerOrders(
-    restaurantId,
-    resolvedTableId,
-    seatSessionId
-  );
-
-  // Fetch recent orders stored in localStorage
-  const { data: recentOrdersData = [], refreshIds: refreshRecentOrderIds } = useRecentOrders(restaurantId || undefined);
-
   // Fetch notification log for Alerts Tab
   const { data: tabNotifications = [] } = useQuery({
     queryKey: ['notifications-tab-history', restaurantId, resolvedTableId],
@@ -450,36 +695,7 @@ const CustomerMenu = () => {
     refetchInterval: 10000,
   });
 
-  // Unified display orders for this customer (merges table and device localStorage orders)
-  const displayOrders = useMemo(() => {
-    const merged = [...customerOrders];
-    recentOrdersData.forEach((ro) => {
-      if (!merged.some((co) => co.id === ro.id)) {
-        merged.push(ro);
-      }
-    });
-    return merged.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-  }, [customerOrders, recentOrdersData]);
 
-  const sessionOrders = useMemo(() => {
-    return displayOrders.filter(o => o.seat_session_id === seatSessionId && o.status !== 'cancelled');
-  }, [displayOrders, seatSessionId]);
-
-  const sessionBilling = useMemo(() => {
-    let subtotal = 0;
-    let tax = 0;
-    let serviceCharge = 0;
-    let total = 0;
-    
-    sessionOrders.forEach(o => {
-      subtotal += Number(o.subtotal || 0);
-      tax += Number(o.tax_amount || 0);
-      serviceCharge += Number(o.service_charge || 0);
-      total += Number(o.total_amount || 0);
-    });
-    
-    return { subtotal, tax, serviceCharge, total };
-  }, [sessionOrders]);
 
   // Fetch active invoice if one exists for the current session
   const { data: sessionInvoice, refetch: refetchSessionInvoice } = useQuery({
@@ -663,18 +879,7 @@ const CustomerMenu = () => {
     manageSession();
   }, [restaurantId, resolvedTableId, isDataLoading, activeSession]);
 
-  // Cart store
-  const { 
-    items: cartItems, 
-    addItem, 
-    removeItem, 
-    updateQuantity, 
-    getTotalItems, 
-    getTotalPrice, 
-    clearCart, 
-    setTableNumber, 
-    tableNumber 
-  } = useCartStore();
+
 
   // Query client initialized at top of component
 
@@ -2140,30 +2345,41 @@ const CustomerMenu = () => {
             </div>
           )}
 
-          <div className="flex gap-2">
-            {!sessionInvoice && !isBillRequested && (
-              <Button 
-                onClick={handleRequestBill}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-10 font-bold text-xs shadow-[0_4px_12px_rgba(16,185,129,0.15)]"
-              >
-                🔔 Request Bill from Staff
-              </Button>
-            )}
-            {isBillRequested && !sessionInvoice && (
-              <div className="w-full text-center py-2 text-xs font-bold text-blue-500 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                🏃 Waiter is bringing your bill...
-              </div>
-            )}
-            {sessionInvoice && sessionInvoice.payment_status === 'unpaid' && (
-              <div className="w-full text-center py-2.5 text-xs font-bold text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                💳 Please pay {currencySymbol}{Number(sessionInvoice.total_amount).toFixed(2)} at the billing counter
-              </div>
-            )}
-            {sessionInvoice && sessionInvoice.payment_status === 'paid' && (
-              <div className="w-full text-center py-2.5 text-xs font-extrabold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                🎉 Fully Paid! Thank you!
-              </div>
-            )}
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              {!sessionInvoice && !isBillRequested && (
+                <Button 
+                  onClick={handleRequestBill}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-10 font-bold text-xs shadow-[0_4px_12px_rgba(16,185,129,0.15)]"
+                >
+                  🔔 Request Bill from Staff
+                </Button>
+              )}
+              {isBillRequested && !sessionInvoice && (
+                <div className="w-full text-center py-2 text-xs font-bold text-blue-500 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                  🏃 Waiter is bringing your bill...
+                </div>
+              )}
+              {sessionInvoice && sessionInvoice.payment_status === 'unpaid' && (
+                <div className="w-full flex flex-col gap-2">
+                  <div className="w-full text-center py-2.5 text-xs font-bold text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                    💳 Please pay {currencySymbol}{Number(sessionInvoice.total_amount).toFixed(2)} at the billing counter
+                  </div>
+                  <Button
+                    onClick={() => setCheckoutFlowStep('receipt')}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-xl h-10 font-bold text-xs shadow-md"
+                  >
+                    📄 View Bill Receipt
+                  </Button>
+                </div>
+              )}
+              {sessionInvoice && sessionInvoice.payment_status === 'paid' && (
+                <div className="w-full text-center py-2.5 text-xs font-extrabold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                  🎉 Fully Paid! Thank you!
+                </div>
+              )}
+            </div>
+
           </div>
         </Card>
       )}
@@ -2234,32 +2450,137 @@ const CustomerMenu = () => {
   const splashLogo = cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url);
   const splashColor = primaryColor || splashBranding?.primary_color || undefined;
 
+  if (sessionTerminatedByRestaurant) {
+    return (
+      <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
+        <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background px-6 text-center select-none py-12">
+          <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto text-3xl mb-6 shadow-md border border-red-500/20">
+            ⚠️
+          </div>
+          <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">
+            Session Closed By Restaurant
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-8">
+            Your dining session has been terminated by the staff.
+          </p>
+          <p className="text-[10px] text-zinc-400 font-medium">
+            Please contact the restaurant staff or scan a new QR code to start a session.
+          </p>
+        </div>
+      </TenantThemeProvider>
+    );
+  }
+
+  if (sessionFullyEnded) {
+    return (
+      <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
+        <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background px-6 text-center select-none py-12">
+          <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto text-3xl shadow-md border border-emerald-500/20">
+            ✓
+          </div>
+          <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">
+            Session Closed
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-6">
+            Thank you for dining with us! Your session is now closed.
+          </p>
+          {checkoutSummary && (
+            <div className="p-5 bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-150 dark:border-zinc-800 rounded-3xl w-full max-w-sm text-left space-y-2 mb-6">
+              <div className="flex justify-between text-xs text-muted-foreground font-semibold">
+                <span>Invoice Number</span>
+                <span className="font-mono text-zinc-900 dark:text-zinc-100">{checkoutSummary.invoiceNumber}</span>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground font-semibold">
+                <span>Total Paid</span>
+                <span className="font-bold text-zinc-900 dark:text-zinc-100">{currencySymbol}{Number(checkoutSummary.totalPaid).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+          <p className="text-[10px] text-zinc-400 font-medium">
+            Scan the table QR code again to start a new dining session.
+          </p>
+        </div>
+      </TenantThemeProvider>
+    );
+  }
+
   if (isSessionEnded) {
     return (
       <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
-        <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background px-6 text-center select-none">
-          <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto text-3xl mb-6">
-            🍽️
-          </div>
-          <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">
-            Session Ended
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-8">
-            Thank you for dining at <span className="font-bold text-zinc-800 dark:text-zinc-200">{restaurant?.name || 'our restaurant'}</span>. We hope you had a wonderful experience!
-          </p>
-          <div className="p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-2xl w-full max-w-xs text-xs text-left space-y-2 mb-6">
-            <div className="flex justify-between font-medium">
-              <span className="text-zinc-500">Restaurant:</span>
-              <span className="font-bold text-zinc-900 dark:text-zinc-100">{restaurant?.name || 'Zappy Partner'}</span>
+        <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background px-6 text-center select-none py-12">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="w-full max-w-sm space-y-6"
+          >
+            <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto text-3xl shadow-md border border-emerald-500/20">
+              🙏
             </div>
-            <div className="flex justify-between font-medium">
-              <span className="text-zinc-500">Status:</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">Paid & Closed</span>
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
+                Thank You For Dining!
+              </h2>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 font-extrabold tracking-wide uppercase">
+                Visit Again
+              </p>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                We hope you had a wonderful experience at <span className="font-bold text-zinc-800 dark:text-zinc-200">{restaurant?.name || 'our restaurant'}</span>.
+              </p>
             </div>
-          </div>
-          <p className="text-[10px] text-zinc-400 font-medium">
-            Please scan the QR code at your table to start a new session.
-          </p>
+
+            <div className="p-5 bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-100 dark:border-zinc-800/80 rounded-3xl text-left space-y-3.5 shadow-sm">
+              <div className="flex items-center justify-between border-b pb-2.5 border-zinc-200/20 dark:border-zinc-800/50">
+                <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Session Status</span>
+                <Badge className="bg-emerald-500 hover:bg-emerald-600 border-0 font-extrabold px-3 py-0.5 rounded-full text-[9px] uppercase tracking-wider text-white">
+                  Session Active
+                </Badge>
+              </div>
+              
+              {checkoutSummary ? (
+                <>
+                  <div className="flex justify-between text-xs text-muted-foreground font-semibold">
+                    <span>Invoice Number</span>
+                    <span className="font-mono text-zinc-900 dark:text-zinc-100">{checkoutSummary.invoiceNumber}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground font-semibold">
+                    <span>Payment Method</span>
+                    <span className="capitalize text-zinc-900 dark:text-zinc-100">{checkoutSummary.paymentMethod}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground font-semibold">
+                    <span>Items Ordered</span>
+                    <span className="text-zinc-900 dark:text-zinc-100">{checkoutSummary.totalItems} items</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-black text-zinc-900 dark:text-zinc-50 border-t pt-2.5 border-zinc-200/20 dark:border-zinc-800/50">
+                    <span>Total Paid</span>
+                    <span>{currencySymbol}{Number(checkoutSummary.totalPaid).toFixed(2)}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between text-xs text-muted-foreground font-semibold">
+                  <span>Restaurant</span>
+                  <span className="font-bold text-zinc-900 dark:text-zinc-100">{restaurant?.name || 'Zappy Partner'}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 space-y-3 shadow-sm">
+              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                Session closing in {thankYouCountdown}s...
+              </p>
+              <Button
+                onClick={handleFinalEndSession}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-11 font-black text-xs shadow-md"
+              >
+                🏁 End Session Now
+              </Button>
+            </div>
+            
+            <p className="text-[10px] text-muted-foreground max-w-xs mx-auto leading-relaxed border-t pt-4 border-zinc-100 dark:border-zinc-900">
+              No further actions are allowed. Please scan the table QR code again to start a new dining session.
+            </p>
+          </motion.div>
         </div>
       </TenantThemeProvider>
     );
@@ -2400,8 +2721,25 @@ const CustomerMenu = () => {
         />
       )}
 
+      {/* Checkout Modals — Receipt & Review Steps on Session Completion */}
+      <CheckoutFlowModals
+        isOpen={checkoutFlowStep !== 'none'}
+        restaurantId={restaurantId}
+        restaurantName={restaurant?.name || ''}
+        tableNumber={dynamicTableId}
+        tableId={resolvedTableId}
+        seatNumbers={selectedSeatNumbers}
+        seatSessionId={seatSessionId || ''}
+        sessionOrders={sessionOrders}
+        sessionInvoice={sessionInvoice}
+        currencySymbol={currencySymbol}
+        onComplete={handleCheckoutComplete}
+        isCompleted={sessionStatus === 'completed'}
+        onClose={() => setCheckoutFlowStep('none')}
+      />
+
       {/* Post-Order Review Prompt — triggers when order is completed */}
-      {reviewOrderId && restaurantId && (
+      {reviewOrderId && restaurantId && sessionStatus === 'completed' && (
         <PostOrderReviewPrompt
           restaurantId={restaurantId}
           orderId={reviewOrderId}

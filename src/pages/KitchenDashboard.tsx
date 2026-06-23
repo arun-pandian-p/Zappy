@@ -148,7 +148,8 @@ const KitchenDashboard = ({ embedded = false, restaurantId: propRestaurantId }: 
   );
 
   // Fetch pending waiter calls
-  const { data: waiterCalls = [] } = usePendingWaiterCalls(restaurantId);
+  const { data: rawWaiterCalls = [] } = usePendingWaiterCalls(restaurantId);
+  const waiterCalls = useMemo(() => rawWaiterCalls.filter(c => c.reason !== 'Bill requested'), [rawWaiterCalls]);
 
   // Kitchen actions
   const { startPreparing, markReady, markServed, isLoading: isUpdating } = useKitchenOrderActions(restaurantId);

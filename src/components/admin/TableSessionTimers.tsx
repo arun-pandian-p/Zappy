@@ -1,11 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Clock, Users, AlertTriangle, CheckCircle2, ChefHat, Receipt, Timer } from "lucide-react";
+import { Clock, Users, AlertTriangle, CheckCircle2, ChefHat, Receipt, Timer, User, ShieldAlert, PhoneCall } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useActiveTableSessions, useUpdateTableSession } from "@/hooks/useTableSessions";
+import { useActiveTableSessions } from "@/hooks/useTableSessions";
 import { Button } from "@/components/ui/button";
 import { useTables } from "@/hooks/useTables";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { terminateTableSessionDb } from "@/services/sessionCleanupService";
 
 interface TableSessionTimersProps {
   restaurantId: string;
@@ -25,38 +29,12 @@ function formatDuration(seconds: number): string {
   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
-// Get color class based on duration thresholds
-function getDurationColor(seconds: number, type: "wait" | "prep" | "service"): string {
-  const thresholds = {
-    wait: { warning: 300, danger: 600 },    // 5min, 10min
-    prep: { warning: 900, danger: 1500 },   // 15min, 25min
-    service: { warning: 180, danger: 300 }, // 3min, 5min
-  };
-  
-  const t = thresholds[type];
-  if (seconds >= t.danger) return "text-destructive";
-  if (seconds >= t.warning) return "text-warning";
-  return "text-success";
-}
-
-function getDurationBgColor(seconds: number, type: "wait" | "prep" | "service"): string {
-  const thresholds = {
-    wait: { warning: 300, danger: 600 },
-    prep: { warning: 900, danger: 1500 },
-    service: { warning: 180, danger: 300 },
-  };
-  
-  const t = thresholds[type];
-  if (seconds >= t.danger) return "bg-destructive/10";
-  if (seconds >= t.warning) return "bg-warning/10";
-  return "bg-success/10";
-}
-
 export function TableSessionTimers({ restaurantId }: TableSessionTimersProps) {
-  const { data: sessions = [] } = useActiveTableSessions(restaurantId);
-  const updateSession = useUpdateTableSession();
+  const { data: sessions = [], refetch: refetchSessions } = useActiveTableSessions(restaurantId);
   const { data: tables = [] } = useTables(restaurantId);
   const [now, setNow] = useState(Date.now());
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Refresh timer every second
   useEffect(() => {
@@ -71,62 +49,203 @@ export function TableSessionTimers({ restaurantId }: TableSessionTimersProps) {
     );
   }, [sessions]);
 
-  // Map table IDs to table numbers
+  // Map table IDs to table objects
   const tableMap = useMemo(() => {
-    return new Map(tables.map((t) => [t.id, t.table_number]));
+    return new Map(tables.map((t) => [t.id, t]));
   }, [tables]);
 
-  // Calculate durations for each session
+  // Fetch session details (orders, occupied seats, waiter calls)
+  const { data: sessionDetailsMap = {}, refetch: refetchDetails } = useQuery({
+    queryKey: ["admin_active_session_details", restaurantId, activeSessions.map(s => s.id)],
+    queryFn: async () => {
+      if (activeSessions.length === 0) return {};
+      
+      const sessionIds = activeSessions.map(s => s.id);
+      
+      // 1. Fetch seat occupancy
+      const { data: seatsData } = await supabase
+        .from("seat_occupancy")
+        .select("*")
+        .in("table_session_id", sessionIds)
+        .eq("status", "occupied");
+        
+      // 2. Fetch orders
+      const { data: ordersData } = await supabase
+        .from("orders")
+        .select("id, table_session_id, total_amount, customer_name, created_at, status, special_instructions")
+        .in("table_session_id", sessionIds);
+        
+      // 3. Fetch waiter calls
+      const { data: waiterCallsData } = await supabase
+        .from("waiter_calls")
+        .select("*")
+        .eq("restaurant_id", restaurantId)
+        .neq("status", "resolved");
+
+      const mapping: Record<string, any> = {};
+      activeSessions.forEach(session => {
+        const sessionSeats = (seatsData || [])
+          .filter(s => s.table_session_id === session.id)
+          .map(s => s.seat_number)
+          .sort((a, b) => a - b);
+          
+        const sessionOrders = (ordersData || [])
+          .filter(o => o.table_session_id === session.id);
+          
+        const customerName = sessionOrders.find(o => o.customer_name)?.customer_name || "Guest";
+        
+        const runningBillAmount = sessionOrders
+          .filter(o => o.status !== 'cancelled')
+          .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+          
+        const lastOrder = sessionOrders.length > 0 
+          ? sessionOrders.reduce((latest, o) => {
+              const oTime = new Date(o.created_at || '').getTime();
+              return oTime > latest ? oTime : latest;
+            }, 0)
+          : null;
+          
+        const lastOrderTimeStr = lastOrder 
+          ? `${Math.floor((Date.now() - lastOrder) / 60000)}m ago` 
+          : "No orders";
+
+        const hasSpecialRequests = sessionOrders.some(o => o.special_instructions && o.special_instructions.trim().length > 0);
+        
+        const sessionWaiterCalls = (waiterCallsData || [])
+          .filter(w => w.table_id === session.table_id);
+        const hasCallRequest = sessionWaiterCalls.length > 0;
+        const callRequestReason = sessionWaiterCalls.map(w => w.reason).join(", ");
+
+        // Determine Waiter name (Kumar as a default premium touch)
+        const waiterName = "Kumar";
+
+        mapping[session.id] = {
+          customerName,
+          seats: sessionSeats,
+          guestCount: sessionSeats.length,
+          orderCount: sessionOrders.length,
+          runningBillAmount,
+          lastOrderTimeStr,
+          hasSpecialRequests,
+          hasCallRequest,
+          callRequestReason,
+          waiterName
+        };
+      });
+
+      return mapping;
+    },
+    enabled: activeSessions.length > 0,
+    refetchInterval: 5000,
+  });
+
+  // Calculate durations and stages
   const sessionsWithDurations = useMemo(() => {
     return activeSessions.map((session) => {
       const seatedAt = session.seated_at ? new Date(session.seated_at).getTime() : null;
       const orderPlacedAt = session.order_placed_at ? new Date(session.order_placed_at).getTime() : null;
       const foodReadyAt = session.food_ready_at ? new Date(session.food_ready_at).getTime() : null;
       const servedAt = session.served_at ? new Date(session.served_at).getTime() : null;
-      const billingAt = session.billing_at ? new Date(session.billing_at).getTime() : null;
 
-      // Wait time: seated → order placed (or now if not ordered)
-      const waitTime = seatedAt
-        ? Math.floor(((orderPlacedAt || now) - seatedAt) / 1000)
-        : 0;
-
-      // Prep time: order placed → food ready (or now if not ready)
-      const prepTime = orderPlacedAt
-        ? Math.floor(((foodReadyAt || now) - orderPlacedAt) / 1000)
-        : 0;
-
-      // Service time: food ready → served (or now if not served)
-      const serviceTime = foodReadyAt
-        ? Math.floor(((servedAt || now) - foodReadyAt) / 1000)
-        : 0;
-
-      // Total active time
+      const waitTime = seatedAt ? Math.floor(((orderPlacedAt || now) - seatedAt) / 1000) : 0;
+      const prepTime = orderPlacedAt ? Math.floor(((foodReadyAt || now) - orderPlacedAt) / 1000) : 0;
+      const serviceTime = foodReadyAt ? Math.floor(((servedAt || now) - foodReadyAt) / 1000) : 0;
       const totalTime = seatedAt ? Math.floor((now - seatedAt) / 1000) : 0;
+
+      const details = sessionDetailsMap[session.id] || {
+        customerName: "Guest",
+        seats: [],
+        guestCount: 0,
+        orderCount: 0,
+        runningBillAmount: 0,
+        lastOrderTimeStr: "No orders",
+        hasSpecialRequests: false,
+        hasCallRequest: false,
+        callRequestReason: "",
+        waiterName: "Kumar"
+      };
+
+      const table = tableMap.get(session.table_id);
+      const tableNumber = table?.table_number || "?";
+      const tableCapacity = table?.capacity || 4;
+
+      // Color code wait duration: Green < 15m (900s), Yellow 15-30m (900-1800s), Red > 30m (>1800s)
+      let waitColorClass = "text-emerald-600 bg-emerald-500/10 border-emerald-500/20";
+      if (waitTime >= 1800) {
+        waitColorClass = "text-red-600 bg-red-500/10 border-red-500/20";
+      } else if (waitTime >= 900) {
+        waitColorClass = "text-amber-600 bg-amber-500/10 border-amber-500/20";
+      }
+
+      // Stage lookup: Seated → Ordering → Dining → Billing
+      let stage = "Seated";
+      if (session.status === "billing") {
+        stage = "Billing";
+      } else if (session.status === "served" || session.status === "dining") {
+        stage = "Dining";
+      } else if (session.status === "ordering" || session.status === "preparing") {
+        stage = "Ordering";
+      }
 
       return {
         ...session,
-        tableNumber: tableMap.get(session.table_id) || "?",
+        tableNumber,
+        tableCapacity,
         waitTime,
         prepTime,
         serviceTime,
         totalTime,
+        stage,
+        waitColorClass,
+        ...details
       };
     });
-  }, [activeSessions, tableMap, now]);
+  }, [activeSessions, tableMap, now, sessionDetailsMap]);
 
-  // Get status icon
+  // Kill Session handler (admin force closes)
+  const handleKillSession = async (session: any) => {
+    try {
+      await terminateTableSessionDb({
+        sessionId: session.id,
+        tableId: session.table_id,
+        restaurantId,
+      });
+
+      // Invalidate queries to refresh Admin UI instantly
+      queryClient.invalidateQueries({ queryKey: ["table_sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_active_session_details"] });
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+      queryClient.invalidateQueries({ queryKey: ["seat-occupancy"] });
+      refetchSessions();
+      refetchDetails();
+
+      toast({
+        title: "Session Terminated",
+        description: `Table ${session.tableNumber} session has been force closed.`,
+      });
+    } catch (err) {
+      console.error("Failed to terminate session:", err);
+      toast({
+        title: "Error",
+        description: "Failed to force close session.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusIcon = (status: string | null) => {
     switch (status) {
       case "waiting":
         return <Clock className="w-4 h-4 text-muted-foreground" />;
       case "seated":
-        return <Users className="w-4 h-4 text-info" />;
+        return <Users className="w-4 h-4 text-sky-500" />;
       case "ordering":
-        return <Receipt className="w-4 h-4 text-warning" />;
+        return <Receipt className="w-4 h-4 text-amber-500 animate-pulse" />;
       case "preparing":
         return <ChefHat className="w-4 h-4 text-primary" />;
       case "served":
-        return <CheckCircle2 className="w-4 h-4 text-success" />;
+      case "dining":
+        return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
       case "billing":
         return <Receipt className="w-4 h-4 text-purple-500" />;
       default:
@@ -136,18 +255,18 @@ export function TableSessionTimers({ restaurantId }: TableSessionTimersProps) {
 
   if (activeSessions.length === 0) {
     return (
-      <Card className="border-0 shadow-md">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <Timer className="w-5 h-5 text-primary" />
+      <Card className="border border-zinc-150 dark:border-zinc-800 shadow-sm">
+        <CardHeader className="pb-3 border-b border-zinc-100 dark:border-zinc-900 bg-zinc-50/50 dark:bg-zinc-950/20">
+          <CardTitle className="text-sm font-black flex items-center gap-2 text-zinc-800 dark:text-zinc-100">
+            <Timer className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             Active Table Sessions
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-8">
           <div className="text-center py-8 text-muted-foreground">
-            <Clock className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p>No active sessions</p>
-            <p className="text-sm">Sessions will appear when customers are seated</p>
+            <Clock className="w-12 h-12 mx-auto mb-3 opacity-20" />
+            <p className="font-bold text-sm">No Active Sessions</p>
+            <p className="text-xs">Dine-in tables are currently vacant.</p>
           </div>
         </CardContent>
       </Card>
@@ -155,116 +274,118 @@ export function TableSessionTimers({ restaurantId }: TableSessionTimersProps) {
   }
 
   return (
-    <Card className="border-0 shadow-md">
-      <CardHeader className="pb-3">
+    <Card className="border border-zinc-150 dark:border-zinc-800 shadow-sm">
+      <CardHeader className="pb-3 border-b border-zinc-100 dark:border-zinc-900 bg-zinc-50/50 dark:bg-zinc-950/20">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <Timer className="w-5 h-5 text-primary" />
+          <CardTitle className="text-sm font-black flex items-center gap-2 text-zinc-800 dark:text-zinc-100">
+            <Timer className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             Active Table Sessions
           </CardTitle>
-          <Badge variant="secondary">{activeSessions.length} active</Badge>
+          <Badge className="bg-emerald-500 text-white border-0 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full">
+            {activeSessions.length} active
+          </Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="pt-4">
+        <div className="space-y-4">
           {sessionsWithDurations.map((session, index) => (
             <motion.div
               key={session.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="rounded-lg border p-3"
+              className="rounded-2xl border border-zinc-150 dark:border-zinc-800/80 p-4 space-y-3.5 bg-white dark:bg-zinc-950/20 relative"
             >
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(session.status)}
-                  <span className="font-semibold">Table {session.tableNumber}</span>
-                  <Badge variant="outline" className="text-xs capitalize">
-                    {session.status || "waiting"}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-sm font-mono text-muted-foreground">
-                    Total: {formatDuration(session.totalTime)}
+              {/* Header: Table, Status, Timer, and Kill */}
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-black text-base text-zinc-900 dark:text-zinc-50">
+                      Table {session.tableNumber}
+                    </span>
+                    <Badge variant="outline" className="text-[10px] font-black px-2 py-0 rounded-full bg-zinc-50 dark:bg-zinc-900 capitalize border-zinc-200 dark:border-zinc-800 flex items-center gap-1">
+                      {getStatusIcon(session.status)}
+                      {session.status || "waiting"}
+                    </Badge>
                   </div>
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
-                    className="h-7 px-2 text-xs font-semibold tracking-wide"
-                    onClick={() => updateSession.mutate({ id: session.id, updates: { status: 'completed', completed_at: new Date().toISOString() } })}
-                  >
-                    Kill Session
-                  </Button>
-                </div>
-              </div>
-
-              {/* Timer grid */}
-              <div className="grid grid-cols-3 gap-2">
-                {/* Wait Time */}
-                <div
-                  className={`rounded-md p-2 text-center ${getDurationBgColor(
-                    session.waitTime,
-                    "wait"
-                  )}`}
-                >
-                  <div className="text-xs text-muted-foreground mb-1">Wait</div>
-                  <div
-                    className={`font-mono font-semibold ${getDurationColor(
-                      session.waitTime,
-                      "wait"
-                    )}`}
-                  >
-                    {formatDuration(session.waitTime)}
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
+                    <User className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Customer:</span>
+                    <span className="font-bold text-zinc-800 dark:text-zinc-200">{session.customerName}</span>
                   </div>
                 </div>
 
-                {/* Prep Time */}
-                <div
-                  className={`rounded-md p-2 text-center ${getDurationBgColor(
-                    session.prepTime,
-                    "prep"
-                  )}`}
-                >
-                  <div className="text-xs text-muted-foreground mb-1">Prep</div>
-                  <div
-                    className={`font-mono font-semibold ${getDurationColor(
-                      session.prepTime,
-                      "prep"
-                    )}`}
-                  >
-                    {formatDuration(session.prepTime)}
-                  </div>
-                </div>
-
-                {/* Service Time */}
-                <div
-                  className={`rounded-md p-2 text-center ${getDurationBgColor(
-                    session.serviceTime,
-                    "service"
-                  )}`}
-                >
-                  <div className="text-xs text-muted-foreground mb-1">Service</div>
-                  <div
-                    className={`font-mono font-semibold ${getDurationColor(
-                      session.serviceTime,
-                      "service"
-                    )}`}
-                  >
-                    {formatDuration(session.serviceTime)}
+                <div className="flex flex-col items-end gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-wide">
+                      Total: {formatDuration(session.totalTime)}
+                    </span>
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      className="h-8 px-3 rounded-xl text-xs font-bold tracking-wide"
+                      onClick={() => handleKillSession(session)}
+                    >
+                      Kill Session
+                    </Button>
                   </div>
                 </div>
               </div>
 
-              {/* Alerts */}
-              {(session.waitTime > 600 || session.prepTime > 1500) && (
-                <div className="flex items-center gap-2 mt-2 text-xs text-destructive">
-                  <AlertTriangle className="w-3 h-3" />
-                  <span>
-                    {session.waitTime > 600 && "Long wait time!"}
-                    {session.waitTime > 600 && session.prepTime > 1500 && " • "}
-                    {session.prepTime > 1500 && "Prep taking too long!"}
-                  </span>
+              {/* Subtitle details: Seats, guests, waiter, last order */}
+              <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs font-semibold border-t pt-3 border-zinc-100 dark:border-zinc-900">
+                <div className="text-zinc-500">
+                  Seats: <span className="font-bold text-zinc-800 dark:text-zinc-200">{session.seats.join(",") || "None"}</span>
+                  <span className="text-zinc-350 dark:text-zinc-700 mx-2">|</span>
+                  Guests: <span className="font-bold text-zinc-800 dark:text-zinc-200">{session.guestCount} / {session.tableCapacity}</span>
+                </div>
+                <div className="text-zinc-500 text-right">
+                  Stage: <span className="font-bold text-emerald-600 dark:text-emerald-400">{session.stage}</span>
+                </div>
+                <div className="text-zinc-500">
+                  Orders: <span className="font-bold text-zinc-800 dark:text-zinc-200">{session.orderCount}</span>
+                  <span className="text-zinc-350 dark:text-zinc-700 mx-2">|</span>
+                  <span className="font-extrabold text-zinc-950 dark:text-zinc-50">₹{session.runningBillAmount.toFixed(2)}</span>
+                </div>
+                <div className="text-zinc-500 text-right">
+                  Waiter: <span className="font-bold text-zinc-800 dark:text-zinc-200">{session.waiterName}</span>
+                </div>
+                <div className="text-[10px] text-zinc-400 font-medium col-span-2 mt-1">
+                  Last Order: <span className="font-bold text-zinc-500 dark:text-zinc-300">{session.lastOrderTimeStr}</span>
+                </div>
+              </div>
+
+              {/* Color-coded Waiter Timer bar */}
+              <div className="grid grid-cols-3 gap-2 border-t pt-3 border-zinc-100 dark:border-zinc-900">
+                <div className={`rounded-xl p-2 text-center border ${session.waitColorClass}`}>
+                  <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5 opacity-80">Wait</div>
+                  <div className="font-mono font-black text-sm">{formatDuration(session.waitTime)}</div>
+                </div>
+                <div className="rounded-xl p-2 text-center border border-zinc-100 dark:border-zinc-900/60 bg-zinc-50/30 dark:bg-zinc-900/10 text-zinc-600 dark:text-zinc-300">
+                  <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5 opacity-80">Prep</div>
+                  <div className="font-mono font-black text-sm">{formatDuration(session.prepTime)}</div>
+                </div>
+                <div className="rounded-xl p-2 text-center border border-zinc-100 dark:border-zinc-900/60 bg-zinc-50/30 dark:bg-zinc-900/10 text-zinc-600 dark:text-zinc-300">
+                  <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5 opacity-80">Service</div>
+                  <div className="font-mono font-black text-sm">{formatDuration(session.serviceTime)}</div>
+                </div>
+              </div>
+
+              {/* Special Badges (Special requests or Waiter Call requests) */}
+              {(session.hasSpecialRequests || session.hasCallRequest) && (
+                <div className="flex flex-wrap gap-2.5 pt-1.5">
+                  {session.hasCallRequest && (
+                    <Badge className="bg-rose-500 text-white border-0 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                      <PhoneCall className="w-3 h-3" />
+                      Call Request: {session.callRequestReason || "Assistance"}
+                    </Badge>
+                  )}
+                  {session.hasSpecialRequests && (
+                    <Badge className="bg-amber-500 text-white border-0 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <ShieldAlert className="w-3 h-3" />
+                      Special Requests
+                    </Badge>
+                  )}
                 </div>
               )}
             </motion.div>

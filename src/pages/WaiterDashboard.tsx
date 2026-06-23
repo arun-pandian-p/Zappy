@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Bell, Search, Volume2, VolumeX, ArrowLeft, CheckCircle2, AlertCircle, RefreshCw, Loader2, Play, Eye } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -127,7 +127,8 @@ const WaiterDashboard = () => {
 
   const { data: tables = [], isLoading: tablesLoading } = useTables(restaurantId);
   const { data: orders = [], isLoading: ordersLoading } = useOrders(restaurantId);
-  const { data: pendingCalls = [], isLoading: callsLoading } = usePendingWaiterCalls(restaurantId);
+  const { data: rawPendingCalls = [], isLoading: callsLoading } = usePendingWaiterCalls(restaurantId);
+  const pendingCalls = useMemo(() => rawPendingCalls.filter(c => c.reason !== 'Bill requested'), [rawPendingCalls]);
 
   const acknowledgeMutation = useAcknowledgeWaiterCall();
   const resolveMutation = useResolveWaiterCall();
