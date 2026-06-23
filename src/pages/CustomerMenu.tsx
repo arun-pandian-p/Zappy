@@ -187,6 +187,99 @@ const CustomerMenu = () => {
   const [reviewImmediate, setReviewImmediate] = useState(false);
   const [isWaiterCallOpen, setIsWaiterCallOpen] = useState(false);
   const prevOrderStatusesRef = useRef<Record<string, string>>({});
+  const [showRegisterDialog, setShowRegisterDialog] = useState(false);
+  const [registering, setRegistering] = useState(false);
+  const [isNewCustomerThisSession, setIsNewCustomerThisSession] = useState(false);
+  const [isSessionEnded, setIsSessionEnded] = useState(false);
+
+  // Check feedback and skip review prompt if already submitted
+  const checkFeedbackAndTrigger = async (orderId: string, immediate: boolean) => {
+    // If they are a new customer this session, always show the review.
+    if (isNewCustomerThisSession) {
+      setReviewOrderId(orderId);
+      setReviewImmediate(immediate);
+      return;
+    }
+
+    try {
+      const alreadyReviewedSession = localStorage.getItem(`reviewed_${orderId}`) === 'true' || 
+                                     sessionStorage.getItem(`reviewed_${orderId}`) === 'true';
+      if (alreadyReviewedSession) {
+        console.log("Customer has already submitted a review for this order. Skipping.");
+        return;
+      }
+
+      const { data: sessionOrders } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('seat_session_id', seatSessionId);
+      
+      if (sessionOrders && sessionOrders.length > 0) {
+        const orderIds = sessionOrders.map(o => o.id);
+        const { data: existingFeedback } = await supabase
+          .from('feedback')
+          .select('id')
+          .in('order_id', orderIds);
+          
+        if (existingFeedback && existingFeedback.length > 0) {
+          console.log("Customer has already submitted a review in this session. Skipping review prompt.");
+          return;
+        }
+      }
+    } catch (error) {
+      console.error("Error checking existing feedback:", error);
+    }
+    
+    setReviewOrderId(orderId);
+    setReviewImmediate(immediate);
+  };
+
+  // Poll current session status to check for completion auto-logout
+  const { data: currentSessionStatusData } = useQuery({
+    queryKey: ['table-session-status', seatSessionId],
+    queryFn: async () => {
+      if (!seatSessionId) return null;
+      const { data, error } = await supabase
+        .from('table_sessions')
+        .select('status, completed_at')
+        .eq('id', seatSessionId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!seatSessionId,
+    refetchInterval: 5000,
+  });
+
+  // Auto-logout within 1 minute of session completion
+  useEffect(() => {
+    if (!seatSessionId || !currentSessionStatusData) return;
+
+    if (currentSessionStatusData.status === 'completed') {
+      const completedTime = currentSessionStatusData.completed_at 
+        ? new Date(currentSessionStatusData.completed_at).getTime() 
+        : Date.now();
+      
+      const timeElapsedMs = Date.now() - completedTime;
+      const timeLeftMs = Math.max(0, 60000 - timeElapsedMs);
+
+      console.log(`[Session Completed] Time elapsed: ${Math.round(timeElapsedMs / 1000)}s. Logging out in ${Math.round(timeLeftMs / 1000)}s.`);
+
+      const timer = setTimeout(() => {
+        console.log('[Session] Auto-logout triggered after 1 minute of session completion.');
+        if (restaurantId && dynamicTableId) {
+          localStorage.removeItem(`zappy_seat_session_${restaurantId}_${dynamicTableId}`);
+          localStorage.removeItem(`qr_table_${restaurantId}`);
+        }
+        clearCart();
+        setSeatSessionData(null);
+        setDynamicTableId('');
+        setIsSessionEnded(true);
+      }, timeLeftMs);
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentSessionStatusData, seatSessionId, restaurantId, dynamicTableId, navigate]);
 
   // Fetch restaurant data
   // Fetch restaurant - try authenticated first, fall back to public view for anon users
@@ -368,6 +461,97 @@ const CustomerMenu = () => {
     return merged.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
   }, [customerOrders, recentOrdersData]);
 
+  const sessionOrders = useMemo(() => {
+    return displayOrders.filter(o => o.seat_session_id === seatSessionId && o.status !== 'cancelled');
+  }, [displayOrders, seatSessionId]);
+
+  const sessionBilling = useMemo(() => {
+    let subtotal = 0;
+    let tax = 0;
+    let serviceCharge = 0;
+    let total = 0;
+    
+    sessionOrders.forEach(o => {
+      subtotal += Number(o.subtotal || 0);
+      tax += Number(o.tax_amount || 0);
+      serviceCharge += Number(o.service_charge || 0);
+      total += Number(o.total_amount || 0);
+    });
+    
+    return { subtotal, tax, serviceCharge, total };
+  }, [sessionOrders]);
+
+  // Fetch active invoice if one exists for the current session
+  const { data: sessionInvoice, refetch: refetchSessionInvoice } = useQuery({
+    queryKey: ['session-invoice', sessionOrders.map(o => o.id)],
+    queryFn: async () => {
+      if (sessionOrders.length === 0) return null;
+      const orderIds = sessionOrders.map(o => o.id);
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .in('order_id', orderIds)
+        .maybeSingle();
+        
+      if (error) {
+        console.error("Error fetching session invoice:", error);
+        return null;
+      }
+      return data;
+    },
+    enabled: sessionOrders.length > 0,
+    refetchInterval: 5000,
+  });
+
+  // Fetch waiter calls for this table with reason 'Bill requested'
+  const { data: billingCalls = [], refetch: refetchBillingCalls } = useQuery({
+    queryKey: ['billing-waiter-calls', restaurantId, resolvedTableId],
+    queryFn: async () => {
+      if (!restaurantId || !resolvedTableId) return [];
+      const { data, error } = await supabase
+        .from('waiter_calls')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .eq('table_id', resolvedTableId)
+        .neq('status', 'resolved')
+        .like('reason', '%Bill%');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!restaurantId && !!resolvedTableId,
+    refetchInterval: 5000,
+  });
+
+  const isBillRequested = billingCalls.length > 0;
+
+  const handleRequestBill = async () => {
+    if (!restaurantId || !resolvedTableId) return;
+    try {
+      const { error } = await supabase
+        .from('waiter_calls')
+        .insert({
+          restaurant_id: restaurantId,
+          table_id: resolvedTableId,
+          reason: 'Bill requested',
+          status: 'pending',
+          seat_number: selectedSeatNumbers.length > 0 ? selectedSeatNumbers[0] : null
+        } as any);
+        
+      if (error) throw error;
+      refetchBillingCalls();
+      toast({
+        title: 'Bill Requested',
+        description: 'The staff has been notified to bring your bill.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to request bill. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
 
   // Mutations
   const createOrder = useCreateOrder();
@@ -541,6 +725,47 @@ const CustomerMenu = () => {
     });
   }, []);
 
+  const handleRegisterCustomer = async (name: string, phone: string) => {
+    if (!name.trim()) return;
+    setRegistering(true);
+    try {
+      const deviceId = localStorage.getItem('zappy_device_id') || crypto.randomUUID();
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from('customer_profiles')
+        .upsert({
+          device_id: deviceId,
+          name: name.trim(),
+          phone: phone.trim() || null,
+          updated_at: now,
+          created_at: now
+        } as any);
+
+      if (error) throw error;
+
+      setCustomerName(name.trim());
+      setCustomerPhone(phone.trim());
+      localStorage.setItem(
+        'zappy_customer_profile',
+        JSON.stringify({ name: name.trim(), phone: phone.trim(), deviceId })
+      );
+      setShowRegisterDialog(false);
+      toast({
+        title: 'Profile Created!',
+        description: 'Welcome! You can now browse the menu and order.',
+      });
+    } catch (err) {
+      console.error('Failed to register customer:', err);
+      toast({
+        title: 'Error',
+        description: 'Could not create profile. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setRegistering(false);
+    }
+  };
+
   useEffect(() => {
     // Generate device/customer identifier if not exists
     let deviceId = localStorage.getItem('zappy_device_id');
@@ -552,20 +777,36 @@ const CustomerMenu = () => {
     // Query DB for matching profile
     const fetchProfile = async () => {
       try {
+        const saved = localStorage.getItem('zappy_customer_profile');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.name) {
+            setCustomerName(parsed.name);
+            setCustomerPhone(parsed.phone || '');
+            setShowRegisterDialog(false);
+            return;
+          }
+        }
+
         const { data, error } = await supabase
           .from('customer_profiles')
           .select('name, phone')
           .eq('device_id', deviceId)
           .maybeSingle();
 
-        if (data) {
-          if (data.name) setCustomerName(data.name);
-          if (data.phone) setCustomerPhone(data.phone);
+        if (data && data.name) {
+          setCustomerName(data.name);
+          setCustomerPhone(data.phone || '');
+          setShowRegisterDialog(false);
           
           localStorage.setItem(
             'zappy_customer_profile',
             JSON.stringify({ name: data.name || '', phone: data.phone || '', deviceId })
           );
+        } else {
+          // New customer — show registration dialog
+          console.log("[Customer Flow] New customer detected. Prompting registration.");
+          setShowRegisterDialog(true);
         }
       } catch (err) {
         console.error('Failed to fetch customer profile:', err);
@@ -949,8 +1190,7 @@ const CustomerMenu = () => {
 
           // Auto-trigger review prompt when order is served
           if (currentStatus === 'served') {
-            setReviewOrderId(activeOrder.id);
-            setReviewImmediate(false);
+            checkFeedbackAndTrigger(activeOrder.id, false);
           }
         }
       }
@@ -969,8 +1209,7 @@ const CustomerMenu = () => {
 
       if (prevStatus && prevStatus !== 'completed' && currentStatus === 'completed') {
         console.log(`[Review Trigger] Order ${order.id} status changed to completed! Triggering review modal...`);
-        setReviewOrderId(order.id);
-        setReviewImmediate(true);
+        checkFeedbackAndTrigger(order.id, true);
       }
 
       // Update ref with current status
@@ -1828,6 +2067,107 @@ const CustomerMenu = () => {
         </div>
       )}
 
+      {/* Session Billing & Invoice Status */}
+      {sessionOrders.length > 0 && (
+        <Card className="border border-zinc-200/50 dark:border-zinc-800/50 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-md rounded-2xl overflow-hidden shadow-sm p-5 space-y-4">
+          <div className="flex items-center justify-between border-b pb-3 border-zinc-100 dark:border-zinc-800/80">
+            <div className="flex items-center gap-2">
+              <Receipt className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <div>
+                <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-50">Active Bill Status</h4>
+                <p className="text-[10px] text-zinc-500 font-medium font-mono uppercase tracking-wide">
+                  Session: {seatSessionId?.slice(0, 8)}
+                </p>
+              </div>
+            </div>
+            
+            <div>
+              {sessionInvoice ? (
+                sessionInvoice.payment_status === 'paid' ? (
+                  <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-bold px-2.5 py-0.5 rounded-full text-[10px]">
+                    Paid & Completed
+                  </Badge>
+                ) : (
+                  <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-0 font-bold px-2.5 py-0.5 rounded-full text-[10px] animate-pulse">
+                    Bill Ready (Unpaid)
+                  </Badge>
+                )
+              ) : isBillRequested ? (
+                <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-0 font-bold px-2.5 py-0.5 rounded-full text-[10px] animate-pulse">
+                  Bill Requested
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="font-bold px-2.5 py-0.5 rounded-full text-[10px]">
+                  Dining Active
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+              <span>Orders Placed:</span>
+              <span className="font-bold text-zinc-900 dark:text-zinc-100">{sessionOrders.length} orders</span>
+            </div>
+            <div className="flex justify-between text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+              <span>Subtotal:</span>
+              <span className="font-bold text-zinc-900 dark:text-zinc-100">{currencySymbol}{sessionBilling.subtotal.toFixed(2)}</span>
+            </div>
+            {sessionBilling.tax > 0 && (
+              <div className="flex justify-between text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                <span>Tax & Service:</span>
+                <span className="font-bold text-zinc-900 dark:text-zinc-100">{currencySymbol}{(sessionBilling.tax + sessionBilling.serviceCharge).toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-sm font-black text-zinc-900 dark:text-zinc-50 border-t pt-2 mt-2 border-zinc-100 dark:border-zinc-800/80">
+              <span>Total Amount:</span>
+              <span>{currencySymbol}{(sessionInvoice ? Number(sessionInvoice.total_amount) : sessionBilling.total).toFixed(2)}</span>
+            </div>
+          </div>
+
+          {sessionInvoice && (
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-xl space-y-2">
+              <div className="flex justify-between text-[11px] font-bold text-zinc-500">
+                <span>Invoice Number:</span>
+                <span className="font-mono text-zinc-800 dark:text-zinc-200">{sessionInvoice.invoice_number}</span>
+              </div>
+              {sessionInvoice.payment_method && (
+                <div className="flex justify-between text-[11px] font-bold text-zinc-500">
+                  <span>Method:</span>
+                  <span className="capitalize text-zinc-800 dark:text-zinc-200">{sessionInvoice.payment_method}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            {!sessionInvoice && !isBillRequested && (
+              <Button 
+                onClick={handleRequestBill}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-10 font-bold text-xs shadow-[0_4px_12px_rgba(16,185,129,0.15)]"
+              >
+                🔔 Request Bill from Staff
+              </Button>
+            )}
+            {isBillRequested && !sessionInvoice && (
+              <div className="w-full text-center py-2 text-xs font-bold text-blue-500 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                🏃 Waiter is bringing your bill...
+              </div>
+            )}
+            {sessionInvoice && sessionInvoice.payment_status === 'unpaid' && (
+              <div className="w-full text-center py-2.5 text-xs font-bold text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                💳 Please pay {currencySymbol}{Number(sessionInvoice.total_amount).toFixed(2)} at the billing counter
+              </div>
+            )}
+            {sessionInvoice && sessionInvoice.payment_status === 'paid' && (
+              <div className="w-full text-center py-2.5 text-xs font-extrabold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                🎉 Fully Paid! Thank you!
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
       <h3 className="font-extrabold text-xl tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">Notification History</h3>
       {tabNotifications.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
@@ -1893,6 +2233,37 @@ const CustomerMenu = () => {
   const splashName = restaurant?.name || splashBranding?.name || '';
   const splashLogo = cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url);
   const splashColor = primaryColor || splashBranding?.primary_color || undefined;
+
+  if (isSessionEnded) {
+    return (
+      <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
+        <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background px-6 text-center select-none">
+          <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto text-3xl mb-6">
+            🍽️
+          </div>
+          <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">
+            Session Ended
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-8">
+            Thank you for dining at <span className="font-bold text-zinc-800 dark:text-zinc-200">{restaurant?.name || 'our restaurant'}</span>. We hope you had a wonderful experience!
+          </p>
+          <div className="p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-2xl w-full max-w-xs text-xs text-left space-y-2 mb-6">
+            <div className="flex justify-between font-medium">
+              <span className="text-zinc-500">Restaurant:</span>
+              <span className="font-bold text-zinc-900 dark:text-zinc-100">{restaurant?.name || 'Zappy Partner'}</span>
+            </div>
+            <div className="flex justify-between font-medium">
+              <span className="text-zinc-500">Status:</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">Paid & Closed</span>
+            </div>
+          </div>
+          <p className="text-[10px] text-zinc-400 font-medium">
+            Please scan the QR code at your table to start a new session.
+          </p>
+        </div>
+      </TenantThemeProvider>
+    );
+  }
 
   return (
     <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
@@ -2043,10 +2414,14 @@ const CustomerMenu = () => {
           seatNumbers={selectedSeatNumbers}
           tableNumber={dynamicTableId}
           onSessionClosed={() => {
+            if (restaurantId && dynamicTableId) {
+              localStorage.removeItem(`zappy_seat_session_${restaurantId}_${dynamicTableId}`);
+              localStorage.removeItem(`qr_table_${restaurantId}`);
+            }
             clearCart();
             setSeatSessionData(null);
             setDynamicTableId('');
-            navigate('/');
+            setIsSessionEnded(true);
           }}
         />
       )}
@@ -2071,6 +2446,80 @@ const CustomerMenu = () => {
               setActiveNotification(null);
             }}
           />
+        )}
+      </AnimatePresence>
+      {/* New Customer Registration Overlay */}
+      <AnimatePresence>
+        {showRegisterDialog && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-md px-6 select-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="w-full max-w-[360px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-4 text-center"
+            >
+              <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-black">
+                ✨
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-extrabold text-zinc-900 dark:text-zinc-50">Welcome to Zappy</h3>
+                <p className="text-xs text-muted-foreground">Please create a customer profile to start ordering.</p>
+              </div>
+
+              <div className="space-y-3 text-left">
+                <div className="space-y-1.5">
+                  <Label htmlFor="reg-name" className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Name <span className="text-rose-500">*</span></Label>
+                  <Input 
+                    id="reg-name"
+                    placeholder="Enter your name"
+                    className="h-11 rounded-2xl text-xs"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const phoneInput = document.getElementById('reg-phone') as HTMLInputElement;
+                        phoneInput?.focus();
+                      }
+                    }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="reg-phone" className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Phone Number (Optional)</Label>
+                  <Input 
+                    id="reg-phone"
+                    placeholder="Enter your phone number"
+                    className="h-11 rounded-2xl text-xs"
+                    type="tel"
+                  />
+                </div>
+              </div>
+
+              <Button
+                disabled={registering}
+                onClick={() => {
+                  const nameVal = (document.getElementById('reg-name') as HTMLInputElement)?.value || '';
+                  const phoneVal = (document.getElementById('reg-phone') as HTMLInputElement)?.value || '';
+                  if (!nameVal.trim()) {
+                    toast({
+                      title: 'Name Required',
+                      description: 'Please enter your name to continue.',
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+                  setIsNewCustomerThisSession(true);
+                  handleRegisterCustomer(nameVal, phoneVal);
+                }}
+                className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-extrabold text-xs shadow-lg hover:shadow-xl transition-all"
+              >
+                {registering ? 'Creating Profile...' : 'Start Dining 🍽️'}
+              </Button>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

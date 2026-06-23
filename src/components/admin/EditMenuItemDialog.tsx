@@ -130,7 +130,8 @@ Respond with ONLY a valid JSON object containing:
     toast({ title: "Generating Image...", description: "Creating a realistic food photo." });
     try {
       const categoryName = categories.find(c => c.id === form.category_id)?.name || "General";
-      const url = await generateFoodImage(form.name, categoryName, restaurantId, isFeaturedItem ? "medium" : "low");
+      const description = form.short_description || form.full_description;
+      const url = await generateFoodImage(form.name, categoryName, restaurantId, isFeaturedItem ? "medium" : "low", description);
       setForm(prev => ({ ...prev, image_url: url }));
       toast({ title: "AI Image Generated", description: "Image attached successfully." });
     } catch (err: any) {

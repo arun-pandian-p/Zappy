@@ -65,6 +65,8 @@ export interface ReceiptData {
   paymentMethod: string;
   customerName?: string;
   footerText?: string;
+  seatNumber?: number | string | null;
+  tokenNumber?: number | string | null;
 }
 
 export class ESCPOSBuilder {
@@ -212,8 +214,17 @@ export class ESCPOSBuilder {
       .text("TAX INVOICE")
       .newline()
       .bold(false)
-      .row("Invoice:", data.invoiceNumber)
-      .row("Table:", data.tableNumber)
+      .row("Invoice:", data.invoiceNumber);
+
+    if (data.tokenNumber) {
+      builder.row("Token/Order:", `#${data.tokenNumber}`);
+    }
+    builder.row("Table:", data.tableNumber);
+    if (data.seatNumber) {
+      builder.row("Seat:", String(data.seatNumber));
+    }
+
+    builder
       .row("Date:", data.date.toLocaleDateString())
       .row("Time:", data.date.toLocaleTimeString());
 

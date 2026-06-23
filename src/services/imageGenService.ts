@@ -9,16 +9,19 @@ export async function generateFoodImage(
   itemName: string,
   category: string,
   restaurantId: string,
-  quality: "low" | "medium" = "low"
+  quality: "low" | "medium" = "low",
+  description?: string
 ): Promise<string> {
   return tracer.startActiveSpan("generateFoodImage", async (span) => {
-    span.setAttribute("llm.prompt_template.template", "Professional food photography of {dish_name}, {category} dish, top-down angle, on a clean plate, restaurant menu style, natural lighting, appetizing, high detail, no text, no watermark");
-    span.setAttribute("llm.prompt_template.variables", JSON.stringify({ itemName, category }));
+    span.setAttribute("llm.prompt_template.template", "Professional food photography of {dish_name}, {category} dish, description: {description}, top-down angle, on a clean plate, restaurant menu style, natural lighting, appetizing, high detail, no text, no watermark");
+    span.setAttribute("llm.prompt_template.variables", JSON.stringify({ itemName, category, description }));
 
     try {
       console.log(`Generating AI image for: ${itemName} (${category})`);
       
-      const prompt = `Professional food photography of ${itemName}, ${category || 'signature'} dish, top-down angle, on a clean plate, restaurant menu style, natural lighting, appetizing, high detail, no text, no watermark`;
+      const prompt = description 
+        ? `Professional food photography of ${itemName}, a delicious ${category || 'signature'} dish. Description: ${description}. Top-down angle, served on a clean plate, elegant restaurant menu style, natural soft lighting, highly appetizing, 4k high detail, no text, no watermark`
+        : `Professional food photography of ${itemName}, ${category || 'signature'} dish, top-down angle, on a clean plate, restaurant menu style, natural lighting, appetizing, high detail, no text, no watermark`;
       span.setAttribute("llm.prompts", prompt);
 
       console.log("[Image Gen] Request Payload:", { model: "gpt-image-1", prompt, quality });

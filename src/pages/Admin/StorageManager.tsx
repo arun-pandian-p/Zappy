@@ -376,7 +376,7 @@ export default function StorageManager() {
             onChange={handleBulkFileUpload}
             accept="image/*"
             multiple
-            /* @ts-ignore - webkitdirectory is non-standard but widely supported */
+            // @ts-expect-error - webkitdirectory is non-standard but widely supported
             webkitdirectory="true"
             className="hidden"
           />

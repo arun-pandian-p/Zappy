@@ -239,11 +239,13 @@ Respond with ONLY a valid JSON object containing:
     setGeneratingAIImage(true);
     toast({ title: "Generating Image...", description: "Creating a realistic food photo." });
     try {
+      const description = newItem.short_description || newItem.full_description;
       const url = await generateFoodImage(
         newItem.name,
         newItem.category || (categories[0]?.name || "Main Course"),
         restaurantId,
-        isFeaturedItem ? "medium" : "low"
+        isFeaturedItem ? "medium" : "low",
+        description
       );
       setNewItem(prev => ({ ...prev, image_url: url }));
       toast({ title: "AI Image Generated", description: "Image attached successfully." });
@@ -346,12 +348,12 @@ Respond with ONLY a valid JSON object containing:
     }
   };
 
-  const handleToggleAvailability = async (id: string, currentValue: boolean) => {
+  const handleToggleAvailability = async (id: string, isAvailable: boolean) => {
     try {
-      await toggleAvailability.mutateAsync({ id, isAvailable: !currentValue });
+      await toggleAvailability.mutateAsync({ id, isAvailable });
       toast({
         title: "Availability Updated",
-        description: `Item is now ${!currentValue ? 'available' : 'unavailable'}.`,
+        description: `Item is now ${isAvailable ? 'available' : 'unavailable'}.`,
       });
     } catch (error: any) {
       toast({
@@ -378,10 +380,6 @@ Respond with ONLY a valid JSON object containing:
           </div>
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Menu Management</h2>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <p className="text-sm text-muted-foreground">Connected to Supabase Realtime</p>
-            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">

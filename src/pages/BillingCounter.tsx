@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, Volume2, VolumeX, BarChart3, Receipt, Clock,
@@ -75,7 +76,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   const [splitAmounts, setSplitAmounts] = useState({ cash: 0, upi: 0, card: 0 });
   const [activeTab, setActiveTab] = useState<'billing' | 'history' | 'analytics'>('billing');
   const [showReceiptPreview, setShowReceiptPreview] = useState(false);
-  const [orderToPrint, setOrderToPrint] = useState<OrderWithItems | null>(null);
+  const [orderToPrint, setOrderToPrint] = useState<any | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedTableFilter, setSelectedTableFilter] = useState<string | null>(null);
   const [selectedDiscount, setSelectedDiscount] = useState(0);
@@ -414,52 +415,61 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
       return;
     }
 
+    const isInvoice = 'invoice_number' in target;
+    const matchingOrder = isInvoice
+      ? allOrders.find(o => o.id === target.order_id)
+      : null;
+
     let receiptData;
-    if ('invoice_number' in target) {
-      // It's an Invoice
+    if (isInvoice) {
+      const invoice = target as Invoice;
       receiptData = {
         restaurantName: restaurantName,
         address: restaurant?.address || undefined,
         phone: restaurant?.phone || undefined,
-        invoiceNumber: target.invoice_number,
-        tableNumber: 'Table',
-        date: new Date(target.created_at),
-        items: target.items.map(item => ({
+        invoiceNumber: invoice.invoice_number,
+        tableNumber: matchingOrder?.table?.table_number || 'N/A',
+        seatNumber: matchingOrder?.seat_number || null,
+        tokenNumber: matchingOrder?.order_number || null,
+        date: new Date(invoice.created_at || Date.now()),
+        items: invoice.items.map(item => ({
           name: item.name,
           quantity: item.quantity,
           price: Number(item.price),
           total: Number(item.total),
         })),
-        subtotal: Number(target.subtotal) || 0,
+        subtotal: Number(invoice.subtotal) || 0,
         taxRate: taxRate,
-        taxAmount: Number(target.tax_amount) || 0,
-        serviceCharge: Number(target.service_charge) || 0,
-        discount: Number(target.discount_amount) || 0,
-        total: Number(target.total_amount) || 0,
-        paymentMethod: target.payment_method,
+        taxAmount: Number(invoice.tax_amount) || 0,
+        serviceCharge: Number(invoice.service_charge) || 0,
+        discount: Number(invoice.discount_amount) || 0,
+        total: Number(invoice.total_amount) || 0,
+        paymentMethod: invoice.payment_method || 'cash',
       };
     } else {
-      // It's an OrderWithItems
+      const order = target as OrderWithItems;
       receiptData = {
         restaurantName: restaurantName,
         address: restaurant?.address || undefined,
         phone: restaurant?.phone || undefined,
-        invoiceNumber: String(target.order_number),
-        tableNumber: target.table?.table_number || 'N/A',
-        date: new Date(target.created_at || Date.now()),
-        items: target.order_items?.map(item => ({
+        invoiceNumber: String(order.order_number),
+        tableNumber: order.table?.table_number || 'N/A',
+        seatNumber: order.seat_number || null,
+        tokenNumber: order.order_number || null,
+        date: new Date(order.created_at || Date.now()),
+        items: order.order_items?.map(item => ({
           name: item.name,
           quantity: item.quantity,
           price: Number(item.price),
           total: Number(item.price) * item.quantity,
         })) || [],
-        subtotal: Number(target.subtotal) || 0,
+        subtotal: Number(order.subtotal) || 0,
         taxRate: taxRate,
-        taxAmount: Number(target.tax_amount) || 0,
-        serviceCharge: Number(target.service_charge) || 0,
-        discount: target.id === selectedOrder?.id ? discountAmount : 0,
-        total: Number(target.total_amount) || 0,
-        paymentMethod: target.payment_method || 'cash',
+        taxAmount: Number(order.tax_amount) || 0,
+        serviceCharge: Number(order.service_charge) || 0,
+        discount: order.id === selectedOrder?.id ? discountAmount : 0,
+        total: Number(order.total_amount) || 0,
+        paymentMethod: order.payment_method || 'cash',
       };
     }
 
@@ -485,6 +495,70 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   const todayTotal = invoiceStats?.totalRevenue || 0;
   const completedCount = invoiceStats?.invoiceCount || 0;
   const paymentBreakdown = invoiceStats?.paymentBreakdown || { cash: 0, card: 0, upi: 0, wallet: 0, split: 0 };
+  const receiptProps = useMemo(() => {
+    if (!orderToPrint) return null;
+
+    const isInvoice = 'invoice_number' in orderToPrint;
+    const matchingOrder = isInvoice
+      ? allOrders.find(o => o.id === orderToPrint.order_id)
+      : null;
+
+    if (isInvoice) {
+      const invoice = orderToPrint as Invoice;
+      return {
+        restaurantName: restaurantName,
+        restaurantAddress: restaurant?.address || '',
+        restaurantPhone: restaurant?.phone || '',
+        orderNumber: invoice.invoice_number,
+        tableNumber: matchingOrder?.table?.table_number || 'N/A',
+        seatNumber: matchingOrder?.seat_number || null,
+        tokenNumber: matchingOrder?.order_number || null,
+        items: invoice.items.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: Number(item.price),
+          total: Number(item.total),
+        })),
+        subtotal: Number(invoice.subtotal) || 0,
+        taxAmount: Number(invoice.tax_amount) || 0,
+        taxRate: taxRate,
+        serviceCharge: Number(invoice.service_charge) || 0,
+        serviceChargeRate: serviceChargeRate,
+        totalAmount: Number(invoice.total_amount) || 0,
+        paymentMethod: invoice.payment_method || 'cash',
+        currencySymbol: currencySymbol,
+        createdAt: new Date(invoice.created_at || Date.now()),
+      };
+    } else {
+      const order = orderToPrint as OrderWithItems;
+      return {
+        restaurantName: restaurantName,
+        restaurantAddress: restaurant?.address || '',
+        restaurantPhone: restaurant?.phone || '',
+        orderNumber: String(order.order_number),
+        tableNumber: order.table?.table_number || 'N/A',
+        seatNumber: order.seat_number || null,
+        tokenNumber: order.order_number || null,
+        items: order.order_items?.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: Number(item.price),
+          total: Number(item.price) * item.quantity,
+        })) || [],
+        subtotal: Number(order.subtotal) || 0,
+        taxAmount: Number(order.tax_amount) || 0,
+        taxRate: taxRate,
+        serviceCharge: Number(order.service_charge) || 0,
+        serviceChargeRate: serviceChargeRate,
+        totalAmount: Number(order.total_amount) || 0,
+        paymentMethod: order.payment_method || 'cash',
+        currencySymbol: currencySymbol,
+        createdAt: new Date(order.created_at || Date.now()),
+      };
+    }
+  }, [orderToPrint, allOrders, restaurant, restaurantName, taxRate, serviceChargeRate, currencySymbol]);
 
   if (!restaurantId) {
     return (
@@ -1153,7 +1227,8 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                                       className="w-full mt-3 gap-2"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handlePrintReceipt(invoice);
+                                        setOrderToPrint(invoice);
+                                        setShowReceiptPreview(true);
                                       }}
                                     >
                                       <Printer className="w-3.5 h-3.5" />
@@ -1255,31 +1330,12 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
           {orderToPrint && (
             <>
               <div className="border rounded-lg overflow-auto max-h-[60vh]">
-                <ThermalReceipt
-                  ref={receiptRef}
-                  restaurantName={restaurantName}
-                  restaurantAddress={restaurant?.address || ''}
-                  restaurantPhone={restaurant?.phone || ''}
-                  orderNumber={String(orderToPrint.order_number)}
-                  tableNumber={orderToPrint.table?.table_number || 'N/A'}
-                  items={orderToPrint.order_items?.map(item => ({
-                    id: item.id,
-                    order_id: item.order_id,
-                    menu_item_id: item.menu_item_id || '',
-                    name: item.name,
-                    quantity: item.quantity,
-                    price: Number(item.price),
-                  })) || []}
-                  subtotal={Number(orderToPrint.subtotal) || 0}
-                  taxAmount={Number(orderToPrint.tax_amount) || 0}
-                  taxRate={taxRate}
-                  serviceCharge={Number(orderToPrint.service_charge) || 0}
-                  serviceChargeRate={serviceChargeRate}
-                  totalAmount={Number(orderToPrint.total_amount) || 0}
-                  paymentMethod={orderToPrint.payment_method || 'cash'}
-                  currencySymbol={currencySymbol}
-                  createdAt={new Date(orderToPrint.created_at || Date.now())}
-                />
+                {receiptProps && (
+                  <ThermalReceipt
+                    ref={receiptRef}
+                    {...receiptProps}
+                  />
+                )}
               </div>
               <div className="flex gap-3 mt-4">
                 <Button

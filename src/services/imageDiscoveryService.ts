@@ -47,10 +47,10 @@ export function getQueryVariations(dishName: string): string[] {
 /**
  * Searches Unsplash and falls back to Pollinations AI image generator.
  */
-export async function discoverFoodImage(dishName: string, accessKey?: string): Promise<{ url: string; confidence: number; qualityScore: number }> {
+export async function discoverFoodImage(dishName: string, accessKey?: string, description?: string): Promise<{ url: string; confidence: number; qualityScore: number }> {
   return tracer.startActiveSpan("discoverFoodImage", async (span) => {
-    span.setAttribute("llm.prompt_template.template", "{{dishName}}, professional food photography, 4k, delicious, macro shot, isolated background, styled plate");
-    span.setAttribute("llm.prompt_template.variables", JSON.stringify({ dishName }));
+    span.setAttribute("llm.prompt_template.template", "{{dishName}}, professional food photography, 4k, delicious, macro shot, isolated background, styled plate, description: {{description}}");
+    span.setAttribute("llm.prompt_template.variables", JSON.stringify({ dishName, description }));
     span.setAttribute("llm.prompt_template.version", "1.0.0");
 
     try {
@@ -101,14 +101,16 @@ export async function discoverFoodImage(dishName: string, accessKey?: string): P
       // Fallback to high-quality AI photo generation
       if (!candidateUrl) {
         console.log(`[Image Discovery] Sourcing via AI photo generator for: ${dishName}`);
-        const enhancedPrompt = `${dishName}, professional food photography, 4k, delicious, macro shot, isolated background, styled plate`;
+        const enhancedPrompt = description 
+          ? `Professional food photography of ${dishName}: ${description}. 4k, delicious, macro shot, isolated background, styled plate, restaurant menu style, appetizing, high detail, no text, no watermark`
+          : `${dishName}, professional food photography, 4k, delicious, macro shot, isolated background, styled plate`;
         const aiPrompt = encodeURIComponent(enhancedPrompt);
         candidateUrl = `https://image.pollinations.ai/prompt/${aiPrompt}?width=800&height=600&nologo=true&seed=${Math.floor(Math.random() * 1000)}`;
         confidence = 98; // AI-generated specifically for this dish
         qualityScore = 95;
       }
 
-      span.setAttribute("llm.prompts", `${dishName}, professional food photography, 4k, delicious, macro shot, isolated background, styled plate`);
+      span.setAttribute("llm.prompts", description || dishName);
       const promptTokens = Math.round(dishName.length / 4) + 15; // + length of template text approx
       const completionTokens = Math.round(candidateUrl.length / 4);
       span.setAttribute("llm.token_count.prompt", promptTokens);
@@ -259,11 +261,11 @@ export function getUpsellRecommendations(dishName: string): { upsell: string[]; 
 // FEATURE 3: DYNAMIC MENU ENRICHMENT PIPELINE
 // -----------------------------------------------------------------
 export async function enrichMenuItem(dishName: string, category: string, restaurantId: string): Promise<EnrichedMenuData> {
-  // 1. Discover and Validate Image (Feature 4, 5, 6)
-  const imageResult = await discoverFoodImage(dishName);
-
-  // 2. Generate Descriptions (Feature 7)
+  // 1. Generate Descriptions (Feature 7)
   const descriptions = generateDishDescriptions(dishName, category);
+
+  // 2. Discover and Validate Image (Feature 4, 5, 6)
+  const imageResult = await discoverFoodImage(dishName, undefined, descriptions.medium);
 
   // 3. Upsell engine recommendations (Feature 8)
   const recs = getUpsellRecommendations(dishName);

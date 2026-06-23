@@ -449,22 +449,12 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
 
   return (
     <div className="space-y-6">
-      {/* Floor Header Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-6 border rounded-3xl shadow-sm">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Visual Floor Plan</h2>
-          <p className="text-sm text-muted-foreground">Manage real-time table occupancy, assignments, and merges. Data synchronizes instantly.</p>
-        </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          {selectedTableIds.length >= 2 && (
-            <Button onClick={handleMergeTables} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl gap-1 shadow-md shadow-blue-500/20">
-              <Combine className="w-4 h-4" /> Merge ({selectedTableIds.length})
-            </Button>
-          )}
-          <Badge variant="outline" className="h-10 px-4 rounded-xl gap-2 font-medium bg-green-50 text-green-700 border-green-200">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Live Sync Active
-          </Badge>
-        </div>
+      <div className="flex justify-end gap-2">
+        {selectedTableIds.length >= 2 && (
+          <Button onClick={handleMergeTables} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl gap-1 shadow-md shadow-blue-500/20">
+            <Combine className="w-4 h-4" /> Merge ({selectedTableIds.length})
+          </Button>
+        )}
       </div>
 
       {/* Summary Stat Cards */}

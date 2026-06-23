@@ -33,7 +33,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-              <ZappyLogo size={56} compact />
+              <ZappyLogo size={40} compact />
             </div>
 
             <nav className="hidden md:flex items-center gap-8">

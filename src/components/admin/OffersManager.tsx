@@ -155,7 +155,7 @@ export function OffersManager({ restaurantId }: OffersManagerProps) {
                   className="h-7 text-[10px] gap-1 text-primary hover:text-primary"
                   onClick={async () => {
                     toast({ title: "Generating image...", description: "AI is creating a photo for " + newOffer.title });
-                    const url = await generateFoodImage(newOffer.title, newOffer.description || "", restaurantId);
+                    const url = await generateFoodImage(newOffer.title, "promotion", restaurantId, "low", newOffer.description);
                     setNewOffer({ ...newOffer, image_url: url });
                     toast({ title: "Image ready!" });
                   }}

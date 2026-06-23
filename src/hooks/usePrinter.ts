@@ -87,7 +87,10 @@ function generateReceiptHTML(data: ReceiptData, currencySymbol: string): string 
         </div>
         <div class="flex-between">
           <span>Table: ${data.tableNumber}</span>
-          <span>Order: #${data.invoiceNumber}</span>
+          ${(data as any).seatNumber ? `<span>Seat: ${(data as any).seatNumber}</span>` : ''}
+        </div>
+        <div class="flex-between">
+          <span>Order/Token: #${(data as any).tokenNumber || data.invoiceNumber}</span>
         </div>
         <div class="border-dashed"></div>
         <div class="flex-between bold">

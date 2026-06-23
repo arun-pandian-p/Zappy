@@ -137,50 +137,42 @@ ${JSON.stringify(recentReviews, null, 2)}`;
     queryKey: ['restaurant_rating_aggregate', restaurantId],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
-          .from('mv_restaurant_ratings' as any)
-          .select('*')
-          .eq('restaurant_id', restaurantId)
-          .maybeSingle();
-        if (error) {
-          // If the materialized view/table is missing, fallback to live aggregation from feedback table
-          if (error.code === 'PGRST205' || (error.message || '').includes('Could not find the table') || error.code === '42P01') {
-            console.warn('mv_restaurant_ratings missing, falling back to feedback table live aggregation');
-            const { data: live, error: liveErr } = await supabase
-              .from('feedback')
-              .select('rating')
-              .eq('restaurant_id', restaurantId);
-            if (liveErr) {
-              console.error('Fallback feedback aggregation failed, trying enterprise_reviews:', liveErr);
-              const { data: entReviews, error: entErr } = await supabase
-                .from('enterprise_reviews' as any)
-                .select('overall_rating')
-                .eq('restaurant_id', restaurantId);
-              if (entErr) {
-                console.error('Secondary fallback failed:', entErr);
-                return null;
-              }
-              const ratings = (entReviews || []).map((r: any) => Number(r.overall_rating)).filter(Boolean);
-              const avg = ratings.length ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) : null;
-              return {
-                average_rating: avg,
-                total_reviews: ratings.length,
-              } as any;
-            }
-            const ratings = (live || []).map((r: any) => Number(r.rating)).filter(Boolean);
-            const avg = ratings.length ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) : null;
-            return {
-              average_rating: avg,
-              total_reviews: ratings.length,
-            } as any;
+        // Query feedback table directly to compute average rating and count
+        // This avoids 404 GET errors on missing materialized views
+        const { data: live, error: liveErr } = await supabase
+          .from('feedback')
+          .select('rating')
+          .eq('restaurant_id', restaurantId);
+
+        if (liveErr) {
+          console.warn('Feedback table query failed, trying enterprise_reviews:', liveErr);
+          const { data: entReviews, error: entErr } = await supabase
+            .from('enterprise_reviews' as any)
+            .select('overall_rating')
+            .eq('restaurant_id', restaurantId);
+
+          if (entErr) {
+            console.error('Secondary fallback to enterprise_reviews failed:', entErr);
+            return { average_rating: 0, total_reviews: 0 };
           }
-          console.error('Error fetching rating aggregate:', error);
-          return null;
+
+          const ratings = (entReviews || []).map((r: any) => Number(r.overall_rating)).filter(Boolean);
+          const avg = ratings.length ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) : 0;
+          return {
+            average_rating: avg,
+            total_reviews: ratings.length,
+          };
         }
-        return data;
+
+        const ratings = (live || []).map((r: any) => Number(r.rating)).filter(Boolean);
+        const avg = ratings.length ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) : 0;
+        return {
+          average_rating: avg,
+          total_reviews: ratings.length,
+        };
       } catch (err: any) {
         console.error('Unexpected error fetching rating aggregate:', err);
-        return null;
+        return { average_rating: 0, total_reviews: 0 };
       }
     },
     enabled: !!restaurantId,
@@ -484,7 +476,7 @@ ${JSON.stringify(recentReviews, null, 2)}`;
                 Average customer rating aggregated by menu items ordered.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-5 max-h-[600px] overflow-y-auto space-y-4">
+            <CardContent className="p-5 max-h-[600px] relative overflow-y-auto space-y-4">
               {itemRatings.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground text-sm">
                   No menu item ratings computed yet. Place orders and submit ratings to view statistics.

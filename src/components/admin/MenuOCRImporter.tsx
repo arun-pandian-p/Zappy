@@ -286,66 +286,16 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <FileUp className="w-4 h-4" />
-          AI Menu Import
+          Menu Upload
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[750px] max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5" />
-            AI Menu Import
-          </DialogTitle>
-          <p className="text-xs text-muted-foreground mt-1">
-            Upload PDF, JPG, PNG, CSV · OpenAI Vision OCR · Bulk Menu Creation
-          </p>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Menu Upload</DialogTitle>
         </DialogHeader>
 
         {!extractedItems.length ? (
           <div className="flex flex-col space-y-4">
-            {/* Configuration Panel */}
-            <div className="grid grid-cols-2 gap-4 p-4 border rounded-xl bg-muted/30">
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">Vision AI Model</Label>
-                <div className="grid grid-cols-2 gap-1 bg-muted p-1 rounded-lg">
-                  {[
-                    { id: "tesseract", label: "OpenAI Vision (GPT-4o)" },
-                    { id: "surya", label: "Claude 3.5 Sonnet" },
-                    { id: "paddle", label: "Gemini 1.5 Pro" },
-                    { id: "easy", label: "Llama 3.2 Vision" },
-                  ].map((engineOpt) => (
-                    <button
-                      key={engineOpt.id}
-                      type="button"
-                      onClick={() => setOcrEngine(engineOpt.id as any)}
-                      className={`text-xs px-2 py-1.5 rounded-md transition-all font-medium ${
-                        ocrEngine === engineOpt.id
-                          ? "bg-background text-foreground shadow-sm"
-                          : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
-                      }`}
-                    >
-                      {engineOpt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">Primary Menu Language</Label>
-                <select
-                  value={languageCode}
-                  onChange={(e) => setLanguageCode(e.target.value)}
-                  className="w-full text-xs h-8 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="eng">English (eng)</option>
-                  <option value="tam">Tamil (tam)</option>
-                  <option value="hin">Hindi (hin)</option>
-                  <option value="tel">Telugu (tel)</option>
-                  <option value="mal">Malayalam (mal)</option>
-                  <option value="kan">Kannada (kan)</option>
-                </select>
-              </div>
-            </div>
-
             {/* Upload Zone */}
             <div
               className="flex flex-col items-center justify-center py-16 border-2 border-dashed rounded-2xl space-y-4 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
@@ -367,7 +317,7 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
                   <div className="p-4 bg-primary/10 rounded-full">
                     <Upload className="w-8 h-8 text-primary" />
                   </div>
-                  <p className="font-semibold text-lg">Menu Upload Here</p>
+                  <p className="font-semibold text-lg text-slate-700 dark:text-slate-300">upload new menu</p>
                   <Input
                     type="file"
                     className="hidden"
@@ -376,12 +326,6 @@ export function MenuOCRImporter({ restaurantId }: { restaurantId: string }) {
                     accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv"
                     multiple
                   />
-                  <Button asChild onClick={(e) => e.stopPropagation()}>
-                    <label htmlFor="menu-ocr-upload" className="cursor-pointer gap-2">
-                      <Upload className="w-4 h-4" />
-                      Upload Button
-                    </label>
-                  </Button>
                 </>
               )}
             </div>

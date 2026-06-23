@@ -293,7 +293,7 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStat
 
   return (
     <>
-      <div className="fixed bottom-20 right-4 z-[45] flex items-center justify-center w-16 h-16 select-none">
+      <div className="fixed bottom-[calc(92px+env(safe-area-inset-bottom))] right-4 z-[45] flex items-center justify-center w-16 h-16 select-none">
         {/* Segmented/Rotating Live Ring around the FAB */}
         <svg className={`absolute inset-0 -rotate-90 w-16 h-16 pointer-events-none transition-transform duration-700 ${currentState === 'pending' || currentState === 'acknowledged' ? 'animate-[spin_4s_linear_infinite] origin-center' : ''}`} viewBox="0 0 64 64">
           <circle

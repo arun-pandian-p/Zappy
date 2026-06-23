@@ -24,6 +24,8 @@ interface ReceiptProps {
   paymentMethod: string;
   currencySymbol?: string;
   createdAt?: Date;
+  seatNumber?: number | string | null;
+  tokenNumber?: number | string | null;
 }
 
 const ThermalReceipt = forwardRef<HTMLDivElement, ReceiptProps>(
@@ -44,6 +46,8 @@ const ThermalReceipt = forwardRef<HTMLDivElement, ReceiptProps>(
       paymentMethod,
       currencySymbol = '₹',
       createdAt = new Date(),
+      seatNumber = null,
+      tokenNumber = null,
     },
     ref
   ) => {
@@ -78,9 +82,13 @@ const ThermalReceipt = forwardRef<HTMLDivElement, ReceiptProps>(
           <span>Date: {format(createdAt, 'dd/MM/yyyy')}</span>
           <span>Time: {format(createdAt, 'HH:mm')}</span>
         </div>
-        <div className="flex justify-between mb-2">
+        <div className="flex justify-between mb-1">
           <span>Table: {tableNumber}</span>
-          <span>Order: #{orderNumber}</span>
+          {seatNumber && <span>Seat: {seatNumber}</span>}
+        </div>
+        <div className="flex justify-between mb-2">
+          <span>Order/Token: #{tokenNumber || orderNumber}</span>
+          {paymentMethod && <span>Pay: {paymentMethod.toUpperCase()}</span>}
         </div>
 
         <div className="border-t border-dashed border-black my-2" />

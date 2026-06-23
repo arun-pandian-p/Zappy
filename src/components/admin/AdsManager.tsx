@@ -207,14 +207,14 @@ export function AdsManager({ restaurantId }: AdsManagerProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card className="overflow-hidden">
+              <Card className="group h-full flex flex-col overflow-hidden border border-border/50 shadow-md card-hover bg-card transition-all">
                 {/* Image */}
-                <div className="aspect-video relative bg-muted">
+                <div className="relative aspect-[4/3] overflow-hidden bg-muted flex-shrink-0">
                   {ad.image_url ? (
                     <img
                       src={ad.image_url}
                       alt={ad.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -222,49 +222,57 @@ export function AdsManager({ restaurantId }: AdsManagerProps) {
                     </div>
                   )}
                   <div className="absolute top-2 right-2">
-                    <Badge variant={ad.is_active ? "default" : "secondary"}>
+                    <Badge variant={ad.is_active ? "default" : "secondary"} className="border-0 text-[10px]">
                       {ad.is_active ? "Active" : "Inactive"}
                     </Badge>
                   </div>
                 </div>
 
-                <CardContent className="p-4">
-                  <h3 className="font-semibold mb-1 truncate">{ad.title}</h3>
-                  {ad.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                      {ad.description}
-                    </p>
-                  )}
+                <CardContent className="p-4 flex-grow flex flex-col justify-between">
+                  <div className="space-y-2.5 flex-grow">
+                    <div>
+                      <h4 className="font-semibold text-foreground line-clamp-1 mb-1">{ad.title}</h4>
+                      {ad.description ? (
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {ad.description}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">No description</p>
+                      )}
+                    </div>
 
-                  {/* Stats */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                    <span className="flex items-center gap-1">
-                      <Eye className="w-4 h-4" />
-                      {ad.impressions || 0}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <ExternalLink className="w-4 h-4" />
-                      {ad.clicks || 0}
-                    </span>
-                    {ad.impressions && ad.impressions > 0 && (
+                    {/* Stats */}
+                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <BarChart3 className="w-4 h-4" />
-                        {((ad.clicks || 0) / ad.impressions * 100).toFixed(1)}% CTR
+                        <Eye className="w-3.5 h-3.5" />
+                        {ad.impressions || 0}
                       </span>
+                      <span className="flex items-center gap-1">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        {ad.clicks || 0}
+                      </span>
+                      {ad.impressions && ad.impressions > 0 && (
+                        <span className="flex items-center gap-1">
+                          <BarChart3 className="w-3.5 h-3.5" />
+                          {((ad.clicks || 0) / ad.impressions * 100).toFixed(1)}% CTR
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Dates */}
+                    {(ad.starts_at || ad.ends_at) ? (
+                      <p className="text-[11px] text-muted-foreground">
+                        {ad.starts_at && `From ${format(new Date(ad.starts_at), "MMM d")}`}
+                        {ad.starts_at && ad.ends_at && " - "}
+                        {ad.ends_at && `Until ${format(new Date(ad.ends_at), "MMM d")}`}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground italic">No date range set</p>
                     )}
                   </div>
 
-                  {/* Dates */}
-                  {(ad.starts_at || ad.ends_at) && (
-                    <p className="text-xs text-muted-foreground mb-3">
-                      {ad.starts_at && `From ${format(new Date(ad.starts_at), "MMM d")}`}
-                      {ad.starts_at && ad.ends_at && " - "}
-                      {ad.ends_at && `Until ${format(new Date(ad.ends_at), "MMM d")}`}
-                    </p>
-                  )}
-
                   {/* Actions */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between pt-3 mt-4 border-t">
                     <Switch
                       checked={ad.is_active || false}
                       onCheckedChange={() => handleToggleActive(ad.id, ad.is_active || false)}

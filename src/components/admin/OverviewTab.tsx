@@ -44,37 +44,6 @@ export function OverviewTab({
     >
       <DashboardStats orders={orders} currencySymbol={currencySymbol} />
       
-      <Card className="border-0 shadow-md bg-gradient-to-r from-emerald-500/5 to-blue-500/5">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <RefreshCw className={cn("w-4 h-4", restaurantsLoading ? "animate-spin" : "text-emerald-500")} />
-            System Health Diagnostic
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4 text-xs">
-            <div className="flex items-center gap-1.5">
-              <div className={cn("w-2 h-2 rounded-full", user ? "bg-green-500" : "bg-red-500")} />
-              <span className="text-muted-foreground">Auth:</span>
-              <span className="font-medium">{user ? "Connected" : "Disconnected"}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className={cn("w-2 h-2 rounded-full", restaurant ? "bg-green-500" : "bg-yellow-500")} />
-              <span className="text-muted-foreground">Database:</span>
-              <span className="font-medium">{restaurant ? "Accessible" : "Wait..."}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-muted-foreground">Role:</span>
-              <span className="font-medium uppercase">{role || "None"}</span>
-            </div>
-            <div className="flex items-center gap-1.5 ml-auto">
-              <span className="text-muted-foreground">Version:</span>
-              <span className="font-mono opacity-50">v2.4.1-prod</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
       {/* Active Table Sessions & Popular Items first */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -92,11 +61,7 @@ export function OverviewTab({
                 {menuItems?.slice(0, 2).map((item, index) => (
                   <MenuPreviewCard
                     key={item.id}
-                    id={item.id}
-                    name={item.name}
-                    price={item.price}
-                    imageUrl={item.image_url}
-                    isVegetarian={item.is_vegetarian}
+                    item={item}
                     currencySymbol={currencySymbol}
                     index={index}
                   />

@@ -6,7 +6,6 @@ import { getAppOrigin } from "@/utils/url";
 import { checkTableDependencies } from "@/utils/tableDependencies";
 import { TableDeleteConfirmDialog } from "@/components/admin/TableDeleteConfirmDialog";
 import { AdvancedQRBuilder } from "@/components/admin/qr/AdvancedQRBuilder";
-import { QRPrintCenter } from "@/components/admin/qr/QRPrintCenter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Plus, Download, Trash2, QrCode as QrCodeIcon, Loader2, Grid3X3, X, ExternalLink, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import jsPDF from "jspdf";
 import QRCodeStyling, { DotType, CornerSquareType, CornerDotType } from "qr-code-styling";
 
 interface QRCenterProps {
@@ -114,54 +112,6 @@ function QRPreviewCard({
     }
   };
 
-  const downloadPDF = async () => {
-    try {
-      const rawSvg = await qrCode.getRawData("svg");
-      if (!rawSvg) throw new Error("Could not get SVG data");
-      
-      const svgData = new XMLSerializer().serializeToString(rawSvg as Node);
-      const canvas = document.createElement("canvas");
-      canvas.width = 1024;
-      canvas.height = 1024;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        try {
-          ctx.fillStyle = meta.bg_color || "#FFFFFF";  // always white base for print
-          ctx.fillRect(0, 0, 1024, 1024);
-          // add 32px quiet zone margin around QR
-          ctx.drawImage(img, 0, 0, 1024, 1024);
-          
-          const imgData = canvas.toDataURL("image/png");
-          const pdf = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4"
-          });
-          
-          pdf.setFontSize(22);
-          pdf.text(qr.qr_name || "QR Code", 105, 30, { align: "center" });
-          pdf.addImage(imgData, 'PNG', 55, 50, 100, 100);
-          
-          pdf.setFontSize(12);
-          pdf.text("Scan me!", 105, 160, { align: "center" });
-          
-          pdf.save(`zappy-qr-${qr.qr_name.replace(/\s+/g, '-').toLowerCase()}.pdf`);
-        } catch (e) {
-          console.error("PDF generation error:", e);
-          toast({ title: "Error", description: "Failed to generate PDF.", variant: "destructive" });
-        }
-      };
-      img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Error", description: "Failed to generate PDF", variant: "destructive" });
-    }
-  };
-
   return (
     <Card className="group overflow-hidden rounded-3xl border-0 shadow-md hover:shadow-xl transition-all hover:-translate-y-1 bg-white dark:bg-zinc-950">
       <div 
@@ -190,15 +140,9 @@ function QRPreviewCard({
           <span className="font-medium bg-muted px-2 py-0.5 rounded-full">{qr.scan_count || 0} scans</span>
         </div>
         
-        <div className="grid grid-cols-3 gap-2">
-          <Button variant="outline" size="sm" className="w-full rounded-xl gap-1 h-9 text-[10px]" onClick={() => downloadQR("png")}>
-            <Download className="w-3 h-3" /> PNG
-          </Button>
-          <Button variant="outline" size="sm" className="w-full rounded-xl gap-1 h-9 text-[10px]" onClick={downloadPDF}>
-            <Download className="w-3 h-3" /> PDF
-          </Button>
-          <Button variant="outline" size="sm" className="w-full rounded-xl gap-1 h-9 text-[10px]" onClick={() => downloadQR("svg")}>
-            <Download className="w-3 h-3" /> SVG
+        <div>
+          <Button variant="outline" size="sm" className="w-full rounded-xl gap-1.5 h-9 text-xs" onClick={() => downloadQR("png")}>
+            <Download className="w-3.5 h-3.5" /> Download
           </Button>
         </div>
         <div className="grid grid-cols-2 gap-2 mt-2">
@@ -511,9 +455,7 @@ export function QRCenter({ restaurantId }: QRCenterProps) {
         </Card>
       )}
 
-      {!showBuilder && !isLoading && (
-        <QRPrintCenter restaurantId={restaurantId} baseUrl={BASE_URL} tables={tables} />
-      )}
+
 
       <TableDeleteConfirmDialog
         isOpen={deleteConfirmOpen}
