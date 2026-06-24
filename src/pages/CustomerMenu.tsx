@@ -39,7 +39,6 @@ import { useActiveEnterprisePromotions } from '@/hooks/useEnterprisePromotions';
 import { evaluateCartDiscounts } from '@/services/promotions/cartPricingEngine';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
 import { useSessionCleanup } from '@/hooks/useSessionCleanup';
-import { SessionLifecycleService } from '@/services/sessionLifecycleService';
 import { PromotionCarousel } from '@/components/menu/PromotionCarousel';
 
 import { BottomNav } from '@/components/menu/BottomNav';
@@ -56,7 +55,6 @@ import { RecommendedSlider } from '@/components/menu/RecommendedSlider';
 import { QRSplashScreen } from '@/components/branding/QRSplashScreen';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
 import { SOUNDS } from '@/hooks/useSound';
-import { PostOrderReviewPrompt } from '@/components/order/PostOrderReviewPrompt';
 import { RecommendationsSection } from '@/components/menu/RecommendationsSection';
 import { ItemDetailsDialog } from '@/components/menu/ItemDetailsDialog';
 import { MenuGridSkeleton, MenuListSkeleton } from '@/components/menu/MenuSkeletons';
@@ -149,7 +147,7 @@ const CustomerMenu = () => {
     tableNumber 
   } = useCartStore();
 
-  const { performClientCleanup, handleEndSessionFlow } = useSessionCleanup();
+  const { handleEndSessionFlow } = useSessionCleanup();
 
   // Seat session persisted alongside table — 4-hour TTL
   const getPersistedSeatSession = (rId: string, tNum: string) => {
@@ -289,10 +287,11 @@ const CustomerMenu = () => {
     }
   });
 
-  const [thankYouCountdown, setThankYouCountdown] = useState(30);
 
   useEffect(() => {
-    if (searchParams.get('table') || searchParams.get('r')) {
+    const isFreshQrScan = !!sessionStorage.getItem('zappy_fresh_qr_scan');
+    if (isFreshQrScan && (searchParams.get('table') || searchParams.get('r'))) {
+      sessionStorage.removeItem('zappy_fresh_qr_scan');
       sessionStorage.removeItem('zappy_session_thank_you');
       sessionStorage.removeItem('zappy_checkout_summary');
       sessionStorage.removeItem('zappy_session_terminated');
@@ -300,90 +299,42 @@ const CustomerMenu = () => {
       setIsSessionEnded(false);
       setSessionTerminatedByRestaurant(false);
       setSessionFullyEnded(false);
-      setThankYouCountdown(30);
     }
   }, [searchParams]);
 
   const handleCheckoutComplete = async (summary: { totalPaid: number; invoiceNumber: string; paymentMethod: string; totalItems: number }) => {
     sessionStorage.setItem('zappy_checkout_summary', JSON.stringify(summary));
-    sessionStorage.setItem('zappy_session_thank_you', 'true');
-    
     setCheckoutSummary(summary);
     setIsSessionEnded(true);
     setCheckoutFlowStep('none');
-    
-    performClientCleanup({
-      restaurantId: restaurantId || '',
-      tableId: resolvedTableId || '',
-      tableNumber: dynamicTableId || '',
-      seatSessionId: seatSessionId || '',
-      clearCart,
-      setSeatSessionData,
-      setDynamicTableId,
-      setIsSessionEnded,
-      setSessionFullyEnded,
-      setCheckoutSummary,
-      setCheckoutFlowStep,
-    });
   };
 
-  const handleDirectEndSession = () => {
-    sessionStorage.setItem('zappy_session_thank_you', 'true');
-    setIsSessionEnded(true);
-    setCheckoutFlowStep('none');
-    
-    performClientCleanup({
-      restaurantId: restaurantId || '',
-      tableId: resolvedTableId || '',
-      tableNumber: dynamicTableId || '',
-      seatSessionId: seatSessionId || '',
-      clearCart,
-      setSeatSessionData,
-      setDynamicTableId,
-      setIsSessionEnded,
-      setSessionFullyEnded,
-      setCheckoutSummary,
-      setCheckoutFlowStep,
-    });
-  };
+  const handleCustomerEndSession = async () => {
+    const tableSessionId = currentSeatOccupancy?.table_session_id || activeSession?.id;
+    if (!tableSessionId || !restaurantId || !resolvedTableId) return;
 
-  const handleManualEndSession = async () => {
-    if (!seatSessionId) return;
     try {
-      await SessionLifecycleService.completeSession({
-        sessionId: seatSessionId,
-        tableId: resolvedTableId || '',
-        restaurantId: restaurantId || '',
+      await handleEndSessionFlow({
+        restaurantId,
+        tableId: resolvedTableId,
+        tableNumber: dynamicTableId || '',
+        tableSessionId,
+        clearCart,
+        setSeatSessionData,
+        setDynamicTableId,
+        setIsSessionEnded,
+        setSessionFullyEnded,
+        setCheckoutSummary,
+        setCheckoutFlowStep,
       });
-      
-      setCheckoutFlowStep('receipt');
+    } catch (error) {
       toast({
-        title: 'Session Ending',
-        description: 'Initiating final checkout and review.',
-      });
-    } catch (err) {
-      console.error('Failed to end session manually:', err);
-      toast({
-        title: 'Error',
-        description: 'Failed to end session. Please try again.',
+        title: 'Unable to end session',
+        description: 'Please try again or ask the restaurant staff for help.',
         variant: 'destructive',
       });
     }
   };
-
-  // Listen for table session completed status from database (via admin billing counter)
-  const sessionStatus = currentSeatOccupancy?.table_sessions?.status;
-  useEffect(() => {
-    if (sessionStatus === 'completed' && checkoutFlowStep === 'none' && !isSessionEnded) {
-      if (sessionOrders.length > 0) {
-        console.log("[Checkout Flow] Table session status updated to completed in DB. Launching checkout/review popups.");
-        setCheckoutFlowStep('receipt');
-      } else {
-        console.log("[Checkout Flow] Table session completed with no orders. Ending session directly.");
-        handleDirectEndSession();
-      }
-    }
-  }, [sessionStatus, sessionOrders.length, checkoutFlowStep, isSessionEnded]);
 
   // Realtime subscription for current table session changes
   useEffect(() => {
@@ -451,32 +402,6 @@ const CustomerMenu = () => {
     setReviewOrderId(orderId);
     setReviewImmediate(immediate);
   };
-
-  // Poll current session status to check for completion auto-logout
-  const { data: currentSessionStatusData } = useQuery({
-    queryKey: ['table-session-status', seatSessionId],
-    queryFn: async () => {
-      if (!seatSessionId) return null;
-      const { data, error } = await supabase
-        .from('table_sessions')
-        .select('status, completed_at')
-        .eq('id', seatSessionId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!seatSessionId,
-    refetchInterval: 5000,
-  });
-
-  // Trigger receipt & checkout modal flow when session is completed
-  useEffect(() => {
-    if (!seatSessionId || !currentSessionStatusData) return;
-
-    if (currentSessionStatusData.status === 'completed' && checkoutFlowStep === 'none' && !isSessionEnded) {
-      setCheckoutFlowStep('receipt');
-    }
-  }, [currentSessionStatusData, seatSessionId, checkoutFlowStep, isSessionEnded]);
 
   // Fetch restaurant data
   // Fetch restaurant - try authenticated first, fall back to public view for anon users
@@ -704,6 +629,14 @@ const CustomerMenu = () => {
     refetchInterval: 5000,
   });
 
+  // Payment is the billing milestone. It reveals the receipt/review flow but
+  // deliberately leaves the dining session active until the guest ends it.
+  useEffect(() => {
+    if (sessionInvoice?.payment_status === 'paid' && checkoutFlowStep === 'none' && !isSessionEnded) {
+      setCheckoutFlowStep('receipt');
+    }
+  }, [sessionInvoice?.payment_status, checkoutFlowStep, isSessionEnded]);
+
   // Fetch waiter calls for this table with reason 'Bill requested'
   const { data: billingCalls = [], refetch: refetchBillingCalls } = useQuery({
     queryKey: ['billing-waiter-calls', restaurantId, resolvedTableId],
@@ -822,52 +755,6 @@ const CustomerMenu = () => {
   // Signal flag — set in handleSeatConfirm, consumed once in effect below
   const seatJustConfirmedRef = useRef(false);
 
-  // Session lifecycle:
-  //   STOP    — billing marks status='completed' + completed_at (in BillingCounter)
-  //   STALE   — auto-expire if > 4h or linked order is completed/cancelled
-  useEffect(() => {
-    if (!restaurantId || !resolvedTableId || isDataLoading) return;
-
-    const manageSession = async () => {
-      // STALE — expire sessions older than 4h
-      if (activeSession) {
-        const seatedTime = new Date(activeSession.seated_at || '').getTime();
-        if (Date.now() - seatedTime > 4 * 60 * 60 * 1000) {
-          console.log('[Session] > 4h — marking completed.');
-          await SessionLifecycleService.completeSession({
-            sessionId: activeSession.id,
-            tableId: resolvedTableId || '',
-            restaurantId: restaurantId || '',
-          });
-          refetchActiveSession();
-          return;
-        }
-
-        // STALE — linked order completed/cancelled
-        if (activeSession.order_id) {
-          const { data: orderData } = await supabase
-            .from('orders')
-            .select('status')
-            .eq('id', activeSession.order_id)
-            .single();
-          if (orderData && (orderData.status === 'completed' || orderData.status === 'cancelled')) {
-            console.log('[Session] Order done — closing session.');
-            await SessionLifecycleService.completeSession({
-              sessionId: activeSession.id,
-              tableId: resolvedTableId || '',
-              restaurantId: restaurantId || '',
-            });
-            refetchActiveSession();
-          }
-        }
-      }
-    };
-
-    manageSession();
-  }, [restaurantId, resolvedTableId, isDataLoading, activeSession]);
-
-
-
   // Query client initialized at top of component
 
   // Set table from URL or dynamic selection
@@ -937,6 +824,7 @@ const CustomerMenu = () => {
 
       setCustomerName(name.trim());
       setCustomerPhone(phone.trim());
+      setIsNewCustomerThisSession(true);
       localStorage.setItem(
         'zappy_customer_profile',
         JSON.stringify({ name: name.trim(), phone: phone.trim(), deviceId })
@@ -1380,10 +1268,6 @@ const CustomerMenu = () => {
             event_type: eventType
           });
 
-          // Auto-trigger review prompt when order is served
-          if (currentStatus === 'served') {
-            checkFeedbackAndTrigger(activeOrder.id, false);
-          }
         }
       }
     }
@@ -1391,30 +1275,6 @@ const CustomerMenu = () => {
     prevOrderStatusRef.current = currentStatus;
   }, [activeOrder?.status, restaurantId, dynamicTableId, tableNumber]);
 
-  // Trigger review modal when an order changes status to completed
-  useEffect(() => {
-    if (displayOrders.length === 0) return;
-
-    displayOrders.forEach((order) => {
-      const prevStatus = prevOrderStatusesRef.current[order.id];
-      const currentStatus = order.status;
-
-      if (prevStatus && prevStatus !== 'completed' && currentStatus === 'completed') {
-        console.log(`[Review Trigger] Order ${order.id} status changed to completed! Triggering review modal...`);
-        checkFeedbackAndTrigger(order.id, true);
-      }
-
-      // Update ref with current status
-      prevOrderStatusesRef.current[order.id] = currentStatus;
-    });
-
-    // Populate initial statuses for newly loaded orders so we only trigger on transitions
-    displayOrders.forEach((order) => {
-      if (!prevOrderStatusesRef.current[order.id]) {
-        prevOrderStatusesRef.current[order.id] = order.status;
-      }
-    });
-  }, [displayOrders]);
 
 
   const estimatedPrepTime = useMemo(() => {
@@ -2213,16 +2073,6 @@ const CustomerMenu = () => {
           </Card>
         ))
       )}
-      {seatSessionId && displayOrders.length > 0 && (
-        <div className="pt-4 pb-6">
-          <Button
-            onClick={handleManualEndSession}
-            className="w-full bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 rounded-2xl h-12 font-black text-xs shadow-md gap-2"
-          >
-            🏁 End Session & Pay
-          </Button>
-        </div>
-      )}
     </div>
   );
 
@@ -2563,8 +2413,14 @@ const CustomerMenu = () => {
             </div>
 
             <p className="text-[10px] text-muted-foreground max-w-xs mx-auto leading-relaxed border-t pt-4 border-zinc-100 dark:border-zinc-900">
-              No further actions are allowed. Please scan the table QR code again to start a new dining session.
+              Payment is complete. End your session when you are ready to leave.
             </p>
+            <Button
+              onClick={handleCustomerEndSession}
+              className="w-full h-12 rounded-2xl font-black text-sm bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-950"
+            >
+              End Session
+            </Button>
           </motion.div>
         </div>
       </TenantThemeProvider>
@@ -2718,36 +2574,12 @@ const CustomerMenu = () => {
         sessionOrders={sessionOrders}
         sessionInvoice={sessionInvoice}
         currencySymbol={currencySymbol}
+        customerName={customerName}
+        reviewRequired={isNewCustomerThisSession && !!customerName.trim()}
         onComplete={handleCheckoutComplete}
-        isCompleted={sessionStatus === 'completed'}
+        isCompleted={sessionInvoice?.payment_status === 'paid'}
         onClose={() => setCheckoutFlowStep('none')}
       />
-
-      {/* Post-Order Review Prompt — triggers when order is completed */}
-      {reviewOrderId && restaurantId && sessionStatus === 'completed' && (
-        <PostOrderReviewPrompt
-          restaurantId={restaurantId}
-          orderId={reviewOrderId}
-          tableId={resolvedTableId}
-          googleReviewUrl={restaurant?.google_review_url}
-          delayMs={reviewImmediate ? 0 : 5000}
-          immediate={reviewImmediate}
-          onClose={() => setReviewOrderId(null)}
-          seatSessionId={seatSessionId}
-          seatNumbers={selectedSeatNumbers}
-          tableNumber={dynamicTableId}
-          onSessionClosed={() => {
-            if (restaurantId && dynamicTableId) {
-              localStorage.removeItem(`zappy_seat_session_${restaurantId}_${dynamicTableId}`);
-              localStorage.removeItem(`qr_table_${restaurantId}`);
-            }
-            clearCart();
-            setSeatSessionData(null);
-            setDynamicTableId('');
-            setIsSessionEnded(true);
-          }}
-        />
-      )}
 
       {/* Realtime Animated Order Notification Bar Overlay */}
       <AnimatePresence>

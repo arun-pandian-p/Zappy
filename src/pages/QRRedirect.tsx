@@ -122,6 +122,9 @@ export default function QRRedirect() {
 
         // Wait a tiny bit to ensure events are dispatched before redirecting
         setTimeout(() => {
+          // A terminal customer session may only be unlocked by a new QR scan.
+          // CustomerMenu consumes this one-time marker after the redirect.
+          sessionStorage.setItem('zappy_fresh_qr_scan', crypto.randomUUID());
           if (targetUrl.startsWith('/')) {
             navigate(targetUrl, { replace: true });
           } else {

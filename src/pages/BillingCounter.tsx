@@ -310,14 +310,8 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
           if (!isMuted) playSound();
 
-          // Process seat releases, session completion, and waiter calls via unified helper
-          await handleSessionClosureAfterBilling(selectedOrder);
-
-          // Invalidate related query caches to refresh Admin UI and Table State instantly
-          queryClient.invalidateQueries({ queryKey: ["table_sessions"] });
-          queryClient.invalidateQueries({ queryKey: ["admin_active_session_details"] });
-          queryClient.invalidateQueries({ queryKey: ["tables"] });
-          queryClient.invalidateQueries({ queryKey: ["seat-occupancy"] });
+          // Billing only records payment and creates the invoice. Session cleanup is
+          // intentionally owned by the guest's End Session action or Admin Kill Session.
 
           toast({
             title: '✅ Payment Completed',

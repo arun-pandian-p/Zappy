@@ -111,6 +111,7 @@ ${JSON.stringify(recentReviews, null, 2)}`;
             *,
             orders ( 
               order_number,
+              customer_name,
               order_items (
                 name,
                 menu_item_id,
@@ -410,6 +411,11 @@ ${JSON.stringify(recentReviews, null, 2)}`;
                   </div>
                 </CardHeader>
                 <CardContent className="p-5">
+                  {review.orders?.customer_name && (
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Review from <span className="font-semibold text-foreground">{review.orders.customer_name}</span>
+                    </p>
+                  )}
                   {review.comment ? (
                     <p className="text-foreground leading-relaxed mb-4">"{review.comment}"</p>
                   ) : (

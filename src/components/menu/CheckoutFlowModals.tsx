@@ -22,6 +22,8 @@ interface CheckoutFlowModalsProps {
   sessionOrders: any[];
   sessionInvoice: any;
   currencySymbol: string;
+  customerName?: string;
+  reviewRequired?: boolean;
   onComplete: (summary: { totalPaid: number; invoiceNumber: string; paymentMethod: string; totalItems: number }) => void;
   isCompleted?: boolean;
   onClose?: () => void;
@@ -38,6 +40,8 @@ export function CheckoutFlowModals({
   sessionOrders,
   sessionInvoice,
   currencySymbol,
+  customerName = "",
+  reviewRequired = false,
   onComplete,
   isCompleted = true,
   onClose,
@@ -106,6 +110,7 @@ export function CheckoutFlowModals({
         table_id: tableId || null,
         rating: overallRating,
         comment: comment.trim() || null,
+        customer_name: customerName.trim() || null,
       });
 
       // Save to enterprise_reviews
@@ -115,6 +120,7 @@ export function CheckoutFlowModals({
         order_id: orderId || null,
         overall_rating: overallRating,
         comment: comment.trim() || null,
+        customer_name: customerName.trim() || null,
         source: "qr",
         status: "published"
       }).select("id").single();
@@ -270,9 +276,9 @@ export function CheckoutFlowModals({
                   {isCompleted ? (
                     <Button
                       className="flex-1 h-12 rounded-2xl font-black text-xs bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/10"
-                      onClick={() => setStep("review")}
+                      onClick={() => reviewRequired ? setStep("review") : onComplete({ totalPaid, invoiceNumber, paymentMethod, totalItems })}
                     >
-                      Continue
+                      {reviewRequired ? "Continue to Review" : "Continue"}
                     </Button>
                   ) : (
                     <Button
@@ -351,21 +357,16 @@ export function CheckoutFlowModals({
                   >
                     {submitting ? "Submitting..." : "Submit Review"}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full h-10 rounded-2xl font-bold text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      onComplete({
-                        totalPaid,
-                        invoiceNumber,
-                        paymentMethod,
-                        totalItems,
-                      });
-                    }}
-                    disabled={submitting}
-                  >
-                    Skip Review
-                  </Button>
+                  {!reviewRequired && (
+                    <Button
+                      variant="ghost"
+                      className="w-full h-10 rounded-2xl font-bold text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => onComplete({ totalPaid, invoiceNumber, paymentMethod, totalItems })}
+                      disabled={submitting}
+                    >
+                      Skip Review
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             )}

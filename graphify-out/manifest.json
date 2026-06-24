@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "src/components/admin/ReputationManager.tsx": {
-    "mtime": 1782183942.0804708,
-    "ast_hash": "6074fbe142d1bb2f5c5618408fcdb96e",
+    "mtime": 1782280024.041694,
+    "ast_hash": "a5437f0871e9eed2c0692633b51f3c6c",
     "semantic_hash": ""
   },
   "src/components/admin/SalesAnalytics.tsx": {
@@ -685,8 +685,8 @@
     "semantic_hash": ""
   },
   "src/components/order/RatingPopup.tsx": {
-    "mtime": 1782119420.4700706,
-    "ast_hash": "2e6c82d6f1baf3b2adacc32803340f2b",
+    "mtime": 1782279965.4356465,
+    "ast_hash": "fb1f858ac4b21bf5a07c1eab4e41783d",
     "semantic_hash": ""
   },
   "src/components/order/WaitingTimer.tsx": {
@@ -1835,13 +1835,13 @@
     "semantic_hash": ""
   },
   "src/pages/BillingCounter.tsx": {
-    "mtime": 1782277952.5671148,
-    "ast_hash": "84bfcecb991a27dd84f16ceed0966321",
+    "mtime": 1782279059.784174,
+    "ast_hash": "26caa7e50b2e419fc547b1f5c10b70a6",
     "semantic_hash": ""
   },
   "src/pages/CustomerMenu.tsx": {
-    "mtime": 1782277738.434247,
-    "ast_hash": "b1cee3280c9b97256bf23541c1f990a8",
+    "mtime": 1782280032.841818,
+    "ast_hash": "0ead1a422a18d8f42f55005b34e2d3dd",
     "semantic_hash": ""
   },
   "src/pages/FeedbackPage.tsx": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "src/pages/QRRedirect.tsx": {
-    "mtime": 1782119420.6281247,
-    "ast_hash": "b3f1c2e0c79b803dac4e707001459945",
+    "mtime": 1782279498.1062193,
+    "ast_hash": "110b2fe68497a88ff8a237b465d0ec5b",
     "semantic_hash": ""
   },
   "src/pages/RequestQuote.tsx": {
@@ -4935,13 +4935,13 @@
     "semantic_hash": ""
   },
   "src/components/menu/CheckoutFlowModals.tsx": {
-    "mtime": 1782277183.8501077,
-    "ast_hash": "e0f5bfec1c74b684f34acb976a5b5036",
+    "mtime": 1782279962.3748853,
+    "ast_hash": "69ce052848922a32e5914d439e18f283",
     "semantic_hash": ""
   },
   "src/hooks/useSessionCleanup.ts": {
-    "mtime": 1782276236.6999102,
-    "ast_hash": "1a7a170605253bc9d57688e8403f67df",
+    "mtime": 1782279496.4988313,
+    "ast_hash": "a7b74581f48134296ab392f1a5e29dc0",
     "semantic_hash": ""
   },
   "src/services/sessionCleanupService.ts": {
@@ -4952,6 +4952,11 @@
   "src/services/sessionLifecycleService.ts": {
     "mtime": 1782276220.3240323,
     "ast_hash": "5d3436f4de0da3de43ee3d3b90875b87",
+    "semantic_hash": ""
+  },
+  "flow.md": {
+    "mtime": 1782280034.282194,
+    "ast_hash": "5ee7271e2ecab092791dc623c8a1366e",
     "semantic_hash": ""
   }
 }

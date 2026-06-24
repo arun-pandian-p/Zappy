@@ -14,6 +14,7 @@ interface RatingPopupProps {
   tableId?: string;
   orderId?: string;
   googleReviewUrl?: string | null;
+  customerName?: string;
 }
 
 export const RatingPopup = ({
@@ -23,6 +24,7 @@ export const RatingPopup = ({
   tableId,
   orderId,
   googleReviewUrl,
+  customerName = '',
 }: RatingPopupProps) => {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -56,6 +58,7 @@ export const RatingPopup = ({
         order_id: orderId || null,
         rating,
         comment: comment.trim() || null,
+        customer_name: customerName.trim() || null,
         redirected_to_google: rating >= 4 && !!googleReviewUrl,
       });
 
@@ -66,6 +69,7 @@ export const RatingPopup = ({
         order_id: orderId || null,
         overall_rating: rating,
         comment: comment.trim() || null,
+        customer_name: customerName.trim() || null,
         redirected_to_google: rating >= 4 && !!googleReviewUrl,
         source: 'qr',
         status: 'published'

@@ -1,12 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { SessionLifecycleService } from "@/services/sessionLifecycleService";
 
 interface SessionCleanupParams {
   restaurantId: string;
   tableId: string;
   tableNumber: string;
-  seatSessionId: string;
+  tableSessionId: string;
   clearCart: () => void;
   setSeatSessionData: (data: any) => void;
   setDynamicTableId: (id: string) => void;
@@ -18,7 +17,6 @@ interface SessionCleanupParams {
 
 export function useSessionCleanup() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const performClientCleanup = (params: SessionCleanupParams) => {
     console.log("[Client Cleanup] Performing customer-side session cleanup...");
@@ -42,21 +40,22 @@ export function useSessionCleanup() {
     queryClient.removeQueries({ queryKey: ["active-table-session"] });
     queryClient.removeQueries({ queryKey: ["table-session-status"] });
 
-    // 5. Clear search parameters from URL (r and table) so reload doesn't trigger seat picker
-    navigate(window.location.pathname, { replace: true });
+    // Keep the current QR URL intact. The locked terminal state is released only
+    // when QRRedirect records a new, one-time scan marker.
   };
 
   const handleEndSessionFlow = async (params: SessionCleanupParams) => {
     // 1. Terminate database session, release seats, and reset table status to needs_cleaning
-    if (params.seatSessionId) {
+    if (params.tableSessionId) {
       try {
         await SessionLifecycleService.completeSession({
-          sessionId: params.seatSessionId,
+          sessionId: params.tableSessionId,
           tableId: params.tableId,
           restaurantId: params.restaurantId,
         });
       } catch (err) {
         console.error("[Session Cleanup] Error terminating database session:", err);
+        throw err;
       }
     }
 
@@ -64,7 +63,7 @@ export function useSessionCleanup() {
     performClientCleanup(params);
 
     // 3. Update status to fully ended
-    params.sessionStorageItemSet('zappy_session_fully_ended', 'true');
+    sessionStorage.setItem('zappy_session_fully_ended', 'true');
     params.setSessionFullyEnded(true);
   };
 
@@ -72,9 +71,4 @@ export function useSessionCleanup() {
     performClientCleanup,
     handleEndSessionFlow,
   };
-}
-
-// Helper wrapper to add sessionStorage utility since TS interfaces might want explicit calls
-export interface SessionCleanupParamsExtended extends SessionCleanupParams {
-  sessionStorageItemSet: (key: string, value: string) => void;
 }
