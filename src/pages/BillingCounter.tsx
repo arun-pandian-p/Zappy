@@ -175,22 +175,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
     const tableSessionId = (order as any).table_session_id;
 
     // Check if table session should be completed
-    let shouldCompleteSession = false;
-    if (tableSessionId) {
-      // Query if there are any other active/unpaid orders in this session
-      const { data: unpaidOrders } = await supabase
-        .from('orders')
-        .select('id')
-        .eq('table_session_id', tableSessionId)
-        .neq('id', order.id)
-        .not('status', 'in', '("completed","cancelled")');
-
-      if (!unpaidOrders || unpaidOrders.length === 0) {
-        shouldCompleteSession = true;
-      }
-    } else {
-      shouldCompleteSession = true;
-    }
+    let shouldCompleteSession = true;
 
     if (shouldCompleteSession) {
       if (tableSessionId) {
@@ -1078,12 +1063,12 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                       )}
 
                       <Button
-                        className="w-full bg-success hover:bg-success/90"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black"
                         size="lg"
                         onClick={handleCompletePayment}
                         disabled={isProcessing || (selectedPaymentMethod === 'split' && Math.abs(adjustedTotal - splitAmounts.cash - splitAmounts.upi - splitAmounts.card) > 0.01)}
                       >
-                        {isProcessing ? 'Processing...' : `Pay ${currencySymbol}${adjustedTotal.toFixed(2)} via ${selectedPaymentMethod.toUpperCase()}`}
+                        {isProcessing ? 'Processing...' : 'Complete & Close Session'}
                       </Button>
 
                       {/* Cash Received & Change */}

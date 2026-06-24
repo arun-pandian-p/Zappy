@@ -343,13 +343,30 @@ export function CheckoutFlowModals({
                   className="rounded-2xl text-xs bg-zinc-50/50 dark:bg-zinc-900/30 resize-none border-zinc-150 focus:border-primary focus:bg-white dark:focus:bg-zinc-950 transition-all duration-200"
                 />
 
-                <Button
-                  className="w-full h-12 rounded-2xl font-black text-xs bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/10"
-                  onClick={handleReviewSubmit}
-                  disabled={submitting || overallRating === 0}
-                >
-                  {submitting ? "Submitting..." : "Submit Review"}
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    className="w-full h-12 rounded-2xl font-black text-xs bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/10"
+                    onClick={handleReviewSubmit}
+                    disabled={submitting || overallRating === 0}
+                  >
+                    {submitting ? "Submitting..." : "Submit Review"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full h-10 rounded-2xl font-bold text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      onComplete({
+                        totalPaid,
+                        invoiceNumber,
+                        paymentMethod,
+                        totalItems,
+                      });
+                    }}
+                    disabled={submitting}
+                  >
+                    Skip Review
+                  </Button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

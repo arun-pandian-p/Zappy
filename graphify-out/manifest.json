@@ -1835,13 +1835,13 @@
     "semantic_hash": ""
   },
   "src/pages/BillingCounter.tsx": {
-    "mtime": 1782276279.2266157,
-    "ast_hash": "1510f6e3dbb439de8dbec7413004f906",
+    "mtime": 1782276767.9054108,
+    "ast_hash": "a9dafda78e0be9b973364be1630587c6",
     "semantic_hash": ""
   },
   "src/pages/CustomerMenu.tsx": {
-    "mtime": 1782276353.987293,
-    "ast_hash": "81bd6221ee3ef930ef2e2426f7c9afbf",
+    "mtime": 1782277342.8988538,
+    "ast_hash": "3a8bcb921c8773b102eb9e10158afc94",
     "semantic_hash": ""
   },
   "src/pages/FeedbackPage.tsx": {
@@ -4935,8 +4935,8 @@
     "semantic_hash": ""
   },
   "src/components/menu/CheckoutFlowModals.tsx": {
-    "mtime": 1782198473.7489862,
-    "ast_hash": "38e5fdbff03281c63892dd8699a5632a",
+    "mtime": 1782277183.8501077,
+    "ast_hash": "e0f5bfec1c74b684f34acb976a5b5036",
     "semantic_hash": ""
   },
   "src/hooks/useSessionCleanup.ts": {

@@ -327,10 +327,12 @@ const CustomerMenu = () => {
     });
   };
 
-  const handleFinalEndSession = async () => {
-    if (sessionFullyEnded) return;
+  const handleDirectEndSession = () => {
+    sessionStorage.setItem('zappy_session_thank_you', 'true');
+    setIsSessionEnded(true);
+    setCheckoutFlowStep('none');
     
-    await handleEndSessionFlow({
+    performClientCleanup({
       restaurantId: restaurantId || '',
       tableId: resolvedTableId || '',
       tableNumber: dynamicTableId || '',
@@ -342,27 +344,8 @@ const CustomerMenu = () => {
       setSessionFullyEnded,
       setCheckoutSummary,
       setCheckoutFlowStep,
-      sessionStorageItemSet: (key, val) => sessionStorage.setItem(key, val),
     });
   };
-
-  // Countdown timer for auto-close on Thank You screen
-  useEffect(() => {
-    if (!isSessionEnded || sessionFullyEnded) return;
-
-    const interval = setInterval(() => {
-      setThankYouCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          handleFinalEndSession();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isSessionEnded, sessionFullyEnded, seatSessionId, resolvedTableId]);
 
   const handleManualEndSession = async () => {
     if (!seatSessionId) return;
@@ -397,7 +380,7 @@ const CustomerMenu = () => {
         setCheckoutFlowStep('receipt');
       } else {
         console.log("[Checkout Flow] Table session completed with no orders. Ending session directly.");
-        handleFinalEndSession();
+        handleDirectEndSession();
       }
     }
   }, [sessionStatus, sessionOrders.length, checkoutFlowStep, isSessionEnded]);
@@ -2537,8 +2520,8 @@ const CustomerMenu = () => {
             <div className="p-5 bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-100 dark:border-zinc-800/80 rounded-3xl text-left space-y-3.5 shadow-sm">
               <div className="flex items-center justify-between border-b pb-2.5 border-zinc-200/20 dark:border-zinc-800/50">
                 <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Session Status</span>
-                <Badge className="bg-emerald-500 hover:bg-emerald-600 border-0 font-extrabold px-3 py-0.5 rounded-full text-[9px] uppercase tracking-wider text-white">
-                  Session Active
+                <Badge className="bg-zinc-500 hover:bg-zinc-600 border-0 font-extrabold px-3 py-0.5 rounded-full text-[9px] uppercase tracking-wider text-white">
+                  Session Closed
                 </Badge>
               </div>
               
@@ -2569,18 +2552,6 @@ const CustomerMenu = () => {
               )}
             </div>
 
-            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 space-y-3 shadow-sm">
-              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                Session closing in {thankYouCountdown}s...
-              </p>
-              <Button
-                onClick={handleFinalEndSession}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-11 font-black text-xs shadow-md"
-              >
-                🏁 End Session Now
-              </Button>
-            </div>
-            
             <p className="text-[10px] text-muted-foreground max-w-xs mx-auto leading-relaxed border-t pt-4 border-zinc-100 dark:border-zinc-900">
               No further actions are allowed. Please scan the table QR code again to start a new dining session.
             </p>
