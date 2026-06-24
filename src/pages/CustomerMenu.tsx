@@ -2213,6 +2213,16 @@ const CustomerMenu = () => {
           </Card>
         ))
       )}
+      {seatSessionId && displayOrders.length > 0 && (
+        <div className="pt-4 pb-6">
+          <Button
+            onClick={handleManualEndSession}
+            className="w-full bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 rounded-2xl h-12 font-black text-xs shadow-md gap-2"
+          >
+            🏁 End Session & Pay
+          </Button>
+        </div>
+      )}
     </div>
   );
 
