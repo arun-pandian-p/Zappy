@@ -9,7 +9,7 @@ import { useTables } from "@/hooks/useTables";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { terminateTableSessionDb } from "@/services/sessionCleanupService";
+import { SessionLifecycleService } from "@/services/sessionLifecycleService";
 
 interface TableSessionTimersProps {
   restaurantId: string;
@@ -205,7 +205,7 @@ export function TableSessionTimers({ restaurantId }: TableSessionTimersProps) {
   // Kill Session handler (admin force closes)
   const handleKillSession = async (session: any) => {
     try {
-      await terminateTableSessionDb({
+      await SessionLifecycleService.forceCloseSession({
         sessionId: session.id,
         tableId: session.table_id,
         restaurantId,

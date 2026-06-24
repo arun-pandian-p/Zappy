@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "src/components/admin/TableSessionTimers.tsx": {
-    "mtime": 1782119420.4274545,
-    "ast_hash": "955c4e68576496720d88d475bb678934",
+    "mtime": 1782276296.913298,
+    "ast_hash": "4105e0161a59df4d7cd2300d174260eb",
     "semantic_hash": ""
   },
   "src/components/admin/TenantThemeProvider.tsx": {
@@ -347,11 +347,6 @@
   "src/components/analytics/OrdersTable.tsx": {
     "mtime": 1782119420.4348953,
     "ast_hash": "bc2202c66b70895a15309994b3d8fccf",
-    "semantic_hash": ""
-  },
-  "src/components/analytics/QRScanAnalytics.tsx": {
-    "mtime": 1782119420.4348953,
-    "ast_hash": "8da221fec97ed76a18ad838b8584b3ca",
     "semantic_hash": ""
   },
   "src/components/analytics/RevenueChart.tsx": {
@@ -465,7 +460,7 @@
     "semantic_hash": ""
   },
   "src/components/landing/Footer.tsx": {
-    "mtime": 1782187256.2488937,
+    "mtime": 1782187573.709605,
     "ast_hash": "7846e0bda03f557bfae9384d2997155a",
     "semantic_hash": ""
   },
@@ -685,8 +680,8 @@
     "semantic_hash": ""
   },
   "src/components/order/PostOrderReviewPrompt.tsx": {
-    "mtime": 1782143597.2895508,
-    "ast_hash": "2dcbe2d8ea18ec74d556b36772dfc87a",
+    "mtime": 1782199516.1115484,
+    "ast_hash": "0848efb4f12f9e0e183a7c006f848def",
     "semantic_hash": ""
   },
   "src/components/order/RatingPopup.tsx": {
@@ -1825,8 +1820,8 @@
     "semantic_hash": ""
   },
   "src/pages/AdminDashboard.tsx": {
-    "mtime": 1782182757.2529497,
-    "ast_hash": "cf568135555bcd41056436f86fd91fa4",
+    "mtime": 1782208697.5447311,
+    "ast_hash": "42ba1af7ab21911b93b5f03980025595",
     "semantic_hash": ""
   },
   "src/pages/AdminOnboarding.tsx": {
@@ -1840,13 +1835,13 @@
     "semantic_hash": ""
   },
   "src/pages/BillingCounter.tsx": {
-    "mtime": 1782182072.9257407,
-    "ast_hash": "bbc1b5e95d25cf698b62ecaf23bfd3bc",
+    "mtime": 1782276279.2266157,
+    "ast_hash": "1510f6e3dbb439de8dbec7413004f906",
     "semantic_hash": ""
   },
   "src/pages/CustomerMenu.tsx": {
-    "mtime": 1782181606.889581,
-    "ast_hash": "a415e6601eb6040983dbfa29c550fb22",
+    "mtime": 1782276353.987293,
+    "ast_hash": "81bd6221ee3ef930ef2e2426f7c9afbf",
     "semantic_hash": ""
   },
   "src/pages/FeedbackPage.tsx": {
@@ -1865,8 +1860,8 @@
     "semantic_hash": ""
   },
   "src/pages/KitchenDashboard.tsx": {
-    "mtime": 1782141084.2262595,
-    "ast_hash": "311fc068988ead78402a4954347dd9ca",
+    "mtime": 1782198362.3044517,
+    "ast_hash": "6f73860cf2d56d684f73473e57eb2dc8",
     "semantic_hash": ""
   },
   "src/pages/LandingPage.tsx": {
@@ -1925,8 +1920,8 @@
     "semantic_hash": ""
   },
   "src/pages/WaiterDashboard.tsx": {
-    "mtime": 1782141121.952324,
-    "ast_hash": "e50f4e5a905c2471812c9de0c1ff5a53",
+    "mtime": 1782198382.3108037,
+    "ast_hash": "7001d42439489912c1a8452d9e6f1615",
     "semantic_hash": ""
   },
   "src/pages/__tests__/QRRedirect.test.tsx": {
@@ -2820,8 +2815,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1782119419.4577005,
-    "ast_hash": "7ff2778d49d9d71948ae2269dcb243eb",
+    "mtime": 1782187573.6742184,
+    "ast_hash": "47718ae2e87b7d15fba1fcd345080e5e",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -4937,6 +4932,26 @@
   "supabase/migrations/20260622000003_audit_rls_fixes.sql": {
     "mtime": 1782139277.7579012,
     "ast_hash": "04481ea9cd40aaa5c12e14a4741accdc",
+    "semantic_hash": ""
+  },
+  "src/components/menu/CheckoutFlowModals.tsx": {
+    "mtime": 1782198473.7489862,
+    "ast_hash": "38e5fdbff03281c63892dd8699a5632a",
+    "semantic_hash": ""
+  },
+  "src/hooks/useSessionCleanup.ts": {
+    "mtime": 1782276236.6999102,
+    "ast_hash": "1a7a170605253bc9d57688e8403f67df",
+    "semantic_hash": ""
+  },
+  "src/services/sessionCleanupService.ts": {
+    "mtime": 1782276227.9483473,
+    "ast_hash": "db56328f32bfcc5c510a7ee51aedb9a6",
+    "semantic_hash": ""
+  },
+  "src/services/sessionLifecycleService.ts": {
+    "mtime": 1782276220.3240323,
+    "ast_hash": "5d3436f4de0da3de43ee3d3b90875b87",
     "semantic_hash": ""
   }
 }

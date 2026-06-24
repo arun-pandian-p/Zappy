@@ -51,7 +51,6 @@ import { PreviewTabContent } from "@/components/admin/PreviewTabContent";
 import { OverviewTab } from "@/components/admin/OverviewTab";
 import { MenuTab } from "@/components/admin/MenuTab";
 import { QRCenter } from "@/pages/QRCenter";
-import { QRScanAnalytics } from "@/components/analytics/QRScanAnalytics";
 import { useRestaurants, useRestaurantDetails } from "@/hooks/useRestaurant";
 import { useMenuItems, useCategories } from "@/hooks/useMenuItems";
 import { InventoryManager } from "@/components/admin/InventoryManager";
@@ -563,7 +562,6 @@ const AdminDashboard = () => {
                   className="space-y-8"
                 >
                   <QRCenter restaurantId={restaurantId} />
-                  <QRScanAnalytics restaurantId={restaurantId} />
                 </motion.div>
               )}
 

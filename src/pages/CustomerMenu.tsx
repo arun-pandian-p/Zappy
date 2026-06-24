@@ -39,6 +39,7 @@ import { useActiveEnterprisePromotions } from '@/hooks/useEnterprisePromotions';
 import { evaluateCartDiscounts } from '@/services/promotions/cartPricingEngine';
 import { WaitingTimer } from '@/components/order/WaitingTimer';
 import { useSessionCleanup } from '@/hooks/useSessionCleanup';
+import { SessionLifecycleService } from '@/services/sessionLifecycleService';
 import { PromotionCarousel } from '@/components/menu/PromotionCarousel';
 
 import { BottomNav } from '@/components/menu/BottomNav';
@@ -366,10 +367,11 @@ const CustomerMenu = () => {
   const handleManualEndSession = async () => {
     if (!seatSessionId) return;
     try {
-      await supabase
-        .from('table_sessions')
-        .update({ status: 'completed', completed_at: new Date().toISOString() })
-        .eq('id', seatSessionId);
+      await SessionLifecycleService.completeSession({
+        sessionId: seatSessionId,
+        tableId: resolvedTableId || '',
+        restaurantId: restaurantId || '',
+      });
       
       setCheckoutFlowStep('receipt');
       toast({
@@ -849,10 +851,11 @@ const CustomerMenu = () => {
         const seatedTime = new Date(activeSession.seated_at || '').getTime();
         if (Date.now() - seatedTime > 4 * 60 * 60 * 1000) {
           console.log('[Session] > 4h — marking completed.');
-          await supabase
-            .from('table_sessions')
-            .update({ status: 'completed', completed_at: new Date().toISOString() })
-            .eq('id', activeSession.id);
+          await SessionLifecycleService.completeSession({
+            sessionId: activeSession.id,
+            tableId: resolvedTableId || '',
+            restaurantId: restaurantId || '',
+          });
           refetchActiveSession();
           return;
         }
@@ -866,10 +869,11 @@ const CustomerMenu = () => {
             .single();
           if (orderData && (orderData.status === 'completed' || orderData.status === 'cancelled')) {
             console.log('[Session] Order done — closing session.');
-            await supabase
-              .from('table_sessions')
-              .update({ status: 'completed', completed_at: new Date().toISOString() })
-              .eq('id', activeSession.id);
+            await SessionLifecycleService.completeSession({
+              sessionId: activeSession.id,
+              tableId: resolvedTableId || '',
+              restaurantId: restaurantId || '',
+            });
             refetchActiveSession();
           }
         }
@@ -1626,7 +1630,7 @@ const CustomerMenu = () => {
             .from('table_sessions')
             .update({
               order_id: result.id,
-              status: 'ordered',
+              status: 'ordering',
               order_placed_at: new Date().toISOString()
             })
             .eq('id', activeSession.id);

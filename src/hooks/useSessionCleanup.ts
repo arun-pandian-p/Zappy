@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { terminateTableSessionDb } from "@/services/sessionCleanupService";
+import { SessionLifecycleService } from "@/services/sessionLifecycleService";
 
 interface SessionCleanupParams {
   restaurantId: string;
@@ -40,6 +40,7 @@ export function useSessionCleanup() {
     queryClient.removeQueries({ queryKey: ["orders"] });
     queryClient.removeQueries({ queryKey: ["current-seat-occupancy"] });
     queryClient.removeQueries({ queryKey: ["active-table-session"] });
+    queryClient.removeQueries({ queryKey: ["table-session-status"] });
 
     // 5. Clear search parameters from URL (r and table) so reload doesn't trigger seat picker
     navigate(window.location.pathname, { replace: true });
@@ -49,7 +50,7 @@ export function useSessionCleanup() {
     // 1. Terminate database session, release seats, and reset table status to needs_cleaning
     if (params.seatSessionId) {
       try {
-        await terminateTableSessionDb({
+        await SessionLifecycleService.completeSession({
           sessionId: params.seatSessionId,
           tableId: params.tableId,
           restaurantId: params.restaurantId,

@@ -33,7 +33,7 @@ import SplitPaymentPanel from '@/components/billing/SplitPaymentPanel';
 import { format } from 'date-fns';
 import { useAtomicBilling } from '@/hooks/useAtomicBilling';
 import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
-import { terminateTableSessionDb } from '@/services/sessionCleanupService';
+import { SessionLifecycleService } from '@/services/sessionLifecycleService';
 
 import { useAuth } from '@/hooks/useAuth';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
@@ -169,6 +169,81 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
     ? Math.max(0, Number(selectedOrder.total_amount || 0) - discountAmount)
     : 0;
 
+  const handleSessionClosureAfterBilling = async (order: OrderWithItems) => {
+    const isMerged = order.id.startsWith('MERGED-');
+    const mergedOrderIds = (order as any).merged_order_ids as string[] | undefined;
+    const tableSessionId = (order as any).table_session_id;
+
+    // Check if table session should be completed
+    let shouldCompleteSession = false;
+    if (tableSessionId) {
+      // Query if there are any other active/unpaid orders in this session
+      const { data: unpaidOrders } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('table_session_id', tableSessionId)
+        .neq('id', order.id)
+        .not('status', 'in', '("completed","cancelled")');
+
+      if (!unpaidOrders || unpaidOrders.length === 0) {
+        shouldCompleteSession = true;
+      }
+    } else {
+      shouldCompleteSession = true;
+    }
+
+    if (shouldCompleteSession) {
+      if (tableSessionId) {
+        await SessionLifecycleService.completeSession({
+          sessionId: tableSessionId,
+          tableId: order.table_id!,
+          restaurantId: restaurantId!,
+        });
+      } else if (order.table_id) {
+        // Fallback: If table_session_id is not set, set table sessions to completed
+        const { data: sessionsToClose } = await supabase
+          .from('table_sessions')
+          .select('id')
+          .eq('table_id', order.table_id)
+          .in('status', ['seated', 'ordering', 'preparing', 'dining', 'served', 'billing']);
+
+        if (sessionsToClose && sessionsToClose.length > 0) {
+          for (const s of sessionsToClose) {
+            await SessionLifecycleService.completeSession({
+              sessionId: s.id,
+              tableId: order.table_id,
+              restaurantId: restaurantId!,
+            });
+          }
+        }
+      }
+    } else {
+      // Session remains active (other orders exist), so only release seats for the current order
+      if (isMerged && mergedOrderIds) {
+        const billedOrders = readyOrders.filter(o => mergedOrderIds.includes(o.id));
+        const seatsToRelease = billedOrders.map(o => o.seat_number).filter(Boolean) as number[];
+        if (seatsToRelease.length > 0 && order.table_id) {
+          await supabase
+            .from('seat_occupancy')
+            .update({ status: 'available' } as any)
+            .eq('table_id', order.table_id)
+            .in('seat_number', seatsToRelease);
+        }
+      } else if (order.seat_number && order.table_id) {
+        await supabase
+          .from('seat_occupancy')
+          .update({ status: 'available' } as any)
+          .eq('table_id', order.table_id)
+          .eq('seat_number', order.seat_number);
+      }
+
+      // Also resolve pending waiter calls for this table
+      if (order.table_id) {
+        await SessionLifecycleService.resolveWaiterCalls(order.table_id);
+      }
+    }
+  };
+
   const handleCompletePayment = async () => {
     if (!selectedOrder || !restaurantId) return;
 
@@ -239,70 +314,8 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
       if (!isMuted) playSound();
 
-      // Auto-release seats for billed orders
-      if (isMerged && mergedOrderIds) {
-        const billedOrders = readyOrders.filter(o => mergedOrderIds.includes(o.id));
-        const seatsToRelease = billedOrders.map(o => o.seat_number).filter(Boolean) as number[];
-        if (seatsToRelease.length > 0 && selectedOrder.table_id) {
-          await supabase
-            .from('seat_occupancy')
-            .update({ status: 'vacant' } as any)
-            .eq('table_id', selectedOrder.table_id)
-            .in('seat_number', seatsToRelease);
-        }
-      } else if (selectedOrder.seat_number && selectedOrder.table_id) {
-        await supabase
-          .from('seat_occupancy')
-          .update({ status: 'vacant' } as any)
-          .eq('table_id', selectedOrder.table_id)
-          .eq('seat_number', selectedOrder.seat_number);
-      }
-
-
-
-      // Check if table session should be completed
-      const tableSessionId = (selectedOrder as any).table_session_id;
-      if (tableSessionId) {
-        // Query if there are any other active/unpaid orders in this session
-        const { data: unpaidOrders } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('table_session_id', tableSessionId)
-          .neq('id', selectedOrder.id)
-          .not('status', 'in', '("completed","cancelled")');
-
-        if (!unpaidOrders || unpaidOrders.length === 0) {
-          // Set the active table session to completed (triggers customer receipt/review modals)
-          await supabase
-            .from('table_sessions')
-            .update({ 
-              status: 'completed', 
-              completed_at: new Date().toISOString() 
-            })
-            .eq('id', tableSessionId);
-        }
-      } else if (selectedOrder.table_id) {
-        // Fallback: If table_session_id is not set, set table sessions to completed
-        await supabase
-          .from('table_sessions')
-          .update({ 
-            status: 'completed', 
-            completed_at: new Date().toISOString() 
-          })
-          .eq('table_id', selectedOrder.table_id)
-          .in('status', ['seated', 'ordering', 'preparing', 'dining', 'served', 'billing']);
-      }
-
-      // Resolve any pending waiter calls for this table with reason 'Bill requested'
-      if (selectedOrder.table_id) {
-        await supabase
-          .from('waiter_calls')
-          .update({ status: 'resolved', responded_at: new Date().toISOString() })
-          .eq('table_id', selectedOrder.table_id)
-          .eq('reason', 'Bill requested')
-          .eq('status', 'pending');
-        refetchWaiterCalls();
-      }
+      // Process seat releases, session completion, and waiter calls via unified helper
+      await handleSessionClosureAfterBilling(selectedOrder);
 
       // Invalidate related query caches to refresh Admin UI and Table State instantly
       queryClient.invalidateQueries({ queryKey: ["table_sessions"] });
@@ -375,16 +388,14 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
           if (!isMuted) playSound();
 
-          // Resolve any pending waiter calls for this table with reason 'Bill requested'
-          if (selectedOrder.table_id) {
-            await supabase
-              .from('waiter_calls')
-              .update({ status: 'resolved', responded_at: new Date().toISOString() })
-              .eq('table_id', selectedOrder.table_id)
-              .eq('reason', 'Bill requested')
-              .eq('status', 'pending');
-            refetchWaiterCalls();
-          }
+          // Process seat releases, session completion, and waiter calls via unified helper
+          await handleSessionClosureAfterBilling(selectedOrder);
+
+          // Invalidate related query caches to refresh Admin UI and Table State instantly
+          queryClient.invalidateQueries({ queryKey: ["table_sessions"] });
+          queryClient.invalidateQueries({ queryKey: ["admin_active_session_details"] });
+          queryClient.invalidateQueries({ queryKey: ["tables"] });
+          queryClient.invalidateQueries({ queryKey: ["seat-occupancy"] });
 
           toast({
             title: '✅ Payment Completed',
