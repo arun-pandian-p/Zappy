@@ -85,7 +85,7 @@ The first claimed `seat_occupancy.id` becomes the guest's `seatSessionId`. That 
 2. Billing Counter handles billing only: it marks the selected order paid and creates the invoice. It does not complete a table session, release seats, change table state, or emit a session-close event.
 3. Once the invoice is paid, the guest receives a receipt. A returning customer identified by an existing device/profile id skips review; a newly registered customer with a name must submit a review before continuing. The thank-you screen then presents **End Session**; there is no payment action on that button and no countdown/automatic session close.
 4. **End Session** is the customer-owned completion action. It calls `SessionLifecycleService.completeSession()` with the table-session id, then clears the cart, local table/seat-session storage, in-memory seat session, and menu access. The terminal Thank You screen remains locked in place; only a newly scanned dynamic QR writes the one-time scan marker that starts another session.
-5. Admin **Kill Session** uses the same lifecycle service through `forceCloseSession()`.
+5. Admin **Kill Session** and customer **End Session** both call the same tenant-scoped `SessionLifecycleService.terminateSession()` operation. The admin path emits `session_terminated`; the customer path emits `session_closed`.
 6. `SessionLifecycleService.completeSession()` performs the final cleanup:
    - updates `table_sessions.status` to `completed` and sets `completed_at`;
    - changes that session's occupied seats to `available` and clears `order_id`;

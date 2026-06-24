@@ -205,10 +205,11 @@ export function TableSessionTimers({ restaurantId }: TableSessionTimersProps) {
   // Kill Session handler (admin force closes)
   const handleKillSession = async (session: any) => {
     try {
-      await SessionLifecycleService.forceCloseSession({
+      await SessionLifecycleService.terminateSession({
         sessionId: session.id,
         tableId: session.table_id,
         restaurantId,
+        initiatedBy: "admin",
       });
 
       // Invalidate queries to refresh Admin UI instantly
