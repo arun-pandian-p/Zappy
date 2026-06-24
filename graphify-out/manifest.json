@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   ".vscode/settings.json": {
-    "mtime": 1782119419.4577005,
-    "ast_hash": "4aa85c6acde752675b31b354987521ce",
+    "mtime": 1782281068.058802,
+    "ast_hash": "1dab2f5bd36307bdb430aab9524c222e",
     "semantic_hash": ""
   },
   "components.json": {
@@ -1840,8 +1840,8 @@
     "semantic_hash": ""
   },
   "src/pages/CustomerMenu.tsx": {
-    "mtime": 1782280032.841818,
-    "ast_hash": "0ead1a422a18d8f42f55005b34e2d3dd",
+    "mtime": 1782282497.6789007,
+    "ast_hash": "1239f952664c1ae7b897a0e08e4b2f38",
     "semantic_hash": ""
   },
   "src/pages/FeedbackPage.tsx": {

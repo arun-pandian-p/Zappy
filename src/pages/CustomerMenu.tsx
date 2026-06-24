@@ -309,25 +309,38 @@ const CustomerMenu = () => {
     setCheckoutFlowStep('none');
   };
 
-  const handleCustomerEndSession = async () => {
+  const handleManualEndSession = async () => {
     const tableSessionId = currentSeatOccupancy?.table_session_id || activeSession?.id;
     if (!tableSessionId || !restaurantId || !resolvedTableId) return;
 
     try {
-      await handleEndSessionFlow({
-        restaurantId,
+      await SessionLifecycleService.completeSession({
+        sessionId: tableSessionId,
         tableId: resolvedTableId,
-        tableNumber: dynamicTableId || '',
-        tableSessionId,
-        clearCart,
-        setSeatSessionData,
-        setDynamicTableId,
-        setIsSessionEnded,
-        setSessionFullyEnded,
-        setCheckoutSummary,
-        setCheckoutFlowStep,
+        restaurantId,
       });
-    } catch (error) {
+
+      if (sessionOrders.length > 0) {
+        setCheckoutFlowStep('receipt');
+      } else {
+        sessionStorage.setItem('zappy_session_thank_you', 'true');
+        setIsSessionEnded(true);
+        performClientCleanup({
+          restaurantId,
+          tableId: resolvedTableId,
+          tableNumber: dynamicTableId || '',
+          tableSessionId,
+          clearCart,
+          setSeatSessionData,
+          setDynamicTableId,
+          setIsSessionEnded,
+          setSessionFullyEnded,
+          setCheckoutSummary,
+          setCheckoutFlowStep,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to end session manually:", err);
       toast({
         title: 'Unable to end session',
         description: 'Please try again or ask the restaurant staff for help.',
@@ -2073,6 +2086,16 @@ const CustomerMenu = () => {
           </Card>
         ))
       )}
+      {seatSessionId && (
+        <div className="pt-4 pb-6">
+          <Button
+            onClick={handleManualEndSession}
+            className="w-full bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 rounded-2xl h-12 font-black text-xs shadow-md gap-2"
+          >
+            🏁 End Session
+          </Button>
+        </div>
+      )}
     </div>
   );
 
@@ -2119,117 +2142,6 @@ const CustomerMenu = () => {
         </div>
       )}
 
-      {/* Session Billing & Invoice Status */}
-      {sessionOrders.length > 0 && (
-        <Card className="border border-zinc-200/50 dark:border-zinc-800/50 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-md rounded-2xl overflow-hidden shadow-sm p-5 space-y-4">
-          <div className="flex items-center justify-between border-b pb-3 border-zinc-100 dark:border-zinc-800/80">
-            <div className="flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <div>
-                <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-50">Active Bill Status</h4>
-                <p className="text-[10px] text-zinc-500 font-medium font-mono uppercase tracking-wide">
-                  Session: {seatSessionId?.slice(0, 8)}
-                </p>
-              </div>
-            </div>
-            
-            <div>
-              {sessionInvoice ? (
-                sessionInvoice.payment_status === 'paid' ? (
-                  <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-bold px-2.5 py-0.5 rounded-full text-[10px]">
-                    Paid & Completed
-                  </Badge>
-                ) : (
-                  <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-0 font-bold px-2.5 py-0.5 rounded-full text-[10px] animate-pulse">
-                    Bill Ready (Unpaid)
-                  </Badge>
-                )
-              ) : isBillRequested ? (
-                <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-0 font-bold px-2.5 py-0.5 rounded-full text-[10px] animate-pulse">
-                  Bill Requested
-                </Badge>
-              ) : (
-                <Badge variant="secondary" className="font-bold px-2.5 py-0.5 rounded-full text-[10px]">
-                  Dining Active
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-              <span>Orders Placed:</span>
-              <span className="font-bold text-zinc-900 dark:text-zinc-100">{sessionOrders.length} orders</span>
-            </div>
-            <div className="flex justify-between text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-              <span>Subtotal:</span>
-              <span className="font-bold text-zinc-900 dark:text-zinc-100">{currencySymbol}{sessionBilling.subtotal.toFixed(2)}</span>
-            </div>
-            {sessionBilling.tax > 0 && (
-              <div className="flex justify-between text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                <span>Tax & Service:</span>
-                <span className="font-bold text-zinc-900 dark:text-zinc-100">{currencySymbol}{(sessionBilling.tax + sessionBilling.serviceCharge).toFixed(2)}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-sm font-black text-zinc-900 dark:text-zinc-50 border-t pt-2 mt-2 border-zinc-100 dark:border-zinc-800/80">
-              <span>Total Amount:</span>
-              <span>{currencySymbol}{(sessionInvoice ? Number(sessionInvoice.total_amount) : sessionBilling.total).toFixed(2)}</span>
-            </div>
-          </div>
-
-          {sessionInvoice && (
-            <div className="p-3 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-xl space-y-2">
-              <div className="flex justify-between text-[11px] font-bold text-zinc-500">
-                <span>Invoice Number:</span>
-                <span className="font-mono text-zinc-800 dark:text-zinc-200">{sessionInvoice.invoice_number}</span>
-              </div>
-              {sessionInvoice.payment_method && (
-                <div className="flex justify-between text-[11px] font-bold text-zinc-500">
-                  <span>Method:</span>
-                  <span className="capitalize text-zinc-800 dark:text-zinc-200">{sessionInvoice.payment_method}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              {!sessionInvoice && !isBillRequested && (
-                <Button 
-                  onClick={handleRequestBill}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-10 font-bold text-xs shadow-[0_4px_12px_rgba(16,185,129,0.15)]"
-                >
-                  🔔 Request Bill from Staff
-                </Button>
-              )}
-              {isBillRequested && !sessionInvoice && (
-                <div className="w-full text-center py-2 text-xs font-bold text-blue-500 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                  🏃 Waiter is bringing your bill...
-                </div>
-              )}
-              {sessionInvoice && sessionInvoice.payment_status === 'unpaid' && (
-                <div className="w-full flex flex-col gap-2">
-                  <div className="w-full text-center py-2.5 text-xs font-bold text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                    💳 Please pay {currencySymbol}{Number(sessionInvoice.total_amount).toFixed(2)} at the billing counter
-                  </div>
-                  <Button
-                    onClick={() => setCheckoutFlowStep('receipt')}
-                    className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-xl h-10 font-bold text-xs shadow-md"
-                  >
-                    📄 View Bill Receipt
-                  </Button>
-                </div>
-              )}
-              {sessionInvoice && sessionInvoice.payment_status === 'paid' && (
-                <div className="w-full text-center py-2.5 text-xs font-extrabold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                  🎉 Fully Paid! Thank you!
-                </div>
-              )}
-            </div>
-
-          </div>
-        </Card>
-      )}
 
       <h3 className="font-extrabold text-xl tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">Notification History</h3>
       {tabNotifications.length === 0 ? (
@@ -2412,15 +2324,7 @@ const CustomerMenu = () => {
               )}
             </div>
 
-            <p className="text-[10px] text-muted-foreground max-w-xs mx-auto leading-relaxed border-t pt-4 border-zinc-100 dark:border-zinc-900">
-              Payment is complete. End your session when you are ready to leave.
-            </p>
-            <Button
-              onClick={handleCustomerEndSession}
-              className="w-full h-12 rounded-2xl font-black text-sm bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-950"
-            >
-              End Session
-            </Button>
+
           </motion.div>
         </div>
       </TenantThemeProvider>
@@ -2577,7 +2481,7 @@ const CustomerMenu = () => {
         customerName={customerName}
         reviewRequired={isNewCustomerThisSession && !!customerName.trim()}
         onComplete={handleCheckoutComplete}
-        isCompleted={sessionInvoice?.payment_status === 'paid'}
+        isCompleted={true}
         onClose={() => setCheckoutFlowStep('none')}
       />
 
