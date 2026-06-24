@@ -33,7 +33,6 @@ import SplitPaymentPanel from '@/components/billing/SplitPaymentPanel';
 import { format } from 'date-fns';
 import { useAtomicBilling } from '@/hooks/useAtomicBilling';
 import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
-import { SessionLifecycleService } from '@/services/sessionLifecycleService';
 
 import { useAuth } from '@/hooks/useAuth';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
@@ -169,65 +168,6 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
     ? Math.max(0, Number(selectedOrder.total_amount || 0) - discountAmount)
     : 0;
 
-  const handleSessionClosureAfterBilling = async (order: OrderWithItems) => {
-    const isMerged = order.id.startsWith('MERGED-');
-    const mergedOrderIds = (order as any).merged_order_ids as string[] | undefined;
-    const tableSessionId = (order as any).table_session_id;
-
-    // Check if table session should be completed
-    let shouldCompleteSession = true;
-
-    if (shouldCompleteSession) {
-      if (tableSessionId) {
-        await SessionLifecycleService.completeSession({
-          sessionId: tableSessionId,
-          tableId: order.table_id!,
-          restaurantId: restaurantId!,
-        });
-      } else if (order.table_id) {
-        // Fallback: If table_session_id is not set, set table sessions to completed
-        const { data: sessionsToClose } = await supabase
-          .from('table_sessions')
-          .select('id')
-          .eq('table_id', order.table_id)
-          .in('status', ['seated', 'ordering', 'preparing', 'dining', 'served', 'billing']);
-
-        if (sessionsToClose && sessionsToClose.length > 0) {
-          for (const s of sessionsToClose) {
-            await SessionLifecycleService.completeSession({
-              sessionId: s.id,
-              tableId: order.table_id,
-              restaurantId: restaurantId!,
-            });
-          }
-        }
-      }
-    } else {
-      // Session remains active (other orders exist), so only release seats for the current order
-      if (isMerged && mergedOrderIds) {
-        const billedOrders = readyOrders.filter(o => mergedOrderIds.includes(o.id));
-        const seatsToRelease = billedOrders.map(o => o.seat_number).filter(Boolean) as number[];
-        if (seatsToRelease.length > 0 && order.table_id) {
-          await supabase
-            .from('seat_occupancy')
-            .update({ status: 'available' } as any)
-            .eq('table_id', order.table_id)
-            .in('seat_number', seatsToRelease);
-        }
-      } else if (order.seat_number && order.table_id) {
-        await supabase
-          .from('seat_occupancy')
-          .update({ status: 'available' } as any)
-          .eq('table_id', order.table_id)
-          .eq('seat_number', order.seat_number);
-      }
-
-      // Also resolve pending waiter calls for this table
-      if (order.table_id) {
-        await SessionLifecycleService.resolveWaiterCalls(order.table_id);
-      }
-    }
-  };
 
   const handleCompletePayment = async () => {
     if (!selectedOrder || !restaurantId) return;
@@ -298,9 +238,6 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
       }
 
       if (!isMuted) playSound();
-
-      // Process seat releases, session completion, and waiter calls via unified helper
-      await handleSessionClosureAfterBilling(selectedOrder);
 
       // Invalidate related query caches to refresh Admin UI and Table State instantly
       queryClient.invalidateQueries({ queryKey: ["table_sessions"] });
@@ -1068,7 +1005,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                         onClick={handleCompletePayment}
                         disabled={isProcessing || (selectedPaymentMethod === 'split' && Math.abs(adjustedTotal - splitAmounts.cash - splitAmounts.upi - splitAmounts.card) > 0.01)}
                       >
-                        {isProcessing ? 'Processing...' : 'Complete & Close Session'}
+                        {isProcessing ? 'Processing...' : 'Complete Payment'}
                       </Button>
 
                       {/* Cash Received & Change */}

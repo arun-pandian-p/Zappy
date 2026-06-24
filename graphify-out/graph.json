@@ -2523,7 +2523,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "admin_inventorymanager_inventorymanager",
-      "community": 10,
+      "community": 142,
       "norm_label": "inventorymanager()"
     },
     {
@@ -102833,7 +102833,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "hooks_useinventory",
-      "community": 10,
+      "community": 142,
       "norm_label": "useinventory.ts"
     },
     {
@@ -102843,7 +102843,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "hooks_useinventory_inventoryitem",
-      "community": 10,
+      "community": 142,
       "norm_label": "inventoryitem"
     },
     {
@@ -102853,7 +102853,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "hooks_useinventory_recipemapping",
-      "community": 10,
+      "community": 142,
       "norm_label": "recipemapping"
     },
     {
@@ -102863,7 +102863,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "hooks_useinventory_useinventoryitems",
-      "community": 10,
+      "community": 142,
       "norm_label": "useinventoryitems()"
     },
     {
@@ -102873,7 +102873,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "hooks_useinventory_usecreateinventoryitem",
-      "community": 10,
+      "community": 142,
       "norm_label": "usecreateinventoryitem()"
     },
     {
@@ -102883,7 +102883,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "hooks_useinventory_useupdateinventorystock",
-      "community": 10,
+      "community": 142,
       "norm_label": "useupdateinventorystock()"
     },
     {
@@ -102893,7 +102893,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "hooks_useinventory_usedeleteinventoryitem",
-      "community": 10,
+      "community": 142,
       "norm_label": "usedeleteinventoryitem()"
     },
     {
@@ -102903,7 +102903,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "hooks_useinventory_userecipemappings",
-      "community": 10,
+      "community": 142,
       "norm_label": "userecipemappings()"
     },
     {
@@ -102913,7 +102913,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "hooks_useinventory_usecreaterecipemapping",
-      "community": 10,
+      "community": 142,
       "norm_label": "usecreaterecipemapping()"
     },
     {
@@ -102923,7 +102923,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "hooks_useinventory_usedeleterecipemapping",
-      "community": 10,
+      "community": 142,
       "norm_label": "usedeleterecipemapping()"
     },
     {
@@ -105630,7 +105630,7 @@
       "label": "BillingCounterProps",
       "file_type": "code",
       "source_file": "src/pages/BillingCounter.tsx",
-      "source_location": "L43",
+      "source_location": "L42",
       "_origin": "ast",
       "id": "pages_billingcounter_billingcounterprops",
       "community": 82,
@@ -105640,7 +105640,7 @@
       "label": "BillingCounter()",
       "file_type": "code",
       "source_file": "src/pages/BillingCounter.tsx",
-      "source_location": "L48",
+      "source_location": "L47",
       "_origin": "ast",
       "id": "pages_billingcounter_billingcounter",
       "community": 82,
@@ -126620,9 +126620,9 @@
       "source_file": "src/components/admin/TableSessionTimers.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_tablesessiontimers",
-      "target": "services_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice"
     },
     {
       "relation": "imports",
@@ -126631,9 +126631,9 @@
       "source_file": "src/components/admin/TableSessionTimers.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_tablesessiontimers",
-      "target": "services_sessionlifecycleservice_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice_sessionlifecycleservice"
     },
     {
       "relation": "imports_from",
@@ -249953,9 +249953,9 @@
       "source_file": "src/hooks/useSessionCleanup.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "hooks_usesessioncleanup",
-      "target": "services_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice"
     },
     {
       "relation": "imports",
@@ -249964,9 +249964,9 @@
       "source_file": "src/hooks/useSessionCleanup.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "hooks_usesessioncleanup",
-      "target": "services_sessionlifecycleservice_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice_sessionlifecycleservice"
     },
     {
       "relation": "imports_from",
@@ -251898,9 +251898,9 @@
       "source_file": "src/services/sessionLifecycleService.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_sessionlifecycleservice",
-      "target": "supabase_client",
-      "confidence_score": 1.0
+      "target": "supabase_client"
     },
     {
       "relation": "imports_from",
@@ -252238,9 +252238,9 @@
       "source_file": "src/services/sessionLifecycleService.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_sessionlifecycleservice",
-      "target": "supabase_client_supabase",
-      "confidence_score": 1.0
+      "target": "supabase_client_supabase"
     },
     {
       "relation": "imports",
@@ -253883,9 +253883,9 @@
       "source_file": "src/pages/BillingCounter.tsx",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pages_billingcounter",
-      "target": "services_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice"
     },
     {
       "relation": "imports",
@@ -253894,9 +253894,9 @@
       "source_file": "src/pages/BillingCounter.tsx",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pages_billingcounter",
-      "target": "services_sessionlifecycleservice_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice_sessionlifecycleservice"
     },
     {
       "relation": "contains",
@@ -254012,9 +254012,9 @@
       "source_file": "src/pages/CustomerMenu.tsx",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pages_customermenu",
-      "target": "services_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice"
     },
     {
       "relation": "imports",
@@ -254023,9 +254023,9 @@
       "source_file": "src/pages/CustomerMenu.tsx",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pages_customermenu",
-      "target": "services_sessionlifecycleservice_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice_sessionlifecycleservice"
     },
     {
       "relation": "imports_from",
@@ -259595,9 +259595,9 @@
       "source_file": "src/services/sessionCleanupService.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_sessioncleanupservice",
-      "target": "services_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice"
     },
     {
       "relation": "imports",
@@ -259606,9 +259606,9 @@
       "source_file": "src/services/sessionCleanupService.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_sessioncleanupservice",
-      "target": "services_sessionlifecycleservice_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice_sessionlifecycleservice"
     },
     {
       "relation": "contains",
@@ -259616,9 +259616,9 @@
       "source_file": "src/services/sessionLifecycleService.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_sessionlifecycleservice",
-      "target": "services_sessionlifecycleservice_sessionlifecycleservice",
-      "confidence_score": 1.0
+      "target": "services_sessionlifecycleservice_sessionlifecycleservice"
     },
     {
       "relation": "contains",
@@ -261146,5 +261146,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "98b2cc3e983e4450950be724764cc7a35baecbd5"
+  "built_at_commit": "a028b1d2dccd197f69d3aec068c035e13bd13fbb"
 }
