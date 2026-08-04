@@ -1,10 +1,7 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/-🍽️-FF5722?style=for-the-badge" height="60"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:FF5722,100:FFB300&height=220&section=header&text=Zappy&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=A%20real-time,%20multi-tenant%20restaurant%20operating%20system&descAlignY=58&descSize=18" width="100%"/>
 
-# Zappy
-
-### A real-time, multi-tenant restaurant operating system
 **QR ordering • Dynamic promotions • AI-driven food pairing • Live kitchen ops — all in one platform.**
 
 <br/>
@@ -12,7 +9,6 @@
 ![Multi-Tenant](https://img.shields.io/badge/⚡_MULTI--TENANT-000000?style=for-the-badge)
 ![SaaS Platform](https://img.shields.io/badge/SAAS_PLATFORM-FF5722?style=for-the-badge)
 ![Status](https://img.shields.io/badge/STATUS-ACTIVE-2EA44F?style=for-the-badge)
-
 
 <br/>
 
@@ -23,13 +19,33 @@
 ![Contributors](https://img.shields.io/github/contributors/shadow-byte-warrior/Zappy?style=flat-square&logo=github&label=Contributors&color=brightgreen)
 ![License](https://img.shields.io/github/license/shadow-byte-warrior/Zappy?style=flat-square&label=License&color=lightgrey)
 
+<br/>
+
+### 🧭 Jump to a section
+
+<table>
+<tr>
+<td align="center" width="14%"><a href="#-overview">✨<br/><b>Overview</b></a></td>
+<td align="center" width="14%"><a href="#-key-features">🚀<br/><b>Features</b></a></td>
+<td align="center" width="14%"><a href="#-tech-stack">🧰<br/><b>Tech Stack</b></a></td>
+<td align="center" width="14%"><a href="#️-architecture">🏗️<br/><b>Architecture</b></a></td>
+<td align="center" width="14%"><a href="#️-getting-started">⚙️<br/><b>Get Started</b></a></td>
+<td align="center" width="14%"><a href="#-development-workflow">🔄<br/><b>Workflow</b></a></td>
+<td align="center" width="14%"><a href="#-contributing">🤝<br/><b>Contribute</b></a></td>
+</tr>
+</table>
+
 </div>
+
 <img width="1907" height="836" alt="image" src="https://github.com/user-attachments/assets/3fafd302-92b9-4e9e-b3fd-26b23c088450" />
 <img width="1907" height="883" alt="image" src="https://github.com/user-attachments/assets/328d9686-e76d-465c-8a9b-0c901a59dfdd" />
 <img width="1910" height="863" alt="image" src="https://github.com/user-attachments/assets/ee765190-9ec0-4c0b-8ab8-0a6844513958" />
+
 <br/>
 
-## 📋 Table of Contents
+<details>
+<summary><b>📋 Full Table of Contents (click to expand)</b></summary>
+<br/>
 
 - [✨ Overview](#-overview)
 - [🚀 Key Features](#-key-features)
@@ -42,6 +58,8 @@
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 
+</details>
+
 <br/>
 
 ## ✨ Overview
@@ -52,15 +70,15 @@
 
 ## 🚀 Key Features
 
-| | Feature | Description |
-|---|---|---|
-| 🛎️ | **QR Ordering** | Customers scan, browse, and order directly from their table — no app required |
-| 🍳 | **Live Kitchen Display** | Real-time order pipeline synced via WebSockets, zero manual refresh |
-| 💳 | **Integrated Billing** | POS-style billing counter with receipt printing (Bluetooth/USB) |
-| 🧠 | **AI Food Pairing** | Smart pairing and upsell suggestions powered by a food relationship graph |
-| 🏷️ | **Dynamic Promotions** | Configurable, real-time promotional rules per tenant |
-| 🏢 | **True Multi-Tenancy** | Isolated branding, menus, and data per restaurant from one codebase |
-| 🛠️ | **Super Admin Console** | Platform-wide visibility and control across every tenant |
+<table>
+<tr><td width="8%" align="center">🛎️</td><td width="22%"><b>QR Ordering</b></td><td>Customers scan, browse, and order directly from their table — no app required</td></tr>
+<tr><td align="center">🍳</td><td><b>Live Kitchen Display</b></td><td>Real-time order pipeline synced via WebSockets, zero manual refresh</td></tr>
+<tr><td align="center">💳</td><td><b>Integrated Billing</b></td><td>POS-style billing counter with receipt printing (Bluetooth/USB)</td></tr>
+<tr><td align="center">🧠</td><td><b>AI Food Pairing</b></td><td>Smart pairing and upsell suggestions powered by a food relationship graph</td></tr>
+<tr><td align="center">🏷️</td><td><b>Dynamic Promotions</b></td><td>Configurable, real-time promotional rules per tenant</td></tr>
+<tr><td align="center">🏢</td><td><b>True Multi-Tenancy</b></td><td>Isolated branding, menus, and data per restaurant from one codebase</td></tr>
+<tr><td align="center">🛠️</td><td><b>Super Admin Console</b></td><td>Platform-wide visibility and control across every tenant</td></tr>
+</table>
 
 <br/>
 
@@ -70,7 +88,9 @@
 <tr>
 <td valign="top" width="50%">
 
-**Frontend**
+<details open>
+<summary><b>Frontend</b></summary>
+<br/>
 
 ![React](https://img.shields.io/badge/React_18-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
@@ -84,10 +104,14 @@
 ![Zod](https://img.shields.io/badge/Zod-3E67B1?style=flat-square&logo=zod&logoColor=white)
 ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
 
+</details>
+
 </td>
 <td valign="top" width="50%">
 
-**Backend & Database**
+<details open>
+<summary><b>Backend & Database</b></summary>
+<br/>
 
 ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
@@ -95,13 +119,19 @@
 ![Supabase Auth](https://img.shields.io/badge/Supabase_Auth-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
 ![Supabase Storage](https://img.shields.io/badge/Supabase_Storage-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
 
-**Tooling**
+</details>
+
+<details open>
+<summary><b>Tooling</b></summary>
+<br/>
 
 ![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=flat-square&logo=eslint&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)
 ![Testing Library](https://img.shields.io/badge/Testing_Library-E33332?style=flat-square&logo=testinglibrary&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker_Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)
+
+</details>
 
 </td>
 </tr>
@@ -122,15 +152,25 @@ flowchart LR
     H[🧩 Prisma Schema] --- E
 ```
 
+<details>
+<summary><b>Click for a step-by-step breakdown of the data flow</b></summary>
+<br/>
+
 1. **Client Interaction** — user interacts with a module (Customer Menu, POS, Admin Dashboard).
 2. **State Management** — local state updates via React state or Zustand stores.
 3. **API Requests** — React Query fetches/mutates data through the Supabase client or serverless endpoints.
 4. **Database Operations** — Prisma defines the schema; Supabase handles PostgreSQL operations and Row Level Security (RLS).
 5. **Real-time Updates** — Supabase real-time subscriptions push live updates (e.g., new orders appearing on the KDS).
 
+</details>
+
 <br/>
 
 ## 🧭 Module Map
+
+<details open>
+<summary><b>Click to view all modules</b></summary>
+<br/>
 
 | Module | Path | What it does |
 |---|---|---|
@@ -141,6 +181,8 @@ flowchart LR
 | 🛠️ **Super Admin** | `src/pages/super-admin/` | Platform-wide controls across tenants |
 | 🌐 **Landing** | `src/pages/landing/` | Marketing landing pages |
 | 🔐 **Auth** | `src/pages/auth/` | Login, reset password, auth flows |
+
+</details>
 
 <br/>
 
@@ -192,7 +234,9 @@ Zappy/
 ![npm](https://img.shields.io/badge/npm-CB3837?style=flat-square&logo=npm&logoColor=white)
 ![Supabase Account](https://img.shields.io/badge/Supabase_Account-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
 
-### Installation
+<details open>
+<summary><b>Installation steps (click to expand)</b></summary>
+<br/>
 
 ```bash
 # 1. Clone the repository
@@ -215,6 +259,8 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 # 4. Start the development server
 npm run dev
 ```
+
+</details>
 
 <br/>
 
@@ -278,6 +324,10 @@ npm run dev
 
 Contributions, issues, and feature requests are welcome!
 
+<details>
+<summary><b>Contribution steps</b></summary>
+<br/>
+
 1. Fork the project
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
@@ -285,6 +335,8 @@ Contributions, issues, and feature requests are welcome!
 5. Open a Pull Request
 
 Please see the [Code of Conduct](CODE_OF_CONDUCT.md) and [Contributing Guide](CONTRIBUTING.md) before submitting.
+
+</details>
 
 <br/>
 
@@ -299,5 +351,7 @@ This project is licensed under the terms specified in the [LICENSE](LICENSE) fil
 **Built with Shine for restaurants everywhere**
 
 ![Made with React](https://img.shields.io/badge/Made_with-React-61DAFB?style=flat-square&logo=react&logoColor=black)
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:FF5722,100:FFB300&height=100&section=footer" width="100%"/>
 
 </div>
