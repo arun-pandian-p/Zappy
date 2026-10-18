@@ -16,6 +16,9 @@ export interface ParsedMenuItem {
   isVegan?: boolean;
   isJain?: boolean;
   isGlutenFree?: boolean;
+  needsReview?: boolean;
+  reviewReason?: string;
+  rawPrice?: string;
 }
 
 // Category keywords for auto-classification
@@ -91,7 +94,12 @@ const IGNORE_PATTERNS = [
 /**
  * Detect category from item name using keyword matching
  */
-function detectCategory(itemName: string, contextCategory?: string): string {
+export function detectCategory(itemName: string, contextCategory?: string): string {
+  // If an explicit context category header was encountered (e.g. "South Indian", "Tandoor", "Beverages"), respect it!
+  if (contextCategory && contextCategory !== "Main Course") {
+    return contextCategory;
+  }
+
   const lower = itemName.toLowerCase();
 
   // Try to match keywords
@@ -112,7 +120,7 @@ function detectCategory(itemName: string, contextCategory?: string): string {
 /**
  * Check if a line looks like a category header
  */
-function isCategoryHeader(line: string): string | null {
+export function isCategoryHeader(line: string): string | null {
   const trimmed = line.trim();
 
   // Skip empty or very short lines

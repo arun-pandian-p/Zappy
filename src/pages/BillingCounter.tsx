@@ -33,6 +33,7 @@ import SplitPaymentPanel from '@/components/billing/SplitPaymentPanel';
 import { format } from 'date-fns';
 import { useAtomicBilling } from '@/hooks/useAtomicBilling';
 import { usePendingWaiterCalls } from '@/hooks/useWaiterCalls';
+import { SessionLifecycleService } from '@/services/sessionLifecycleService';
 
 import { useAuth } from '@/hooks/useAuth';
 import { TenantThemeProvider } from '@/components/admin/TenantThemeProvider';
@@ -145,13 +146,15 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
   }, []);
 
   const readyOrders = useMemo(() => {
-    const orders = allOrders.filter((o) => o.status === 'ready' || o.status === 'served');
+    const orders = allOrders.filter(
+      (o) => (o.status === 'ready' || o.status === 'served') && o.payment_status !== 'paid' && o.status !== 'completed'
+    );
     if (selectedTableFilter) return orders.filter(o => o.table_id === selectedTableFilter);
     return orders;
   }, [allOrders, selectedTableFilter]);
 
   const completedOrders = useMemo(() =>
-    allOrders.filter((o) => o.status === 'completed'),
+    allOrders.filter((o) => o.status === 'completed' || o.payment_status === 'paid'),
     [allOrders]
   );
 
@@ -171,6 +174,17 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
   const handleCompletePayment = async () => {
     if (!selectedOrder || !restaurantId) return;
+
+    // Prevent duplicate billing / payments
+    if (selectedOrder.payment_status === 'paid' || selectedOrder.status === 'completed') {
+      toast({
+        title: 'Already Paid',
+        description: 'This order has already been paid and billed.',
+        variant: 'destructive',
+      });
+      setSelectedOrder(null);
+      return;
+    }
 
     setIsProcessing(true);
 
@@ -222,19 +236,45 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
             notes: splitNote ? `MERGED BILL | ${splitNote}` : 'MERGED BILL',
           });
 
+        // After order is marked served and payment is successfully confirmed, close session automatically
+        if (selectedOrder.status === 'served' || selectedOrder.status === 'completed' || selectedOrder.status === 'ready') {
+          await SessionLifecycleService.closeSessionIfServedAndPaid({
+            orderId: mergedOrderIds[0],
+            tableId: selectedOrder.table_id,
+            tableSessionId: selectedOrder.table_session_id,
+            seatSessionId: selectedOrder.seat_session_id,
+            restaurantId,
+            status: 'served',
+            paymentStatus: 'paid',
+          });
+        }
+
         refetchOrders();
       } else {
         // Attempt atomic billing transaction (single DB call)
-      await completeBilling.mutateAsync({
-        orderId: selectedOrder.id,
-        paymentMethod: selectedPaymentMethod,
-        discountAmount: discountAmount,
-        totalAmount: adjustedTotal,
-        customerName: customerName.trim() || null,
-        customerPhone: customerPhone.trim() || null,
-        notes: splitNote || null,
-        invoiceNumber: generateInvoiceNumber(restaurantId),
-      });
+        await completeBilling.mutateAsync({
+          orderId: selectedOrder.id,
+          paymentMethod: selectedPaymentMethod,
+          discountAmount: discountAmount,
+          totalAmount: adjustedTotal,
+          customerName: customerName.trim() || null,
+          customerPhone: customerPhone.trim() || null,
+          notes: splitNote || null,
+          invoiceNumber: generateInvoiceNumber(restaurantId),
+        });
+
+        // After order is marked served and payment is successfully confirmed, close session automatically
+        if (selectedOrder.status === 'served' || selectedOrder.status === 'completed' || selectedOrder.status === 'ready') {
+          await SessionLifecycleService.closeSessionIfServedAndPaid({
+            orderId: selectedOrder.id,
+            tableId: selectedOrder.table_id,
+            tableSessionId: selectedOrder.table_session_id,
+            seatSessionId: selectedOrder.seat_session_id,
+            restaurantId,
+            status: 'served',
+            paymentStatus: 'paid',
+          });
+        }
       }
 
       if (!isMuted) playSound();
@@ -244,9 +284,14 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
       queryClient.invalidateQueries({ queryKey: ["admin_active_session_details"] });
       queryClient.invalidateQueries({ queryKey: ["tables"] });
       queryClient.invalidateQueries({ queryKey: ["seat-occupancy"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices", "today", restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ["invoices", "stats", restaurantId] });
+      refetchOrders();
 
       toast({
-        title: '✅ Payment Completed',
+        title: 'Payment Completed',
         description: `Order #${selectedOrder.order_number} paid via ${selectedPaymentMethod}. Total: ${currencySymbol}${adjustedTotal.toFixed(2)}`,
       });
 
@@ -254,31 +299,32 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
       setShowReceiptPreview(true);
       setSelectedOrder(null);
       setSelectedDiscount(0);
+      setCashReceived(0);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
 
       // Handle specific error types
       if (errorMsg.includes('DUPLICATE_BILLING')) {
         toast({
-          title: '⚠️ Already Billed',
+          title: 'Already Billed',
           description: 'This order has already been billed. Check the history tab.',
           variant: 'destructive',
         });
       } else if (errorMsg.includes('ORDER_LOCKED')) {
         toast({
-          title: '🔒 Order Locked',
+          title: 'Order Locked',
           description: 'Another staff member is processing this order.',
           variant: 'destructive',
         });
       } else if (errorMsg.includes('ORDER_CLOSED')) {
         toast({
-          title: '⚠️ Order Closed',
+          title: 'Order Closed',
           description: 'This order is already completed or cancelled.',
           variant: 'destructive',
         });
       } else if (errorMsg.includes('OFFLINE_QUEUED')) {
         toast({
-          title: '📡 Queued Offline',
+          title: 'Queued Offline',
           description: 'Payment saved locally. Will sync when connection resumes.',
         });
       } else if (errorMsg.includes('could not find the function') || errorMsg.includes('function') ) {
@@ -310,11 +356,31 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
 
           if (!isMuted) playSound();
 
-          // Billing only records payment and creates the invoice. Session cleanup is
-          // intentionally owned by the guest's End Session action or Admin Kill Session.
+          // Automatically close session if order is served and payment confirmed
+          if (selectedOrder.status === 'served' || selectedOrder.status === 'completed' || selectedOrder.status === 'ready') {
+            await SessionLifecycleService.closeSessionIfServedAndPaid({
+              orderId: selectedOrder.id,
+              tableId: selectedOrder.table_id,
+              tableSessionId: selectedOrder.table_session_id,
+              seatSessionId: selectedOrder.seat_session_id,
+              restaurantId,
+              status: 'served',
+              paymentStatus: 'paid',
+            });
+          }
+
+          queryClient.invalidateQueries({ queryKey: ["table_sessions"] });
+          queryClient.invalidateQueries({ queryKey: ["admin_active_session_details"] });
+          queryClient.invalidateQueries({ queryKey: ["tables"] });
+          queryClient.invalidateQueries({ queryKey: ["seat-occupancy"] });
+          queryClient.invalidateQueries({ queryKey: ["orders"] });
+          queryClient.invalidateQueries({ queryKey: ["invoices"] });
+          queryClient.invalidateQueries({ queryKey: ["invoices", "today", restaurantId] });
+          queryClient.invalidateQueries({ queryKey: ["invoices", "stats", restaurantId] });
+          refetchOrders();
 
           toast({
-            title: '✅ Payment Completed',
+            title: 'Payment Completed',
             description: `Order #${selectedOrder.order_number} paid via ${selectedPaymentMethod}. Total: ${currencySymbol}${adjustedTotal.toFixed(2)}`,
           });
 
@@ -322,6 +388,7 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
           setShowReceiptPreview(true);
           setSelectedOrder(null);
           setSelectedDiscount(0);
+          setCashReceived(0);
         } catch (fallbackErr) {
           toast({
             title: 'Payment Failed',
@@ -1289,7 +1356,13 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
       </main>
 
       {/* Receipt Preview Dialog */}
-      <Dialog open={showReceiptPreview} onOpenChange={setShowReceiptPreview}>
+      <Dialog
+        open={showReceiptPreview}
+        onOpenChange={(open) => {
+          setShowReceiptPreview(open);
+          if (!open) setOrderToPrint(null);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1311,7 +1384,10 @@ const BillingCounter = ({ embedded = false, restaurantId: propRestaurantId }: Bi
                 <Button
                   variant="outline"
                   className="flex-1"
-                  onClick={() => setShowReceiptPreview(false)}
+                  onClick={() => {
+                    setShowReceiptPreview(false);
+                    setOrderToPrint(null);
+                  }}
                 >
                   Close
                 </Button>

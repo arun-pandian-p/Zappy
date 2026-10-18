@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { HandHelping, Check, HelpCircle, Volume2, Mic, Camera, Send, X, Loader2, Play } from 'lucide-react';
+import { HandHelping, Check, HelpCircle, Volume2, Mic, Camera, Send, X, Loader2, Play, Droplets, Receipt, Bell, UserCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -202,7 +202,7 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStat
       await handleQuickCall(JSON.stringify({
         type: 'voice',
         url: publicUrl,
-        label: '🎤 Voice Request'
+        label: 'Voice Request'
       }));
 
       // Reset voice state
@@ -212,7 +212,7 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStat
       // Fallback: send as base64 string or log locally if bucket doesn't exist yet
       console.warn('Storage bucket upload failed, using fallback database logging:', err);
       // Fallback to text helper
-      await handleQuickCall('🎤 Voice note uploaded (Local data)');
+      await handleQuickCall('Voice note uploaded (Local data)');
       setAudioUrl(null);
       setAudioBlob(null);
     } finally {
@@ -250,14 +250,14 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStat
       await handleQuickCall(JSON.stringify({
         type: 'image',
         url: publicUrl,
-        label: '📷 Image Report: Wrong/Damaged Food'
+        label: 'Image Report: Wrong/Damaged Food'
       }));
 
       setImageFile(null);
       setImagePreview(null);
     } catch (err) {
       console.warn('Storage upload failed, using fallback database logging:', err);
-      await handleQuickCall('📷 Photo Report submitted');
+      await handleQuickCall('Photo Report submitted');
       setImageFile(null);
       setImagePreview(null);
     } finally {
@@ -278,7 +278,7 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStat
     idle: 'Call Waiter',
     sending: 'Calling...',
     pending: 'Request Sent',
-    acknowledged: 'Staff Arriving 🏃',
+    acknowledged: 'Staff Arriving',
     completed: 'Completed!'
   };
 
@@ -391,16 +391,18 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStat
                 <Button 
                   onClick={() => handleQuickCall('Water requested')} 
                   variant="outline" 
-                  className="rounded-2xl h-12 text-xs font-bold border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  className="rounded-2xl h-12 text-xs font-bold border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 gap-1.5"
                 >
-                  🥛 Need Water
+                  <Droplets className="w-4 h-4 text-sky-500 shrink-0" />
+                  Need Water
                 </Button>
                 <Button 
                   onClick={() => handleQuickCall('Bill requested')} 
                   variant="outline" 
-                  className="rounded-2xl h-12 text-xs font-bold border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  className="rounded-2xl h-12 text-xs font-bold border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 gap-1.5"
                 >
-                  💵 Need Bill
+                  <Receipt className="w-4 h-4 text-amber-500 shrink-0" />
+                  Need Bill
                 </Button>
               </div>
 
@@ -488,9 +490,14 @@ export function WaiterCallFAB({ restaurantId, tableId, tableNumber, onDrawerStat
               <Button 
                 onClick={() => handleQuickCall('Waiter assistance call')} 
                 disabled={currentState !== 'idle' || createCall.isPending}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl h-12 font-extrabold text-sm"
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl h-12 font-extrabold text-sm gap-2"
               >
-                {createCall.isPending ? 'Requesting...' : '🔔 Call Waiter Staff'}
+                {createCall.isPending ? 'Requesting...' : (
+                  <>
+                    <Bell className="w-4 h-4" />
+                    <span>Call Waiter Staff</span>
+                  </>
+                )}
               </Button>
             </motion.div>
           </div>

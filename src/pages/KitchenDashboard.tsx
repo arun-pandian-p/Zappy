@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChefHat, Volume2, VolumeX, Clock, Play, Check, Bell, RefreshCw, AlertCircle, UtensilsCrossed, XCircle, Eye } from 'lucide-react';
+import { ChefHat, Volume2, VolumeX, Clock, Play, Check, Bell, RefreshCw, AlertCircle, UtensilsCrossed, XCircle, Eye, Mic, Camera } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -71,7 +71,10 @@ const WaiterCallReasonRenderer = ({ reason }: { reason: string | null }) => {
     if (parsed.type === 'voice' && parsed.url) {
       return (
         <div className="space-y-1.5 mb-3" onClick={(e) => e.stopPropagation()}>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">🎤 Voice Note Request</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Mic className="w-3.5 h-3.5 text-primary" />
+            Voice Note Request
+          </p>
           <VoicePlayer url={parsed.url} />
         </div>
       );
@@ -79,7 +82,10 @@ const WaiterCallReasonRenderer = ({ reason }: { reason: string | null }) => {
     if (parsed.type === 'image' && parsed.url) {
       return (
         <div className="space-y-1.5 mb-3" onClick={(e) => e.stopPropagation()}>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">📷 Photo Attachment</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Camera className="w-3.5 h-3.5 text-primary" />
+            Photo Attachment
+          </p>
           <Dialog>
             <DialogTrigger asChild>
               <div className="relative group w-20 h-20 rounded-xl overflow-hidden border cursor-pointer bg-muted">

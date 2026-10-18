@@ -85,19 +85,19 @@ CREATE POLICY "Public can view active promotions"
 CREATE POLICY "Restaurants can view their own promotions"
   ON enterprise_promotions FOR SELECT
   USING (restaurant_id IN (
-    SELECT restaurant_id FROM tenant_members WHERE user_id = auth.uid()
+    SELECT restaurant_id FROM user_roles WHERE user_id = auth.uid()
   ));
 
 CREATE POLICY "Restaurants can insert promotions"
   ON enterprise_promotions FOR INSERT
   WITH CHECK (restaurant_id IN (
-    SELECT restaurant_id FROM tenant_members WHERE user_id = auth.uid()
+    SELECT restaurant_id FROM user_roles WHERE user_id = auth.uid()
   ));
 
 CREATE POLICY "Restaurants can update their own pending/draft promotions"
   ON enterprise_promotions FOR UPDATE
   USING (restaurant_id IN (
-    SELECT restaurant_id FROM tenant_members WHERE user_id = auth.uid()
+    SELECT restaurant_id FROM user_roles WHERE user_id = auth.uid()
   ));
 
 -- Superadmin full access (assuming superadmin role check exists)

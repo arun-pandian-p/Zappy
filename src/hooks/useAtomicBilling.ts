@@ -181,6 +181,17 @@ export function useAtomicBilling(restaurantId?: string) {
       serviceCharge: number;
       items: Array<{ id: string; name: string; quantity: number; price: number; total: number }>;
     }) => {
+      // Step 0: Check if invoice already exists (duplicate billing prevention)
+      const { data: existingInvoice } = await supabase
+        .from("invoices")
+        .select("id")
+        .eq("order_id", params.orderId)
+        .maybeSingle();
+
+      if (existingInvoice) {
+        throw new Error("DUPLICATE_BILLING: This order has already been billed.");
+      }
+
       // Step 1: Update order status and payment
       const { error: orderError } = await supabase
         .from("orders")

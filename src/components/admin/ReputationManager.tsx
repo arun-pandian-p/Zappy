@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Star, MessageSquare, AlertCircle, CheckCircle2,
-  TrendingUp, Ticket, Brain, RefreshCw, Smartphone, Globe, Sparkles, Loader2
+  TrendingUp, Ticket, Brain, RefreshCw, Smartphone, Globe, Sparkles, Loader2, Utensils
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { executeOpenAIChatCall } from '@/services/openaiService';
@@ -476,7 +476,7 @@ ${JSON.stringify(recentReviews, null, 2)}`;
           <Card className="border-0 shadow-md">
             <CardHeader className="pb-3 border-b">
               <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <span>🍽️</span> Menu Item Ratings
+                <Utensils className="w-5 h-5 text-primary" /> Menu Item Ratings
               </CardTitle>
               <CardDescription>
                 Average customer rating aggregated by menu items ordered.
@@ -500,8 +500,9 @@ ${JSON.stringify(recentReviews, null, 2)}`;
                       </p>
                     </div>
                     <div className="flex flex-col items-end shrink-0 gap-1">
-                      <span className="text-sm font-bold text-amber-500 flex items-center gap-0.5 leading-none">
-                        ★ {item.avgRating.toFixed(1)}
+                      <span className="text-sm font-bold text-amber-500 flex items-center gap-1 leading-none">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500 inline shrink-0" />
+                        {item.avgRating.toFixed(1)}
                       </span>
                       <div className="flex gap-0.5">
                         {[1, 2, 3, 4, 5].map((star) => (

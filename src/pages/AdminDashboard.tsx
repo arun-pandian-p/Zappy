@@ -137,7 +137,8 @@ const AdminDashboard = () => {
   }, [activeTab]);
 
   const { data: restaurants = [], isLoading: restaurantsLoading } = useRestaurants();
-  const restaurantId = authRestaurantId || restaurants[0]?.id || DEMO_RESTAURANT_ID;
+  const arunHotel = restaurants.find(r => r.name?.toLowerCase().includes("arun") || r.slug?.includes("arun"));
+  const restaurantId = authRestaurantId || arunHotel?.id || restaurants[0]?.id || DEMO_RESTAURANT_ID;
   
   useEffect(() => {
     if (!authLoading && !user) {
@@ -297,14 +298,14 @@ const AdminDashboard = () => {
           {!isOnline && (
             <div className="bg-destructive text-destructive-foreground px-6 py-2 flex items-center gap-2 text-xs font-semibold animate-pulse">
               <WifiOff className="w-4 h-4 shrink-0" />
-              <span>🔌 You are currently working offline. Real-time updates and active syncing are suspended until connection returns.</span>
+              <span>You are currently working offline. Real-time updates and active syncing are suspended until connection returns.</span>
             </div>
           )}
 
           {isOnline && wsStatus === "disconnected" && (
             <div className="bg-amber-500 text-white px-6 py-2 flex items-center gap-2 text-xs font-semibold">
               <AlertCircle className="w-4 h-4 shrink-0 animate-bounce" />
-              <span>⚠️ Real-time connection interrupted. Attempting to re-establish live WebSocket listener channel...</span>
+              <span>Real-time connection interrupted. Attempting to re-establish live WebSocket listener channel...</span>
             </div>
           )}
 

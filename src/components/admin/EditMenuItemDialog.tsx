@@ -12,10 +12,11 @@ import { StorageImagePicker } from "@/components/admin/StorageImagePicker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUpdateMenuItem, type MenuItem, type Category } from "@/hooks/useMenuItems";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Sparkles, Upload } from "lucide-react";
+import { Loader2, Save, Sparkles, Upload, Search, Archive } from "lucide-react";
 import { sanitize } from "@/utils/sanitize";
 import { generateFoodImage } from "@/services/imageGenService";
 import { executeOpenAIChatCall } from "@/services/openaiService";
+import { syncImageToSupabase } from "@/services/storageService";
 
 interface EditMenuItemDialogProps {
   open: boolean;
@@ -154,6 +155,15 @@ Respond with ONLY a valid JSON object containing:
         combinedDesc += "\n\n" + sanitize(form.full_description);
       }
 
+      let finalImageUrl = form.image_url;
+      if (finalImageUrl && (!finalImageUrl.includes('supabase.co/storage') || finalImageUrl.startsWith('data:'))) {
+        try {
+          finalImageUrl = await syncImageToSupabase(finalImageUrl, restaurantId, "menu", cleanName.toLowerCase().replace(/\s+/g, "_"));
+        } catch (e) {
+          console.warn("Could not sync image to storage:", e);
+        }
+      }
+
       await updateMenuItem.mutateAsync({
         id: item.id,
         updates: {
@@ -161,7 +171,7 @@ Respond with ONLY a valid JSON object containing:
           description: combinedDesc,
           price: parseFloat(form.price),
           category_id: form.category_id || null,
-          image_url: form.image_url || null,
+          image_url: finalImageUrl || null,
           is_vegetarian: form.is_vegetarian,
           prep_time_minutes: parseInt(form.prep_time_minutes) || 15,
           tags: form.tags.split(",").map(t => t.trim()).filter(Boolean),
@@ -256,12 +266,18 @@ Respond with ONLY a valid JSON object containing:
               <Label>Item Image</Label>
               <Tabs value={imageSource} onValueChange={(v) => setImageSource(v as any)} className="w-full">
                 <TabsList className="grid grid-cols-4 w-full bg-muted/50 p-1 rounded-xl">
-                  <TabsTrigger value="ai" className="rounded-lg text-xs gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white">
-                    <Sparkles className="w-3 h-3" /> AI Generate
+                  <TabsTrigger value="ai" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white">
+                    <Sparkles className="w-3.5 h-3.5" /> AI Generate
                   </TabsTrigger>
-                  <TabsTrigger value="unsplash" className="rounded-lg text-xs">🔍 Unsplash</TabsTrigger>
-                  <TabsTrigger value="upload" className="rounded-lg text-xs">⬆ Upload</TabsTrigger>
-                  <TabsTrigger value="storage" className="rounded-lg text-xs">📦 Storage</TabsTrigger>
+                  <TabsTrigger value="unsplash" className="rounded-lg text-xs gap-1.5">
+                    <Search className="w-3.5 h-3.5" /> Unsplash
+                  </TabsTrigger>
+                  <TabsTrigger value="upload" className="rounded-lg text-xs gap-1.5">
+                    <Upload className="w-3.5 h-3.5" /> Upload
+                  </TabsTrigger>
+                  <TabsTrigger value="storage" className="rounded-lg text-xs gap-1.5">
+                    <Archive className="w-3.5 h-3.5" /> Storage
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="ai" className="mt-3 space-y-3">
@@ -284,9 +300,15 @@ Respond with ONLY a valid JSON object containing:
                 <TabsContent value="unsplash" className="mt-3">
                   <UnsplashPicker
                     query={form.name}
-                    onSelect={(url) => {
-                      setForm({ ...form, image_url: url });
-                      toast({ title: "Unsplash image selected!" });
+                    onSelect={async (url) => {
+                      toast({ title: "Saving image to storage...", description: "Persisting image to hotel storage..." });
+                      try {
+                        const persistentUrl = await syncImageToSupabase(url, restaurantId, "menu", form.name?.toLowerCase().replace(/\s+/g, "_"), "unsplash");
+                        setForm({ ...form, image_url: persistentUrl });
+                        toast({ title: "Image saved to hotel storage!" });
+                      } catch (err) {
+                        setForm({ ...form, image_url: url });
+                      }
                     }}
                   />
                 </TabsContent>

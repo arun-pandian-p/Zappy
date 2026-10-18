@@ -86,6 +86,6 @@ CREATE POLICY "Authenticated users can delete menu images" ON storage.objects FO
 -- 8. Add item snapshot to order_items to preserve historical data
 ALTER TABLE public.order_items ADD COLUMN IF NOT EXISTS item_snapshot JSONB;
 
--- Update foreign key constraint on item_id to be ON DELETE SET NULL
-ALTER TABLE public.order_items DROP CONSTRAINT IF EXISTS order_items_item_id_fkey;
-ALTER TABLE public.order_items ADD CONSTRAINT order_items_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.menu_items(id) ON DELETE SET NULL;
+-- Update foreign key constraint on menu_item_id to be ON DELETE SET NULL
+ALTER TABLE public.order_items DROP CONSTRAINT IF EXISTS order_items_menu_item_id_fkey;
+ALTER TABLE public.order_items ADD CONSTRAINT order_items_menu_item_id_fkey FOREIGN KEY (menu_item_id) REFERENCES public.menu_items(id) ON DELETE SET NULL;

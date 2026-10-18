@@ -3,6 +3,7 @@ import { useEffect, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
 import { analyticsService } from "@/services/analyticsService";
+import { SessionLifecycleService } from "@/services/sessionLifecycleService";
 
 export type Order = Tables<"orders">;
 export type OrderItem = Tables<"order_items">;
@@ -206,11 +207,35 @@ export function useUpdateOrderStatus() {
         .single();
 
       if (error) throw error;
+
+      // If the order is now served and payment is already paid, close session automatically
+      if (status === "served" && data.payment_status === "paid") {
+        await supabase
+          .from("orders")
+          .update({ status: "completed" as const })
+          .eq("id", id);
+
+        if (data.restaurant_id) {
+          await SessionLifecycleService.closeSessionIfServedAndPaid({
+            orderId: data.id,
+            tableId: data.table_id,
+            tableSessionId: data.table_session_id,
+            seatSessionId: data.seat_session_id,
+            restaurantId: data.restaurant_id,
+            status: "served",
+            paymentStatus: "paid",
+          });
+        }
+      }
+
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["orders", data.restaurant_id] });
       queryClient.invalidateQueries({ queryKey: ["order", data.id] });
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+      queryClient.invalidateQueries({ queryKey: ["table_sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["seat-occupancy"] });
     },
   });
 }
@@ -292,12 +317,40 @@ export function useKitchenOrderActions(restaurantId?: string) {
     async (orderId: string) => {
       setIsPending(true);
       try {
-        const { error } = await supabase
+        const { data: updatedOrder, error } = await supabase
           .from("orders")
           .update({ status: "served" as const })
-          .eq("id", orderId);
+          .eq("id", orderId)
+          .select("id, status, payment_status, table_id, table_session_id, seat_session_id, restaurant_id")
+          .single();
+
         if (error) throw error;
+
+        // If the order was already paid, it is now BOTH served and paid!
+        // Automatically close the session and mark the order completed.
+        if (updatedOrder && updatedOrder.payment_status === "paid") {
+          await supabase
+            .from("orders")
+            .update({ status: "completed" as const })
+            .eq("id", orderId);
+
+          if (updatedOrder.restaurant_id) {
+            await SessionLifecycleService.closeSessionIfServedAndPaid({
+              orderId: updatedOrder.id,
+              tableId: updatedOrder.table_id,
+              tableSessionId: updatedOrder.table_session_id,
+              seatSessionId: updatedOrder.seat_session_id,
+              restaurantId: updatedOrder.restaurant_id,
+              status: "served",
+              paymentStatus: "paid",
+            });
+          }
+        }
+
         queryClient.invalidateQueries({ queryKey: ["orders"] });
+        queryClient.invalidateQueries({ queryKey: ["tables"] });
+        queryClient.invalidateQueries({ queryKey: ["table_sessions"] });
+        queryClient.invalidateQueries({ queryKey: ["seat-occupancy"] });
       } finally {
         setIsPending(false);
       }

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,10 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { FileUp, Loader2, Save, Trash2, Upload, Files } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { FileUp, Loader2, Save, Trash2, Upload, Files, CopySlash, Check, AlertCircle, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { processMenuFile, OCRProgress } from "@/services/ocrService";
 import type { ParsedMenuItem as ExtractedMenuItem } from "@/services/menuParser";
+import { FoodLoader } from "@/components/shared/FoodLoader";
 
 interface ParsedMenuItem {
   name: string;
@@ -27,12 +32,87 @@ interface BulkMenuImporterProps {
 }
 
 export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: BulkMenuImporterProps) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressStatus, setProgressStatus] = useState("Waiting for files...");
   const [progressValue, setProgressValue] = useState(0);
   const [extractedItems, setExtractedItems] = useState<ParsedMenuItem[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
+
+  // Reset selection when extracted items change
+  useEffect(() => {
+    setSelectedIndices(new Set());
+  }, [extractedItems.length]);
+
+  // Compute duplicate occurrences in extractedItems
+  const { duplicateIndices, duplicateCount } = useMemo(() => {
+    const seen = new Set<string>();
+    const dupIndices = new Set<number>();
+    extractedItems.forEach((item, idx) => {
+      const key = item.name.trim().toLowerCase();
+      if (seen.has(key)) {
+        dupIndices.add(idx);
+      } else {
+        seen.add(key);
+      }
+    });
+    return { duplicateIndices: dupIndices, duplicateCount: dupIndices.size };
+  }, [extractedItems]);
+
+  const isAllSelected = extractedItems.length > 0 && selectedIndices.size === extractedItems.length;
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIndices(new Set());
+    } else {
+      setSelectedIndices(new Set(extractedItems.map((_, idx) => idx)));
+    }
+  };
+
+  const handleToggleSelect = (index: number) => {
+    setSelectedIndices(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedIndices.size === 0) return;
+    const remaining = extractedItems.filter((_, idx) => !selectedIndices.has(idx));
+    const count = selectedIndices.size;
+    setExtractedItems(remaining);
+    setSelectedIndices(new Set());
+    toast({
+      title: "Items Deleted",
+      description: `Removed ${count} selected item(s).`,
+    });
+  };
+
+  const handleRemoveDuplicates = () => {
+    const seen = new Set<string>();
+    const deduped: ParsedMenuItem[] = [];
+    let removed = 0;
+    extractedItems.forEach((item) => {
+      const key = item.name.trim().toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        deduped.push(item);
+      } else {
+        removed++;
+      }
+    });
+    setExtractedItems(deduped);
+    setSelectedIndices(new Set());
+    toast({
+      title: "Duplicates Removed",
+      description: `Removed ${removed} duplicate item(s) from the import list.`,
+    });
+  };
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -113,51 +193,130 @@ export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: B
     setProgressStatus("Saving items to database...");
     
     try {
-      // 1. Get or create categories
-      const categoryNames = Array.from(new Set(extractedItems.map(i => i.category)));
-      const categoryMap: Record<string, string> = {};
+      // 1. Fetch all existing categories for this restaurant
+      const { data: existingCategories } = await supabase
+        .from("categories")
+        .select("id, name")
+        .eq("restaurant_id", restaurantId);
 
-      for (const name of categoryNames) {
-        const { data: cat } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("restaurant_id", restaurantId)
-          .eq("name", name)
-          .single();
-        
-        if (cat) {
-          categoryMap[name] = cat.id;
-        } else {
-          const { data: newCat, error: catError } = await supabase
+      const categoryMap = new Map<string, string>();
+      (existingCategories || []).forEach(c => {
+        if (c.name) categoryMap.set(c.name.trim().toLowerCase(), c.id);
+      });
+
+      // 2. Identify missing categories and insert them safely
+      const requiredCategories = Array.from(new Set(
+        extractedItems.map(i => (i.category || "Main Course").trim()).filter(Boolean)
+      ));
+
+      for (const catName of requiredCategories) {
+        const key = catName.toLowerCase();
+        if (!categoryMap.has(key)) {
+          const { data: newCat, error: insertCatErr } = await supabase
             .from("categories")
-            .insert({ restaurant_id: restaurantId, name, is_active: true })
-            .select()
+            .insert({
+              restaurant_id: restaurantId,
+              name: catName,
+              is_active: true
+            })
+            .select("id, name")
             .single();
-          if (newCat) categoryMap[name] = newCat.id;
+
+          if (newCat) {
+            categoryMap.set(key, newCat.id);
+          } else if (insertCatErr) {
+            console.warn(`Category creation warning for "${catName}":`, insertCatErr.message);
+          }
         }
       }
 
-      // 2. Insert items
-      const itemsToInsert = extractedItems.map(item => ({
-        restaurant_id: restaurantId,
-        category_id: categoryMap[item.category],
-        name: item.name,
-        price: item.price,
-        description: item.description || "",
-        is_vegetarian: item.is_veg,
-        is_available: item.is_available,
-        tags: item.is_veg ? ["Veg"] : ["Non-Veg"]
-      }));
+      // Default category fallback
+      const defaultCategoryId = categoryMap.values().next().value || (existingCategories?.[0]?.id ?? null);
 
-      const { error } = await supabase.from("menu_items").insert(itemsToInsert);
+      // 3. Prepare items to insert
+      const itemsToInsert = extractedItems.map(item => {
+        const catName = (item.category || "Main Course").trim();
+        const catId = categoryMap.get(catName.toLowerCase()) || defaultCategoryId;
+        return {
+          restaurant_id: restaurantId,
+          category_id: catId,
+          name: item.name.trim(),
+          price: Number(item.price) || 0,
+          description: item.description || "",
+          is_vegetarian: !!item.is_veg,
+          is_available: item.is_available ?? true,
+          tags: item.is_veg ? ["Veg"] : ["Non-Veg"]
+        };
+      });
+
+      // 4. Pre-check vs Existing Items in the Database for this restaurant to prevent duplicates!
+      const { data: existingDbItems } = await supabase
+        .from("menu_items")
+        .select("name")
+        .eq("restaurant_id", restaurantId);
+
+      const existingDbNames = new Set((existingDbItems || []).map(i => i.name.trim().toLowerCase()));
+
+      const uniqueItemsToInsert: typeof itemsToInsert = [];
+      const seenInBatch = new Set<string>();
+      let skippedExistingCount = 0;
+      let skippedBatchCount = 0;
+
+      for (const item of itemsToInsert) {
+        const key = item.name.toLowerCase().trim();
+        if (seenInBatch.has(key)) {
+          skippedBatchCount++;
+          continue;
+        }
+        seenInBatch.add(key);
+
+        if (existingDbNames.has(key)) {
+          skippedExistingCount++;
+          continue;
+        }
+        uniqueItemsToInsert.push(item);
+      }
+
+      if (uniqueItemsToInsert.length === 0) {
+        toast({
+          title: "All Items Already Exist",
+          description: `All ${extractedItems.length} items already exist in your menu. No duplicates were created.`,
+        });
+        setIsOpen(false);
+        setExtractedItems([]);
+        return;
+      }
+
+      const { data: inserted, error: insertErr } = await supabase
+        .from("menu_items")
+        .insert(uniqueItemsToInsert)
+        .select("id");
       
-      if (error) throw error;
+      if (insertErr) throw insertErr;
 
-      if (onSuccess) onSuccess(extractedItems.length);
+      // Invalidate React Query caches so Admin Menu Management & Customer Menu refresh immediately!
+      await queryClient.invalidateQueries({ queryKey: ["menu_items", restaurantId] });
+      await queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
+      await queryClient.invalidateQueries({ queryKey: ["restaurant", restaurantId] });
+
+      const totalSkipped = skippedExistingCount + skippedBatchCount;
+      toast({
+        title: "Import Complete",
+        description: totalSkipped > 0
+          ? `Saved ${inserted?.length || uniqueItemsToInsert.length} items (${totalSkipped} duplicates skipped).`
+          : `Saved ${inserted?.length || uniqueItemsToInsert.length} items to your menu.`,
+      });
+
+      if (onSuccess) onSuccess(inserted?.length || uniqueItemsToInsert.length);
       setIsOpen(false);
       setExtractedItems([]);
     } catch (err: any) {
       setError(err.message || "Failed to save items to database.");
+      toast({
+        title: "Import Failed",
+        description: err.message || "Failed to save items to database.",
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -171,7 +330,9 @@ export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: B
           Bulk OCR Import
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[750px] max-h-[90vh] flex flex-col">
+      <DialogContent className={`sm:max-w-[800px] w-[95vw] flex flex-col overflow-hidden ${
+        extractedItems.length > 0 ? "h-[88vh] max-h-[88vh]" : "max-h-[90vh]"
+      }`}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
@@ -182,13 +343,15 @@ export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: B
           </p>
           <div className="flex gap-2.5 mt-2">
             <Button variant="outline" size="sm" asChild className="h-8 text-xs font-semibold rounded-lg border-primary/20 hover:bg-primary/5">
-              <a href="/samples/menu_template.xlsx" download="menu_template.xlsx">
-                📥 Download Excel Template
+              <a href="/samples/menu_template.xlsx" download="menu_template.xlsx" className="flex items-center gap-1.5">
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Excel Template</span>
               </a>
             </Button>
             <Button variant="outline" size="sm" asChild className="h-8 text-xs font-semibold rounded-lg border-primary/20 hover:bg-primary/5">
-              <a href="/samples/menu_template.csv" download="menu_template.csv">
-                📥 Download CSV Template
+              <a href="/samples/menu_template.csv" download="menu_template.csv" className="flex items-center gap-1.5">
+                <Download className="w-3.5 h-3.5" />
+                <span>Download CSV Template</span>
               </a>
             </Button>
           </div>
@@ -232,12 +395,15 @@ export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: B
             </div>
           </div>
         ) : (
-          <div className="flex-1 overflow-hidden flex flex-col space-y-4">
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col space-y-3 pt-1">
             {isProcessing && (
-              <div className="flex flex-col items-center justify-center py-6 bg-muted/20 rounded-xl space-y-3">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <p className="font-semibold text-sm">{progressStatus}</p>
-                <Progress value={progressValue} className="w-64 mx-auto" />
+              <div className="py-2 bg-muted/20 rounded-xl">
+                <FoodLoader
+                  message="Extracting Menu Items..."
+                  subMessage={progressStatus}
+                  progress={progressValue}
+                  size="sm"
+                />
               </div>
             )}
             
@@ -245,25 +411,91 @@ export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: B
 
             {extractedItems.length > 0 && (
               <>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {extractedItems.length} items extracted — review and edit below.
-                  </p>
-                  <Button size="sm" variant="ghost" onClick={() => setExtractedItems([])} className="text-destructive">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Clear All
-                  </Button>
+                <div className="flex flex-wrap items-center justify-between shrink-0 gap-2 p-2.5 bg-muted/40 rounded-xl border">
+                  <div className="flex items-center gap-3">
+                    {/* Select All Checkbox */}
+                    <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer select-none">
+                      <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={handleToggleSelectAll}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                      <span>Select All ({extractedItems.length})</span>
+                    </label>
+
+                    {selectedIndices.size > 0 && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleDeleteSelected}
+                        className="h-7 text-xs px-2.5 rounded-lg shadow-sm"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1" />
+                        Delete Selected ({selectedIndices.size})
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {duplicateCount > 0 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleRemoveDuplicates}
+                        className="h-7 text-xs px-2.5 rounded-lg border-amber-500/40 text-amber-600 hover:bg-amber-500/10 font-semibold"
+                      >
+                        <CopySlash className="w-3.5 h-3.5 mr-1" />
+                        Remove Duplicates ({duplicateCount})
+                      </Button>
+                    )}
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setExtractedItems([])}
+                      className="h-7 text-xs px-2 text-muted-foreground hover:text-destructive"
+                    >
+                      Clear All
+                    </Button>
+                  </div>
                 </div>
 
-                <ScrollArea className="flex-1 border rounded-md">
-                  <div className="p-4 space-y-3">
-                    {extractedItems.map((item, idx) => (
-                      <Card key={idx} className="border-l-4 border-l-primary/50">
+                <div className="flex-1 min-h-0 overflow-y-auto border rounded-xl p-4 space-y-3 bg-muted/5 shadow-inner overscroll-contain focus:outline-none">
+                  {extractedItems.map((item, idx) => {
+                    const isDup = duplicateIndices.has(idx);
+                    const isSelected = selectedIndices.has(idx);
+                    return (
+                      <Card 
+                        key={idx} 
+                        className={`border-l-4 transition-all ${
+                          isSelected
+                            ? 'ring-2 ring-primary border-l-primary bg-primary/[0.02]'
+                            : isDup
+                            ? 'border-l-amber-500 bg-amber-500/[0.02]'
+                            : 'border-l-primary/50'
+                        }`}
+                      >
                         <CardContent className="p-3 space-y-3">
                           <div className="flex items-center justify-between gap-4">
+                            {/* Individual select checkbox */}
+                            <div className="flex items-center shrink-0 pr-1 cursor-pointer" onClick={() => handleToggleSelect(idx)}>
+                              <Checkbox 
+                                checked={isSelected}
+                                onCheckedChange={() => handleToggleSelect(idx)}
+                                className="data-[state=checked]:bg-primary"
+                              />
+                            </div>
+
                             <div className="flex-1 grid grid-cols-3 gap-3">
                               <div className="col-span-1">
-                                <Label className="text-[10px] uppercase text-muted-foreground font-semibold">Name</Label>
+                                <div className="flex items-center gap-1.5">
+                                  <Label className="text-[10px] uppercase text-muted-foreground font-semibold">Name</Label>
+                                  {isDup && (
+                                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                                      Duplicate
+                                    </Badge>
+                                  )}
+                                </div>
                                 <Input 
                                   value={item.name} 
                                   onChange={(e) => {
@@ -331,11 +563,11 @@ export default function BulkMenuImporter({ restaurantId, onSuccess, onClose }: B
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
+                    );
+                  })}
+                </div>
 
-                <div className="pt-4 flex gap-3">
+                <div className="pt-3 flex gap-3 shrink-0 border-t mt-auto">
                   <Button variant="outline" className="flex-1" onClick={() => setIsOpen(false)} disabled={isProcessing}>
                     Cancel
                   </Button>

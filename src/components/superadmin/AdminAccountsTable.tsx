@@ -141,7 +141,7 @@ const AdminAccountsTable = () => {
       }
 
       toast({
-        title: '✅ User Created',
+        title: 'User Created',
         description: `${newUser.email} has been added as ${ROLE_LABELS[newUser.role] || newUser.role}.`,
       });
 

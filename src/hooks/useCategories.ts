@@ -47,7 +47,9 @@ export function useCategories(restaurantId?: string) {
         .order("display_order");
 
       if (error) throw error;
-      return data as Category[];
+      return (data as Category[]).filter(
+        (c) => c.name && c.name.trim().toLowerCase() !== "uncategorized"
+      );
     },
     enabled: !!restaurantId,
     staleTime: 5 * 60 * 1000,

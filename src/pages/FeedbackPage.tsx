@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, ExternalLink, CheckCircle, ArrowLeft } from 'lucide-react';
+import { MessageSquare, ExternalLink, CheckCircle, ArrowLeft, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -234,15 +234,15 @@ const FeedbackPage = () => {
             <CardHeader className="text-center">
               <motion.div
                 animate={{ 
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, -5, 0]
+                  scale: [1, 1.08, 1],
+                  rotate: [0, 4, -4, 0]
                 }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                className="mx-auto w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-4"
+                className="mx-auto w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-4 border border-amber-500/20 text-amber-500 shadow-sm"
               >
-                ⭐
+                <Star className="w-8 h-8 fill-amber-400 text-amber-500" />
               </motion.div>
-              <CardTitle className="text-2xl">We're Thrilled! 🎉</CardTitle>
+              <CardTitle className="text-2xl">We're Thrilled!</CardTitle>
               <CardDescription className="text-base">
                 Would you mind sharing your experience on Google? It helps other food lovers discover us!
               </CardDescription>
@@ -309,11 +309,11 @@ const FeedbackPage = () => {
                       exit={{ opacity: 0, y: 10 }}
                       className="text-sm text-muted-foreground"
                     >
-                      {rating === 1 && 'We\'re sorry to hear that 😔'}
-                      {rating === 2 && 'We\'ll do better 🙏'}
-                      {rating === 3 && 'Thanks for your feedback 👍'}
-                      {rating === 4 && 'Great to hear! 😊'}
-                      {rating === 5 && 'Awesome! You made our day! 🎉'}
+                      {rating === 1 && "We're sorry to hear that"}
+                      {rating === 2 && "We'll do better"}
+                      {rating === 3 && "Thanks for your feedback"}
+                      {rating === 4 && "Great to hear!"}
+                      {rating === 5 && "Awesome! You made our day!"}
                     </motion.p>
                   )}
                 </AnimatePresence>

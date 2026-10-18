@@ -65,50 +65,50 @@ ALTER TABLE public.qr_templates ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own tenant campaigns"
 ON public.qr_campaigns FOR SELECT
 USING (tenant_id IN (
-    SELECT get_user_tenants(auth.uid())
+    SELECT restaurant_id FROM public.user_roles WHERE user_id = auth.uid()
 ));
 
 CREATE POLICY "Users can insert their own tenant campaigns"
 ON public.qr_campaigns FOR INSERT
 WITH CHECK (tenant_id IN (
-    SELECT get_user_tenants(auth.uid())
+    SELECT restaurant_id FROM public.user_roles WHERE user_id = auth.uid()
 ));
 
 CREATE POLICY "Users can update their own tenant campaigns"
 ON public.qr_campaigns FOR UPDATE
 USING (tenant_id IN (
-    SELECT get_user_tenants(auth.uid())
+    SELECT restaurant_id FROM public.user_roles WHERE user_id = auth.uid()
 ));
 
 CREATE POLICY "Users can delete their own tenant campaigns"
 ON public.qr_campaigns FOR DELETE
 USING (tenant_id IN (
-    SELECT get_user_tenants(auth.uid())
+    SELECT restaurant_id FROM public.user_roles WHERE user_id = auth.uid()
 ));
 
 -- RLS Policies for qr_templates
 CREATE POLICY "Users can view global templates and their own"
 ON public.qr_templates FOR SELECT
 USING (tenant_id IS NULL OR tenant_id IN (
-    SELECT get_user_tenants(auth.uid())
+    SELECT restaurant_id FROM public.user_roles WHERE user_id = auth.uid()
 ));
 
 CREATE POLICY "Users can insert their own tenant templates"
 ON public.qr_templates FOR INSERT
 WITH CHECK (tenant_id IN (
-    SELECT get_user_tenants(auth.uid())
+    SELECT restaurant_id FROM public.user_roles WHERE user_id = auth.uid()
 ));
 
 CREATE POLICY "Users can update their own tenant templates"
 ON public.qr_templates FOR UPDATE
 USING (tenant_id IN (
-    SELECT get_user_tenants(auth.uid())
+    SELECT restaurant_id FROM public.user_roles WHERE user_id = auth.uid()
 ));
 
 CREATE POLICY "Users can delete their own tenant templates"
 ON public.qr_templates FOR DELETE
 USING (tenant_id IN (
-    SELECT get_user_tenants(auth.uid())
+    SELECT restaurant_id FROM public.user_roles WHERE user_id = auth.uid()
 ));
 
 -- Add realtime publications

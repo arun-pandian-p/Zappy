@@ -14,7 +14,7 @@ function cacheBustUrl(url: string | null | undefined): string | undefined {
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List, MessageSquare, Bell, CheckCircle2, ChefHat, BellRing, Utensils, Receipt, XCircle } from 'lucide-react';
+import { ShoppingCart, ClipboardList, Loader2, AlertCircle, Plus, Minus, Trash2, Search, Menu, HandHelping, LayoutGrid, List, MessageSquare, Bell, CheckCircle2, ChefHat, BellRing, Utensils, Receipt, XCircle, X, Sparkles, HeartHandshake, LogOut, User, AlertTriangle, Check, RotateCcw, UtensilsCrossed } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCartStore } from '@/stores/cartStore';
 import { Button } from '@/components/ui/button';
@@ -61,6 +61,9 @@ import { MenuGridSkeleton, MenuListSkeleton } from '@/components/menu/MenuSkelet
 import { notificationService, type NotificationType } from '@/services/notificationService';
 import { NotificationBar } from '@/components/menu/NotificationBar';
 import { WaiterCallFAB } from '@/components/menu/WaiterCallFAB';
+import { GoogleRatingSection } from '@/components/menu/GoogleRatingSection';
+import { RestaurantMenuBanner } from '@/components/menu/RestaurantMenuBanner';
+import { MenuSearchFilter, type MenuFilterOptions, DEFAULT_MENU_FILTERS } from '@/components/menu/MenuSearchFilter';
 
 
 type ViewType = 'home' | 'search' | 'cart' | 'orders' | 'profile' | 'notifications';
@@ -81,15 +84,15 @@ const CustomerMenu = () => {
   // Slug-based tenant resolution — also fetch basic branding for splash
   const [resolvedRestaurantId, setResolvedRestaurantId] = useState(initialResolvedId);
   const [splashBranding, setSplashBranding] = useState<{
-    name: string; logo_url: string | null; primary_color: string | null;
+    name: string; logo_url: string | null; primary_color: string | null; cover_image_url: string | null;
   } | null>(null);
   
   useEffect(() => {
     const idToUse = restaurantIdParam && UUID_REGEX.test(restaurantIdParam) ? restaurantIdParam : undefined;
     const query = slug && !restaurantIdParam
-      ? supabase.from('restaurants_public').select('id, name, logo_url, primary_color').eq('slug', slug).eq('is_active', true).single()
+      ? supabase.from('restaurants_public').select('id, name, logo_url, primary_color, cover_image_url').eq('slug', slug).eq('is_active', true).single()
       : idToUse
-      ? supabase.from('restaurants_public').select('id, name, logo_url, primary_color').eq('id', idToUse).single()
+      ? supabase.from('restaurants_public').select('id, name, logo_url, primary_color, cover_image_url').eq('id', idToUse).single()
       : null;
 
     if (query) {
@@ -100,7 +103,12 @@ const CustomerMenu = () => {
         }
         if (data) {
           if (!restaurantIdParam) setResolvedRestaurantId(data.id);
-          setSplashBranding({ name: data.name, logo_url: data.logo_url, primary_color: data.primary_color });
+          setSplashBranding({ 
+            name: data.name, 
+            logo_url: data.logo_url, 
+            primary_color: data.primary_color,
+            cover_image_url: data.cover_image_url 
+          });
         }
       }).catch(err => {
         console.error("Failed to query restaurants_public:", err);
@@ -147,7 +155,7 @@ const CustomerMenu = () => {
     tableNumber 
   } = useCartStore();
 
-  const { handleEndSessionFlow } = useSessionCleanup();
+  const { handleEndSessionFlow, performClientCleanup } = useSessionCleanup();
 
   // Seat session persisted alongside table — 4-hour TTL
   const getPersistedSeatSession = (rId: string, tNum: string) => {
@@ -258,6 +266,18 @@ const CustomerMenu = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedItemForDetails, setSelectedItemForDetails] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [menuFilters, setMenuFilters] = useState<MenuFilterOptions>(DEFAULT_MENU_FILTERS);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // 150ms debounce for high-performance responsive filtering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const [showAddedToast, setShowAddedToast] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState('');
   const [menuViewMode, setMenuViewMode] = useState<'list' | 'grid'>('grid');
@@ -296,6 +316,7 @@ const CustomerMenu = () => {
       sessionStorage.removeItem('zappy_checkout_summary');
       sessionStorage.removeItem('zappy_session_terminated');
       sessionStorage.removeItem('zappy_session_fully_ended');
+      sessionStorage.removeItem('zappy_receipt_dismissed');
       setIsSessionEnded(false);
       setSessionTerminatedByRestaurant(false);
       setSessionFullyEnded(false);
@@ -304,32 +325,50 @@ const CustomerMenu = () => {
 
   const handleCheckoutComplete = async (summary: { totalPaid: number; invoiceNumber: string; paymentMethod: string; totalItems: number }) => {
     sessionStorage.setItem('zappy_checkout_summary', JSON.stringify(summary));
+    sessionStorage.setItem('zappy_session_thank_you', 'true');
+    sessionStorage.setItem('zappy_receipt_dismissed', 'true');
     setCheckoutSummary(summary);
     setIsSessionEnded(true);
     setCheckoutFlowStep('none');
+    setShowMoreDishesPrompt(false);
+    setActiveNotification(null);
   };
 
-  const handleManualEndSession = async () => {
-    const tableSessionId = currentSeatOccupancy?.table_session_id || activeSession?.id;
-    if (!tableSessionId || !restaurantId || !resolvedTableId) return;
+  const [showMoreDishesPrompt, setShowMoreDishesPrompt] = useState(false);
+  const [isEndingSession, setIsEndingSession] = useState(false);
 
+  const handleManualEndSession = () => {
+    setShowMoreDishesPrompt(true);
+  };
+
+  const proceedWithEndSession = async () => {
+    setIsEndingSession(true);
     try {
-      await SessionLifecycleService.completeSession({
-        sessionId: tableSessionId,
-        tableId: resolvedTableId,
-        restaurantId,
-      });
+      const candidateSessionId = 
+        currentSeatOccupancy?.table_session_id || 
+        activeSession?.id || 
+        (sessionOrders.length > 0 ? (sessionOrders[0] as any).table_session_id : null) || 
+        seatSessionId;
 
-      if (sessionOrders.length > 0) {
+      if (restaurantId && resolvedTableId) {
+        await SessionLifecycleService.completeSession({
+          sessionId: candidateSessionId || '',
+          tableId: resolvedTableId,
+          restaurantId,
+        });
+      }
+
+      setShowMoreDishesPrompt(false);
+      if (sessionOrders.length > 0 || displayOrders.length > 0) {
         setCheckoutFlowStep('receipt');
       } else {
         sessionStorage.setItem('zappy_session_thank_you', 'true');
         setIsSessionEnded(true);
         performClientCleanup({
-          restaurantId,
-          tableId: resolvedTableId,
+          restaurantId: restaurantId || '',
+          tableId: resolvedTableId || '',
           tableNumber: dynamicTableId || '',
-          tableSessionId,
+          tableSessionId: candidateSessionId || '',
           clearCart,
           setSeatSessionData,
           setDynamicTableId,
@@ -341,11 +380,19 @@ const CustomerMenu = () => {
       }
     } catch (err) {
       console.error("Failed to end session manually:", err);
-      toast({
-        title: 'Unable to end session',
-        description: 'Please try again or ask the restaurant staff for help.',
-        variant: 'destructive',
-      });
+      // Gracefully close prompt and show receipt if orders exist rather than trapping user
+      setShowMoreDishesPrompt(false);
+      if (sessionOrders.length > 0 || displayOrders.length > 0) {
+        setCheckoutFlowStep('receipt');
+      } else {
+        toast({
+          title: 'Unable to end session',
+          description: 'Please try again or ask the restaurant staff for help.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsEndingSession(false);
     }
   };
 
@@ -507,42 +554,74 @@ const CustomerMenu = () => {
     };
   }, [restaurantId, refetchPromotions]);
 
-  // Realtime subscription for session termination from restaurant side (Kill Session)
+  // Realtime subscription for session termination/closure from restaurant side
   useEffect(() => {
-    if (!seatSessionId) return;
+    if (!seatSessionId && !restaurantId) return;
 
     console.log(`[Realtime] Subscribing to customer_events for session ${seatSessionId}...`);
     const channel = supabase
-      .channel(`session-termination-${seatSessionId}`)
+      .channel(`session-events-${seatSessionId || restaurantId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'customer_events',
-          filter: `session_id=eq.${seatSessionId}`
+          filter: `restaurant_id=eq.${restaurantId}`
         },
         (payload) => {
-          if (payload.new && payload.new.event_type === 'session_terminated') {
-            console.log('[Realtime] Session terminated by restaurant!');
-            // Clear cart & session locally
-            if (restaurantId && dynamicTableId) {
-              localStorage.removeItem(`zappy_seat_session_${restaurantId}_${dynamicTableId}`);
-              localStorage.removeItem(`qr_table_${restaurantId}`);
-            }
-            clearCart();
-            setSeatSessionData(null);
-            setDynamicTableId('');
+          if (payload.new) {
+            const matchesSession =
+              payload.new.session_id === seatSessionId ||
+              payload.new.session_id === currentSeatOccupancy?.table_session_id ||
+              (resolvedTableId && payload.new.table_id === resolvedTableId);
 
-            sessionStorage.setItem('zappy_session_terminated', 'true');
-            setSessionTerminatedByRestaurant(true);
-            // Clear search parameters from URL so refreshes don't reset the terminated screen
-            navigate(window.location.pathname, { replace: true });
-            toast({
-              title: "Session Closed",
-              description: "Your session was closed by the restaurant.",
-              variant: "destructive",
-            });
+            if (!matchesSession) return;
+
+            if (payload.new.event_type === 'session_terminated') {
+              console.log('[Realtime] Session terminated by restaurant!');
+              // Clear cart & session locally
+              if (restaurantId && dynamicTableId) {
+                localStorage.removeItem(`zappy_seat_session_${restaurantId}_${dynamicTableId}`);
+                localStorage.removeItem(`qr_table_${restaurantId}`);
+              }
+              clearCart();
+              setSeatSessionData(null);
+              setDynamicTableId('');
+              setCheckoutFlowStep('none');
+              setShowMoreDishesPrompt(false);
+              setActiveNotification(null);
+
+              sessionStorage.setItem('zappy_session_terminated', 'true');
+              setSessionTerminatedByRestaurant(true);
+              navigate(window.location.pathname, { replace: true });
+              toast({
+                title: "Session Closed",
+                description: "Your session was closed by the restaurant.",
+                variant: "destructive",
+              });
+            } else if (payload.new.event_type === 'session_closed') {
+              console.log('[Realtime] Session completed and closed!');
+              if (restaurantId && dynamicTableId) {
+                localStorage.removeItem(`zappy_seat_session_${restaurantId}_${dynamicTableId}`);
+                localStorage.removeItem(`qr_table_${restaurantId}`);
+              }
+              clearCart();
+              setSeatSessionData(null);
+              setDynamicTableId('');
+              setCheckoutFlowStep('none');
+              setShowMoreDishesPrompt(false);
+              setActiveNotification(null);
+
+              sessionStorage.setItem('zappy_session_thank_you', 'true');
+              sessionStorage.setItem('zappy_receipt_dismissed', 'true');
+              setIsSessionEnded(true);
+              setSessionFullyEnded(true);
+              toast({
+                title: "Meal Completed",
+                description: "Thank you for dining with us! Your session is closed.",
+              });
+            }
           }
         }
       )
@@ -551,7 +630,31 @@ const CustomerMenu = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [seatSessionId, restaurantId, dynamicTableId, clearCart, toast]);
+  }, [seatSessionId, restaurantId, dynamicTableId, clearCart, toast, currentSeatOccupancy?.table_session_id, resolvedTableId]);
+
+  // Realtime detection of completed table session in database
+  useEffect(() => {
+    if (
+      currentSeatOccupancy?.table_sessions?.status === 'completed' &&
+      !isSessionEnded
+    ) {
+      console.log('[Realtime] Table session marked completed in DB. Closing customer view cleanly...');
+      if (restaurantId && dynamicTableId) {
+        localStorage.removeItem(`zappy_seat_session_${restaurantId}_${dynamicTableId}`);
+        localStorage.removeItem(`qr_table_${restaurantId}`);
+      }
+      clearCart();
+      setSeatSessionData(null);
+      setDynamicTableId('');
+      setCheckoutFlowStep('none');
+      setShowMoreDishesPrompt(false);
+      setActiveNotification(null);
+      sessionStorage.setItem('zappy_session_thank_you', 'true');
+      sessionStorage.setItem('zappy_receipt_dismissed', 'true');
+      setIsSessionEnded(true);
+      setSessionFullyEnded(true);
+    }
+  }, [currentSeatOccupancy?.table_sessions?.status, isSessionEnded, restaurantId, dynamicTableId, clearCart]);
 
   // Fetch menu items
   const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(restaurantId);
@@ -642,10 +745,10 @@ const CustomerMenu = () => {
     refetchInterval: 5000,
   });
 
-  // Payment is the billing milestone. It reveals the receipt/review flow but
-  // deliberately leaves the dining session active until the guest ends it.
+  // Payment is confirmed — reveal receipt/review flow once without infinite looping
   useEffect(() => {
-    if (sessionInvoice?.payment_status === 'paid' && checkoutFlowStep === 'none' && !isSessionEnded) {
+    const alreadyDismissed = sessionStorage.getItem('zappy_receipt_dismissed') === 'true';
+    if (sessionInvoice?.payment_status === 'paid' && checkoutFlowStep === 'none' && !isSessionEnded && !alreadyDismissed) {
       setCheckoutFlowStep('receipt');
     }
   }, [sessionInvoice?.payment_status, checkoutFlowStep, isSessionEnded]);
@@ -833,7 +936,9 @@ const CustomerMenu = () => {
           created_at: now
         } as any);
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Could not save customer profile to database, using local storage fallback:', error);
+      }
 
       setCustomerName(name.trim());
       setCustomerPhone(phone.trim());
@@ -848,11 +953,19 @@ const CustomerMenu = () => {
         description: 'Welcome! You can now browse the menu and order.',
       });
     } catch (err) {
-      console.error('Failed to register customer:', err);
+      console.error('Failed to register customer to database, falling back locally:', err);
+      const deviceId = localStorage.getItem('zappy_device_id') || crypto.randomUUID();
+      setCustomerName(name.trim());
+      setCustomerPhone(phone.trim());
+      setIsNewCustomerThisSession(true);
+      localStorage.setItem(
+        'zappy_customer_profile',
+        JSON.stringify({ name: name.trim(), phone: phone.trim(), deviceId })
+      );
+      setShowRegisterDialog(false);
       toast({
-        title: 'Error',
-        description: 'Could not create profile. Please try again.',
-        variant: 'destructive',
+        title: 'Welcome to Zappy!',
+        description: 'You can now browse the menu and order.',
       });
     } finally {
       setRegistering(false);
@@ -1171,39 +1284,70 @@ const CustomerMenu = () => {
     [menuItems]
   );
 
-  // Build category list with "All" option
+  // Build category list with "All" option (strictly excluding "Uncategorized")
   const categoryObjects = useMemo(() => {
+    const validCategories = categories.filter(
+      (c) => c.name && c.name.trim().toLowerCase() !== "uncategorized" && c.name.trim().toLowerCase() !== "all"
+    );
     return [
       { id: 'all', name: 'All', image_url: null },
-      ...categories.map(c => ({ id: c.id, name: c.name, image_url: c.image_url }))
+      ...validCategories.map(c => ({ id: c.id, name: c.name, image_url: c.image_url }))
     ];
   }, [categories]);
 
-  // Filter items
+  // Filter items strictly by admin categories, debounced search query, and active filters
   const filteredItems = useMemo(() => {
-    return availableMenuItems.filter((item) => {
+    let items = availableMenuItems.filter((item) => {
+      // 1. Admin Category matching
       const matchesCategory = (() => {
-        if (selectedCategory === 'All') return true;
-        if (selectedCategory === 'Trending') return item.is_popular === true;
-        if (selectedCategory === 'Chef Special') {
-          return item.is_popular === true || 
-                 (item.tags && item.tags.some(t => t.toLowerCase().includes('chef') || t.toLowerCase().includes('special')));
-        }
-        if (selectedCategory === 'Healthy') {
-          return item.is_vegetarian === true || 
-                 item.is_vegan === true || 
-                 (item.tags && item.tags.some(t => t.toLowerCase().includes('healthy') || t.toLowerCase().includes('diet')));
-        }
-        if (selectedCategory === 'Spicy') {
-          return item.spicy_level !== undefined && item.spicy_level !== null && item.spicy_level > 0;
-        }
-        return item.category?.name === selectedCategory;
+        if (!selectedCategory || selectedCategory.trim().toLowerCase() === 'all') return true;
+        return (
+          item.category?.name?.trim().toLowerCase() ===
+          selectedCategory.trim().toLowerCase()
+        );
       })();
 
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+      // 2. Multi-field search match across name, category, description, ingredients & tags
+      const matchesSearch = (() => {
+        const q = debouncedSearchQuery.trim().toLowerCase();
+        if (!q) return true;
+        const tokens = q.split(/\s+/).filter(Boolean);
+        const name = (item.name || '').toLowerCase();
+        const category = (item.category?.name || '').toLowerCase();
+        const desc = (item.description || '').toLowerCase();
+        const tags = Array.isArray(item.tags)
+          ? item.tags.map((t) => String(t).toLowerCase()).join(' ')
+          : '';
+        const combined = `${name} ${category} ${desc} ${tags}`;
+        return tokens.every((token) => combined.includes(token));
+      })();
+
+      // 3. Dietary preferences filter
+      const matchesDietary = (() => {
+        if (menuFilters.dietary === 'all') return true;
+        if (menuFilters.dietary === 'veg') return !!item.is_vegetarian;
+        if (menuFilters.dietary === 'non-veg') return !item.is_vegetarian;
+        if (menuFilters.dietary === 'vegan') return !!item.is_vegan;
+        return true;
+      })();
+
+      // 4. Popular / Chef Special filter
+      const matchesPopular = !menuFilters.popularOnly || !!item.is_popular;
+
+      return matchesCategory && matchesSearch && matchesDietary && matchesPopular;
     });
-  }, [availableMenuItems, selectedCategory, searchQuery]);
+
+    // 5. Sorting
+    if (menuFilters.sortBy === 'price-asc') {
+      items = [...items].sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (menuFilters.sortBy === 'price-desc') {
+      items = [...items].sort((a, b) => Number(b.price) - Number(a.price));
+    } else if (menuFilters.sortBy === 'name-asc') {
+      items = [...items].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }
+
+    return items;
+  }, [availableMenuItems, selectedCategory, debouncedSearchQuery, menuFilters]);
 
   const recommendedItems = useMemo(() => {
     // Return items that have is_popular === true, or fall back to the first 6 items in menuItems
@@ -1240,23 +1384,26 @@ const CustomerMenu = () => {
 
           if (currentStatus === 'accepted') {
             eventType = 'received';
-            title = '✅ Order Accepted';
+            title = 'Order Accepted';
             message = 'Our kitchen team has received and verified your order. Prep starts now!';
           } else if (currentStatus === 'preparing') {
             eventType = 'preparing';
-            title = '👨‍🍳 Chef is Preparing!';
+            title = 'Chef is Preparing!';
             message = 'Your freshly ordered dishes are currently in the hot pan. Smells amazing!';
           } else if (currentStatus === 'ready') {
             eventType = 'ready';
-            title = '🔔 Order Ready to Serve!';
+            title = 'Order Ready to Serve!';
             message = 'Your delicious meal is ready to be served. Our waitstaff is bringing it hot!';
           } else if (currentStatus === 'served') {
             eventType = 'delivered';
-            title = '🍽️ Order Served';
+            title = 'Order Served';
             message = `Enjoy your meal! Your hot food has been served at Table ${tableNumber || 'N/A'}.`;
+            setTimeout(() => {
+              setShowMoreDishesPrompt(true);
+            }, 1200);
           } else if (currentStatus === 'completed') {
             eventType = 'delivered';
-            title = '✨ Meal Completed';
+            title = 'Meal Completed';
             message = 'Thank you for dining with us! We hope you loved your culinary experience.';
           }
 
@@ -1287,6 +1434,20 @@ const CustomerMenu = () => {
 
     prevOrderStatusRef.current = currentStatus;
   }, [activeOrder?.status, restaurantId, dynamicTableId, tableNumber]);
+
+  // Automatically prompt "have you more dish or click me 😉" after order is served
+  useEffect(() => {
+    if (activeOrder?.status === 'served' && activeOrder?.id) {
+      const key = `zappy_prompt_served_${activeOrder.id}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, 'true');
+        const timer = setTimeout(() => {
+          setShowMoreDishesPrompt(true);
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [activeOrder?.status, activeOrder?.id]);
 
 
 
@@ -1349,7 +1510,7 @@ const CustomerMenu = () => {
       id: item.id,
       name: item.name,
       price: Number(item.price),
-      category: item.category?.name || 'Uncategorized',
+      category: item.category?.name || 'Menu',
       image_url: item.image_url || undefined,
     });
     setLastAddedItem(item.name);
@@ -1417,7 +1578,7 @@ const CustomerMenu = () => {
 
     if (isDemoMode) {
       toast({
-        title: '🎉 Demo Order Placed!',
+        title: 'Demo Order Placed',
         description: 'This is a demo — your order was not sent to the kitchen.',
       });
       clearCart();
@@ -1673,6 +1834,15 @@ const CustomerMenu = () => {
         )}
       </div>
 
+      {/* Google Ratings & Reviews Showcase */}
+      {restaurantId && (
+        <GoogleRatingSection
+          restaurantId={restaurantId}
+          restaurantName={restaurant?.name}
+          variant="full"
+        />
+      )}
+
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="card-hover cursor-pointer border-primary/20" onClick={() => setCurrentView('search')}>
@@ -1707,23 +1877,41 @@ const CustomerMenu = () => {
 
   const renderMenu = () => (
     <div>
+      {/* Restaurant Hero Banner directly above search */}
+      <RestaurantMenuBanner
+        restaurantName={restaurant?.name || splashBranding?.name || 'Restaurant'}
+        logoUrl={cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url)}
+        bannerImageUrl={
+          cacheBustUrl(restaurant?.banner_image_url) ||
+          cacheBustUrl(restaurant?.cover_image_url) ||
+          cacheBustUrl(splashBranding?.cover_image_url)
+        }
+        tagline={restaurant?.description || undefined}
+        tableNumber={tableNumber || undefined}
+        seatNumber={selectedSeatNumbers.length > 0 ? selectedSeatNumbers : undefined}
+        rating={restaurant?.google_rating ? Number(restaurant.google_rating) : undefined}
+        totalReviews={restaurant?.google_user_ratings_total ? Number(restaurant.google_user_ratings_total) : undefined}
+        city={restaurant?.city || undefined}
+        primaryColor={primaryColor}
+      />
 
-      {/* Search */}
-      <div className="sticky top-[56px] z-30 bg-background pb-3 -mx-4 px-4 pt-2 transition-all duration-300">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative flex-1 flex items-center group">
-            <Search className="absolute left-4 w-5 h-5 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
-            <Input
-              placeholder="Search menu..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-10 h-11 rounded-2xl bg-zinc-100/70 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 text-sm focus-visible:ring-1 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/50 transition-all shadow-[0_4px_16px_rgba(0,0,0,0.02)]"
-            />
-            {/* Filter icon placeholder */}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-4 text-zinc-400">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-            </svg>
-          </div>
+      {/* Sticky Search & Category Bar */}
+      <div className="sticky top-[52px] z-30 bg-background pb-3 -mx-4 px-4 pt-1 transition-all duration-300">
+        <div className="mb-3">
+          <MenuSearchFilter
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filters={menuFilters}
+            onFiltersChange={setMenuFilters}
+            menuItems={availableMenuItems}
+            categories={categoryObjects}
+            currencySymbol={currencySymbol}
+            restaurantId={restaurantId || undefined}
+            onSelectMenuItem={(item) => setSelectedItemForDetails(item)}
+            onSelectCategory={(catName) => setSelectedCategory(catName)}
+            filteredCount={filteredItems.length}
+            inputRef={searchInputRef}
+          />
         </div>
 
         {/* Categories */}
@@ -1732,6 +1920,17 @@ const CustomerMenu = () => {
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
         />
+
+        {/* Compact Google Rating Badge */}
+        {restaurantId && (
+          <div className="pt-2 pb-1">
+            <GoogleRatingSection
+              restaurantId={restaurantId}
+              restaurantName={restaurant?.name}
+              variant="badge"
+            />
+          </div>
+        )}
       </div>
 
       {/* Dynamic Advertisement Banners */}
@@ -1756,7 +1955,7 @@ const CustomerMenu = () => {
         <>
           <div className="flex items-center justify-between mt-6 mb-4">
             <h3 className="font-extrabold text-xl text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5 tracking-tight">
-              Recommended for you <span className="text-emerald-500 text-lg">✨</span>
+              Recommended for you <Sparkles className="w-5 h-5 text-emerald-500 shrink-0" />
             </h3>
             <button
               onClick={() => setSelectedCategory('All')}
@@ -1783,7 +1982,14 @@ const CustomerMenu = () => {
       {/* Menu Items */}
       <div className="mt-4">
       {menuLoading ? (
-        menuViewMode === 'list' ? <MenuListSkeleton /> : <MenuGridSkeleton />
+        <div className="py-4 space-y-4">
+          <FoodLoader
+            message="Preparing delicious menu..."
+            subMessage="Loading fresh recipes & chef recommendations"
+            size="md"
+          />
+          {menuViewMode === 'list' ? <MenuListSkeleton /> : <MenuGridSkeleton />}
+        </div>
       ) : menuViewMode === 'list' ? (
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
@@ -1836,21 +2042,32 @@ const CustomerMenu = () => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center py-16 px-4 bg-zinc-50/50 dark:bg-zinc-900/30 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl"
+          className="text-center py-14 px-4 bg-zinc-50/50 dark:bg-zinc-900/30 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl"
         >
-          <Search className="w-10 h-10 mx-auto text-zinc-400 dark:text-zinc-600 mb-3" />
-          <h3 className="text-base font-extrabold text-zinc-900 dark:text-zinc-50 mb-1">No items found</h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
-            We couldn't find any items matching "{searchQuery}" in this category. Try adjusting your search query or category filter.
+          <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+            <UtensilsCrossed className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-extrabold text-zinc-900 dark:text-zinc-50 mb-1">No dishes found</h3>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto leading-relaxed">
+            {searchQuery
+              ? `We couldn't find any dishes matching "${searchQuery}". Try searching with different keywords.`
+              : `No dishes match your selected category or dietary filters. Try adjusting your preferences.`}
           </p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
-            className="mt-4 text-xs font-bold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300"
-          >
-            Clear Filters
-          </Button>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('All');
+                setMenuFilters(DEFAULT_MENU_FILTERS);
+              }}
+              className="text-xs font-bold gap-1.5 rounded-xl h-9"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Reset All Filters
+            </Button>
+          </div>
         </motion.div>
       )}
       </div>
@@ -1984,7 +2201,7 @@ const CustomerMenu = () => {
               
               {cartPricing.appliedDiscounts.map(discount => (
                 <div key={discount.promotionId} className="flex justify-between text-sm text-green-600 font-medium">
-                  <span>✨ {discount.title}</span>
+                  <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" /> {discount.title}</span>
                   <span>-{currencySymbol}{discount.discountAmount.toFixed(2)}</span>
                 </div>
               ))}
@@ -2092,7 +2309,8 @@ const CustomerMenu = () => {
             onClick={handleManualEndSession}
             className="w-full bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 rounded-2xl h-12 font-black text-xs shadow-md gap-2"
           >
-            🏁 End Session
+            <LogOut className="w-4 h-4" />
+            End Session
           </Button>
         </div>
       )}
@@ -2101,8 +2319,8 @@ const CustomerMenu = () => {
 
   const renderProfile = () => (
     <div className="space-y-4 text-center py-12">
-      <div className="w-20 h-20 mx-auto bg-muted rounded-full flex items-center justify-center">
-        <span className="text-3xl">👤</span>
+      <div className="w-20 h-20 mx-auto bg-muted rounded-full flex items-center justify-center text-muted-foreground">
+        <User className="w-9 h-9" />
       </div>
       <h3 className="font-semibold text-lg">Guest</h3>
       <p className="text-sm text-muted-foreground">Table {tableNumber || 'N/A'}</p>
@@ -2213,8 +2431,8 @@ const CustomerMenu = () => {
     return (
       <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
         <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background px-6 text-center select-none py-12">
-          <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto text-3xl mb-6 shadow-md border border-red-500/20">
-            ⚠️
+          <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-md border border-red-500/20">
+            <AlertTriangle className="w-9 h-9" />
           </div>
           <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">
             Session Closed By Restaurant
@@ -2234,8 +2452,8 @@ const CustomerMenu = () => {
     return (
       <TenantThemeProvider primaryColor={restaurant?.primary_color} secondaryColor={restaurant?.secondary_color}>
         <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background px-6 text-center select-none py-12">
-          <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto text-3xl shadow-md border border-emerald-500/20">
-            ✓
+          <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto shadow-md border border-emerald-500/20">
+            <Check className="w-9 h-9" />
           </div>
           <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">
             Session Closed
@@ -2273,8 +2491,8 @@ const CustomerMenu = () => {
             transition={{ duration: 0.4 }}
             className="w-full max-w-sm space-y-6"
           >
-            <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto text-3xl shadow-md border border-emerald-500/20">
-              🙏
+            <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto shadow-md border border-emerald-500/20">
+              <HeartHandshake className="w-10 h-10" />
             </div>
             
             <div className="space-y-2">
@@ -2337,6 +2555,7 @@ const CustomerMenu = () => {
     <QRSplashScreen
       restaurantName={splashName}
       logoUrl={splashLogo}
+      backgroundImageUrl={splashBranding?.cover_image_url || restaurant?.cover_image_url || ((restaurant?.settings as any)?.branding?.splash_bg_image_url as string) || null}
       animation={brandingConfig.letter_animation}
       speed={brandingConfig.animation_speed}
       mascot={brandingConfig.mascot}
@@ -2394,7 +2613,12 @@ const CustomerMenu = () => {
         logoUrl={cacheBustUrl(restaurant?.logo_url) || cacheBustUrl(splashBranding?.logo_url)}
         tableNumber={tableNumber || 'Select Table'}
         seatNumber={selectedSeatNumbers.length > 0 ? selectedSeatNumbers : undefined}
-        onSearchClick={() => setCurrentView('search')}
+        onSearchClick={() => {
+          setCurrentView('search');
+          setTimeout(() => {
+            searchInputRef.current?.focus();
+          }, 80);
+        }}
         onAlertsClick={() => setCurrentView('notifications')}
         onProfileClick={() => setCurrentView('profile')}
         primaryColor={primaryColor}
@@ -2402,6 +2626,8 @@ const CustomerMenu = () => {
         restaurantId={restaurantId || undefined}
         tableId={resolvedTableId || undefined}
         notificationCount={tabNotifications.filter((n: any) => !readNotificationIds.includes(n.id)).length}
+        avgRating={restaurant?.google_rating ? Number(restaurant.google_rating) : undefined}
+        totalReviews={restaurant?.google_user_ratings_total ? Number(restaurant.google_user_ratings_total) : undefined}
       />
 
       {/* Content */}
@@ -2482,7 +2708,14 @@ const CustomerMenu = () => {
         reviewRequired={isNewCustomerThisSession && !!customerName.trim()}
         onComplete={handleCheckoutComplete}
         isCompleted={true}
-        onClose={() => setCheckoutFlowStep('none')}
+        onClose={() => {
+          sessionStorage.setItem('zappy_receipt_dismissed', 'true');
+          setCheckoutFlowStep('none');
+          if (activeOrder?.status === 'served' || activeOrder?.status === 'completed' || sessionInvoice?.payment_status === 'paid') {
+            setIsSessionEnded(true);
+            sessionStorage.setItem('zappy_session_thank_you', 'true');
+          }
+        }}
       />
 
       {/* Realtime Animated Order Notification Bar Overlay */}
@@ -2522,8 +2755,8 @@ const CustomerMenu = () => {
               exit={{ scale: 0.95, y: 20 }}
               className="w-full max-w-[360px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-4 text-center"
             >
-              <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-black">
-                ✨
+              <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto">
+                <Sparkles className="w-8 h-8" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-lg font-extrabold text-zinc-900 dark:text-zinc-50">Welcome to Zappy</h3>
@@ -2573,10 +2806,113 @@ const CustomerMenu = () => {
                   setIsNewCustomerThisSession(true);
                   handleRegisterCustomer(nameVal, phoneVal);
                 }}
-                className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-extrabold text-xs shadow-lg hover:shadow-xl transition-all"
+                className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-extrabold text-xs shadow-lg hover:shadow-xl transition-all gap-1.5"
               >
-                {registering ? 'Creating Profile...' : 'Start Dining 🍽️'}
+                {registering ? 'Creating Profile...' : (
+                  <span className="flex items-center justify-center gap-1.5">
+                    Start Dining <Utensils className="w-3.5 h-3.5" />
+                  </span>
+                )}
               </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Have More Dishes / End Session Prompt ("have you more dish or click me 😉") */}
+      <AnimatePresence>
+        {showMoreDishesPrompt && (
+          <motion.div
+            className="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-md px-5 select-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 24, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 16, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              className="w-full max-w-[380px] bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-5 text-center relative overflow-hidden"
+            >
+              {/* Subtle top glow banner */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500" />
+
+              {/* Close / Dismiss 'X' button in top-right */}
+              <button
+                type="button"
+                onClick={() => setShowMoreDishesPrompt(false)}
+                className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Playful Animated Icon */}
+              <motion.div 
+                animate={{ rotate: [0, -10, 10, -5, 5, 0], scale: [1, 1.08, 1] }}
+                transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 2 }}
+                className="w-16 h-16 bg-gradient-to-tr from-amber-500/15 via-emerald-500/15 to-amber-500/20 text-amber-500 dark:text-amber-400 rounded-3xl flex items-center justify-center mx-auto shadow-inner border border-amber-500/20"
+              >
+                <Sparkles className="w-8 h-8" />
+              </motion.div>
+
+              {/* Title & Description */}
+              <div className="space-y-2">
+                <h3 className="text-xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 leading-snug">
+                  have you more dish or click me 😉
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed px-2">
+                  Craving another hot dish, beverage, or dessert? Or tap below to complete your table session and review your bill!
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2.5 pt-1">
+                {/* Option 1: Order More Dishes */}
+                <Button
+                  onClick={() => {
+                    setShowMoreDishesPrompt(false);
+                    setCurrentView('search');
+                    toast({
+                      title: 'Menu Opened',
+                      description: 'Explore the full menu and add more tasty dishes anytime.',
+                    });
+                  }}
+                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-sm shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all flex items-center justify-center gap-2"
+                >
+                  <Utensils className="w-4 h-4" />
+                  <span>Have More Dishes</span>
+                </Button>
+
+                {/* Option 2: Click Me 😉 (End Session & Bill) */}
+                <Button
+                  disabled={isEndingSession}
+                  onClick={proceedWithEndSession}
+                  className="w-full h-12 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 rounded-2xl font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 border border-zinc-800 dark:border-zinc-200"
+                >
+                  {isEndingSession ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Finishing Session...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Receipt className="w-4 h-4" />
+                      <span>click me 😉</span>
+                      <span className="text-xs opacity-75 font-normal">(Get Bill & End Session)</span>
+                    </>
+                  )}
+                </Button>
+
+                {/* Option 3: Continue Dining / Later */}
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowMoreDishesPrompt(false)}
+                  className="w-full h-9 text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 rounded-xl font-medium transition-colors"
+                >
+                  Continue Dining
+                </Button>
+              </div>
             </motion.div>
           </motion.div>
         )}

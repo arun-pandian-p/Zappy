@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Plus, Minus, Heart } from "lucide-react";
+import { Plus, Minus, Heart, Utensils, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { type MenuItem } from "@/hooks/useMenuItems";
 
@@ -83,8 +83,8 @@ function RecommendedCard({
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-zinc-400">
-            🥘
+          <div className="w-full h-full flex items-center justify-center text-zinc-400 bg-muted/40">
+            <Utensils className="w-8 h-8 opacity-40" />
           </div>
         )}
 
@@ -117,7 +117,7 @@ function RecommendedCard({
 
         {/* Rating / Popular Tag overlay */}
         <div className="absolute bottom-2.5 left-2.5 bg-black/55 backdrop-blur-md text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-          <span>⭐</span>
+          <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
           <span>{item.is_popular ? "4.8 (120+)" : "4.5 (80+)"}</span>
         </div>
       </div>

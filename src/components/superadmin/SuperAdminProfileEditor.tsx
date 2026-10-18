@@ -15,8 +15,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { invokeFunction } from '@/integrations/supabase/functions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-const EMOJI_AVATARS = ['👨‍💼', '👩‍💼', '🧑‍💻', '👨‍🍳', '🦸', '🧙', '🎭', '🤖'];
-
 interface TeamMember {
   user_id: string;
   email: string;

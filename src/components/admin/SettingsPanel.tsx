@@ -24,6 +24,10 @@ import {
   RefreshCw,
   Palette,
   Image as ImageLucide,
+  Utensils,
+  Moon,
+  Sparkles,
+  Square,
 } from "lucide-react";
 import { BrandingAnimationSettings, type BrandingConfig, defaultBrandingConfig } from "@/components/branding/BrandingAnimationSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -38,6 +42,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { ImageCropDialog } from "@/components/admin/ImageCropDialog";
 import { BannerLogoUploader } from "@/components/admin/BannerLogoUploader";
+import { LocationAndGoogleReviewsSection } from "@/components/admin/LocationAndGoogleReviewsSection";
 import {
   Select,
   SelectContent,
@@ -58,16 +63,31 @@ interface SettingsPanelProps {
 }
 
 const THEME_PRESETS = [
-  { id: 'classic', name: 'Classic', primary: '#F97316', secondary: '#FDE68A', font: 'Inter', desc: 'Warm & inviting with orange accents', emoji: '🍽️' },
-  { id: 'dark', name: 'Dark', primary: '#A78BFA', secondary: '#6366F1', font: 'Inter', desc: 'Modern dark theme with violet tones', emoji: '🌙' },
-  { id: 'premium', name: 'Premium', primary: '#D4A574', secondary: '#1A1A2E', font: 'Playfair Display', desc: 'Luxurious gold & dark palette', emoji: '✨' },
-  { id: 'minimal', name: 'Minimal', primary: '#374151', secondary: '#E5E7EB', font: 'Inter', desc: 'Clean white with subtle accents', emoji: '◻️' },
-  { id: 'custom', name: 'Custom', primary: '#3B82F6', secondary: '#10B981', font: 'Inter', desc: 'Choose your own colors & fonts', emoji: '🎨' },
+  { id: 'classic', name: 'Classic', primary: '#F97316', secondary: '#FDE68A', font: 'Inter', desc: 'Warm & inviting with orange accents', icon: Utensils },
+  { id: 'dark', name: 'Dark', primary: '#A78BFA', secondary: '#6366F1', font: 'Inter', desc: 'Modern dark theme with violet tones', icon: Moon },
+  { id: 'premium', name: 'Premium', primary: '#D4A574', secondary: '#1A1A2E', font: 'Playfair Display', desc: 'Luxurious gold & dark palette', icon: Sparkles },
+  { id: 'minimal', name: 'Minimal', primary: '#374151', secondary: '#E5E7EB', font: 'Inter', desc: 'Clean white with subtle accents', icon: Square },
+  { id: 'custom', name: 'Custom', primary: '#3B82F6', secondary: '#10B981', font: 'Inter', desc: 'Choose your own colors & fonts', icon: Palette },
 ];
 
 interface RestaurantSettings {
   name: string;
   address: string;
+  country: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  latitude: number | null;
+  longitude: number | null;
+  google_place_id: string;
+  google_place_name?: string;
+  google_formatted_address?: string;
+  google_rating?: number | null;
+  google_user_ratings_total?: number;
+  google_maps_url?: string;
+  google_synced_at?: string;
+  google_sync_status?: string;
+  google_sync_error?: string;
   phone: string;
   email: string;
   currency: string;
@@ -91,6 +111,7 @@ interface RestaurantSettings {
   font_family: string;
   logo_url: string;
   banner_image_url: string;
+  cover_image_url: string;
   favicon_url: string;
   menu_title: string;
 }
@@ -100,6 +121,21 @@ const BASE_URL = getAppOrigin();
 const defaultSettings: RestaurantSettings = {
   name: "",
   address: "",
+  country: "",
+  city: "",
+  state: "",
+  postal_code: "",
+  latitude: null,
+  longitude: null,
+  google_place_id: "",
+  google_place_name: "",
+  google_formatted_address: "",
+  google_rating: null,
+  google_user_ratings_total: 0,
+  google_maps_url: "",
+  google_synced_at: "",
+  google_sync_status: "not_connected",
+  google_sync_error: "",
   phone: "",
   email: "",
   currency: "INR",
@@ -123,6 +159,7 @@ const defaultSettings: RestaurantSettings = {
   font_family: "Inter",
   logo_url: "",
   banner_image_url: "",
+  cover_image_url: "",
   favicon_url: "",
   menu_title: "",
 };
@@ -202,6 +239,21 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
       setSettings({
         name: restaurant.name || "",
         address: restaurant.address || "",
+        country: restaurant.country || "",
+        city: restaurant.city || "",
+        state: restaurant.state || "",
+        postal_code: restaurant.postal_code || "",
+        latitude: restaurant.latitude ?? null,
+        longitude: restaurant.longitude ?? null,
+        google_place_id: restaurant.google_place_id || "",
+        google_place_name: restaurant.google_place_name || "",
+        google_formatted_address: restaurant.google_formatted_address || "",
+        google_rating: restaurant.google_rating ?? null,
+        google_user_ratings_total: restaurant.google_user_ratings_total ?? 0,
+        google_maps_url: restaurant.google_maps_url || "",
+        google_synced_at: restaurant.google_synced_at || "",
+        google_sync_status: restaurant.google_sync_status || "not_connected",
+        google_sync_error: restaurant.google_sync_error || "",
         phone: restaurant.phone || "",
         email: restaurant.email || "",
         currency: restaurant.currency || "INR",
@@ -232,6 +284,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         font_family: restaurant.font_family || "Inter",
         logo_url: restaurant.logo_url || "",
         banner_image_url: restaurant.banner_image_url || "",
+        cover_image_url: restaurant.cover_image_url || ((restaurant.settings as any)?.branding?.splash_bg_image_url as string) || "",
         favicon_url: restaurant.favicon_url || "",
         menu_title: restaurant.menu_title || "",
       });
@@ -244,6 +297,10 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
     try {
       const cleanName = sanitize(settings.name);
       const cleanAddress = sanitize(settings.address);
+      const cleanCountry = settings.country ? sanitize(settings.country) : null;
+      const cleanCity = settings.city ? sanitize(settings.city) : null;
+      const cleanState = settings.state ? sanitize(settings.state) : null;
+      const cleanPostalCode = settings.postal_code ? sanitize(settings.postal_code) : null;
       const cleanPhone = sanitize(settings.phone);
       const cleanEmail = sanitize(settings.email);
       const cleanMenuTitle = settings.menu_title ? sanitize(settings.menu_title) : null;
@@ -254,6 +311,16 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         updates: {
           name: cleanName,
           address: cleanAddress,
+          country: cleanCountry,
+          city: cleanCity,
+          state: cleanState,
+          postal_code: cleanPostalCode,
+          latitude: settings.latitude,
+          longitude: settings.longitude,
+          google_place_id: settings.google_place_id || null,
+          google_place_name: settings.google_place_name || null,
+          google_formatted_address: settings.google_formatted_address || null,
+          google_maps_url: settings.google_maps_url || null,
           phone: cleanPhone,
           email: cleanEmail,
           currency: settings.currency,
@@ -274,7 +341,10 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           },
           settings: {
             qr_base_url: settings.qr_base_url,
-            branding: { ...settings.branding },
+            branding: { 
+              ...settings.branding,
+              splash_bg_image_url: settings.cover_image_url || "",
+            },
             admin_avatar: settings.admin_avatar,
             admin_display_name: cleanDisplayName,
           } as any,
@@ -283,6 +353,7 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
           font_family: settings.font_family,
           logo_url: settings.logo_url || null,
           banner_image_url: settings.banner_image_url || null,
+          cover_image_url: settings.cover_image_url || null,
           favicon_url: settings.favicon_url || null,
           menu_title: cleanMenuTitle,
           theme_config: {
@@ -397,6 +468,19 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
         </Card>
       </motion.div>
 
+      {/* Location & Google Reviews */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.03 }}
+      >
+        <LocationAndGoogleReviewsSection
+          restaurantId={restaurantId}
+          settings={settings}
+          onChange={(updated) => setSettings((prev) => ({ ...prev, ...updated }))}
+        />
+      </motion.div>
+
       {/* Theme & Appearance */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -439,7 +523,9 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
                         <CheckCircle2 className="w-5 h-5 text-primary" />
                       </div>
                     )}
-                    <span className="text-2xl">{preset.emoji}</span>
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-primary mb-2">
+                      <preset.icon className="w-4 h-4" />
+                    </div>
                     <div className="flex gap-1.5 mt-2">
                       <div className="w-6 h-6 rounded-full border" style={{ backgroundColor: preset.primary }} />
                       <div className="w-6 h-6 rounded-full border" style={{ backgroundColor: preset.secondary }} />
@@ -574,19 +660,26 @@ export function SettingsPanel({ restaurantId }: SettingsPanelProps) {
 
             <Separator />
 
-            {/* Favicon */}
+            {/* Splash / Loading Screen Background */}
             <div className="space-y-2">
-              <Label>Favicon</Label>
-              <p className="text-xs text-muted-foreground">Small icon shown in browser tabs. 32×32 or 64×64 PNG recommended.</p>
+              <div className="flex items-center gap-2">
+                <Label>Loading Screen Background Image</Label>
+                <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">
+                  Splash Screen
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Custom background photo shown while customer menu opens on phones. High-resolution food/ambiance image recommended.
+              </p>
               <ImageUpload
-                currentImageUrl={settings.favicon_url || null}
-                onImageUploaded={(url) => setSettings({ ...settings, favicon_url: url })}
+                currentImageUrl={settings.cover_image_url || null}
+                onImageUploaded={(url) => setSettings({ ...settings, cover_image_url: url })}
                 restaurantId={restaurantId}
                 folder="branding"
                 maxSizeMB={10}
                 enableCrop
                 cropShape="rect"
-                cropAspect={1}
+                cropAspect={16 / 9}
               />
             </div>
 

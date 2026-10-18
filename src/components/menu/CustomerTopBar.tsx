@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Bell, LogIn } from "lucide-react";
+import { Search, Bell, LogIn, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, useScroll } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -101,21 +101,12 @@ export function CustomerTopBar({
     >
       {/* Left: Logo + Restaurant Title + Table Badge */}
       <div className="flex items-center gap-2 min-w-0">
-        {logoUrl && !logoFailed ? (
-          <img
-            src={logoUrl}
-            alt=""
-            className="w-8 h-8 rounded-lg object-cover border border-zinc-200/40 dark:border-zinc-800/40 shrink-0"
-            onError={() => setLogoFailed(true)}
-          />
-        ) : (
-          <div 
-            className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs text-white shrink-0"
-            style={{ backgroundColor: primaryColor || '#10B981' }}
-          >
-            {restaurantName ? restaurantName.charAt(0).toUpperCase() : '✦'}
-          </div>
-        )}
+        <img
+          src={logoUrl && !logoFailed ? logoUrl : "/restaurant-logo.svg"}
+          alt={restaurantName || "Restaurant"}
+          className="w-8 h-8 rounded-lg object-contain border border-zinc-200/40 dark:border-zinc-800/40 shrink-0 bg-background/50 p-0.5"
+          onError={() => setLogoFailed(true)}
+        />
         <div className="flex flex-col min-w-0">
           <h1 className="font-extrabold text-xs text-zinc-900 dark:text-zinc-50 tracking-tight leading-none truncate mb-1">
             {restaurantName}
@@ -137,7 +128,7 @@ export function CustomerTopBar({
             )}
             {avgRating !== undefined && totalReviews !== undefined && totalReviews > 0 && (
               <span className="text-[9px] font-bold text-amber-500 dark:text-amber-400 flex items-center gap-0.5 shrink-0 leading-none">
-                ★ {avgRating.toFixed(1)} <span className="text-muted-foreground dark:text-zinc-500 font-normal">({totalReviews})</span>
+                <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400 shrink-0" /> {avgRating.toFixed(1)} <span className="text-muted-foreground dark:text-zinc-500 font-normal">({totalReviews})</span>
               </span>
             )}
           </div>

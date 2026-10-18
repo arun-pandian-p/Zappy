@@ -9,7 +9,7 @@ import { useTables } from "@/hooks/useTables";
 import { Label } from "@/components/ui/label";
 import { 
   Users, UserCheck, Play, Power, Star, Receipt, 
-  MapPin, Clock, ArrowRightLeft, ShieldAlert, Loader2, RefreshCw 
+  MapPin, Clock, ArrowRightLeft, ShieldAlert, Loader2, RefreshCw, Phone
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -329,7 +329,10 @@ export function WaiterManagementPanel({ restaurantId }: WaiterManagementPanelPro
                       <h3 className="font-bold text-slate-900 dark:text-white">{waiter.full_name}</h3>
                       <span className="text-xs text-muted-foreground">ID: W-{waiter.username.toUpperCase()}</span>
                       {waiter.phone && (
-                        <div className="text-[10px] text-muted-foreground mt-0.5">📱 {waiter.phone}</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                          <Phone className="w-2.5 h-2.5 shrink-0" />
+                          <span>{waiter.phone}</span>
+                        </div>
                       )}
                     </div>
                   </div>

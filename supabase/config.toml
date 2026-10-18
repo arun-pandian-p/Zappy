@@ -1,14 +1,34 @@
-project_id = "copkzrwvpqfjpsyyyqdy"
-
-[functions.manage-staff]
-verify_jwt = false
+project_id = "ybnamsnooymffjsgrsao"
 
 [functions.create-tenant]
 verify_jwt = false
 
+[functions.evict-ai-cache]
+verify_jwt = false
 
-[functions.qr-redirect]
+[functions.google-places]
+verify_jwt = false
+
+[functions.manage-qr]
+verify_jwt = false
+
+[functions.manage-staff]
+verify_jwt = false
+
+[functions.manage-super-admins]
 verify_jwt = false
 
 [functions.notify-quote]
+verify_jwt = false
+
+[functions.ocr-menu]
+verify_jwt = false
+
+[functions.push-invoice]
+verify_jwt = false
+
+[functions.push-sender]
+verify_jwt = false
+
+[functions.qr-redirect]
 verify_jwt = false

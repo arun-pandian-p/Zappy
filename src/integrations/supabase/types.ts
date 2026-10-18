@@ -1315,6 +1315,7 @@ export type Database = {
           table_id: string | null
           table_session_id: string | null
           seat_session_id: string | null
+          token_no: string | null
           tax_amount: number | null
           total_amount: number | null
           updated_at: string | null
@@ -1340,6 +1341,8 @@ export type Database = {
           subtotal?: number | null
           table_id?: string | null
           table_session_id?: string | null
+          seat_session_id?: string | null
+          token_no?: string | null
           tax_amount?: number | null
           total_amount?: number | null
           updated_at?: string | null
@@ -1365,6 +1368,8 @@ export type Database = {
           subtotal?: number | null
           table_id?: string | null
           table_session_id?: string | null
+          seat_session_id?: string | null
+          token_no?: string | null
           tax_amount?: number | null
           total_amount?: number | null
           updated_at?: string | null
@@ -1691,6 +1696,8 @@ export type Database = {
           address: string | null
           ads_enabled: boolean | null
           banner_image_url: string | null
+          city: string | null
+          country: string | null
           cover_image_url: string | null
           created_at: string | null
           currency: string | null
@@ -1699,14 +1706,27 @@ export type Database = {
           favicon_url: string | null
           feature_toggles: Json | null
           font_family: string | null
+          google_formatted_address: string | null
+          google_maps_url: string | null
+          google_place_id: string | null
+          google_place_name: string | null
+          google_rating: number | null
           google_review_url: string | null
+          google_reviews_cache: Json | null
+          google_sync_error: string | null
+          google_sync_status: string | null
+          google_synced_at: string | null
+          google_user_ratings_total: number | null
           id: string
           is_active: boolean | null
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           menu_title: string | null
           name: string
           onboarding_completed: boolean | null
           phone: string | null
+          postal_code: string | null
           primary_color: string | null
           printer_settings: Json | null
           review_settings: Json | null
@@ -1714,6 +1734,7 @@ export type Database = {
           service_charge_rate: number | null
           settings: Json | null
           slug: string
+          state: string | null
           subscription_ends_at: string | null
           subscription_tier:
             | Database["public"]["Enums"]["subscription_tier"]
@@ -1726,6 +1747,8 @@ export type Database = {
           address?: string | null
           ads_enabled?: boolean | null
           banner_image_url?: string | null
+          city?: string | null
+          country?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           currency?: string | null
@@ -1734,14 +1757,27 @@ export type Database = {
           favicon_url?: string | null
           feature_toggles?: Json | null
           font_family?: string | null
+          google_formatted_address?: string | null
+          google_maps_url?: string | null
+          google_place_id?: string | null
+          google_place_name?: string | null
+          google_rating?: number | null
           google_review_url?: string | null
+          google_reviews_cache?: Json | null
+          google_sync_error?: string | null
+          google_sync_status?: string | null
+          google_synced_at?: string | null
+          google_user_ratings_total?: number | null
           id?: string
           is_active?: boolean | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           menu_title?: string | null
           name: string
           onboarding_completed?: boolean | null
           phone?: string | null
+          postal_code?: string | null
           primary_color?: string | null
           printer_settings?: Json | null
           review_settings?: Json | null
@@ -1749,6 +1785,7 @@ export type Database = {
           service_charge_rate?: number | null
           settings?: Json | null
           slug: string
+          state?: string | null
           subscription_ends_at?: string | null
           subscription_tier?:
             | Database["public"]["Enums"]["subscription_tier"]
@@ -1761,6 +1798,8 @@ export type Database = {
           address?: string | null
           ads_enabled?: boolean | null
           banner_image_url?: string | null
+          city?: string | null
+          country?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           currency?: string | null
@@ -1769,14 +1808,27 @@ export type Database = {
           favicon_url?: string | null
           feature_toggles?: Json | null
           font_family?: string | null
+          google_formatted_address?: string | null
+          google_maps_url?: string | null
+          google_place_id?: string | null
+          google_place_name?: string | null
+          google_rating?: number | null
           google_review_url?: string | null
+          google_reviews_cache?: Json | null
+          google_sync_error?: string | null
+          google_sync_status?: string | null
+          google_synced_at?: string | null
+          google_user_ratings_total?: number | null
           id?: string
           is_active?: boolean | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           menu_title?: string | null
           name?: string
           onboarding_completed?: boolean | null
           phone?: string | null
+          postal_code?: string | null
           primary_color?: string | null
           printer_settings?: Json | null
           review_settings?: Json | null
@@ -1784,6 +1836,7 @@ export type Database = {
           service_charge_rate?: number | null
           settings?: Json | null
           slug?: string
+          state?: string | null
           subscription_ends_at?: string | null
           subscription_tier?:
             | Database["public"]["Enums"]["subscription_tier"]
@@ -2408,58 +2461,107 @@ export type Database = {
           address: string | null
           ads_enabled: boolean | null
           banner_image_url: string | null
+          city: string | null
+          country: string | null
           cover_image_url: string | null
           currency: string | null
           description: string | null
           favicon_url: string | null
           font_family: string | null
+          google_formatted_address: string | null
+          google_maps_url: string | null
+          google_place_id: string | null
+          google_place_name: string | null
+          google_rating: number | null
           google_review_url: string | null
+          google_reviews_cache: Json | null
+          google_sync_status: string | null
+          google_synced_at: string | null
+          google_user_ratings_total: number | null
           id: string | null
           is_active: boolean | null
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           menu_title: string | null
           name: string | null
+          postal_code: string | null
           primary_color: string | null
           secondary_color: string | null
           slug: string | null
+          state: string | null
           theme_config: Json | null
         }
         Insert: {
           address?: string | null
           ads_enabled?: boolean | null
           banner_image_url?: string | null
+          city?: string | null
+          country?: string | null
           cover_image_url?: string | null
           currency?: string | null
           description?: string | null
           favicon_url?: string | null
           font_family?: string | null
+          google_formatted_address?: string | null
+          google_maps_url?: string | null
+          google_place_id?: string | null
+          google_place_name?: string | null
+          google_rating?: number | null
           google_review_url?: string | null
+          google_reviews_cache?: Json | null
+          google_sync_status?: string | null
+          google_synced_at?: string | null
+          google_user_ratings_total?: number | null
           id?: string | null
           is_active?: boolean | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           menu_title?: string | null
           name?: string | null
+          postal_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
           slug?: string | null
+          state?: string | null
           theme_config?: Json | null
         }
         Update: {
           address?: string | null
           ads_enabled?: boolean | null
           banner_image_url?: string | null
+          city?: string | null
+          country?: string | null
           cover_image_url?: string | null
           currency?: string | null
           description?: string | null
           favicon_url?: string | null
           font_family?: string | null
+          google_formatted_address?: string | null
+          google_maps_url?: string | null
+          google_place_id?: string | null
+          google_place_name?: string | null
+          google_rating?: number | null
           google_review_url?: string | null
+          google_reviews_cache?: Json | null
+          google_sync_status?: string | null
+          google_synced_at?: string | null
+          google_user_ratings_total?: number | null
           id?: string | null
           is_active?: boolean | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           menu_title?: string | null
           name?: string | null
+          postal_code?: string | null
           primary_color?: string | null
+          secondary_color?: string | null
+          slug?: string | null
+          state?: string | null
+          theme_config?: Json | null
+        }
           secondary_color?: string | null
           slug?: string | null
           theme_config?: Json | null

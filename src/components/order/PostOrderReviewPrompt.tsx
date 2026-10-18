@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, X } from 'lucide-react';
+import { ExternalLink, X, Star, HeartHandshake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -304,7 +304,7 @@ export const PostOrderReviewPrompt = ({
     if (googleReviewUrl) {
       window.open(googleReviewUrl, '_blank');
     }
-    toast({ title: 'Thank you! 🌟', description: 'Your review means a lot to us!' });
+    toast({ title: 'Thank you!', description: 'Your review means a lot to us!' });
     handleFinalClose();
   };
 
@@ -328,9 +328,9 @@ export const PostOrderReviewPrompt = ({
             </Button>
             <DialogTitle className="text-2xl font-bold tracking-tight">
               {step === 'overall' && 'How was everything?'}
-              {step === 'details' && 'Tell us more 💭'}
-              {step === 'google' && "We're thrilled! 🎉"}
-              {step === 'thank_you' && 'Thank You! ❤️'}
+              {step === 'details' && 'Tell us more'}
+              {step === 'google' && "We're thrilled!"}
+              {step === 'thank_you' && 'Thank You!'}
             </DialogTitle>
           </div>
 
@@ -349,7 +349,7 @@ export const PostOrderReviewPrompt = ({
                       {overallRating === 2 && "Poor"}
                       {overallRating === 3 && "Average"}
                       {overallRating === 4 && "Great!"}
-                      {overallRating === 5 && "Excellent! ❤️"}
+                      {overallRating === 5 && "Excellent!"}
                     </p>
                   </motion.div>
                 )}
@@ -410,9 +410,9 @@ export const PostOrderReviewPrompt = ({
             {/* Step 3: Google Review Redirect */}
             {step === 'google' && (
               <motion.div key="google" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-6 text-center space-y-6">
-                <motion.div animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }} transition={{ duration: 2, repeat: Infinity }} className="text-6xl my-4">
-                  ⭐
-                </motion.div>
+                <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mx-auto my-4 border border-amber-500/20 shadow-sm">
+                  <Star className="w-9 h-9 fill-amber-400 text-amber-500" />
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Would you mind sharing your experience on Google? It helps other food lovers discover us and supports our staff!
                 </p>
@@ -431,9 +431,9 @@ export const PostOrderReviewPrompt = ({
             {/* Step 4: Thank You Popup with Countdown */}
             {step === 'thank_you' && (
               <motion.div key="thank_you" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-6 text-center space-y-6">
-                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="text-6xl my-4 animate-bounce">
-                  🙏
-                </motion.div>
+                <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto my-4 border border-emerald-500/20 shadow-sm">
+                  <HeartHandshake className="w-9 h-9" />
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Your feedback has been submitted successfully.
                 </p>

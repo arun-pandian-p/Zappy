@@ -7,6 +7,10 @@ import {
   Save,
   Loader2,
   Sparkles,
+  CopySlash,
+  Search,
+  Upload,
+  Archive,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -15,6 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +57,7 @@ import { generateFoodImage } from "@/services/imageGenService";
 import { executeOpenAIChatCall } from "@/services/openaiService";
 import { useRestaurantDetails } from "@/hooks/useRestaurant";
 import { sanitize } from "@/utils/sanitize";
+import { syncImageToSupabase } from "@/services/storageService";
 
 interface MenuTabProps {
   restaurantId: string;
@@ -158,7 +166,8 @@ export function MenuTab({
       }
     }
     
-    queryClient.invalidateQueries({ queryKey: ["menuItems", restaurantId] });
+    queryClient.invalidateQueries({ queryKey: ["menu_items", restaurantId] });
+    queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
     setFailedItems(currentFailed);
     setIsCompletingMenu(false);
     setCompletionStatus("");
@@ -264,6 +273,130 @@ Respond with ONLY a valid JSON object containing:
     );
   }, [menuItems, selectedAdminCategory]);
 
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isCleaningDuplicates, setIsCleaningDuplicates] = useState(false);
+
+  // Compute duplicate occurrences in menuItems (first occurrence kept, subsequent rows marked as duplicate)
+  const { duplicateItemIds, duplicateNameCount } = useMemo(() => {
+    const seen = new Set<string>();
+    const dupIds = new Set<string>();
+    let dupCount = 0;
+    (menuItems || []).forEach(item => {
+      if (!item?.name) return;
+      const key = item.name.trim().toLowerCase();
+      if (seen.has(key)) {
+        dupIds.add(item.id);
+        dupCount++;
+      } else {
+        seen.add(key);
+      }
+    });
+    return { duplicateItemIds: dupIds, duplicateNameCount: dupCount };
+  }, [menuItems]);
+
+  const isAllSelected =
+    filteredMenuItems.length > 0 &&
+    filteredMenuItems.every(item => selectedItemIds.has(item.id));
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedItemIds(new Set());
+    } else {
+      setSelectedItemIds(new Set(filteredMenuItems.map(item => item.id)));
+    }
+  };
+
+  const handleToggleSelect = (id: string, checked: boolean) => {
+    setSelectedItemIds(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedItemIds.size === 0) return;
+    const count = selectedItemIds.size;
+    if (!confirm(`Are you sure you want to delete ${count} selected menu item(s)?`)) return;
+
+    setIsBulkDeleting(true);
+    try {
+      const idsToDelete = Array.from(selectedItemIds);
+      const { error } = await supabase
+        .from("menu_items")
+        .delete()
+        .in("id", idsToDelete);
+
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ["menu_items", restaurantId] });
+      await queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
+      setSelectedItemIds(new Set());
+
+      toast({
+        title: "Items Deleted",
+        description: `Successfully removed ${count} menu item(s).`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Could not delete selected items.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  const handleCleanAllDuplicates = async () => {
+    if (duplicateItemIds.size === 0) {
+      toast({
+        title: "No Duplicates Found",
+        description: "Your menu currently has no duplicate item names.",
+      });
+      return;
+    }
+
+    const count = duplicateItemIds.size;
+    if (
+      !confirm(
+        `Found ${count} duplicate item(s) in this menu. Would you like to remove the duplicates and keep 1 unique copy of each?`
+      )
+    ) {
+      return;
+    }
+
+    setIsCleaningDuplicates(true);
+    try {
+      const idsToDelete = Array.from(duplicateItemIds);
+      const { error } = await supabase
+        .from("menu_items")
+        .delete()
+        .in("id", idsToDelete);
+
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ["menu_items", restaurantId] });
+      await queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
+      setSelectedItemIds(new Set());
+
+      toast({
+        title: "Duplicates Cleaned Up",
+        description: `Removed ${count} duplicate rows. Each item now exists only once.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Cleanup Failed",
+        description: error.message || "Failed to remove duplicates.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCleaningDuplicates(false);
+    }
+  };
+
   const handleAddItem = async () => {
     if (!newItem.name || !newItem.price) {
       toast({
@@ -283,13 +416,22 @@ Respond with ONLY a valid JSON object containing:
         combinedDesc += "\n\n" + sanitize(newItem.full_description);
       }
 
+      let finalImageUrl = newItem.image_url;
+      if (finalImageUrl && (!finalImageUrl.includes('supabase.co/storage') || finalImageUrl.startsWith('data:'))) {
+        try {
+          finalImageUrl = await syncImageToSupabase(finalImageUrl, restaurantId, "menu", cleanName.toLowerCase().replace(/\s+/g, "_"));
+        } catch (e) {
+          console.warn("Could not sync image to storage:", e);
+        }
+      }
+
       await createMenuItem.mutateAsync({
         restaurant_id: restaurantId,
         name: cleanName,
         description: combinedDesc || undefined,
         price: parseFloat(newItem.price),
         category_id: category?.id,
-        image_url: newItem.image_url || undefined,
+        image_url: finalImageUrl || undefined,
         is_vegetarian: newItem.is_vegetarian,
         is_popular: newItem.is_popular,
         prep_time_minutes: parseInt(newItem.prep_time_minutes) || 15,
@@ -407,7 +549,7 @@ Respond with ONLY a valid JSON object containing:
             ) : (
               <>
                 <Sparkles className="w-4 h-4 mr-2 text-amber-500" />
-                ✨ AI Enhance
+                AI Enhance
               </>
             )}
           </Button>
@@ -502,12 +644,18 @@ Respond with ONLY a valid JSON object containing:
                     <Label>Item Image</Label>
                     <Tabs value={imageSource} onValueChange={(v) => setImageSource(v as any)} className="w-full">
                       <TabsList className="grid grid-cols-4 w-full bg-muted/50 p-1 rounded-xl">
-                        <TabsTrigger value="ai" className="rounded-lg text-xs gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white">
-                          <Sparkles className="w-3 h-3" /> AI Generate
+                        <TabsTrigger value="ai" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white">
+                          <Sparkles className="w-3.5 h-3.5" /> AI Generate
                         </TabsTrigger>
-                        <TabsTrigger value="unsplash" className="rounded-lg text-xs">🔍 Unsplash</TabsTrigger>
-                        <TabsTrigger value="upload" className="rounded-lg text-xs">⬆ Upload</TabsTrigger>
-                        <TabsTrigger value="storage" className="rounded-lg text-xs">📦 Storage</TabsTrigger>
+                        <TabsTrigger value="unsplash" className="rounded-lg text-xs gap-1.5">
+                          <Search className="w-3.5 h-3.5" /> Unsplash
+                        </TabsTrigger>
+                        <TabsTrigger value="upload" className="rounded-lg text-xs gap-1.5">
+                          <Upload className="w-3.5 h-3.5" /> Upload
+                        </TabsTrigger>
+                        <TabsTrigger value="storage" className="rounded-lg text-xs gap-1.5">
+                          <Archive className="w-3.5 h-3.5" /> Storage
+                        </TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="ai" className="mt-3 space-y-3">
@@ -530,9 +678,15 @@ Respond with ONLY a valid JSON object containing:
                       <TabsContent value="unsplash" className="mt-3">
                         <UnsplashPicker
                           query={newItem.name}
-                          onSelect={(url) => {
-                            setNewItem({ ...newItem, image_url: url });
-                            toast({ title: "Unsplash image selected!" });
+                          onSelect={async (url) => {
+                            toast({ title: "Saving image to storage...", description: "Persisting image to hotel storage..." });
+                            try {
+                              const persistentUrl = await syncImageToSupabase(url, restaurantId, "menu", newItem.name?.toLowerCase().replace(/\s+/g, "_"), "unsplash");
+                              setNewItem({ ...newItem, image_url: persistentUrl });
+                              toast({ title: "Image saved to hotel storage!" });
+                            } catch (err) {
+                              setNewItem({ ...newItem, image_url: url });
+                            }
                           }}
                         />
                       </TabsContent>
@@ -597,7 +751,13 @@ Respond with ONLY a valid JSON object containing:
               </div>
             </DialogContent>
           </Dialog>
-          <MenuOCRImporter restaurantId={restaurantId} />
+          <MenuOCRImporter 
+            restaurantId={restaurantId} 
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ["menu_items", restaurantId] });
+              queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
+            }}
+          />
         </div>
       </div>
 
@@ -618,6 +778,14 @@ Respond with ONLY a valid JSON object containing:
                 <span className="text-sm">Active Items</span>
                 <span className="font-bold text-green-500">{menuItems.filter(i => i.is_available).length}</span>
               </div>
+              {duplicateNameCount > 0 && (
+                <div className="flex items-center justify-between text-amber-600 font-medium text-xs">
+                  <span>Duplicates</span>
+                  <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-600 font-bold">
+                    {duplicateNameCount} duplicate{duplicateNameCount > 1 ? 's' : ''}
+                  </Badge>
+                </div>
+              )}
               <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                 <div 
                   className="bg-primary h-full transition-all duration-500" 
@@ -649,13 +817,69 @@ Respond with ONLY a valid JSON object containing:
             ))}
           </div>
 
+          {/* Batch Selection & Duplicate Actions Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-card border rounded-2xl shadow-sm">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer select-none">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={handleToggleSelectAll}
+                  className="data-[state=checked]:bg-primary"
+                />
+                <span>Select All ({filteredMenuItems.length})</span>
+              </label>
+
+              {selectedItemIds.size > 0 && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleDeleteSelected}
+                  disabled={isBulkDeleting}
+                  className="h-8 text-xs px-3 rounded-xl shadow-sm gap-1.5"
+                >
+                  {isBulkDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  Delete Selected ({selectedItemIds.size})
+                </Button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {duplicateNameCount > 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCleanAllDuplicates}
+                  disabled={isCleaningDuplicates}
+                  className="h-8 text-xs px-3 rounded-xl border-amber-500/40 text-amber-600 hover:bg-amber-500/10 font-semibold gap-1.5 shadow-sm"
+                >
+                  {isCleaningDuplicates ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CopySlash className="w-3.5 h-3.5" />}
+                  Remove Duplicates ({duplicateNameCount})
+                </Button>
+              )}
+              {selectedItemIds.size > 0 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedItemIds(new Set())}
+                  className="h-8 text-xs px-2 text-muted-foreground hover:text-foreground"
+                >
+                  Deselect All
+                </Button>
+              )}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <AnimatePresence>
-              {filteredMenuItems.map((item) => (
+              {filteredMenuItems.map((item, idx) => (
                 <MenuPreviewCard 
                   key={item.id} 
                   item={item} 
                   currencySymbol={currencySymbol}
+                  index={idx}
+                  isSelected={selectedItemIds.has(item.id)}
+                  onToggleSelect={(checked) => handleToggleSelect(item.id, checked)}
+                  isDuplicate={duplicateItemIds.has(item.id)}
                   onEdit={() => setEditingItem(item)}
                   onDelete={() => handleDeleteItem(item.id)}
                   onToggleAvailability={(val) => handleToggleAvailability(item.id, val)}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Armchair, CheckCircle2 } from "lucide-react";
+import { Armchair, CheckCircle2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SeatPickerOverlayProps {
@@ -70,7 +70,7 @@ export function SeatPickerDialog({
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.35, delay: 0.05 }}
               >
-                {restaurantName ? restaurantName.charAt(0) : "✦"}
+                {restaurantName ? restaurantName.charAt(0) : <Sparkles className="w-5 h-5" />}
               </motion.div>
             )}
 

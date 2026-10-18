@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Receipt, Star, MessageSquare, Download, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
+import { Receipt, Star, MessageSquare, Download, ChevronDown, ChevronUp, CheckCircle2, Sparkles } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -187,8 +187,8 @@ export function CheckoutFlowModals({
                 className="p-6 space-y-5"
               >
                 <div className="text-center space-y-1">
-                  <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-                    🎉
+                  <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto border border-emerald-500/20">
+                    <Sparkles className="w-6 h-6 text-emerald-500" />
                   </div>
                   <h3 className="text-xl font-black text-zinc-900 dark:text-zinc-50">
                     {isCompleted ? "Bill Paid Successfully" : "Bill Receipt Preview"}
@@ -299,8 +299,8 @@ export function CheckoutFlowModals({
                 className="p-6 space-y-5"
               >
                 <div className="text-center space-y-1">
-                  <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto text-xl font-bold animate-pulse">
-                    ⭐
+                  <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto border border-amber-500/20">
+                    <Star className="w-6 h-6 fill-amber-400 text-amber-500" />
                   </div>
                   <h3 className="text-xl font-black text-zinc-900 dark:text-zinc-50">Rate Your Experience</h3>
                   <p className="text-xs text-muted-foreground">Your feedback helps us improve our service</p>

@@ -103,11 +103,11 @@ CREATE POLICY "Public can insert reviews" ON enterprise_reviews FOR INSERT WITH 
 
 -- Allow restaurants to view their reviews
 CREATE POLICY "Restaurants can view own reviews" ON enterprise_reviews FOR SELECT USING (
-  restaurant_id IN (SELECT restaurant_id FROM tenant_members WHERE user_id = auth.uid())
+  restaurant_id IN (SELECT restaurant_id FROM user_roles WHERE user_id = auth.uid())
 );
 CREATE POLICY "Restaurants can view own insights" ON review_ai_insights FOR SELECT USING (
-  restaurant_id IN (SELECT restaurant_id FROM tenant_members WHERE user_id = auth.uid())
+  restaurant_id IN (SELECT restaurant_id FROM user_roles WHERE user_id = auth.uid())
 );
 CREATE POLICY "Restaurants can view/update own recoveries" ON review_recoveries FOR ALL USING (
-  restaurant_id IN (SELECT restaurant_id FROM tenant_members WHERE user_id = auth.uid())
+  restaurant_id IN (SELECT restaurant_id FROM user_roles WHERE user_id = auth.uid())
 );

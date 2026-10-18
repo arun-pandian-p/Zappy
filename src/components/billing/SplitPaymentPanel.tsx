@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Banknote, Smartphone, CreditCard } from 'lucide-react';
+import { Banknote, Smartphone, CreditCard, Check } from 'lucide-react';
 
 interface SplitPaymentPanelProps {
   total: number;
@@ -40,8 +40,15 @@ const SplitPaymentPanel = ({ total, currencySymbol, onSplitChange }: SplitPaymen
     <div className="space-y-3 p-3 bg-muted/30 rounded-lg border">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium">Split Payment</p>
-        <Badge variant={isValid ? 'default' : 'destructive'} className="text-xs">
-          {isValid ? '✓ Balanced' : `${currencySymbol}${remaining.toFixed(2)} remaining`}
+        <Badge variant={isValid ? 'default' : 'destructive'} className="text-xs inline-flex items-center gap-1">
+          {isValid ? (
+            <>
+              <Check className="w-3 h-3 shrink-0" />
+              <span>Balanced</span>
+            </>
+          ) : (
+            `${currencySymbol}${remaining.toFixed(2)} remaining`
+          )}
         </Badge>
       </div>
 

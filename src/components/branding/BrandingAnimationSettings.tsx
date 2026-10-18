@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Upload } from "lucide-react";
 import { AnimatedHotelName, type LetterAnimation, type AnimationSpeed } from "./AnimatedHotelName";
 import { MascotIcon, type MascotType } from "./MascotIcon";
 import { ImageUpload } from "@/components/admin/ImageUpload";
@@ -89,7 +89,12 @@ export function BrandingAnimationSettings({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="custom">📷 Custom Upload</SelectItem>
+                  <SelectItem value="custom">
+                    <span className="flex items-center gap-1.5">
+                      <Upload className="w-3.5 h-3.5" />
+                      Custom Upload
+                    </span>
+                  </SelectItem>
                   <SelectItem value="lion">🦁 Lion</SelectItem>
                   <SelectItem value="tiger">🐯 Tiger</SelectItem>
                   <SelectItem value="elephant">🐘 Elephant</SelectItem>

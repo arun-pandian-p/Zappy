@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { 
   Grid3X3, Plus, Trash2, Combine, Split, UserPlus, 
   Clock, Coffee, Info, Loader2, AlertCircle, RefreshCw,
-  LayoutGrid, Users, DollarSign
+  LayoutGrid, Users, DollarSign, User
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -642,8 +642,9 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
                               <div className="border-t pt-2 mt-2">
                                 <div className="flex justify-between text-xs font-semibold text-slate-800 dark:text-slate-200 bg-amber-50/50 dark:bg-amber-950/20 p-1.5 rounded-lg border border-amber-100 dark:border-amber-900/50">
                                   <span>Res: {reservationsMap[table.id].time}</span>
-                                  <span className="text-muted-foreground truncate max-w-[80px]" title={reservationsMap[table.id].name}>
-                                    👤 {reservationsMap[table.id].name}
+                                  <span className="text-muted-foreground truncate max-w-[90px] inline-flex items-center gap-1" title={reservationsMap[table.id].name}>
+                                    <User className="w-3 h-3 shrink-0" />
+                                    <span className="truncate">{reservationsMap[table.id].name}</span>
                                   </span>
                                 </div>
                               </div>
@@ -747,20 +748,20 @@ export function TableManagement({ restaurantId }: TableManagementProps) {
             </CardHeader>
             <CardContent className="space-y-2 text-xs">
               <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded bg-green-500 block shrink-0" />
-                <span className="font-medium">🟢 Available</span>
+                <span className="w-3 h-3 rounded-full bg-emerald-500 block shrink-0" />
+                <span className="font-medium text-slate-700 dark:text-slate-200">Available</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded bg-amber-500 block shrink-0" />
-                <span className="font-medium">🟡 Reserved</span>
+                <span className="w-3 h-3 rounded-full bg-amber-500 block shrink-0" />
+                <span className="font-medium text-slate-700 dark:text-slate-200">Reserved</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded bg-blue-500 block shrink-0" />
-                <span className="font-medium">🔵 Occupied</span>
+                <span className="w-3 h-3 rounded-full bg-blue-500 block shrink-0" />
+                <span className="font-medium text-slate-700 dark:text-slate-200">Occupied</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded bg-rose-500 block shrink-0" />
-                <span className="font-medium">🔴 Needs Cleaning</span>
+                <span className="w-3 h-3 rounded-full bg-rose-500 block shrink-0" />
+                <span className="font-medium text-slate-700 dark:text-slate-200">Needs Cleaning</span>
               </div>
               <p className="text-[10px] text-muted-foreground border-t pt-2 mt-2">
                 * Select multiple tables by clicking them and click "Merge" to group tables for larger groups.

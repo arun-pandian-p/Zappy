@@ -17,7 +17,7 @@ CREATE OR REPLACE FUNCTION public.refresh_restaurant_ratings_if_exists()
 RETURNS TRIGGER AS $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'mv_restaurant_ratings' AND relkind = 'm') THEN
-    PERFORM REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_restaurant_ratings;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_restaurant_ratings;
   END IF;
   RETURN NULL;
 END;

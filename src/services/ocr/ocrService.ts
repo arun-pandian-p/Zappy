@@ -240,7 +240,7 @@ function parseMenuText(text: string): ParsedMenuItem[] {
     .filter((l) => l.length > 1);
 
   const items: ParsedMenuItem[] = [];
-  let currentCategory = "Uncategorized";
+  let currentCategory = "Main Menu";
 
   // Price patterns — covers ₹, Rs., INR, /-  with optional commas
   const priceRegex =

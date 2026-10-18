@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, Printer, ArrowLeft } from 'lucide-react';
+import { Download, Printer, ArrowLeft, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const UserGuide = () => {
@@ -37,7 +37,10 @@ const UserGuide = () => {
 
         {/* Table of Contents */}
         <section>
-          <h2 className="text-2xl font-bold border-b pb-2 mb-4">📑 Table of Contents</h2>
+          <h2 className="text-2xl font-bold border-b pb-2 mb-4 flex items-center gap-2">
+            <BookOpen className="w-6 h-6 text-primary" />
+            Table of Contents
+          </h2>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="space-y-1">
               <p className="font-semibold mt-2">Part 1 — Super Admin</p>
@@ -109,7 +112,7 @@ const UserGuide = () => {
             <li><strong>Total Revenue</strong> — Platform-wide revenue summary</li>
             <li><strong>Monthly Trend Chart</strong> — Visual revenue trends over the last 6 months</li>
           </ul>
-          <p className="mt-2">The sidebar on the left provides navigation to all modules. Click the <strong>hamburger icon (☰)</strong> to collapse/expand it.</p>
+          <p className="mt-2">The sidebar on the left provides navigation to all modules. Click the <strong>menu icon</strong> to collapse/expand it.</p>
         </section>
 
         {/* 1.3 */}
@@ -118,7 +121,7 @@ const UserGuide = () => {
           <p>Navigate to <strong>Tenants / Hotels</strong> from the sidebar.</p>
           <ul className="list-disc pl-6 space-y-1 mt-2">
             <li><strong>Search</strong> — Filter restaurants by name, slug, or email</li>
-            <li><strong>View Modes</strong> — Toggle between Table View (📋) and Grid View (⊞)</li>
+            <li><strong>View Modes</strong> — Toggle between Table View and Grid View</li>
             <li><strong>Toggle Active/Inactive</strong> — Enable or disable a restaurant instantly</li>
             <li><strong>Change Plan</strong> — Switch between Free, Pro, and Enterprise tiers</li>
             <li><strong>Toggle Ads</strong> — Enable/disable ad display for each restaurant</li>

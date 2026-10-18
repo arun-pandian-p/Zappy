@@ -10,6 +10,11 @@ vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     rpc: vi.fn(),
     from: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
       update: vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({ error: null }),
       }),
@@ -156,4 +161,38 @@ describe("useAtomicBilling hook", () => {
     expect(supabase.from).toHaveBeenCalledWith("orders");
     expect(supabase.from).toHaveBeenCalledWith("invoices");
   });
+
+  it("prevents duplicate billing fallback when an invoice already exists", async () => {
+    vi.mocked(supabase.from).mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: { id: "existing-inv-999" },
+            error: null,
+          }),
+        }),
+      }),
+    } as any);
+
+    const { result } = renderHook(() => useAtomicBilling("rest-1"), {
+      wrapper: createWrapper(),
+    });
+
+    await act(async () => {
+      await expect(
+        result.current.completeBillingFallback.mutateAsync({
+          orderId: "order-123",
+          restaurantId: "rest-1",
+          paymentMethod: "cash",
+          discountAmount: 0,
+          totalAmount: 1200,
+          subtotal: 1100,
+          taxAmount: 50,
+          serviceCharge: 50,
+          items: [],
+        })
+      ).rejects.toThrow("DUPLICATE_BILLING");
+    });
+  });
 });
+

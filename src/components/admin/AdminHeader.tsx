@@ -45,17 +45,14 @@ export function AdminHeader({
           {animEnabled && branding?.mascot && branding.mascot !== "none" && (
             <MascotIcon mascot={branding.mascot} size={36} primaryColor={primaryColor} customImageUrl={branding?.mascot_image_url} />
           )}
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={restaurantName}
-              className="w-10 h-10 rounded-xl object-cover border-2 border-primary/20 shadow-sm"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary text-lg">
-              {restaurantName.charAt(0)}
-            </div>
-          )}
+          <img
+            src={logoUrl || "/restaurant-logo.svg"}
+            alt={restaurantName}
+            className="w-10 h-10 rounded-xl object-contain border-2 border-primary/20 shadow-sm bg-background p-1"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = "/restaurant-logo.svg";
+            }}
+          />
           <div>
             {animEnabled ? (
               <AnimatedHotelName

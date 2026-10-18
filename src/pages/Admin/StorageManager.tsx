@@ -99,6 +99,11 @@ export default function StorageManager() {
         if (path) {
           await supabase.storage.from('item-images').remove([path]);
         }
+      } else if (url.includes('supabase.co/storage/v1/object/public/menu-images/')) {
+        const path = url.split('menu-images/')[1];
+        if (path) {
+          await supabase.storage.from('menu-images').remove([path]);
+        }
       }
 
       const { error } = await supabase.from('image_library').delete().eq('id', id);
@@ -176,19 +181,19 @@ export default function StorageManager() {
 
     setUploading(true);
     try {
-      // Upload new image
+      // Upload new image to Arun Hotel persistent storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-      const filePath = `manual/${fileName}`;
+      const filePath = `ba349c16-9643-41dd-a70f-b01c64aeabd4/uploads/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('item-images')
+        .from('menu-images')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabase.storage
-        .from('item-images')
+        .from('menu-images')
         .getPublicUrl(filePath);
 
       // Update DB record
@@ -225,16 +230,16 @@ export default function StorageManager() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-      const filePath = `manual/${fileName}`;
+      const filePath = `ba349c16-9643-41dd-a70f-b01c64aeabd4/uploads/${fileName}`;
 
       const { error: uploadError, data } = await supabase.storage
-        .from('item-images')
+        .from('menu-images')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabase.storage
-        .from('item-images')
+        .from('menu-images')
         .getPublicUrl(filePath);
 
       const { error: dbError } = await supabase.from('image_library').insert({
@@ -298,16 +303,16 @@ export default function StorageManager() {
         // Auto-rename path: Category/Item_Name_hash.jpg
         const sanitizedCat = category.replace(/[^a-zA-Z0-9]/g, '');
         const sanitizedName = itemName.replace(/[^a-zA-Z0-9]/g, '');
-        const filePath = `auto/${sanitizedCat}/${sanitizedName}_${fileName}`;
+        const filePath = `ba349c16-9643-41dd-a70f-b01c64aeabd4/uploads/${sanitizedCat}_${sanitizedName}_${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('item-images')
+          .from('menu-images')
           .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 
         const { data: publicUrlData } = supabase.storage
-          .from('item-images')
+          .from('menu-images')
           .getPublicUrl(filePath);
 
         const { error: dbError } = await supabase.from('image_library').insert({

@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Save, Eye, EyeOff, Loader2, FileText, ExternalLink, RefreshCw, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { 
+  Save, Eye, EyeOff, Loader2, FileText, ExternalLink, RefreshCw, PanelLeftClose, PanelLeft,
+  Rocket, Sparkles, Layers, CreditCard, MessageSquareQuote, Megaphone, Link2
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,14 +12,14 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useLandingCMS, type LandingSection } from '@/hooks/useLandingCMS';
 
-const sectionLabels: Record<string, string> = {
-  hero: '🚀 Hero Section',
-  features: '✨ Features',
-  how_it_works: '📋 How It Works',
-  pricing: '💰 Pricing',
-  testimonials: '💬 Testimonials',
-  cta_banner: '📢 CTA Banner',
-  footer: '🔗 Footer',
+const sectionConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
+  hero: { label: 'Hero Section', icon: Rocket },
+  features: { label: 'Features', icon: Sparkles },
+  how_it_works: { label: 'How It Works', icon: Layers },
+  pricing: { label: 'Pricing', icon: CreditCard },
+  testimonials: { label: 'Testimonials', icon: MessageSquareQuote },
+  cta_banner: { label: 'CTA Banner', icon: Megaphone },
+  footer: { label: 'Footer', icon: Link2 },
 };
 
 function SectionEditor({ section, onSave, isSaving }: { section: LandingSection; onSave: (id: string, content: Record<string, any>, visible: boolean) => void; isSaving: boolean }) {
@@ -120,7 +123,18 @@ function SectionEditor({ section, onSave, isSaving }: { section: LandingSection;
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">{sectionLabels[section.section_key] || section.section_key}</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            {(() => {
+              const config = sectionConfig[section.section_key];
+              const Icon = config?.icon || FileText;
+              return (
+                <>
+                  <Icon className="w-4 h-4 text-primary shrink-0" />
+                  <span>{config?.label || section.section_key}</span>
+                </>
+              );
+            })()}
+          </CardTitle>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               {visible ? <Eye className="w-4 h-4 text-primary" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}

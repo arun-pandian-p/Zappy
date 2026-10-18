@@ -16,6 +16,12 @@ import { tracer } from "./telemetry";
 import { SpanStatusCode } from "@opentelemetry/api";
 import { executeOpenAIVisionCall } from "./openaiService";
 import { AICacheService } from "./aiCacheService";
+import {
+  processImageWithPaddleOCR,
+  processScannedPdfPagesWithPaddleOCR,
+  type PaddleOCRTask,
+  type PaddleOCRFormat,
+} from "./paddleOCRService";
 
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
@@ -27,6 +33,20 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 // ============================================================
 
 type FileType = "image" | "pdf" | "csv" | "excel" | "word" | "unknown";
+
+async function readFileAsText(file: File | Blob): Promise<string> {
+  if (typeof file.text === "function") {
+    try {
+      return await file.text();
+    } catch (_) {}
+  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string) || "");
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
 
 function detectFileType(file: File): FileType {
   const ext = file.name.split(".").pop()?.toLowerCase() || "";
@@ -111,10 +131,43 @@ async function ocrImage(
 // ============================================================
 
 /**
- * Extract text from a PDF using pdfjs-dist.
- * If the PDF has a text layer, we get it directly (fast, accurate).
- * If not (scanned PDF), we fall back to Tesseract OCR on rendered pages.
+ * Helper to extract PDF digital text layer if available.
  */
+export async function extractPDFTextLayer(
+  file: File,
+  onProgress?: (p: OCRProgress) => void
+): Promise<{ hasTextLayer: boolean; text: string; totalPages: number }> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const totalPages = pdf.numPages;
+  let fullText = "";
+  let hasTextLayer = false;
+
+  for (let i = 1; i <= totalPages; i++) {
+    onProgress?.({
+      status: `Extracting text layer from page ${i}/${totalPages}`,
+      progress: Math.round((i / totalPages) * 50),
+    });
+
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item: any) => item.str)
+      .join(" ");
+
+    if (pageText.trim().length > 20) {
+      hasTextLayer = true;
+    }
+    fullText += pageText + "\n";
+  }
+
+  return {
+    hasTextLayer: hasTextLayer && fullText.trim().length > 50,
+    text: fullText,
+    totalPages,
+  };
+}
+
 async function extractPDFText(
   file: File,
   languageCode: string = "eng",
@@ -128,40 +181,16 @@ async function extractPDFText(
     try {
       console.log("[OCR] Extracting text from PDF...");
 
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      const totalPages = pdf.numPages;
+      const { hasTextLayer, text, totalPages } = await extractPDFTextLayer(file, onProgress);
       span.setAttribute("pdf.total_pages", totalPages);
-      let fullText = "";
-      let hasTextLayer = false;
-
-      // First pass: try to extract text layer
-      for (let i = 1; i <= totalPages; i++) {
-        onProgress?.({
-          status: `Extracting text from page ${i}/${totalPages}`,
-          progress: Math.round((i / totalPages) * 50),
-        });
-
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items
-          .map((item: any) => item.str)
-          .join(" ");
-
-        if (pageText.trim().length > 20) {
-          hasTextLayer = true;
-        }
-        fullText += pageText + "\n";
-      }
-
       span.setAttribute("pdf.has_text_layer", hasTextLayer);
 
       // If text layer found, return it
-      if (hasTextLayer && fullText.trim().length > 50) {
-        console.log(`[OCR] PDF has text layer — extracted ${fullText.length} chars from ${totalPages} pages`);
-        span.setAttribute("pdf.text_length", fullText.length);
+      if (hasTextLayer) {
+        console.log(`[OCR] PDF has text layer — extracted ${text.length} chars from ${totalPages} pages`);
+        span.setAttribute("pdf.text_length", text.length);
         span.setStatus({ code: SpanStatusCode.OK });
-        return fullText;
+        return text;
       }
 
       // Scanned PDF — fall back to Tesseract OCR on rendered pages
@@ -275,16 +304,55 @@ export interface OCROptions {
   ocrEngine?: "paddle" | "surya" | "tesseract" | "easy";
   languageCode?: string;
   restaurantId?: string;
+  paddleTask?: PaddleOCRTask;
+  paddleFormat?: PaddleOCRFormat;
+  timeoutMs?: number;
+  signal?: AbortSignal;
+  useProxy?: boolean;
+  fallbackToTesseractOnError?: boolean;
+  maxPdfPages?: number;
+}
+
+export function buildOCRCacheKey(params: {
+  fileHash: string;
+  engine: string;
+  task?: string;
+  format?: string;
+  languageCode?: string;
+}): string {
+  const engine = (params.engine || "tesseract").toLowerCase();
+  const task = (params.task || (engine === "paddle" ? "Full OCR (Layout & Text)" : "default"))
+    .replace(/[^a-zA-Z0-9_]/g, "_")
+    .toLowerCase();
+  const format = (params.format || (engine === "paddle" ? "JSON" : "text"))
+    .replace(/[^a-zA-Z0-9_]/g, "_")
+    .toLowerCase();
+  const lang = (params.languageCode || "eng").toLowerCase();
+  return `ocr_${params.fileHash}_eng:${engine}_task:${task}_fmt:${format}_lang:${lang}`;
 }
 
 async function computeFileHash(file: File): Promise<string> {
   if (typeof crypto === "undefined" || !crypto.subtle) {
     return "test_hash_" + file.size + "_" + file.name.replace(/[^a-zA-Z0-9]/g, "");
   }
-  const arrayBuffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  try {
+    let arrayBuffer: ArrayBuffer;
+    if (typeof file.arrayBuffer === "function") {
+      arrayBuffer = await file.arrayBuffer();
+    } else {
+      arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as ArrayBuffer);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (_) {
+    return "fallback_hash_" + file.size + "_" + file.name.replace(/[^a-zA-Z0-9]/g, "");
+  }
 }
 
 export async function processMenuFile(
@@ -312,12 +380,20 @@ export async function processMenuFile(
       }
 
       let fileHash = "";
+      let cacheKey = "";
       if (fileType === "image" || fileType === "pdf") {
         try {
           fileHash = await computeFileHash(file);
-          const cached = await AICacheService.get<ParsedMenuItem[]>("ocr_menu", `ocr_${fileHash}`);
+          cacheKey = buildOCRCacheKey({
+            fileHash,
+            engine,
+            task: options?.paddleTask,
+            format: options?.paddleFormat,
+            languageCode: lang,
+          });
+          const cached = await AICacheService.get<ParsedMenuItem[]>("ocr_menu", cacheKey);
           if (cached && cached.length > 0) {
-            console.log(`[OCR Cache Hit] Returning cached OCR results for file hash: ${fileHash}`);
+            console.log(`[OCR Cache Hit] Returning cached OCR results for key: ${cacheKey}`);
             onProgress?.({ status: "Cached results found. Loading...", progress: 100 });
             return cached;
           }
@@ -326,116 +402,187 @@ export async function processMenuFile(
         }
       }
 
-      // Handle simulation progress for non-local engines
-      if (engine === "surya" || engine === "paddle" || engine === "easy") {
-        const engineName = engine === "surya" ? "Surya OCR" : engine === "paddle" ? "PaddleOCR" : "EasyOCR";
-        const steps = [
-          { status: `${engineName}: Initializing layout model weights...`, progress: 15 },
-          { status: `${engineName}: Detecting text segments & columns...`, progress: 35 },
-          { status: `${engineName}: Reconstructing multi-lingual reading order...`, progress: 55 },
-          { status: `${engineName}: Finalizing layout-aware OCR extraction...`, progress: 75 },
-        ];
-        for (const step of steps) {
-          onProgress?.(step);
-          await new Promise((resolve) => setTimeout(resolve, 600));
+      // Check non-configured engines
+      if (engine === "surya") {
+        const suryaUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SURYA_API_URL) || "";
+        if (!suryaUrl) {
+          throw new Error("Surya OCR engine is not configured in this environment. Please select PaddleOCR or Tesseract.");
         }
       }
 
-      let rawText = "";
-
-      switch (fileType) {
-        case "image":
-          onProgress?.({ status: "Running OCR on image...", progress: 80 });
-          rawText = await ocrImage(file, lang, onProgress);
-          break;
-
-        case "pdf":
-          onProgress?.({ status: "Extracting text from PDF...", progress: 80 });
-          rawText = await extractPDFText(file, lang, onProgress);
-          break;
-
-        case "csv":
-          onProgress?.({ status: "Reading CSV file...", progress: 50 });
-          rawText = await file.text();
-          break;
-
-        case "excel":
-          onProgress?.({ status: "Parsing Excel file...", progress: 50 });
-          rawText = await extractExcelText(file);
-          break;
-
-        case "word":
-          onProgress?.({ status: "Parsing Word document...", progress: 50 });
-          rawText = await extractWordText(file);
-          break;
-
-        default:
-          throw new Error(`Unsupported file format: ${file.name}`);
+      if (engine === "easy") {
+        const easyUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_EASY_OCR_API_URL) || "";
+        if (!easyUrl) {
+          throw new Error("EasyOCR engine is not configured in this environment. Please select PaddleOCR or Tesseract.");
+        }
       }
 
-      onProgress?.({ status: "Parsing menu items...", progress: 80 });
+      let items: ParsedMenuItem[] = [];
 
-      // Clean the text
-      const cleanedText = cleanOCRText(rawText);
-      console.log(`[OCR] Cleaned text (${cleanedText.length} chars):`, cleanedText.substring(0, 500));
-      span.setAttribute("ocr.cleaned_text_length", cleanedText.length);
-
-      // Parse based on format
-      let items: ParsedMenuItem[];
-      if (fileType === "csv" || fileType === "excel") {
-        items = parseMenuFromCSV(cleanedText);
-      } else {
-        items = parseMenuFromText(cleanedText);
-      }
-
-      // Calculate completeness & fallback to OpenAI Vision if needed
-      const totalLines = cleanedText.split("\n").filter(l => l.trim().length > 5).length;
-      const parsedCount = items.length;
-      const completeness = totalLines > 0 ? (parsedCount / totalLines) : 0;
-      
-      const needsVisionFallback = (completeness < 0.3 || items.length === 0) && (fileType === "image" || fileType === "pdf");
-      const restaurantId = options?.restaurantId || "00000000-0000-0000-0000-000000000001";
-
-      if (needsVisionFallback) {
-        try {
-          console.log(`[OCR] Low local completeness (${completeness.toFixed(2)}) or no items found. Triggering OpenAI Vision Fallback...`);
-          onProgress?.({ status: "Low local confidence. Running AI Vision Fallback...", progress: 85 });
-          
-          const imagesList: string[] = [];
-          if (fileType === "image") {
-            const base64Image = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
+      if (engine === "paddle") {
+        span.setAttribute("ocr.engine_type", "paddle_api");
+        if (fileType === "image") {
+          try {
+            items = await processImageWithPaddleOCR(file, {
+              task: options?.paddleTask || "Full OCR (Layout & Text)",
+              format: options?.paddleFormat || "JSON",
+              timeoutMs: options?.timeoutMs,
+              signal: options?.signal,
+              useProxy: options?.useProxy,
+              restaurantId: options?.restaurantId,
+              onProgress,
             });
-            imagesList.push(base64Image);
-          } else if (fileType === "pdf") {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            const totalPages = Math.min(pdf.numPages, 3); // Max 3 pages
-            for (let i = 1; i <= totalPages; i++) {
-              const page = await pdf.getPage(i);
-              const viewport = page.getViewport({ scale: 1.5 });
-              const canvas = document.createElement("canvas");
-              canvas.width = viewport.width;
-              canvas.height = viewport.height;
-              const ctx = canvas.getContext("2d")!;
-              await page.render({ canvasContext: ctx, viewport }).promise;
-              imagesList.push(canvas.toDataURL("image/jpeg", 0.8));
-              canvas.remove();
+          } catch (paddleErr: any) {
+            if (paddleErr?.name === "AbortError" || options?.signal?.aborted) {
+              throw paddleErr;
+            }
+            if (options?.fallbackToTesseractOnError) {
+              console.warn("[OCR] PaddleOCR failed, falling back to local Tesseract:", paddleErr);
+              span.setAttribute("ocr.fallback_to_tesseract", true);
+              onProgress?.({ status: "PaddleOCR unavailable. Falling back to local Tesseract OCR engine...", progress: 40 });
+              const rawText = await ocrImage(file, lang, onProgress);
+              const cleanedText = cleanOCRText(rawText);
+              items = parseMenuFromText(cleanedText);
+            } else {
+              throw paddleErr;
             }
           }
+        } else if (fileType === "pdf") {
+          const textResult = await extractPDFTextLayer(file, onProgress);
+          if (textResult.hasTextLayer) {
+            console.log(`[OCR] PDF has valid text layer (${textResult.text.length} chars)`);
+            items = parseMenuFromText(cleanOCRText(textResult.text));
+          } else {
+            console.log("[OCR] PDF is scanned. Running PaddleOCR on rendered pages...");
+            try {
+              items = await processScannedPdfPagesWithPaddleOCR(file, pdfjsLib, {
+                maxPages: options?.maxPdfPages || 5,
+                task: options?.paddleTask || "Full OCR (Layout & Text)",
+                format: options?.paddleFormat || "JSON",
+                timeoutMs: options?.timeoutMs,
+                signal: options?.signal,
+                useProxy: options?.useProxy,
+                restaurantId: options?.restaurantId,
+                onProgress,
+              });
+            } catch (pdfErr: any) {
+              if (pdfErr?.name === "AbortError" || options?.signal?.aborted) {
+                throw pdfErr;
+              }
+              if (options?.fallbackToTesseractOnError) {
+                console.warn("[OCR] PaddleOCR PDF failed, falling back to local Tesseract:", pdfErr);
+                span.setAttribute("ocr.fallback_to_tesseract", true);
+                onProgress?.({ status: "PaddleOCR unavailable. Falling back to local Tesseract OCR engine...", progress: 40 });
+                const rawText = await extractPDFText(file, lang, onProgress);
+                items = parseMenuFromText(cleanOCRText(rawText));
+              } else {
+                throw pdfErr;
+              }
+            }
+          }
+        } else if (fileType === "csv") {
+          onProgress?.({ status: "Reading CSV file...", progress: 50 });
+          const raw = await readFileAsText(file);
+          items = parseMenuFromCSV(cleanOCRText(raw));
+        } else if (fileType === "excel") {
+          onProgress?.({ status: "Parsing Excel file...", progress: 50 });
+          const raw = await extractExcelText(file);
+          items = parseMenuFromCSV(cleanOCRText(raw));
+        } else if (fileType === "word") {
+          onProgress?.({ status: "Parsing Word document...", progress: 50 });
+          const raw = await extractWordText(file);
+          items = parseMenuFromText(cleanOCRText(raw));
+        } else {
+          throw new Error(`Unsupported file format: ${file.name}`);
+        }
+      } else {
+        // Tesseract (local engine)
+        span.setAttribute("ocr.engine_type", "tesseract_local");
+        let rawText = "";
+        switch (fileType) {
+          case "image":
+            onProgress?.({ status: "Running Tesseract OCR on image...", progress: 50 });
+            rawText = await ocrImage(file, lang, onProgress);
+            break;
+          case "pdf":
+            onProgress?.({ status: "Extracting text from PDF...", progress: 50 });
+            rawText = await extractPDFText(file, lang, onProgress);
+            break;
+          case "csv":
+            onProgress?.({ status: "Reading CSV file...", progress: 50 });
+            rawText = await readFileAsText(file);
+            break;
+          case "excel":
+            onProgress?.({ status: "Parsing Excel file...", progress: 50 });
+            rawText = await extractExcelText(file);
+            break;
+          case "word":
+            onProgress?.({ status: "Parsing Word document...", progress: 50 });
+            rawText = await extractWordText(file);
+            break;
+          default:
+            throw new Error(`Unsupported file format: ${file.name}`);
+        }
 
-          if (imagesList.length > 0) {
-            const promptText = `Analyze the restaurant menu image(s) and extract all menu items.
+        onProgress?.({ status: "Parsing menu items...", progress: 80 });
+        const cleanedText = cleanOCRText(rawText);
+        console.log(`[OCR] Cleaned text (${cleanedText.length} chars):`, cleanedText.substring(0, 500));
+        span.setAttribute("ocr.cleaned_text_length", cleanedText.length);
+
+        if (fileType === "csv" || fileType === "excel") {
+          items = parseMenuFromCSV(cleanedText);
+        } else {
+          items = parseMenuFromText(cleanedText);
+        }
+
+        // Calculate completeness & fallback to OpenAI Vision if needed
+        const totalLines = cleanedText.split("\n").filter(l => l.trim().length > 5).length;
+        const parsedCount = items.length;
+        const completeness = totalLines > 0 ? (parsedCount / totalLines) : 0;
+        
+        const needsVisionFallback = (completeness < 0.3 || items.length === 0) && (fileType === "image" || fileType === "pdf");
+        const restaurantId = options?.restaurantId || "00000000-0000-0000-0000-000000000001";
+
+        if (needsVisionFallback) {
+          try {
+            console.log(`[OCR] Low local completeness (${completeness.toFixed(2)}) or no items found. Triggering OpenAI Vision Fallback...`);
+            onProgress?.({ status: "Low local confidence. Running AI Vision Fallback...", progress: 85 });
+            
+            const imagesList: string[] = [];
+            if (fileType === "image") {
+              const base64Image = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              });
+              imagesList.push(base64Image);
+            } else if (fileType === "pdf") {
+              const arrayBuffer = await file.arrayBuffer();
+              const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+              const totalPages = Math.min(pdf.numPages, 3); // Max 3 pages
+              for (let i = 1; i <= totalPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.createElement("canvas");
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const ctx = canvas.getContext("2d")!;
+                await page.render({ canvasContext: ctx, viewport }).promise;
+                imagesList.push(canvas.toDataURL("image/jpeg", 0.8));
+                canvas.remove();
+              }
+            }
+
+            if (imagesList.length > 0) {
+              const promptText = `Analyze the restaurant menu image(s) and extract all menu items.
 You must return a JSON object containing a single key "items" with an array of objects matching this TypeScript type:
 interface ParsedMenuItem {
   name: string;
   price: number;
   category: string;
   description: string;
-  confidence: number; // between 0 and 100, representing your extraction confidence
+  confidence: number;
   isVegetarian: boolean;
   isVegan: boolean;
   isJain: boolean;
@@ -443,32 +590,33 @@ interface ParsedMenuItem {
 }
 Do not add markdown backticks or extra text, just raw JSON.`;
 
-            const aiResponse = await executeOpenAIVisionCall(restaurantId, "ocr_menu_import_fallback", imagesList, promptText);
-            const parsed = JSON.parse(aiResponse);
-            if (parsed && Array.isArray(parsed.items) && parsed.items.length > 0) {
-              items = parsed.items.map((i: any) => ({
-                name: i.name,
-                price: Number(i.price) || 0,
-                category: i.category || "Main Course",
-                description: i.description || "",
-                confidence: i.confidence || 90,
-                isVegetarian: !!i.isVegetarian,
-                isVegan: !!i.isVegan,
-                isJain: !!i.isJain,
-                isGlutenFree: !!i.isGlutenFree,
-              }));
-              console.log(`[OCR] OpenAI Vision Fallback successfully extracted ${items.length} items.`);
+              const aiResponse = await executeOpenAIVisionCall(restaurantId, "ocr_menu_import_fallback", imagesList, promptText);
+              const parsed = JSON.parse(aiResponse);
+              if (parsed && Array.isArray(parsed.items) && parsed.items.length > 0) {
+                items = parsed.items.map((i: any) => ({
+                  name: i.name,
+                  price: Number(i.price) || 0,
+                  category: i.category || "Main Course",
+                  description: i.description || "",
+                  confidence: i.confidence || 90,
+                  isVegetarian: !!i.isVegetarian,
+                  isVegan: !!i.isVegan,
+                  isJain: !!i.isJain,
+                  isGlutenFree: !!i.isGlutenFree,
+                }));
+                console.log(`[OCR] OpenAI Vision Fallback successfully extracted ${items.length} items.`);
+              }
             }
+          } catch (aiErr) {
+            console.warn("[OCR] OpenAI Vision fallback failed, using local OCR results.", aiErr);
           }
-        } catch (aiErr) {
-          console.warn("[OCR] OpenAI Vision fallback failed, using local OCR results.", aiErr);
         }
       }
 
-      if (fileHash && items.length > 0) {
+      if (cacheKey && items.length > 0) {
         try {
-          await AICacheService.set("ocr_menu", `ocr_${fileHash}`, items, "long");
-          console.log(`[OCR Cache Saved] Saved OCR results for file hash: ${fileHash}`);
+          await AICacheService.set("ocr_menu", cacheKey, items, "long");
+          console.log(`[OCR Cache Saved] Saved OCR results for cache key: ${cacheKey}`);
         } catch (cacheSaveErr) {
           console.error("Failed to save OCR cache:", cacheSaveErr);
         }

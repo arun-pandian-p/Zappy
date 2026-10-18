@@ -49,6 +49,9 @@ import {
   AlertCircle,
   RefreshCw,
   Calendar,
+  Trophy,
+  Medal,
+  Star,
 } from "lucide-react";
 import { format, subDays, startOfDay, parseISO, isWithinInterval } from "date-fns";
 
@@ -623,7 +626,21 @@ export function SalesAnalytics({ restaurantId }: SalesAnalyticsProps) {
                   {waiterLeaderboard.map((waiter, index) => (
                     <tr key={index} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/50 transition-colors">
                       <td className="py-3.5 font-bold text-slate-400">
-                        {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+                        {index === 0 ? (
+                          <div className="w-6 h-6 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                            <Trophy className="w-3.5 h-3.5" />
+                          </div>
+                        ) : index === 1 ? (
+                          <div className="w-6 h-6 rounded-full bg-slate-300/30 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+                            <Medal className="w-3.5 h-3.5" />
+                          </div>
+                        ) : index === 2 ? (
+                          <div className="w-6 h-6 rounded-full bg-amber-700/10 text-amber-700 dark:text-amber-600 flex items-center justify-center">
+                            <Medal className="w-3.5 h-3.5" />
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground ml-1.5 font-medium">#{index + 1}</span>
+                        )}
                       </td>
                       <td className="py-3.5">
                         <div className="flex items-center gap-3">
@@ -635,8 +652,9 @@ export function SalesAnalytics({ restaurantId }: SalesAnalyticsProps) {
                         </div>
                       </td>
                       <td className="py-3.5 text-center">
-                        <Badge variant="outline" className="gap-1 border-amber-200 bg-amber-50/40 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900">
-                          ★ {waiter.rating}
+                        <Badge variant="outline" className="gap-1 border-amber-200 bg-amber-50/40 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900 inline-flex items-center">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0" />
+                          <span>{waiter.rating}</span>
                         </Badge>
                       </td>
                       <td className="py-3.5 text-center font-medium">{waiter.ordersCount}</td>

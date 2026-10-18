@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, TrendingUp, Zap, Sparkles } from 'lucide-react';
+import { ShieldCheck, TrendingUp, Zap, Sparkles, Check } from 'lucide-react';
 
 const beforeState = [
   { label: 'Table turnarounds', val: '45 mins' },
@@ -79,7 +79,9 @@ const Transformation = () => {
                   transition={{ duration: 0.5 }}
                   className="space-y-6 w-full text-center"
                 >
-                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FF6B00]/10 text-[#FF6B00] flex items-center justify-center font-bold text-2xl">✓</div>
+                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FF6B00]/10 text-[#FF6B00] flex items-center justify-center font-bold">
+                    <Check className="w-8 h-8" />
+                  </div>
                   <h3 className="text-2xl font-black text-[#111111] uppercase tracking-tight">Streamlined Perfection</h3>
                   <div className="space-y-3 max-w-md mx-auto text-sm text-[#111111]/70 leading-relaxed font-light">
                     <p className="border border-[#FF6B00]/20 bg-[#FF6B00]/5 py-2.5 px-4 rounded-xl flex items-center justify-between">

@@ -83,27 +83,35 @@ export function ImageCropDialog({
     try {
       const blob = await getCroppedBlob(imageSrc, croppedAreaPixels);
 
-      if (uploadPath) {
-        // Upload cropped image to storage — returns a proper URL
-        const fileName = `${uploadPath.restaurantId}/${uploadPath.folder}/cropped_${Date.now()}.jpg`;
-        const { data, error } = await supabase.storage
-          .from('menu-images')
-          .upload(fileName, blob, { cacheControl: '3600', upsert: true, contentType: 'image/jpeg' });
+      const targetRestId = uploadPath?.restaurantId || 'ba349c16-9643-41dd-a70f-b01c64aeabd4';
+      const targetFolder = uploadPath?.folder || 'cropped';
+      const fileName = `${targetRestId}/${targetFolder}/cropped_${Date.now()}.jpg`;
 
-        if (error) throw error;
+      const { data, error } = await supabase.storage
+        .from('menu-images')
+        .upload(fileName, blob, { cacheControl: '3600', upsert: true, contentType: 'image/jpeg' });
 
-        const { data: urlData } = supabase.storage
-          .from('menu-images')
-          .getPublicUrl(data.path);
-
-        onCropComplete(urlData.publicUrl);
-      } else {
-        // Fallback: return data URL (legacy behavior)
+      if (error) {
+        console.warn('Storage upload error for cropped image, falling back to data URL:', error);
         const reader = new FileReader();
         reader.onloadend = () => {
           onCropComplete(reader.result as string);
         };
         reader.readAsDataURL(blob);
+      } else {
+        const { data: urlData } = supabase.storage
+          .from('menu-images')
+          .getPublicUrl(data.path);
+
+        // Index in image_library
+        supabase.from('image_library').insert({
+          image_url: urlData.publicUrl,
+          item_name: title || 'Cropped Image',
+          category_name: targetFolder === 'branding' ? 'Branding' : 'Menu',
+          source: 'upload'
+        } as any).then(() => {});
+
+        onCropComplete(urlData.publicUrl);
       }
     } catch (e) {
       console.error('Crop error:', e);

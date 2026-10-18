@@ -352,8 +352,8 @@ export function getSpiceLevelLabel(level: number): string {
 }
 
 /**
- * Get spice level emoji indicator
+ * Get spice level indicator string
  */
 export function getSpiceLevelEmoji(level: number): string {
-  return "🌶️".repeat(level);
+  return getSpiceLevelLabel(level);
 }

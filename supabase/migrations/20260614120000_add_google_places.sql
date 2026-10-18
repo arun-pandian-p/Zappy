@@ -25,6 +25,6 @@ CREATE POLICY "Allow public insert to customer_feedback"
 CREATE POLICY "Allow tenant read customer_feedback"
     ON public.customer_feedback FOR SELECT
     USING (restaurant_id IN (
-        SELECT r.id FROM restaurants r
-        WHERE r.tenant_id = (SELECT auth.uid())
+        SELECT restaurant_id FROM public.user_roles
+        WHERE user_id = auth.uid()
     ));

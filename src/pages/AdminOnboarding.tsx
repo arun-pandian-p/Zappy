@@ -5,7 +5,7 @@ import {
   Building2, Upload, Palette, Settings, CheckCircle2,
   Loader2, ArrowRight, ArrowLeft, Rocket, 
   ImagePlus, Sparkles, X, Eye, LayoutGrid, List,
-  Tag, Utensils, Monitor,
+  Tag, Utensils, Monitor, Moon, Square,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,11 +29,11 @@ const STEPS = [
 ];
 
 const THEME_PRESETS = [
-  { id: 'classic', name: 'Classic', primary: '#F97316', secondary: '#FDE68A', font: 'Inter', desc: 'Warm & inviting with orange accents', emoji: '🍽️' },
-  { id: 'dark', name: 'Dark', primary: '#A78BFA', secondary: '#6366F1', font: 'Inter', desc: 'Modern dark theme with violet tones', emoji: '🌙' },
-  { id: 'premium', name: 'Premium', primary: '#D4A574', secondary: '#1A1A2E', font: 'Playfair Display', desc: 'Luxurious gold & dark palette', emoji: '✨' },
-  { id: 'minimal', name: 'Minimal', primary: '#374151', secondary: '#E5E7EB', font: 'Inter', desc: 'Clean white with subtle accents', emoji: '◻️' },
-  { id: 'custom', name: 'Custom', primary: '#3B82F6', secondary: '#10B981', font: 'Inter', desc: 'Choose your own colors & fonts', emoji: '🎨' },
+  { id: 'classic', name: 'Classic', primary: '#F97316', secondary: '#FDE68A', font: 'Inter', desc: 'Warm & inviting with orange accents', icon: Utensils },
+  { id: 'dark', name: 'Dark', primary: '#A78BFA', secondary: '#6366F1', font: 'Inter', desc: 'Modern dark theme with violet tones', icon: Moon },
+  { id: 'premium', name: 'Premium', primary: '#D4A574', secondary: '#1A1A2E', font: 'Playfair Display', desc: 'Luxurious gold & dark palette', icon: Sparkles },
+  { id: 'minimal', name: 'Minimal', primary: '#374151', secondary: '#E5E7EB', font: 'Inter', desc: 'Clean white with subtle accents', icon: Square },
+  { id: 'custom', name: 'Custom', primary: '#3B82F6', secondary: '#10B981', font: 'Inter', desc: 'Choose your own colors & fonts', icon: Palette },
 ];
 
 const CUISINE_OPTIONS = [
@@ -285,7 +285,7 @@ const AdminOnboarding = () => {
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
-      toast({ title: '🎉 Setup Complete!', description: 'Your restaurant is ready to go.' });
+      toast({ title: 'Setup Complete!', description: 'Your restaurant is ready to go.' });
       navigate('/admin');
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -548,7 +548,9 @@ const AdminOnboarding = () => {
                             <CheckCircle2 className="w-5 h-5 text-orange-400" />
                           </motion.div>
                         )}
-                        <span className="text-2xl mb-3 block">{preset.emoji}</span>
+                        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mb-3">
+                          <preset.icon className="w-4 h-4 text-orange-400" />
+                        </div>
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-5 h-5 rounded-full ring-2 ring-white/20 shadow-sm" style={{ backgroundColor: preset.primary }} />
                           <div className="w-5 h-5 rounded-full ring-2 ring-white/20 shadow-sm" style={{ backgroundColor: preset.secondary }} />

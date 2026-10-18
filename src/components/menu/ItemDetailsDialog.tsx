@@ -7,10 +7,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Plus, Minus, Heart, X, Clock, Flame, ChefHat, 
   Leaf, Drumstick, Star, ShoppingBag, ArrowRight,
-  UtensilsCrossed, Sparkles
+  UtensilsCrossed, Sparkles, Package, AlertTriangle
 } from "lucide-react";
 import { RecommendationsSection } from "./RecommendationsSection";
-import { getRecipeInfo, getSpiceLevelLabel, getSpiceLevelEmoji } from "@/services/recipeService";
+import { getRecipeInfo, getSpiceLevelLabel } from "@/services/recipeService";
 import type { MenuItem } from "@/hooks/useMenuItems";
 
 interface ItemDetailsDialogProps {
@@ -148,7 +148,10 @@ export function ItemDetailsDialog({
               </div>
               {recipe.servingSize && (
                 <div className="flex items-center gap-1.5 bg-muted/65 rounded-full px-3 py-1.5 border border-zinc-200/20">
-                  <span className="text-xs font-semibold">📦 {recipe.servingSize}</span>
+                  <span className="text-xs font-semibold flex items-center gap-1.5">
+                    <Package className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                    {recipe.servingSize}
+                  </span>
                 </div>
               )}
             </div>
@@ -195,7 +198,10 @@ export function ItemDetailsDialog({
               {/* Dynamic Allergy warning flags */}
               {recipe.allergens && recipe.allergens.length > 0 && (
                 <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400 pl-0.5 pt-1">
-                  <span className="font-bold">⚠️ Allergen Info:</span>
+                  <span className="font-bold flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    Allergen Info:
+                  </span>
                   <span className="font-medium">{recipe.allergens.join(", ")}</span>
                 </div>
               )}
@@ -203,7 +209,7 @@ export function ItemDetailsDialog({
               {/* Inset Chef Note */}
               <div className="bg-amber-50/70 dark:bg-amber-950/15 rounded-2xl p-4 border border-amber-200/30 dark:border-amber-950/30 shadow-sm mt-3">
                 <div className="flex items-start gap-2.5">
-                  <span className="text-lg flex-shrink-0">👨‍🍳</span>
+                  <ChefHat className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
                     <span className="text-[10px] uppercase font-extrabold text-amber-800 dark:text-amber-400 tracking-wider">Chef's Secret Notes</span>
                     <p className="text-xs text-amber-900 dark:text-amber-300 leading-relaxed font-medium">{recipe.chefNote}</p>

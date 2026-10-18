@@ -158,7 +158,7 @@ export const RatingPopup = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center">
-            {showGoogleRedirect ? 'Thank You! 🎉' : 'How was your experience?'}
+            {showGoogleRedirect ? 'Thank You!' : 'How was your experience?'}
           </DialogTitle>
         </DialogHeader>
 
@@ -231,7 +231,9 @@ export const RatingPopup = ({
               exit={{ opacity: 0, y: -10 }}
               className="space-y-6 py-4 text-center"
             >
-              <div className="text-6xl">⭐</div>
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-sm">
+                <Star className="w-9 h-9 fill-amber-400 text-amber-500" />
+              </div>
               <p className="text-muted-foreground">
                 We're thrilled you had a great experience! Would you mind sharing your review on Google? It helps us a lot!
               </p>

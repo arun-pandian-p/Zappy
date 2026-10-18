@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropDialog } from '@/components/admin/ImageCropDialog';
 import { UnsplashPicker } from '@/components/admin/UnsplashPicker';
+import { syncImageToSupabase } from '@/services/storageService';
 import {
   Dialog,
   DialogContent,
@@ -31,13 +32,14 @@ interface ImageUploadProps {
 export const ImageUpload = ({ 
   currentImageUrl, 
   onImageUploaded, 
-  restaurantId,
+  restaurantId: passedRestaurantId,
   folder = 'items',
   maxSizeMB,
   enableCrop = false,
   cropShape = 'rect',
   cropAspect = 1,
 }: ImageUploadProps) => {
+  const restaurantId = passedRestaurantId || 'ba349c16-9643-41dd-a70f-b01c64aeabd4';
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -75,13 +77,21 @@ export const ImageUpload = ({
       const publicUrl = urlData.publicUrl;
       pendingFileRef.current = null;
 
+      // Index into image_library for persistent storage reuse
+      supabase.from('image_library').insert({
+        image_url: publicUrl,
+        item_name: file.name.split('.')[0] || 'Uploaded Dish',
+        category_name: folder === 'branding' ? 'Branding' : 'Menu',
+        source: 'upload'
+      } as any).then(() => {});
+
       if (enableCrop) {
         // Open crop dialog with the uploaded image
         setCropSrc(publicUrl);
       } else {
         setPreviewUrl(publicUrl);
         onImageUploaded(publicUrl);
-        toast({ title: 'Image uploaded', description: 'Image has been uploaded successfully.' });
+        toast({ title: 'Image uploaded', description: 'Image has been saved to hotel storage.' });
       }
     } catch (error: any) {
       console.error('[ImageUpload] Upload error:', error);
@@ -162,11 +172,22 @@ export const ImageUpload = ({
               <DialogTitle>Search Unsplash</DialogTitle>
             </DialogHeader>
             <UnsplashPicker 
-              onSelect={(url) => {
-                setPreviewUrl(url);
-                onImageUploaded(url);
+              onSelect={async (url) => {
                 setUnsplashOpen(false);
-                toast({ title: 'Image selected', description: 'Photo from Unsplash has been applied.' });
+                setIsUploading(true);
+                toast({ title: 'Saving to storage...', description: 'Persisting image to hotel storage...' });
+                try {
+                  const persistentUrl = await syncImageToSupabase(url, restaurantId, folder as any, undefined, "unsplash");
+                  setPreviewUrl(persistentUrl);
+                  onImageUploaded(persistentUrl);
+                  toast({ title: 'Image saved to storage', description: 'Photo persisted to hotel storage successfully.' });
+                } catch (err: any) {
+                  console.error('Failed to sync Unsplash image:', err);
+                  setPreviewUrl(url);
+                  onImageUploaded(url);
+                } finally {
+                  setIsUploading(false);
+                }
               }} 
             />
           </DialogContent>
