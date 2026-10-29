@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${hero.headline} + ' | ZAPPY Restaurant OS'">ZAPPY - Restaurant Operating System</title>
+    <meta name="description" content="Orders, Tables, Kitchen, Staff, Inventory, Billing, Analytics and Marketing — all powered by ZAPPY.">
+
+    <!-- Tailwind CSS via CDN (No Node.js / npm build step required) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0B1120',
+                        card: '#0F172A',
+                        primary: {
+                            DEFAULT: '#3B82F6',
+                            hover: '#2563EB',
+                            foreground: '#FFFFFF'
+                        },
+                        slate: {
+                            850: '#111A2E',
+                            900: '#0B1120',
+                            950: '#070D18'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Tech Grid & Subtle Dot Background Patterns */
+        .tech-grid {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .tech-dots {
+            background-image: radial-gradient(circle, rgba(59, 130, 246, 0.18) 1.2px, transparent 1.2px);
+            background-size: 36px 36px;
+        }
+
+        /* Pure CSS keyframe animations for video glow and SVG pulse */
+        @keyframes subtle-float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(1.04); }
+        }
+        .animate-float {
+            animation: subtle-float 4s ease-in-out infinite;
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 6s ease-in-out infinite;
+        }
+
+        /* Accordion transition for native details/summary */
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        details[open] summary svg.chevron-icon {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="bg-[#0B1120] text-slate-100 antialiased font-sans selection:bg-blue-600 selection:text-white relative min-h-screen">
+
+    <!-- Flash message notifications for form submissions -->
+    <div th:if="${demoSuccess}" id="flash-demo" class="fixed top-20 right-6 z-50 max-w-md bg-emerald-950 border border-emerald-500/40 text-emerald-200 px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3 transition-opacity duration-500">
+        <svg class="w-6 h-6 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+            <p class="font-bold text-white text-sm">Demo Request Received!</p>
+            <p class="text-xs text-emerald-300/80">Thank you, <span th:text="${leadName}">Partner</span>. Our restaurant specialist will connect shortly.</p>
+        </div>
+        <button onclick="document.getElementById('flash-demo').remove()" class="ml-auto text-emerald-400 hover:text-white">&times;</button>
+    </div>
+
+    <div th:if="${subscribed}" id="flash-subscribe" class="fixed top-20 right-6 z-50 max-w-md bg-blue-950 border border-blue-500/40 text-blue-200 px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3 transition-opacity duration-500">
+        <svg class="w-6 h-6 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+            <p class="font-bold text-white text-sm">Subscribed Successfully!</p>
+            <p class="text-xs text-blue-300/80">You're on the list to receive our latest restaurant tech updates.</p>
+        </div>
+        <button onclick="document.getElementById('flash-subscribe').remove()" class="ml-auto text-blue-400 hover:text-white">&times;</button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 1. HEADER / NAVBAR                                                        -->
+    <!-- ========================================================================= -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-[#0B1120]/80 backdrop-blur-md border-b border-white/10 transition-all duration-300">
+        <div class="container mx-auto px-6 max-w-7xl">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                
+                <!-- Logo -->
+                <a href="/" class="flex items-center gap-3 group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform duration-300">
+                        Z
+                    </div>
+                    <span class="text-2xl font-black tracking-tight text-white">ZAPPY</span>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center gap-8">
+                    <a th:each="link : ${navLinks}"
+                       th:href="${link.href}"
+                       th:text="${link.label}"
+                       class="text-sm font-medium text-slate-300 hover:text-white transition-colors relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-blue-500 after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left">
+                        Navigation Item
+                    </a>
+                </nav>
+
+                <!-- Action Buttons -->
+                <div class="hidden md:flex items-center gap-3">
+                    <a href="#cta" class="inline-flex items-center text-sm font-semibold text-slate-300 hover:text-white px-4 py-2.5 rounded-full hover:bg-white/5 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        Login
+                    </a>
+                    <button onclick="openDemoModal()" class="inline-flex items-center text-sm font-semibold text-white bg-white/10 hover:bg-white/15 border border-white/10 px-5 py-2.5 rounded-full transition-all duration-200">
+                        Book Demo
+                    </button>
+                    <a href="#cta" class="inline-flex items-center text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/30 px-5 py-2.5 rounded-full transition-all duration-200 hover:scale-105">
+                        Start Free Trial
+                    </a>
+                </div>
+
+                <!-- Mobile Hamburger Button -->
+                <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 focus:outline-none" aria-label="Toggle Navigation">
+                    <svg id="hamburger-icon" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-white/10 bg-[#0B1120] px-6 py-6 space-y-4">
+            <div class="flex flex-col space-y-3">
+                <a th:each="link : ${navLinks}"
+                   th:href="${link.href}"
+                   th:text="${link.label}"
+                   onclick="toggleMobileMenu()"
+                   class="text-base font-medium text-slate-300 hover:text-white py-1">
+                    Navigation Item
+                </a>
+            </div>
+            <div class="pt-4 border-t border-white/10 flex flex-col gap-3">
+                <button onclick="toggleMobileMenu(); openDemoModal()" class="w-full py-3 rounded-full bg-white/10 text-white font-semibold text-center border border-white/10">
+                    Book Demo
+                </button>
+                <a href="#cta" onclick="toggleMobileMenu()" class="w-full py-3 rounded-full bg-blue-600 text-white font-bold text-center shadow-lg shadow-blue-600/20">
+                    Start Free Trial
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-16 md:pt-20">
+
+        <!-- ========================================================================= -->
+        <!-- 2. HERO SECTION                                                           -->
+        <!-- ========================================================================= -->
+        <section class="relative min-h-[90vh] flex flex-col justify-center overflow-hidden tech-grid border-b border-white/5 py-16 lg:py-24">
+            <!-- Ambient Glow Orbs -->
+            <div class="absolute top-1/4 left-10 w-[500px] h-[500px] rounded-full bg-blue-600/15 blur-[140px] pointer-events-none -z-10 animate-pulse-slow"></div>
+            <div class="absolute bottom-10 right-10 w-[450px] h-[450px] rounded-full bg-indigo-600/10 blur-[130px] pointer-events-none -z-10"></div>
+
+            <div class="container mx-auto px-6 max-w-7xl relative z-10">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                    
+                    <!-- Left Column: Copy & Actions -->
+                    <div class="lg:col-span-6 text-center lg:text-left space-y-8">
+                        <!-- Top Pill Badge -->
+                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            The Next-Gen Restaurant OS
+                        </div>
+
+                        <!-- Main Headline -->
+                        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.12]">
+                            <span th:text="${hero.headline}">Run Your Entire Restaurant from One Dashboard</span>
+                        </h1>
+
+                        <!-- Subtitle -->
+                        <p th:text="${hero.subtitle}" class="text-lg md:text-xl text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                            Orders, Tables, Kitchen, Staff, Inventory, Billing, Analytics and Marketing — all powered by ZAPPY.
+                        </p>
+
+                        <!-- CTA Group -->
+                        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                            <a href="#cta" class="w-full sm:w-auto h-14 px-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-xl shadow-blue-600/30 inline-flex items-center justify-center gap-2 group transition-all duration-300 hover:scale-105">
+                                <svg class="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                <span th:text="${hero.ctaText}">Start Free Trial</span>
+                                <svg class="w-4 h-4 text-blue-200 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </a>
+                            
+                            <button onclick="openDemoModal()" class="w-full sm:w-auto h-14 px-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold inline-flex items-center justify-center transition-all duration-200">
+                                Book Demo
+                            </button>
+
+                            <button onclick="openTourModal()" class="w-full sm:w-auto h-14 px-6 rounded-full hover:bg-white/5 text-slate-300 hover:text-white font-semibold inline-flex items-center justify-center gap-2 transition-colors">
+                                <svg class="w-4 h-4 fill-current text-blue-400" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                                Watch Tour
+                            </button>
+                        </div>
+
+                        <!-- Stats Bar -->
+                        <div class="pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center lg:text-left">
+                            <div th:each="stat : ${hero.stats}">
+                                <p th:text="${stat.value}" class="text-3xl font-black text-white tracking-tight">100+</p>
+                                <p th:text="${stat.label}" class="text-xs uppercase tracking-wider font-semibold text-slate-400 mt-1">Restaurants</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Visual Video Showcase with Z Decoration -->
+                    <div class="lg:col-span-6 relative flex items-center justify-center">
+                        <div class="relative w-full aspect-video rounded-3xl overflow-hidden border border-white/15 shadow-2xl shadow-blue-500/10 group">
+                            <!-- Z-shaped SVG decorative line overlay -->
+                            <svg class="absolute -inset-6 w-[calc(100%+48px)] h-[calc(100%+48px)] opacity-20 pointer-events-none -z-10 text-blue-400" viewBox="0 0 100 100" fill="none">
+                                <path d="M 15 15 L 85 15 L 15 85 L 85 85" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <circle cx="15" cy="15" r="2" fill="currentColor" />
+                                <circle cx="85" cy="15" r="2" fill="currentColor" />
+                                <circle cx="15" cy="85" r="2" fill="currentColor" />
+                                <circle cx="85" cy="85" r="2" fill="currentColor" />
+                            </svg>
+
+                            <!-- Video player with fallback poster -->
+                            <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                                <source th:src="@{/videos/brand-identity-2.mp4}" type="video/mp4">
+                                <source src="/videos/brand-identity-2.mp4" type="video/mp4">
+                            </video>
+
+                            <!-- Gradient bottom shadow on video -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none"></div>
+
+                            <div class="absolute bottom-4 left-6 right-6 flex items-center justify-between text-xs text-slate-300">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                    Live Dining Interface
+                                </span>
+                                <span class="bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 font-mono text-[11px]">
+                                    v3.2 Production Ready
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Scroll Indicator -->
+            <div class="mt-12 flex justify-center text-slate-500 hover:text-slate-300 transition-colors">
+                <a href="#problem" class="animate-bounce" aria-label="Scroll down">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </a>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- 3. PROBLEM SECTION (from sections/Problem.tsx)                             -->
+        <!-- ========================================================================= -->
+        <section id="problem" class="relative py-24 md:py-32 bg-[#0B1120] text-slate-100 overflow-hidden border-b border-white/5">
+            <!-- Glows -->
+            <div class="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-blue-600/10 blur-[130px] rounded-full pointer-events-none"></div>
+            <div class="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[400px] h-[300px] bg-rose-600/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+            <div class="container mx-auto px-6 max-w-6xl relative z-10">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                    
+                    <!-- Left Column: Dilemma Statement -->
+                    <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-32">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold uppercase tracking-wider">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                            The Operations Dilemma
+                        </div>
+                        <h2 class="text-4xl md:text-5xl font-black text-white leading-tight tracking-tight">
+                            Where is your <span class="bg-gradient-to-r from-red-400 via-orange-400 to-amber-400 bg-clip-text text-transparent">revenue escaping?</span>
+                        </h2>
+                        <p class="text-slate-400 text-lg leading-relaxed">
+                            Traditional restaurant setups rely on paper tickets, disjointed software tablets, and legacy POS hardware. This friction costs you customer satisfaction and eats away at your hard-earned margins every single day.
+                        </p>
+                    </div>
+
+                    <!-- Right Column: Pain Point Cards -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <div th:each="point : ${painPoints}"
+                             class="group relative p-8 rounded-3xl bg-slate-950/40 border border-white/5 backdrop-blur-md hover:border-white/15 transition-all duration-300 overflow-hidden hover:-translate-y-1">
+                            
+                            <!-- Subtle hover gradient glow -->
+                            <div th:class="'absolute inset-0 bg-gradient-to-br ' + ${point.color} + ' opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none'"></div>
+
+                            <div class="relative z-10 flex flex-col sm:flex-row gap-6">
+                                <div class="flex-shrink-0">
+                                    <div class="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 group-hover:text-white transition-colors duration-300">
+                                        <!-- Smartphone Icon -->
+                                        <svg th:if="${point.icon == 'smartphone'}" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                                            <line x1="12" y1="18" x2="12.01" y2="18" />
+                                        </svg>
+                                        <!-- Clock Icon -->
+                                        <svg th:if="${point.icon == 'clock'}" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <polyline points="12 6 12 12 16 14" />
+                                        </svg>
+                                        <!-- Alert Icon -->
+                                        <svg th:if="${point.icon == 'alert'}" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <line x1="12" y1="8" x2="12" y2="12" />
+                                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span th:text="${point.badge}" class="text-xs font-semibold text-slate-400 bg-white/5 border border-white/5 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                            Feedback Churn
+                                        </span>
+                                        <svg class="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7V17" />
+                                        </svg>
+                                    </div>
+                                    <h3 th:text="${point.title}" class="text-xl font-bold text-white group-hover:translate-x-1 transition-transform duration-300">
+                                        The Silent Loss of Guest Retention
+                                    </h3>
+                                    <p th:text="${point.description}" class="text-slate-400 text-sm leading-relaxed">
+                                        Unhappy guests leave silently without giving you a chance to recover.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- 4. SOLUTION ECOSYSTEM (from sections/Solution.tsx)                         -->
+        <!-- ========================================================================= -->
+        <section id="solution" class="relative py-24 md:py-32 bg-[#0B1120] text-slate-100 overflow-hidden border-b border-white/5">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-blue-500/5 blur-[140px] rounded-full pointer-events-none"></div>
+
+            <div class="container mx-auto px-6 max-w-6xl relative z-10">
+                <div class="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                    <span class="text-xs font-semibold tracking-widest uppercase text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3.5 py-1 rounded-full inline-block">
+                        The Zappy Ecosystem
+                    </span>
+                    <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight">
+                        One unified flow. <span class="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Zero friction.</span>
+                    </h2>
+                    <p class="text-slate-400 text-lg leading-relaxed">
+                        Eliminate communication gaps by replacing paper workflows and standalone tablets with a single synchronized software environment.
+                    </p>
+                </div>
+
+                <!-- Steps Flow Timeline -->
+                <div class="relative">
+                    <!-- Connector line (Desktop only) -->
+                    <div class="hidden lg:block absolute top-[44px] left-[5%] right-[5%] h-0.5 bg-gradient-to-r from-blue-500/10 via-indigo-500/25 to-blue-500/10"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+                        <div th:each="step : ${solutionSteps}"
+                             class="flex flex-col items-center lg:items-start text-center lg:text-left space-y-4 group">
+                            
+                            <!-- Step circle -->
+                            <div class="relative z-10 w-20 h-20 rounded-full bg-slate-950 border border-white/10 flex items-center justify-center text-blue-400 group-hover:border-blue-500/40 group-hover:text-white transition-all duration-300">
+                                <div class="absolute inset-1.5 rounded-full bg-slate-900 border border-white/10 group-hover:bg-blue-600/15 group-hover:border-blue-500/20 transition-all duration-300"></div>
+                                
+                                <!-- Step Icons -->
+                                <svg th:if="${step.icon == 'qrcode'}" class="relative z-20 w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                                </svg>
+                                <svg th:if="${step.icon == 'clipboard'}" class="relative z-20 w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                                </svg>
+                                <svg th:if="${step.icon == 'utensils'}" class="relative z-20 w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2M15 11v11M5 2v10a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V2M7 14v8" />
+                                </svg>
+                                <svg th:if="${step.icon == 'bell'}" class="relative z-20 w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                </svg>
+                                <svg th:if="${step.icon == 'receipt'}" class="relative z-20 w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="8" y1="10" x2="16" y2="10" />
+                                </svg>
+
+                                <!-- Step number badge -->
+                                <div th:text="${step.number}" class="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-[10px] font-bold text-white tracking-tighter">
+                                    01
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <h3 th:text="${step.title}" class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors duration-300">
+                                    Scan Table QR & Pick Seat
+                                </h3>
+                                <p th:text="${step.description}" class="text-slate-400 text-sm leading-relaxed">
+                                    Customers scan the unique table QR code, pick their specific seat, and are instantly authenticated.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- 5. CORE FEATURES (from sections/Features.tsx)                             -->
+        <!-- ========================================================================= -->
+        <section id="features" class="relative py-24 md:py-32 bg-[#0B1120] text-slate-100 overflow-hidden border-b border-white/5">
+            <div class="absolute top-0 right-1/4 w-[600px] h-[300px] bg-blue-600/5 blur-[130px] rounded-full pointer-events-none"></div>
+
+            <div class="container mx-auto px-6 max-w-6xl relative z-10">
+                <div class="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                    <span class="text-xs font-semibold tracking-widest uppercase text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3.5 py-1 rounded-full inline-block">
+                        Core capabilities
+                    </span>
+                    <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight">
+                        Engineered for <span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">high-frequency dining</span>
+                    </h2>
+                    <p class="text-slate-400 text-lg leading-relaxed">
+                        From QR seat reservations to kitchen queue management, Zappy covers the entire life-cycle of customer dining.
+                    </p>
+                </div>
+
+                <!-- Feature Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div th:each="feature : ${features}"
+                         th:class="'group relative p-8 rounded-3xl bg-slate-950/40 border border-white/5 hover:border-white/15 transition-all duration-300 flex flex-col justify-between hover:shadow-2xl hover:-translate-y-1 ' + ${feature.glowColor}">
+                        
+                        <div class="space-y-6">
+                            <!-- Icon wrap -->
+                            <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-600/10 group-hover:text-white transition-all duration-300">
+                                <svg th:if="${feature.icon == 'qrcode'}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                                </svg>
+                                <svg th:if="${feature.icon == 'monitor'}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+                                </svg>
+                                <svg th:if="${feature.icon == 'barchart'}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" />
+                                </svg>
+                                <svg th:if="${feature.icon == 'heart'}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                                </svg>
+                                <svg th:if="${feature.icon == 'shield'}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" />
+                                </svg>
+                                <svg th:if="${feature.icon == 'compass'}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                                </svg>
+                            </div>
+
+                            <div class="space-y-2">
+                                <h3 th:text="${feature.title}" class="text-xl font-bold text-white group-hover:text-blue-400 transition-colors duration-300">
+                                    Smart QR Seat Selection
+                                </h3>
+                                <p th:text="${feature.description}" class="text-slate-400 text-sm leading-relaxed">
+                                    Provide an intuitive dining flow with persistent device recognition.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Decorative border bottom-line -->
+                        <div class="absolute bottom-0 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-transparent via-blue-500/0 to-transparent group-hover:via-blue-500/20 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- 6. CAPABILITIES & INNOVATION (from src/pages/landing/ 10 subpages)        -->
+        <!-- ========================================================================= -->
+        <section id="capabilities" class="relative py-24 md:py-32 bg-[#080E1C] text-slate-100 overflow-hidden border-b border-white/5">
+            <div class="container mx-auto px-6 max-w-6xl relative z-10">
+                <div class="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                    <span class="text-xs font-semibold tracking-widest uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3.5 py-1 rounded-full inline-block">
+                        AI & Digital Modules
+                    </span>
+                    <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight">
+                        Powering modern <span class="bg-gradient-to-r from-indigo-400 to-sky-400 bg-clip-text text-transparent">dining operations</span>
+                    </h2>
+                    <p class="text-slate-400 text-lg leading-relaxed">
+                        Deep dive into our specialized engines: from intelligent OCR digitizers to automated visual dish generation.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div th:each="cap : ${capabilities}" 
+                         class="p-8 rounded-3xl bg-slate-900/50 border border-white/5 hover:border-blue-500/30 transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span th:text="${cap.badge}" class="text-xs font-bold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
+                                    AI Digitization
+                                </span>
+                                <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-white">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <h3 th:text="${cap.title}" class="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
+                                AI Restaurant Menu OCR
+                            </h3>
+
+                            <p th:text="${cap.description}" class="text-slate-400 text-sm leading-relaxed">
+                                Transform printed paper menus into digital QR menus in seconds.
+                            </p>
+
+                            <!-- Highlights list -->
+                            <ul class="space-y-2 pt-2 border-t border-white/5">
+                                <li th:each="hl : ${cap.highlights}" class="text-xs text-slate-300 flex items-center gap-2">
+                                    <svg class="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    <span th:text="${hl}">Feature point</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="pt-6 mt-6 border-t border-white/5">
+                            <button onclick="openDemoModal()" class="text-xs font-bold text-blue-400 hover:text-blue-300 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                Explore Capability &rarr;
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- 7. PROOF & RESULTS (from sections/Proof.tsx)                               -->
+        <!-- ========================================================================= -->
+        <section id="proof" class="relative py-24 md:py-32 bg-[#0B1120] text-slate-100 overflow-hidden border-b border-white/5">
+            <div class="container mx-auto px-6 max-w-6xl relative z-10">
+                <div class="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                    <span class="text-xs font-semibold tracking-widest uppercase text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3.5 py-1 rounded-full inline-block">
+                        Proven Results
+                    </span>
+                    <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight">
+                        Loved by operations. <span class="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Trusted by guests.</span>
+                    </h2>
+                    <p class="text-slate-400 text-lg leading-relaxed">
+                        See the business growth metrics restaurants achieve when upgrading to Zappy Restaurant OS.
+                    </p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
+                    <div th:each="stat : ${proofStats}"
+                         class="group relative p-8 rounded-3xl bg-slate-950/40 border border-white/5 hover:border-white/15 transition-all duration-300 text-center hover:-translate-y-1">
+                        
+                        <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 mx-auto mb-6">
+                            <svg th:if="${stat.icon == 'trending'}" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
+                            </svg>
+                            <svg th:if="${stat.icon == 'zap'}" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                            </svg>
+                            <svg th:if="${stat.icon == 'users'}" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                        </div>
+                        
+                        <h3 th:text="${stat.value}" class="text-4xl md:text-5xl font-black text-white mb-2 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                            +22%
+                        </h3>
+                        <h4 th:text="${stat.label}" class="text-base font-bold text-slate-300 mb-2">Avg. Ticket Value</h4>
+                        <p th:text="${stat.description}" class="text-slate-400 text-xs leading-relaxed">
+                            Smart upsells and seamless re-ordering increase guest spending.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Testimonials Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div th:each="test : ${testimonials}"
+                         class="p-8 rounded-3xl bg-slate-950/40 border border-white/5 relative flex flex-col justify-between hover:border-white/15 transition-all">
+                        
+                        <div class="space-y-6">
+                            <!-- 5 Stars SVG -->
+                            <div class="flex gap-1 text-amber-400">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                            </div>
+
+                            <p th:text="'&quot;' + ${test.quote} + '&quot;'" class="text-slate-300 text-base italic leading-relaxed">
+                                "Integrating Zappy completely changed our dinner rush."
+                            </p>
+                        </div>
+
+                        <div class="mt-6 pt-6 border-t border-white/5">
+                            <h5 th:text="${test.author}" class="font-bold text-white">Elena Rostova</h5>
+                            <p th:text="${test.role}" class="text-xs text-slate-500">General Manager, Bistro L'Avenue</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- 8. FAQ SECTION (from FAQSection.tsx)                                      -->
+        <!-- ========================================================================= -->
+        <section id="faq" class="py-24 bg-[#0B1120] border-b border-white/5">
+            <div class="container mx-auto px-4 max-w-4xl">
+                <div class="text-center mb-16 space-y-3">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">
+                        Frequently Asked <span class="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Questions</span>
+                    </h2>
+                    <p class="text-lg text-slate-400">Everything you need to know about ZAPPY.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <details th:each="faq : ${faqs}" class="group rounded-2xl bg-slate-900/50 border border-white/10 px-6 py-5 transition-all duration-200 open:bg-slate-900">
+                        <summary class="flex items-center justify-between cursor-pointer font-semibold text-white select-none list-none">
+                            <span th:text="${faq.question}">Do my customers need to download an app?</span>
+                            <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200 group-open:rotate-180 flex-shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </summary>
+                        <div class="mt-4 pt-3 border-t border-white/5 text-slate-400 text-sm leading-relaxed">
+                            <p th:text="${faq.answer}">No! ZAPPY works entirely in the browser without downloads.</p>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- 9. CTA BANNER SECTION (from sections/CTA.tsx)                             -->
+        <!-- ========================================================================= -->
+        <section id="cta" class="relative py-24 md:py-32 bg-[#0B1120] text-slate-100 overflow-hidden">
+            <!-- Light Highlights -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-blue-600/10 blur-[140px] rounded-full pointer-events-none"></div>
+
+            <div class="container mx-auto px-6 max-w-4xl relative z-10 text-center space-y-8">
+                <span class="text-xs font-semibold tracking-widest uppercase text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3.5 py-1 rounded-full inline-block">
+                    Start upgrading today
+                </span>
+                
+                <h2 class="text-4xl md:text-6xl font-black text-white tracking-tight leading-tight">
+                    Ready to experience the <br />
+                    <span class="bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent">future of dining?</span>
+                </h2>
+                
+                <p class="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                    Boost seat throughput, recover feedback instantly, and run kitchen operations cleanly. Set up your digital workspace in minutes.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                    <button onclick="openDemoModal()" class="w-full sm:w-auto h-14 px-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/25 inline-flex items-center justify-center gap-2 group transition-all duration-300 hover:scale-105">
+                        <svg class="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Start Free Trial
+                        <svg class="w-4 h-4 text-blue-200 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </button>
+                    
+                    <button onclick="openDemoModal()" class="w-full sm:w-auto h-14 px-8 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 text-white font-semibold transition-all">
+                        Book Demo
+                    </button>
+
+                    <button onclick="openTourModal()" class="w-full sm:w-auto h-14 px-8 rounded-full hover:bg-white/5 text-slate-300 hover:text-white font-semibold inline-flex items-center gap-2 transition-colors">
+                        <svg class="w-4 h-4 fill-current text-blue-400" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                        Watch Tour
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- 10. FOOTER (from Footer.tsx)                                              -->
+    <!-- ========================================================================= -->
+    <footer class="bg-[#080E1C] text-white pt-20 pb-12 border-t border-slate-800">
+        <div class="container mx-auto px-6 max-w-7xl">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
+                
+                <!-- Brand & Newsletter -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-lg">Z</div>
+                        <span class="text-2xl font-black tracking-tight text-white">ZAPPY</span>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed max-w-sm">
+                        The high frequency restaurant operating system unifying QR ordering, live kitchen tracking, payment settlement, and customer analytics.
+                    </p>
+
+                    <!-- Newsletter Subscription Form -->
+                    <div class="pt-2">
+                        <h4 class="text-xs font-bold text-white/80 uppercase tracking-wider mb-3">Subscribe to updates</h4>
+                        <form th:action="@{/subscribe}" method="post" class="flex max-w-sm">
+                            <input type="email" name="email" required placeholder="Enter your email" class="bg-slate-900 border border-white/10 text-white placeholder:text-slate-500 h-10 px-4 rounded-l-xl text-sm focus:outline-none focus:border-blue-500 w-full" />
+                            <button type="submit" class="h-10 px-5 rounded-r-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-colors flex-shrink-0">
+                                Subscribe
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Footer Columns Grid -->
+                <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-8">
+                    <div th:each="section : ${footerSections}">
+                        <h3 th:text="${section.title}" class="font-bold text-xs text-white mb-5 uppercase tracking-wider">
+                            Product
+                        </h3>
+                        <ul class="space-y-3">
+                            <li th:each="link : ${section.links}">
+                                <a th:href="${link.href}" th:text="${link.name}" class="text-sm text-slate-400 hover:text-white transition-colors">
+                                    Link Item
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Legal & Socials -->
+            <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-400">
+                <p>&copy; <span th:text="${currentYear}">2026</span> ZAPPY Inc. All rights reserved.</p>
+
+                <!-- Social Icons -->
+                <div class="flex items-center gap-4">
+                    <!-- LinkedIn -->
+                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-colors" aria-label="LinkedIn">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                    </a>
+                    <!-- Twitter / X -->
+                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-colors" aria-label="Twitter">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </a>
+                    <!-- Instagram -->
+                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-colors" aria-label="Instagram">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <a href="#problem" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="#solution" class="hover:text-white transition-colors">Terms of Service</a>
+                    <a href="#faq" class="hover:text-white transition-colors">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ========================================================================= -->
+    <!-- 11. FLOATING BOOK DEMO BUTTON (appears upon scroll)                       -->
+    <!-- ========================================================================= -->
+    <div id="floating-demo-btn" class="fixed bottom-6 right-6 z-40 hidden transition-all duration-300">
+        <button onclick="openDemoModal()" class="rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-2xl shadow-blue-500/40 px-6 py-4 inline-flex items-center gap-2 hover:scale-105 transition-transform">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Book Demo
+        </button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 12. BOOK DEMO MODAL                                                       -->
+    <!-- ========================================================================= -->
+    <div id="demo-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-white/10 rounded-3xl max-w-lg w-full p-8 shadow-2xl relative text-slate-100">
+            <!-- Close button -->
+            <button onclick="closeDemoModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white" aria-label="Close modal">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <div class="mb-6 space-y-1">
+                <h3 class="text-2xl font-bold text-white">Book ZAPPY Demo</h3>
+                <p class="text-sm text-slate-400">Request a live interactive product tour with our restaurant solutions specialist.</p>
+            </div>
+
+            <form th:action="@{/book-demo}" method="post" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Your Name *</label>
+                    <input type="text" name="name" required placeholder="John Doe" class="w-full h-11 px-4 bg-slate-950 border border-white/10 rounded-xl text-white text-sm focus:border-blue-500 focus:outline-none" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Restaurant Name *</label>
+                    <input type="text" name="restaurantName" required placeholder="Bella Italia Bistro" class="w-full h-11 px-4 bg-slate-950 border border-white/10 rounded-xl text-white text-sm focus:border-blue-500 focus:outline-none" />
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Phone *</label>
+                        <input type="tel" name="phone" required placeholder="+1 555-0199" class="w-full h-11 px-4 bg-slate-950 border border-white/10 rounded-xl text-white text-sm focus:border-blue-500 focus:outline-none" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Email *</label>
+                        <input type="email" name="email" required placeholder="john@restaurant.com" class="w-full h-11 px-4 bg-slate-950 border border-white/10 rounded-xl text-white text-sm focus:border-blue-500 focus:outline-none" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Number of Branches</label>
+                        <input type="number" name="branches" min="1" value="1" class="w-full h-11 px-4 bg-slate-950 border border-white/10 rounded-xl text-white text-sm focus:border-blue-500 focus:outline-none" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">City *</label>
+                        <input type="text" name="city" required placeholder="New York" class="w-full h-11 px-4 bg-slate-950 border border-white/10 rounded-xl text-white text-sm focus:border-blue-500 focus:outline-none" />
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-colors mt-2 inline-flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    Submit Demo Request
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 13. WATCH TOUR MODAL                                                      -->
+    <!-- ========================================================================= -->
+    <div id="tour-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-black border border-white/10 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl relative">
+            <div class="p-4 bg-slate-900 border-b border-white/10 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-white">ZAPPY Product Tour</h3>
+                    <p class="text-xs text-slate-400">Integrated Restaurant OS Walkthrough</p>
+                </div>
+                <button onclick="closeTourModal()" class="text-slate-400 hover:text-white p-1" aria-label="Close tour">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="aspect-video w-full bg-slate-950">
+                <video id="tour-video" controls class="w-full h-full object-cover">
+                    <source th:src="@{/videos/brand-identity-2.mp4}" type="video/mp4">
+                    <source src="/videos/brand-identity-2.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vanilla JavaScript for interactivity (no React/Node needed) -->
+    <script>
+        // Toggle Mobile Menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const hamburger = document.getElementById('hamburger-icon');
+            const close = document.getElementById('close-icon');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                hamburger.classList.add('hidden');
+                close.classList.remove('hidden');
+            } else {
+                menu.classList.add('hidden');
+                hamburger.classList.remove('hidden');
+                close.classList.add('hidden');
+            }
+        }
+
+        // Demo Modal Handlers
+        function openDemoModal() {
+            document.getElementById('demo-modal').classList.remove('hidden');
+        }
+        function closeDemoModal() {
+            document.getElementById('demo-modal').classList.add('hidden');
+        }
+
+        // Tour Modal Handlers
+        function openTourModal() {
+            const modal = document.getElementById('tour-modal');
+            modal.classList.remove('hidden');
+            const vid = document.getElementById('tour-video');
+            if (vid) vid.play().catch(() => {});
+        }
+        function closeTourModal() {
+            const modal = document.getElementById('tour-modal');
+            modal.classList.add('hidden');
+            const vid = document.getElementById('tour-video');
+            if (vid) vid.pause();
+        }
+
+        // Floating Demo Button on Scroll
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('floating-demo-btn');
+            if (window.scrollY > 300) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        });
+
+        // Close modals on clicking outside or ESC key
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDemoModal();
+                closeTourModal();
+            }
+        });
+        document.getElementById('demo-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'demo-modal') closeDemoModal();
+        });
+        document.getElementById('tour-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'tour-modal') closeTourModal();
+        });
+    </script>
+</body>
+</html>
+
