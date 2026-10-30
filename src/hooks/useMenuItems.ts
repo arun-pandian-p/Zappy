@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/services/apiClient";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { logActivity } from "@/services/auditLogger";
 
@@ -43,18 +44,24 @@ export function useMenuItems(restaurantId?: string) {
     queryKey: ["menu_items", restaurantId],
     queryFn: async () => {
       if (!restaurantId) return [];
-      
-      const { data, error } = await supabase
-        .from("menu_items")
-        .select(`
-          *,
-          category:categories(id, name, display_order)
-        `)
-        .eq("restaurant_id", restaurantId)
-        .order("display_order");
 
-      if (error) throw error;
-      return data as (MenuItem & { category: Pick<Category, "id" | "name" | "display_order"> | null })[];
+      try {
+        const items = await apiClient.getMenuItems(restaurantId);
+        return items as (MenuItem & { category: Pick<Category, "id" | "name" | "display_order"> | null })[];
+      } catch (err) {
+        console.warn("Java API getMenuItems error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("menu_items")
+          .select(`
+            *,
+            category:categories(id, name, display_order)
+          `)
+          .eq("restaurant_id", restaurantId)
+          .order("display_order");
+
+        if (error) throw error;
+        return data as (MenuItem & { category: Pick<Category, "id" | "name" | "display_order"> | null })[];
+      }
     },
     enabled: !!restaurantId,
     staleTime: 2 * 60 * 1000,
@@ -92,52 +99,29 @@ export function useCategories(restaurantId?: string) {
     queryKey: ["categories", restaurantId],
     queryFn: async () => {
       if (!restaurantId) return [];
-      
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .eq("is_active", true)
-        .order("display_order");
 
-      if (error) throw error;
-      return (data as Category[]).filter(
-        (c) => c.name && c.name.trim().toLowerCase() !== "uncategorized"
-      );
+      try {
+        const categories = await apiClient.getCategories(restaurantId);
+        return (categories as Category[]).filter(
+          (c) => c.name && c.name.trim().toLowerCase() !== "uncategorized"
+        );
+      } catch (err) {
+        console.warn("Java API getCategories error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("categories")
+          .select("*")
+          .eq("restaurant_id", restaurantId)
+          .eq("is_active", true)
+          .order("display_order");
+
+        if (error) throw error;
+        return (data as Category[]).filter(
+          (c) => c.name && c.name.trim().toLowerCase() !== "uncategorized"
+        );
+      }
     },
     enabled: !!restaurantId,
     staleTime: 5 * 60 * 1000,
-  });
-}
-
-export function useCreateMenuItem() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (item: MenuItemInsert) => {
-      const { data, error } = await supabase
-        .from("menu_items")
-        .insert(item)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
-      
-      debouncedEmbedding(data.id, data.name, data.description || "", data.restaurant_id)
-        .catch(() => {});
-
-      logActivity({
-        restaurantId: data.restaurant_id,
-        action: "Create Menu Item",
-        tableName: "menu_items",
-        recordId: data.id,
-        newValues: data
-      });
-    },
   });
 }
 
@@ -162,20 +146,61 @@ async function debouncedEmbedding(
   await generateAndSaveMenuEmbedding(id, name, description, restaurantId);
 }
 
+export function useCreateMenuItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (item: MenuItemInsert) => {
+      try {
+        return await apiClient.createMenuItem(item.restaurant_id, item);
+      } catch (err) {
+        console.warn("Java API createMenuItem error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("menu_items")
+          .insert(item)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
+      
+      debouncedEmbedding(data.id, data.name, data.description || "", data.restaurant_id)
+        .catch(() => {});
+
+      logActivity({
+        restaurantId: data.restaurant_id,
+        action: "Create Menu Item",
+        tableName: "menu_items",
+        recordId: data.id,
+        newValues: data
+      });
+    },
+  });
+}
+
 export function useUpdateMenuItem() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: MenuItemUpdate }) => {
-      const { data, error } = await supabase
-        .from("menu_items")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
+      try {
+        return await apiClient.updateMenuItem(id, updates);
+      } catch (err) {
+        console.warn("Java API updateMenuItem error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("menu_items")
+          .update(updates)
+          .eq("id", id)
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });
@@ -199,13 +224,19 @@ export function useDeleteMenuItem() {
 
   return useMutation({
     mutationFn: async ({ id, restaurantId }: { id: string; restaurantId: string }) => {
-      const { error } = await supabase
-        .from("menu_items")
-        .delete()
-        .eq("id", id);
+      try {
+        await apiClient.deleteMenuItem(id);
+        return { id, restaurantId };
+      } catch (err) {
+        console.warn("Java API deleteMenuItem error, falling back to Supabase client:", err);
+        const { error } = await supabase
+          .from("menu_items")
+          .delete()
+          .eq("id", id);
 
-      if (error) throw error;
-      return { id, restaurantId };
+        if (error) throw error;
+        return { id, restaurantId };
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurantId] });
@@ -224,15 +255,20 @@ export function useToggleMenuItemAvailability() {
 
   return useMutation({
     mutationFn: async ({ id, isAvailable }: { id: string; isAvailable: boolean }) => {
-      const { data, error } = await supabase
-        .from("menu_items")
-        .update({ is_available: isAvailable })
-        .eq("id", id)
-        .select()
-        .single();
+      try {
+        return await apiClient.toggleMenuItemAvailability(id, isAvailable);
+      } catch (err) {
+        console.warn("Java API toggleMenuItemAvailability error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("menu_items")
+          .update({ is_available: isAvailable })
+          .eq("id", id)
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["menu_items", data.restaurant_id] });

@@ -65,6 +65,19 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/restaurants/slug/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
 
+                // Public category and menu items reading
+                .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/menu-items/**").permitAll()
+
+                // Category & Menu Item modifications
+                .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAnyRole("restaurant_admin", "super_admin", "manager")
+                .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasAnyRole("restaurant_admin", "super_admin", "manager")
+                .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAnyRole("restaurant_admin", "super_admin", "manager")
+                .requestMatchers(HttpMethod.POST, "/api/menu-items/**").hasAnyRole("restaurant_admin", "super_admin", "manager")
+                .requestMatchers(HttpMethod.PUT, "/api/menu-items/**").hasAnyRole("restaurant_admin", "super_admin", "manager")
+                .requestMatchers(HttpMethod.PATCH, "/api/menu-items/**").hasAnyRole("restaurant_admin", "super_admin", "manager")
+                .requestMatchers(HttpMethod.DELETE, "/api/menu-items/**").hasAnyRole("restaurant_admin", "super_admin", "manager")
+
                 // Restaurant management - authenticated only
                 .requestMatchers(HttpMethod.PUT, "/api/restaurants/**").hasAnyRole("restaurant_admin", "super_admin")
                 .requestMatchers(HttpMethod.POST, "/api/restaurants/*/logo").hasAnyRole("restaurant_admin", "super_admin")

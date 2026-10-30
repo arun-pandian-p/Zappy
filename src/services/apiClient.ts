@@ -197,6 +197,125 @@ class ApiClient {
     });
     return this.handleResponse<OverviewStats>(response);
   }
+
+  // --- Category Management APIs (Sprint 02) ---
+
+  async getCategories(restaurantId: string): Promise<any[]> {
+    const response = await fetch(`${API_BASE}/categories?restaurantId=${encodeURIComponent(restaurantId)}`, {
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any[]>(response);
+  }
+
+  async getCategory(id: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/categories/${id}`, {
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async createCategory(restaurantId: string, category: { name: string; description?: string | null; image_url?: string | null; display_order?: number | null; is_active?: boolean | null }): Promise<any> {
+    const response = await fetch(`${API_BASE}/categories?restaurantId=${encodeURIComponent(restaurantId)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(category),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async updateCategory(id: string, updates: Record<string, any>): Promise<any> {
+    const response = await fetch(`${API_BASE}/categories/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(updates),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async reorderCategories(restaurantId: string, categoryIds: string[]): Promise<any> {
+    const response = await fetch(`${API_BASE}/categories/reorder?restaurantId=${encodeURIComponent(restaurantId)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ categoryIds }),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async deleteCategory(id: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/categories/${id}`, {
+      method: 'DELETE',
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  // --- Menu Items Management APIs (Sprint 02) ---
+
+  async getMenuItems(restaurantId: string, categoryId?: string): Promise<any[]> {
+    const query = new URLSearchParams({ restaurantId });
+    if (categoryId) query.append('categoryId', categoryId);
+
+    const response = await fetch(`${API_BASE}/menu-items?${query.toString()}`, {
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any[]>(response);
+  }
+
+  async getMenuItem(id: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/menu-items/${id}`, {
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async createMenuItem(restaurantId: string, item: Record<string, any>): Promise<any> {
+    const response = await fetch(`${API_BASE}/menu-items?restaurantId=${encodeURIComponent(restaurantId)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(item),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async updateMenuItem(id: string, updates: Record<string, any>): Promise<any> {
+    const response = await fetch(`${API_BASE}/menu-items/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(updates),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async toggleMenuItemAvailability(id: string, isAvailable: boolean): Promise<any> {
+    const response = await fetch(`${API_BASE}/menu-items/${id}/availability?isAvailable=${isAvailable}`, {
+      method: 'PATCH',
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async deleteMenuItem(id: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/menu-items/${id}`, {
+      method: 'DELETE',
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any>(response);
+  }
 }
 
 export const apiClient = new ApiClient();
