@@ -76,6 +76,9 @@ public class RestaurantEntity {
     @Column(name = "ads_enabled")
     private Boolean adsEnabled = true;
 
+    @Column(name = "onboarding_completed")
+    private Boolean onboardingCompleted = true;
+
     @Column(name = "settings", columnDefinition = "text")
     private String settings;
 
@@ -326,6 +329,14 @@ public class RestaurantEntity {
 
     public void setFeatureToggles(String featureToggles) {
         this.featureToggles = featureToggles;
+    }
+
+    public Boolean getOnboardingCompleted() {
+        return onboardingCompleted != null ? onboardingCompleted : true;
+    }
+
+    public void setOnboardingCompleted(Boolean onboardingCompleted) {
+        this.onboardingCompleted = onboardingCompleted;
     }
 
     public Instant getCreatedAt() {

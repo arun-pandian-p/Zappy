@@ -76,6 +76,7 @@ public class RestaurantService {
         if (request.secondary_color() != null) restaurant.setSecondaryColor(request.secondary_color());
         if (request.font_family() != null) restaurant.setFontFamily(request.font_family());
         if (request.ads_enabled() != null) restaurant.setAdsEnabled(request.ads_enabled());
+        if (request.onboarding_completed() != null) restaurant.setOnboardingCompleted(request.onboarding_completed());
         if (request.logo_url() != null) restaurant.setLogoUrl(request.logo_url());
         if (request.banner_image_url() != null) restaurant.setBannerImageUrl(request.banner_image_url());
         if (request.cover_image_url() != null) restaurant.setCoverImageUrl(request.cover_image_url());
