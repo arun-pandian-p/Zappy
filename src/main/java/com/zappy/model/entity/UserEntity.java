@@ -24,7 +24,7 @@ public class UserEntity {
     @Column(name = "last_sign_in_at")
     private Instant lastSignInAt;
 
-    @Column(name = "raw_user_meta_data", columnDefinition = "text")
+    @Column(name = "raw_user_meta_data", insertable = false, updatable = false)
     private String rawUserMetaData;
 
     @Column(name = "created_at")
