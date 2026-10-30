@@ -316,6 +316,69 @@ class ApiClient {
     });
     return this.handleResponse<any>(response);
   }
+
+  // --- Table & Floor Management APIs (Sprint 03) ---
+
+  async getTables(restaurantId: string): Promise<any[]> {
+    const response = await fetch(`${API_BASE}/tables?restaurantId=${encodeURIComponent(restaurantId)}`, {
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any[]>(response);
+  }
+
+  async getTable(id: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/tables/${id}`, {
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async getTableByNumber(restaurantId: string, tableNumber: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/tables/by-number?restaurantId=${encodeURIComponent(restaurantId)}&tableNumber=${encodeURIComponent(tableNumber)}`, {
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async createTable(restaurantId: string, table: Record<string, any>): Promise<any> {
+    const response = await fetch(`${API_BASE}/tables?restaurantId=${encodeURIComponent(restaurantId)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(table),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async updateTable(id: string, updates: Record<string, any>): Promise<any> {
+    const response = await fetch(`${API_BASE}/tables/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(updates),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async updateTableStatus(id: string, status: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/tables/${id}/status?status=${encodeURIComponent(status)}`, {
+      method: 'PATCH',
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async deleteTable(id: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/tables/${id}`, {
+      method: 'DELETE',
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any>(response);
+  }
 }
 
 export const apiClient = new ApiClient();

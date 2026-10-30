@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/services/apiClient";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Table = Tables<"tables">;
@@ -13,20 +14,26 @@ export function useTableByNumber(restaurantId?: string, tableNumber?: string) {
     queryKey: ["table-by-number", restaurantId, tableNumber],
     queryFn: async () => {
       if (!restaurantId || !tableNumber) return null;
-      
-      const { data, error } = await supabase
-        .from("tables")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .ilike("table_number", tableNumber)
-        .eq("is_active", true)
-        .single();
 
-      if (error) {
-        console.error("Error fetching table by number:", error);
-        return null;
+      try {
+        const table = await apiClient.getTableByNumber(restaurantId, tableNumber);
+        return table as Table;
+      } catch (err) {
+        console.warn("Java API getTableByNumber error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("tables")
+          .select("*")
+          .eq("restaurant_id", restaurantId)
+          .ilike("table_number", tableNumber)
+          .eq("is_active", true)
+          .single();
+
+        if (error) {
+          console.error("Error fetching table by number:", error);
+          return null;
+        }
+        return data as Table;
       }
-      return data as Table;
     },
     enabled: !!restaurantId && !!tableNumber,
   });
@@ -39,16 +46,22 @@ export function useTables(restaurantId?: string) {
     queryKey: ["tables", restaurantId],
     queryFn: async () => {
       if (!restaurantId) return [];
-      
-      const { data, error } = await supabase
-        .from("tables")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .eq("is_active", true)
-        .order("table_number");
 
-      if (error) throw error;
-      return data as Table[];
+      try {
+        const tables = await apiClient.getTables(restaurantId);
+        return tables as Table[];
+      } catch (err) {
+        console.warn("Java API getTables error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("tables")
+          .select("*")
+          .eq("restaurant_id", restaurantId)
+          .eq("is_active", true)
+          .order("table_number");
+
+        if (error) throw error;
+        return data as Table[];
+      }
     },
     enabled: !!restaurantId,
     staleTime: 2 * 60 * 1000,
@@ -87,15 +100,21 @@ export function useTable(tableId?: string) {
     queryKey: ["table", tableId],
     queryFn: async () => {
       if (!tableId) return null;
-      
-      const { data, error } = await supabase
-        .from("tables")
-        .select("*")
-        .eq("id", tableId)
-        .single();
 
-      if (error) throw error;
-      return data as Table;
+      try {
+        const table = await apiClient.getTable(tableId);
+        return table as Table;
+      } catch (err) {
+        console.warn("Java API getTable error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("tables")
+          .select("*")
+          .eq("id", tableId)
+          .single();
+
+        if (error) throw error;
+        return data as Table;
+      }
     },
     enabled: !!tableId,
   });
@@ -106,21 +125,26 @@ export function useCreateTable() {
 
   return useMutation({
     mutationFn: async (table: TableInsert) => {
-      const { data, error } = await supabase
-        .from("tables")
-        .upsert(
-          {
-            ...table,
-            is_active: true,
-            deleted_at: null,
-          },
-          { onConflict: "restaurant_id,table_number" }
-        )
-        .select()
-        .single();
+      try {
+        return await apiClient.createTable(table.restaurant_id, table);
+      } catch (err) {
+        console.warn("Java API createTable error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("tables")
+          .upsert(
+            {
+              ...table,
+              is_active: true,
+              deleted_at: null,
+            },
+            { onConflict: "restaurant_id,table_number" }
+          )
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["tables", data.restaurant_id] });
@@ -133,15 +157,20 @@ export function useUpdateTable() {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: TableUpdate }) => {
-      const { data, error } = await supabase
-        .from("tables")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
+      try {
+        return await apiClient.updateTable(id, updates);
+      } catch (err) {
+        console.warn("Java API updateTable error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("tables")
+          .update(updates)
+          .eq("id", id)
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["tables", data.restaurant_id] });
@@ -154,13 +183,19 @@ export function useDeleteTable() {
 
   return useMutation({
     mutationFn: async ({ id, restaurantId }: { id: string; restaurantId: string }) => {
-      const { error } = await supabase
-        .from("tables")
-        .update({ is_active: false, deleted_at: new Date().toISOString() })
-        .eq("id", id);
+      try {
+        await apiClient.deleteTable(id);
+        return { id, restaurantId };
+      } catch (err) {
+        console.warn("Java API deleteTable error, falling back to Supabase client:", err);
+        const { error } = await supabase
+          .from("tables")
+          .update({ is_active: false, deleted_at: new Date().toISOString() })
+          .eq("id", id);
 
-      if (error) throw new Error(error.message || JSON.stringify(error));
-      return { id, restaurantId };
+        if (error) throw new Error(error.message || JSON.stringify(error));
+        return { id, restaurantId };
+      }
     },
     onMutate: async ({ id, restaurantId }) => {
       await queryClient.cancelQueries({ queryKey: ["tables", restaurantId] });
@@ -184,15 +219,20 @@ export function useUpdateTableStatus() {
 
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { data, error } = await supabase
-        .from("tables")
-        .update({ status })
-        .eq("id", id)
-        .select()
-        .single();
+      try {
+        return await apiClient.updateTableStatus(id, status);
+      } catch (err) {
+        console.warn("Java API updateTableStatus error, falling back to Supabase client:", err);
+        const { data, error } = await supabase
+          .from("tables")
+          .update({ status })
+          .eq("id", id)
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["tables", data.restaurant_id] });
