@@ -21,3 +21,4 @@ public interface TableRepository extends JpaRepository<TableEntity, UUID> {
 
     long countByRestaurantIdAndIsActiveTrue(UUID restaurantId);
 }
+

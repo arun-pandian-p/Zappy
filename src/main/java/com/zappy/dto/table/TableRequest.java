@@ -16,3 +16,4 @@ public record TableRequest(
 
     Boolean is_active
 ) {}
+

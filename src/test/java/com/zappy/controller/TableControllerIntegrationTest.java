@@ -1,4 +1,23 @@
+
 package com.zappy.controller;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zappy.dto.table.TableRequest;
@@ -13,20 +32,6 @@ import com.zappy.repository.UserRepository;
 import com.zappy.repository.UserRoleRepository;
 import com.zappy.security.JwtTokenProvider;
 import com.zappy.security.UserPrincipal;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.UUID;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -123,7 +128,7 @@ class TableControllerIntegrationTest {
 
         mockMvc.perform(post("/api/tables")
                         .param("restaurantId", restaurantId.toString())
-                        .header("Authorization", adminToken)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -139,7 +144,7 @@ class TableControllerIntegrationTest {
 
         mockMvc.perform(patch("/api/tables/" + t1.getId() + "/status")
                         .param("status", "occupied")
-                        .header("Authorization", adminToken))
+                        .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("occupied"));
     }
@@ -151,7 +156,7 @@ class TableControllerIntegrationTest {
         t1 = tableRepository.save(t1);
 
         mockMvc.perform(delete("/api/tables/" + t1.getId())
-                        .header("Authorization", adminToken))
+                        .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
