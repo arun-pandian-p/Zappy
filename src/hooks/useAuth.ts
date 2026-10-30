@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/services/apiClient';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -16,6 +17,9 @@ interface AuthState {
 
 const clearSupabaseAuthState = () => {
   localStorage.removeItem('impersonated_restaurant_id');
+  localStorage.removeItem('zappy_access_token');
+  localStorage.removeItem('zappy_refresh_token');
+  localStorage.removeItem('zappy_user');
 
   const authKeys = Object.keys(localStorage).filter(
     (key) => key.startsWith('sb-') || key.includes('supabase')
@@ -62,6 +66,26 @@ export const useAuth = () => {
 
     const loadSession = async () => {
       try {
+        // First check Java backend session in localStorage
+        const storedUser = localStorage.getItem('zappy_user');
+        const storedToken = localStorage.getItem('zappy_access_token');
+        if (storedUser && storedToken) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            setAuthState({
+              user: { id: parsedUser.id, email: parsedUser.email } as any,
+              session: { access_token: storedToken } as any,
+              role: parsedUser.role as AppRole,
+              restaurantId: parsedUser.restaurantId,
+              originalRestaurantId: parsedUser.restaurantId,
+              loading: false,
+            });
+            return;
+          } catch (e) {
+            console.warn('Failed to parse local stored user', e);
+          }
+        }
+
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -135,7 +159,10 @@ export const useAuth = () => {
             });
           }, 0);
         } else {
-          setLoggedOutState();
+          const storedUser = localStorage.getItem('zappy_user');
+          if (!storedUser) {
+            setLoggedOutState();
+          }
         }
       }
     );
@@ -149,8 +176,39 @@ export const useAuth = () => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    return { data, error };
+    try {
+      // 1. Authenticate with Java Spring Boot backend
+      const javaAuth = await apiClient.login(email, password);
+
+      if (javaAuth?.user) {
+        setAuthState({
+          user: { id: javaAuth.user.id, email: javaAuth.user.email } as any,
+          session: { access_token: javaAuth.accessToken } as any,
+          role: javaAuth.user.role as any,
+          restaurantId: javaAuth.user.restaurantId,
+          originalRestaurantId: javaAuth.user.restaurantId,
+          loading: false,
+        });
+      }
+
+      // Also authenticate Supabase session for real-time channels if reachable
+      try {
+        await supabase.auth.signInWithPassword({ email, password });
+      } catch (err) {
+        console.warn('Supabase real-time sync note:', err);
+      }
+
+      return { data: javaAuth, error: null };
+    } catch (err: any) {
+      // Fallback to supabase if backend is offline
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (!error && data?.user) {
+          return { data, error: null };
+        }
+      } catch (_) {}
+      return { data: null, error: { message: err.message || 'Login failed' } };
+    }
   };
 
   const signUp = async (email: string, password: string) => {
@@ -163,6 +221,11 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
+    try {
+      await apiClient.logout();
+    } catch (err) {
+      console.warn('API logout notice:', err);
+    }
     clearSupabaseAuthState();
     try {
       await supabase.removeAllChannels();
@@ -173,8 +236,8 @@ export const useAuth = () => {
       const { error } = await supabase.auth.signOut();
       return { error };
     } catch (error) {
-      console.warn('Supabase signOut failed, clearing local auth state anyway:', error);
-      return { error: error instanceof Error ? error : new Error('Sign out failed') };
+      console.warn('Supabase signOut notice:', error);
+      return { error: null };
     }
   };
 

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/services/apiClient";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Restaurant = Tables<"restaurants">;
@@ -12,6 +13,17 @@ export function useRestaurantDetails(restaurantId?: string) {
     queryFn: async () => {
       if (!restaurantId) return null;
       
+      try {
+        // 1. Fetch from Java Spring Boot backend (Feature 2)
+        const javaProfile = await apiClient.getRestaurant(restaurantId);
+        if (javaProfile) {
+          return javaProfile as unknown as Restaurant;
+        }
+      } catch (err) {
+        console.warn("Java backend getRestaurant failed, trying Supabase fallback:", err);
+      }
+
+      // 2. Fallback to Supabase
       const { data, error } = await supabase
         .from("restaurants")
         .select("*")
@@ -22,7 +34,7 @@ export function useRestaurantDetails(restaurantId?: string) {
       return data as Restaurant | null;
     },
     enabled: !!restaurantId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -32,6 +44,15 @@ export function useRestaurantBySlug(slug?: string) {
     queryFn: async () => {
       if (!slug) return null;
       
+      try {
+        const javaProfile = await apiClient.getRestaurantBySlug(slug);
+        if (javaProfile) {
+          return javaProfile as unknown as Restaurant;
+        }
+      } catch (err) {
+        console.warn("Java backend getRestaurantBySlug notice:", err);
+      }
+
       const { data, error } = await supabase
         .from("restaurants_public")
         .select("*")
@@ -67,6 +88,17 @@ export function useUpdateRestaurant() {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: RestaurantUpdate }) => {
+      try {
+        // 1. Update via Java Spring Boot backend (Feature 2)
+        const updated = await apiClient.updateRestaurant(id, updates as any);
+        if (updated) {
+          return updated as unknown as Restaurant;
+        }
+      } catch (err) {
+        console.warn("Java backend updateRestaurant failed, trying Supabase fallback:", err);
+      }
+
+      // 2. Fallback to Supabase
       const { data: result, error } = await supabase
         .from("restaurants")
         .update(updates)

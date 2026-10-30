@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/services/apiClient';
 import { ZappyLogo } from '@/components/branding/ZappyLogo';
 
 const ForgotPassword = () => {
@@ -21,16 +22,25 @@ const ForgotPassword = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      // 1. Call Java Spring Boot Forgot Password API
+      await apiClient.forgotPassword(email);
       setSent(true);
       toast({ title: 'Email sent', description: 'Check your inbox for a password reset link.' });
+    } catch (err: any) {
+      // Fallback
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      } else {
+        setSent(true);
+        toast({ title: 'Email sent', description: 'Check your inbox for a password reset link.' });
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/services/apiClient';
 import { ZappyLogo } from '@/components/branding/ZappyLogo';
 
 const ResetPassword = () => {
@@ -24,8 +25,9 @@ const ResetPassword = () => {
         const hash = window.location.hash || "";
         const search = window.location.search || "";
         
-        // Immediately allow if URL contains valid recovery params
+        // Check for Java token or recovery params
         if (
+          search.includes("token=") ||
           hash.includes("type=recovery") || 
           hash.includes("access_token=") || 
           search.includes("type=recovery") || 
@@ -67,6 +69,26 @@ const ResetPassword = () => {
       return;
     }
     setLoading(true);
+
+    const searchParams = new URLSearchParams(window.location.search);
+    const javaToken = searchParams.get('token');
+
+    if (javaToken) {
+      try {
+        // 1. Reset via Java Spring Boot backend
+        await apiClient.resetPassword(javaToken, password);
+        toast({ title: 'Password updated', description: 'You can now sign in with your new password.' });
+        navigate('/login', { replace: true });
+        setLoading(false);
+        return;
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message || 'Reset failed', variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+    }
+
+    // 2. Fallback to Supabase updateUser
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -106,6 +128,7 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden p-6">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px]" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px]" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -130,11 +153,12 @@ const ResetPassword = () => {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 disabled={loading}
-                className="pl-10 pr-10 h-11 rounded-lg border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus-visible:ring-emerald-500"
+                autoComplete="new-password"
+                className="pl-10 pr-10 h-11 rounded-lg border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
               >
@@ -153,7 +177,8 @@ const ResetPassword = () => {
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
                 disabled={loading}
-                className="pl-10 h-11 rounded-lg border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus-visible:ring-emerald-500"
+                autoComplete="new-password"
+                className="pl-10 h-11 rounded-lg border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
               />
             </div>
           </div>
