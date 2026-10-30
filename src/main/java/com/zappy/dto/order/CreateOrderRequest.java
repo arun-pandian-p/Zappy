@@ -21,3 +21,4 @@ public record CreateOrderRequest(
     @Valid
     List<OrderItemRequest> items
 ) {}
+

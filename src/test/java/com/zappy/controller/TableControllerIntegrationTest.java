@@ -128,7 +128,7 @@ class TableControllerIntegrationTest {
 
         mockMvc.perform(post("/api/tables")
                         .param("restaurantId", restaurantId.toString())
-                        .header("Authorization", "Bearer " + adminToken)
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -144,7 +144,7 @@ class TableControllerIntegrationTest {
 
         mockMvc.perform(patch("/api/tables/" + t1.getId() + "/status")
                         .param("status", "occupied")
-                        .header("Authorization", "Bearer " + adminToken))
+                        .header("Authorization", adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("occupied"));
     }
@@ -156,7 +156,7 @@ class TableControllerIntegrationTest {
         t1 = tableRepository.save(t1);
 
         mockMvc.perform(delete("/api/tables/" + t1.getId())
-                        .header("Authorization", "Bearer " + adminToken))
+                        .header("Authorization", adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
