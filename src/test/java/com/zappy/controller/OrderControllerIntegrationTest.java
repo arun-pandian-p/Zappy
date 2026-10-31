@@ -208,3 +208,4 @@ class OrderControllerIntegrationTest {
                 .andExpect(jsonPath("$.payment_method").value("cash"));
     }
 }
+
