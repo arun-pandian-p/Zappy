@@ -29,3 +29,4 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID> {
 
     long countByRestaurantIdAndCreatedAtGreaterThanEqual(UUID restaurantId, Instant since);
 }
+

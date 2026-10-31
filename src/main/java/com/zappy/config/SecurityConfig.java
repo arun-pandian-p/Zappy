@@ -65,12 +65,14 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/restaurants/slug/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
 
-                // Public category, menu items, tables reading, and customer order placement
+                // Public category, menu items, tables reading, customer order placement, and waiter calls
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/menu-items/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/tables/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/orders/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/orders/*").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/waiter/calls/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/waiter/calls/table/**").permitAll()
 
                 // Category & Menu Item modifications
                 .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAnyRole("restaurant_admin", "super_admin", "manager")

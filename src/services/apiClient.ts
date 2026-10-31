@@ -379,6 +379,79 @@ class ApiClient {
     });
     return this.handleResponse<any>(response);
   }
+
+  // --- Orders Management APIs (Sprint 04) ---
+
+  async createOrder(restaurantId: string, orderData: { order: Record<string, any>; items: Record<string, any>[] }): Promise<any> {
+    const payload = {
+      ...orderData.order,
+      restaurant_id: restaurantId,
+      items: orderData.items,
+    };
+    const response = await fetch(`${API_BASE}/orders?restaurantId=${encodeURIComponent(restaurantId)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(payload),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async getOrders(restaurantId: string, status?: string | string[]): Promise<any[]> {
+    const query = new URLSearchParams({ restaurantId });
+    if (status) {
+      if (Array.isArray(status)) {
+        status.forEach(s => query.append('statuses', s));
+      } else {
+        query.append('status', status);
+      }
+    }
+
+    const response = await fetch(`${API_BASE}/orders?${query.toString()}`, {
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any[]>(response);
+  }
+
+  async getOrder(id: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/orders/${id}`, {
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async getTodayOrders(restaurantId: string): Promise<any[]> {
+    const response = await fetch(`${API_BASE}/orders/today?restaurantId=${encodeURIComponent(restaurantId)}`, {
+      headers: { ...this.getAuthHeader() },
+    });
+    return this.handleResponse<any[]>(response);
+  }
+
+  async updateOrderStatus(id: string, status: string, cancelReason?: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/orders/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ status, cancel_reason: cancelReason }),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async updateOrderPayment(id: string, paymentStatus: string, paymentMethod?: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/orders/${id}/payment`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ payment_status: paymentStatus, payment_method: paymentMethod }),
+    });
+    return this.handleResponse<any>(response);
+  }
 }
 
 export const apiClient = new ApiClient();
